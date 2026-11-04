@@ -1,0 +1,18 @@
+{
+  "colors": {
+    "background": "#000000",
+    "surface": "#222222",
+    "text": "#ffffff",
+    "subtext": "#aaaaaa",
+    "dim": "#8a8a8a",
+    "accent": "#ffffff",
+    "error": "#ee6666"
+  },
+  "font": "",
+  "fontSize": 14,
+  "fontWeight": 500,
+  "radius": null,
+  "scale": 1,
+  "animations": true,
+  "barHeight": 34
+}

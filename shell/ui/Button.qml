@@ -1,0 +1,112 @@
+import QtQuick
+import qs
+
+// A button: `text`, `icon` (one of Theme.icons), both, or what's put in it,
+// after those. `filled` for the main action, `flat` for one that shows only
+// under the pointer. Tab gets to it; Enter and Space press it.
+Rectangle {
+	id: button
+
+	property string text
+	property string icon
+	property bool filled: false
+	property bool flat: false
+	property color ink: filled ? Theme.colors.background : Theme.colors.text
+	default property alias content: row.data
+
+	signal clicked
+	signal rightClicked
+	signal middleClicked
+	// Notches of the wheel, up is positive.
+	signal scrolled(int steps)
+
+	implicitWidth: row.implicitWidth + Theme.u(row.implicitWidth > 0 && !text ? 16 : 28)
+	implicitHeight: Theme.u(34)
+	radius: Theme.round(height)
+	color: filled ? Theme.colors.accent : flat ? "transparent" : Qt.alpha(Theme.colors.text, 0.1)
+	opacity: enabled ? 1 : 0.5
+	activeFocusOnTab: enabled
+
+	Keys.onPressed: event => {
+		if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+			button.clicked();
+			event.accepted = true;
+		}
+	}
+
+	Rectangle {
+		anchors.fill: parent
+		radius: parent.radius
+		color: pointer.pressed ? Qt.alpha(button.ink, 0.16) : pointer.containsMouse ? Qt.alpha(button.ink, 0.08) : "transparent"
+
+		Behavior on color {
+			enabled: Theme.animate
+
+			ColorAnimation {
+				duration: 120
+			}
+		}
+	}
+
+	Row {
+		id: row
+
+		anchors.centerIn: parent
+		spacing: Theme.u(6)
+
+		Icon {
+			anchors.verticalCenter: parent.verticalCenter
+			visible: button.icon !== ""
+			name: button.icon
+			color: button.ink
+		}
+
+		Text {
+			anchors.verticalCenter: parent.verticalCenter
+			visible: button.text !== ""
+			text: button.text
+			color: button.ink
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize
+			font.weight: Theme.fontWeight
+			font.features: {
+				"tnum": 1
+			}
+		}
+	}
+
+	MouseArea {
+		id: pointer
+
+		property int wheel: 0
+
+		anchors.fill: parent
+		enabled: button.enabled
+		hoverEnabled: true
+		acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+		cursorShape: Qt.PointingHandCursor
+		onClicked: event => {
+			if (event.button === Qt.RightButton)
+				button.rightClicked();
+			else if (event.button === Qt.MiddleButton)
+				button.middleClicked();
+			else
+				button.clicked();
+		}
+		onWheel: event => {
+			// A touchpad comes in small parts of a notch.
+			wheel += event.angleDelta.y;
+			const steps = Math.trunc(wheel / 120);
+			if (steps !== 0) {
+				wheel -= steps * 120;
+				button.scrolled(steps);
+			}
+		}
+	}
+
+	FocusRing {
+		anchors.fill: parent
+		visible: button.activeFocus
+		cornerRadius: button.radius
+	}
+}

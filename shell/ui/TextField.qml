@@ -1,0 +1,93 @@
+import QtQuick
+import qs
+
+// A line of text. `icon` goes in front of it; `secret` hides what's typed,
+// with an eye to show it. Enter is accepted().
+Rectangle {
+	id: field
+
+	property alias text: input.text
+	property string placeholder
+	property string icon
+	property bool secret: false
+	property bool revealed: false
+
+	signal accepted
+
+	// `focus: true` on the field means the text.
+	onActiveFocusChanged: {
+		if (activeFocus)
+			input.forceActiveFocus();
+	}
+
+	function take() {
+		input.forceActiveFocus();
+	}
+
+	implicitWidth: Theme.u(260)
+	implicitHeight: Theme.u(38)
+	radius: Theme.round(height)
+	color: Theme.colors.surface
+	border.width: Math.max(1, Theme.u(input.activeFocus ? 2 : 1))
+	border.color: input.activeFocus ? Theme.colors.accent : Theme.border
+	opacity: enabled ? 1 : 0.5
+
+	Row {
+		id: leading
+
+		anchors.left: parent.left
+		anchors.leftMargin: Theme.u(12)
+		anchors.verticalCenter: parent.verticalCenter
+
+		Icon {
+			visible: field.icon !== ""
+			name: field.icon
+			color: Theme.colors.subtext
+		}
+	}
+
+	TextInput {
+		id: input
+
+		anchors.left: leading.right
+		anchors.leftMargin: field.icon !== "" ? Theme.u(8) : 0
+		anchors.right: eye.visible ? eye.left : parent.right
+		anchors.rightMargin: eye.visible ? Theme.u(4) : Theme.u(12)
+		anchors.verticalCenter: parent.verticalCenter
+		activeFocusOnTab: field.enabled
+		clip: true
+		selectByMouse: true
+		echoMode: field.secret && !field.revealed ? TextInput.Password : TextInput.Normal
+		color: Theme.colors.text
+		selectionColor: Theme.colors.accent
+		selectedTextColor: Theme.colors.background
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize
+		onAccepted: field.accepted()
+
+		Text {
+			anchors.fill: parent
+			visible: input.text === ""
+			text: field.placeholder
+			color: Theme.colors.dim
+			elide: Text.ElideRight
+			font: input.font
+		}
+	}
+
+	Button {
+		id: eye
+
+		anchors.right: parent.right
+		anchors.rightMargin: Theme.u(4)
+		anchors.verticalCenter: parent.verticalCenter
+		implicitWidth: height
+		height: parent.height - Theme.u(8)
+		visible: field.secret
+		flat: true
+		icon: field.revealed ? "eyeOff" : "eye"
+		ink: Theme.colors.subtext
+		activeFocusOnTab: false
+		onClicked: field.revealed = !field.revealed
+	}
+}
