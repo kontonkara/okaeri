@@ -2,20 +2,30 @@ import QtQuick
 import Quickshell.Widgets
 import qs
 
-// A list to pick from, by the pointer or by the keys. `model` is an array of
-// { text, subtext, icon (of Theme.icons), image (a source), check, more,
-// enabled, separator }, all but `text` left out as needed; it can hold
-// anything else for whoever gets activated(index, entry).
+// A list to pick from, by the pointer or by the keys. `model` is an array, or
+// a ScriptModel of one, of { text, subtext, icon (of Theme.icons), image (a
+// source, with `icon` for one that won't load), check, more, enabled,
+// separator }, all but `text` left out as needed; it can hold anything else
+// for whoever gets activated(index, entry). Text in it is never markup.
 ListView {
 	id: list
 
 	readonly property real rowHeight: Theme.u(38)
+	// Where the pointer last was in the window, null for not seen yet: set that
+	// at an opening, and the row it opened on doesn't count as moved onto.
+	property var pointer: null
 
 	signal activated(int index, var entry)
 
+	// Row `index`. An array has a `values` too, a function.
+	function entry(index) {
+		const values = model?.values;
+		return (typeof values === "function" ? model : values)?.[index];
+	}
+
 	function usable(index) {
-		const entry = model[index];
-		return !!entry && !entry.separator && entry.enabled !== false;
+		const row = entry(index);
+		return !!row && !row.separator && row.enabled !== false;
 	}
 
 	// To the next row that can be picked, `by` 1 or -1.
@@ -30,7 +40,16 @@ ListView {
 
 	function activate(index) {
 		if (usable(index))
-			activated(index, model[index]);
+			activated(index, entry(index));
+	}
+
+	// The pointer is `at` on row `index`. Only a pointer that moved picks it: a
+	// row that comes up under one at rest would take the selection from the keys.
+	function follow(index, at) {
+		const last = pointer;
+		pointer = at;
+		if (last && at !== last)
+			currentIndex = index;
 	}
 
 	implicitWidth: Theme.u(280)
@@ -55,9 +74,10 @@ ListView {
 		event.accepted = true;
 	}
 
+	// What Enter goes by: Theme.hover is faint on black.
 	highlight: Rectangle {
 		radius: Math.max(0, Theme.cardRadius - Theme.u(4))
-		color: Theme.hover
+		color: Theme.pressed
 	}
 
 	delegate: Item {
@@ -89,14 +109,16 @@ ListView {
 
 			Icon {
 				anchors.verticalCenter: parent.verticalCenter
-				visible: !!row.modelData.icon
+				visible: !!row.modelData.icon && !picture.visible
 				name: row.modelData.icon || ""
 				color: Theme.colors.subtext
 			}
 
 			IconImage {
+				id: picture
+
 				anchors.verticalCenter: parent.verticalCenter
-				visible: !!row.modelData.image
+				visible: !!row.modelData.image && status !== Image.Error
 				source: row.modelData.image || ""
 				implicitSize: Theme.u(18)
 			}
@@ -107,6 +129,7 @@ ListView {
 				Text {
 					width: Math.min(implicitWidth, row.width - Theme.u(80))
 					text: row.modelData.text || ""
+					textFormat: Text.PlainText
 					color: Theme.colors.text
 					elide: Text.ElideRight
 					font.family: Theme.font
@@ -117,6 +140,7 @@ ListView {
 					width: Math.min(implicitWidth, row.width - Theme.u(80))
 					visible: !!row.modelData.subtext
 					text: row.modelData.subtext || ""
+					textFormat: Text.PlainText
 					color: Theme.colors.subtext
 					elide: Text.ElideRight
 					font.family: Theme.font
@@ -140,7 +164,7 @@ ListView {
 			enabled: row.usable
 			hoverEnabled: true
 			cursorShape: Qt.PointingHandCursor
-			onEntered: list.currentIndex = row.index
+			onPositionChanged: event => list.follow(row.index, mapToItem(null, event.x, event.y))
 			onClicked: list.activate(row.index)
 		}
 	}

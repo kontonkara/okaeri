@@ -68,6 +68,11 @@ Singleton {
 	readonly property bool animate: !!values.animations
 	readonly property real barHeight: u(values.barHeight)
 
+	// Where what opens under the bar starts, and how far it stays from the sides
+	// of the screen. Whole pixels: at a fraction its edges would smear.
+	readonly property int below: Math.round(barHeight + u(8))
+	readonly property int edge: Math.round(u(10))
+
 	// `n` pixels at the UI scale.
 	function u(n) {
 		return n * values.scale;

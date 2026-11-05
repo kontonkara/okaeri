@@ -2,8 +2,9 @@ import QtQuick
 import qs
 
 // A button: `text`, `icon` (one of Theme.icons), both, or what's put in it,
-// after those. `filled` for the main action, `flat` for one that shows only
-// under the pointer. Tab gets to it; Enter and Space press it.
+// after those; without text it's square. `filled` for the main action, `flat`
+// for one that shows only under the pointer. Tab gets to it; Enter and Space
+// press it.
 Rectangle {
 	id: button
 
@@ -20,7 +21,7 @@ Rectangle {
 	// Notches of the wheel, up is positive.
 	signal scrolled(int steps)
 
-	implicitWidth: row.implicitWidth + Theme.u(row.implicitWidth > 0 && !text ? 16 : 28)
+	implicitWidth: text ? row.implicitWidth + Theme.u(28) : height
 	implicitHeight: Theme.u(34)
 	radius: Theme.round(height)
 	color: filled ? Theme.colors.accent : flat ? "transparent" : Qt.alpha(Theme.colors.text, 0.1)
@@ -65,6 +66,7 @@ Rectangle {
 			anchors.verticalCenter: parent.verticalCenter
 			visible: button.text !== ""
 			text: button.text
+			textFormat: Text.PlainText
 			color: button.ink
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
