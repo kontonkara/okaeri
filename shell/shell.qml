@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.bar
+import qs.clipboard
 import qs.control
 import qs.launcher
 import qs.notifications
@@ -19,6 +20,8 @@ ShellRoot {
 	}
 
 	NotificationCenter {}
+
+	ClipboardPanel {}
 
 	ControlCenter {}
 
