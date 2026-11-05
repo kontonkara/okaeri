@@ -68,6 +68,7 @@ Singleton {
 	readonly property bool animate: !!values.animations
 	readonly property real barHeight: u(values.barHeight)
 	readonly property real barMargin: u(values.barMargin)
+	readonly property real barIcon: u(values.barIcon)
 
 	// How far what opens stays from the sides of the screen, as the bar does, and
 	// where it starts under it. Whole pixels: at a fraction its edges would smear.
@@ -125,6 +126,7 @@ Singleton {
 		sliders: "M4 7h10 M18 7h2 M14 5v4h4V5z M4 17h2 M10 17h10 M6 15v4h4v-4z",
 		sun: "M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z M12 2.5v2 M12 19.5v2 M2.5 12h2 M19.5 12h2 M5.3 5.3l1.4 1.4 M17.3 17.3l1.4 1.4 M5.3 18.7l1.4-1.4 M17.3 6.7l1.4-1.4",
 		trash: "M4 7h16 M9 7V4h6v3 M6 7l1 14h10l1-14",
+		tray: "M4 13l2-8h12l2 8v6H4z M4 13h5l1 2h4l1-2h5",
 		volume: "M4 9.5v5h3.5l4.5 4v-13l-4.5 4z M16 9a4.2 4.2 0 0 1 0 6 M18.5 6.5a7.8 7.8 0 0 1 0 11",
 		volumeOff: "M4 9.5v5h3.5l4.5 4v-13l-4.5 4z M16.5 9.5l5 5 M21.5 9.5l-5 5",
 		wifi: "M2 8.8a15 15 0 0 1 20 0 M5 12.6a10 10 0 0 1 14 0 M8.5 16.2a5 5 0 0 1 7 0 M12 20h.01",

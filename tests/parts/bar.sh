@@ -355,11 +355,73 @@ key Escape
 wait_up 0
 reaches after-a-panel
 
+step "Hidden"
+settings() {
+	printf '%s\n' "$1" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+	sleep 0.4
+}
+item=$(dbus-send --session --print-reply --dest=org.kde.StatusNotifierWatcher /StatusNotifierWatcher org.freedesktop.DBus.Properties.Get \
+	string:org.kde.StatusNotifierWatcher string:RegisteredStatusNotifierItems | sed -n 's/.*string "\(.*\)"/\1/p' | head -n 1)
+id=$(dbus-send --session --print-reply --dest="${item%%/*}" "/${item#*/}" org.freedesktop.DBus.Properties.Get \
+	string:org.kde.StatusNotifierItem string:Id | sed -n 's/.*string "\(.*\)"/\1/p')
+[ -n "$id" ] || fail "the app has no id"
+move 300 600
+settings "{ \"tray\": { \"hidden\": [\"$id\"] } }"
+shot hidden
+same "what's on the bar with the app hidden" "$(lane hidden | wc -l)" "$before"
+settings "{ \"tray\": { \"hidden\": [\"nobody\"] } }"
+wait_tray
+
+step "In a drawer"
+panels() {
+	niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-panel")] | length'
+}
+wait_panels() {
+	for _ in $(seq 30); do
+		[ "$(panels)" = "$1" ] && return 0
+		sleep 0.1
+	done
+	fail "$2: $(panels) panels up, not $1"
+}
+settings '{ "tray": { "drawer": true } }'
+move 300 600
+sleep 0.2
+shot drawer-bar
+opener=$(lane drawer-bar | head -n 1)
+# Under the button, on the panel's only icon.
+icon_y=62
+move "$opener" 16
+click
+wait_panels 1 "a click on the drawer's button"
+sleep 0.3
+shot drawer
+move "$opener" "$icon_y"
+click
+did activate
+wait_panels 0 "a click on an icon in the drawer"
+
+# Its menu takes the drawer's place.
+move "$opener" 16
+click
+wait_panels 1 "the drawer again"
+sleep 0.3
+move "$opener" "$icon_y"
+click right
+sleep 0.5
+shot drawer-menu
+wait_panels 1 "the menu from the drawer"
+key Escape
+wait_panels 0 "Escape from the menu"
+settings '{}'
+wait_tray
+tray=$(lane tray | head -n 1)
+
 step "The app goes away"
 menu
 ipc probe leave
 wait_up 0
 reaches after-the-app
+move 300 600
 ipc probe come
 wait_tray
 

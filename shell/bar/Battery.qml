@@ -19,14 +19,14 @@ Row {
 		anchors.verticalCenter: parent.verticalCenter
 		visible: battery.charging
 		name: "bolt"
-		size: Theme.u(14)
+		size: Theme.u(13)
 		color: battery.tint
 	}
 
 	Item {
 		anchors.verticalCenter: parent.verticalCenter
-		width: Theme.u(26)
-		height: Theme.u(13)
+		width: Theme.u(24)
+		height: Theme.u(12)
 
 		Rectangle {
 			id: cell

@@ -10,5 +10,9 @@
 	"wallpaper": {
 		"path": "",
 		"fade": 1500
+	},
+	"tray": {
+		"drawer": false,
+		"hidden": []
 	}
 }

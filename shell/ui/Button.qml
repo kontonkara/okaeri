@@ -14,6 +14,7 @@ Rectangle {
 	property bool flat: false
 	// Beside what's on it, with text.
 	property real pad: Theme.u(14)
+	property real iconSize: Theme.u(18)
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
 	default property alias content: row.data
 
@@ -61,6 +62,7 @@ Rectangle {
 			anchors.verticalCenter: parent.verticalCenter
 			visible: button.icon !== ""
 			name: button.icon
+			size: button.iconSize
 			color: button.ink
 		}
 
