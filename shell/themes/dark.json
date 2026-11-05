@@ -15,5 +15,6 @@
   "scale": 1,
   "animations": true,
   "barHeight": 34,
-  "barMargin": 4
+  "barMargin": 4,
+  "barIcon": 16
 }

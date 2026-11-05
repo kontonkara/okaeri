@@ -7,7 +7,8 @@ Button {
 	anchors.verticalCenter: parent.verticalCenter
 	height: Theme.u(28)
 	flat: true
-	pad: Theme.u(5)
+	iconSize: Theme.barIcon
+	pad: Theme.u(6)
 	activeFocusOnTab: false
 	icon: NotificationStore.dnd ? "bellOff" : "bell"
 	text: NotificationStore.unread > 0 ? `${NotificationStore.unread}` : ""

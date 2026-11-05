@@ -14,7 +14,7 @@ Panel {
 	property var path: []
 
 	function showFor(item, under) {
-		middle = under.mapToItem(null, under.width / 2, 0).x;
+		middle = Panels.middleOf(under);
 		path = [item.menu];
 		show(under.QsWindow.window.screen);
 	}

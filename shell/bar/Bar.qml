@@ -81,9 +81,9 @@ PanelWindow {
 		id: status
 
 		anchors.right: parent.right
-		anchors.rightMargin: Theme.u(9)
+		anchors.rightMargin: Theme.u(8)
 		anchors.verticalCenter: parent.verticalCenter
-		spacing: Theme.u(6)
+		spacing: Theme.u(4)
 
 		Tray {
 			anchors.verticalCenter: parent.verticalCenter
@@ -97,8 +97,8 @@ PanelWindow {
 
 		Battery {
 			anchors.verticalCenter: parent.verticalCenter
-			leftPadding: Theme.u(5)
-			rightPadding: Theme.u(5)
+			leftPadding: Theme.u(6)
+			rightPadding: Theme.u(6)
 		}
 
 		ControlCenterButton {

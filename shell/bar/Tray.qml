@@ -1,52 +1,50 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.SystemTray
-import Quickshell.Widgets
 import qs
-import qs.services
 import qs.ui
 
-// The apps' icons. A click activates one, or opens its menu when that's all
-// it has; a right click opens the menu, in okaeri's look.
+// The apps' icons, but for those Settings.tray.hidden names by id: on the bar,
+// or with Settings.tray.drawer behind a button that shows them in a panel.
 Row {
 	id: tray
 
-	spacing: Theme.u(6)
+	readonly property var shown: SystemTray.items.values.filter(item => item.status !== Status.Passive && !Settings.tray.hidden.includes(item.id))
+
+	spacing: Theme.u(4)
 
 	TrayMenu {
 		id: menu
 	}
 
+	TrayDrawer {
+		id: drawer
+
+		items: tray.shown
+		trayMenu: menu
+	}
+
+	Button {
+		id: opener
+
+		anchors.verticalCenter: parent.verticalCenter
+		height: Theme.u(28)
+		visible: Settings.tray.drawer && tray.shown.length > 0
+		flat: true
+		activeFocusOnTab: false
+		icon: "tray"
+		iconSize: Theme.barIcon
+		onClicked: drawer.showUnder(opener)
+	}
+
 	Repeater {
-		model: SystemTray.items
+		model: ScriptModel {
+			values: Settings.tray.drawer ? [] : tray.shown
+		}
 
-		Button {
-			id: entry
-
-			required property var modelData
-
+		TrayIcon {
 			anchors.verticalCenter: parent.verticalCenter
-			height: Theme.u(28)
-			visible: modelData.status !== Status.Passive
-			flat: true
-			activeFocusOnTab: false
-			onClicked: {
-				if (modelData.onlyMenu)
-					menu.showFor(modelData, entry);
-				else
-					Env.act("tray activate", () => modelData.activate());
-			}
-			onRightClicked: {
-				if (modelData.hasMenu)
-					menu.showFor(modelData, entry);
-			}
-			onMiddleClicked: Env.act("tray secondary activate", () => modelData.secondaryActivate())
-			onScrolled: steps => Env.act(`tray scroll ${steps}`, () => modelData.scroll(steps, false))
-
-			IconImage {
-				anchors.verticalCenter: parent.verticalCenter
-				source: entry.modelData.icon
-				implicitSize: Theme.u(18)
-			}
+			trayMenu: menu
 		}
 	}
 }

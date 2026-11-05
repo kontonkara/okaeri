@@ -6,6 +6,7 @@ import qs.ui
 Button {
 	height: Theme.u(28)
 	flat: true
+	iconSize: Theme.barIcon
 	activeFocusOnTab: false
 	icon: "sliders"
 	onClicked: Control.toggle()
