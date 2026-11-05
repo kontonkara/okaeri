@@ -5,8 +5,8 @@ import qs
 import qs.services
 import qs.ui
 
-// The bar of a screen: the workspaces, the clock, and the tray, the volume,
-// the brightness and the battery. The wheel changes the volume and the
+// The bar of a screen: the workspaces, the clock, and the tray, the battery,
+// the volume and the brightness. The wheel changes the volume and the
 // brightness, a click mutes.
 PanelWindow {
 	id: bar
@@ -27,17 +27,34 @@ PanelWindow {
 	}
 
 	Workspaces {
+		id: workspaces
+
 		anchors.left: parent.left
 		anchors.leftMargin: Theme.u(12)
 		anchors.verticalCenter: parent.verticalCenter
 		output: bar.screen ? bar.screen.name : ""
 	}
 
+	TextMetrics {
+		id: dated
+
+		font: time.font
+		text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+	}
+
 	Text {
 		id: time
 
-		anchors.centerIn: parent
-		text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+		// What the two sides leave it.
+		readonly property real from: workspaces.x + workspaces.width + Theme.u(12)
+		readonly property real to: status.x - Theme.u(12)
+
+		// In the middle, or beside the right side on a narrow screen. Narrower
+		// still the date goes, and then the time.
+		x: Math.round(Math.max(from, Math.min((parent.width - width) / 2, to - width)))
+		anchors.verticalCenter: parent.verticalCenter
+		visible: width <= to - from
+		text: dated.advanceWidth <= to - from ? dated.text : Qt.formatDateTime(clock.date, "HH:mm")
 		color: Theme.colors.text
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize
@@ -48,6 +65,8 @@ PanelWindow {
 	}
 
 	Row {
+		id: status
+
 		anchors.right: parent.right
 		anchors.rightMargin: Theme.u(10)
 		anchors.verticalCenter: parent.verticalCenter
@@ -55,6 +74,12 @@ PanelWindow {
 
 		Tray {
 			anchors.verticalCenter: parent.verticalCenter
+		}
+
+		Battery {
+			anchors.verticalCenter: parent.verticalCenter
+			leftPadding: Theme.u(6)
+			rightPadding: Theme.u(4)
 		}
 
 		Button {
@@ -78,12 +103,6 @@ PanelWindow {
 			icon: "sun"
 			text: `${Math.round(Brightness.level * 100)}%`
 			onScrolled: steps => Brightness.change(steps * 0.05)
-		}
-
-		Battery {
-			anchors.verticalCenter: parent.verticalCenter
-			leftPadding: Theme.u(6)
-			rightPadding: Theme.u(4)
 		}
 	}
 
