@@ -1,0 +1,31 @@
+#!/bin/sh
+# okaeri: a desktop shell on Quickshell.
+#
+#   okaeri                runs it, in a Wayland session
+#   okaeri <target> ...   calls it, as a compositor's binds do: `okaeri launcher
+#                         toggle`, `okaeri volume up 10`
+set -eu
+
+shell=${OKAERI_SHELL_DIR:?}
+
+[ "$#" -eq 0 ] || exec quickshell ipc -p "$shell" call -- "$@"
+
+# With no screen on an NVIDIA GPU, only Mesa's EGL is offered: libglvnd would
+# otherwise load NVIDIA's first, which wakes the GPU from its sleep.
+uses_nvidia=false
+for status in /sys/class/drm/card*-*/status; do
+	[ "$(cat "$status" 2>/dev/null)" = connected ] || continue
+	[ "$(cat "${status%/*}/device/device/vendor" 2>/dev/null)" != 0x10de ] || uses_nvidia=true
+done
+if [ "$uses_nvidia" = false ]; then
+	for f in /run/opengl-driver/share/glvnd/egl_vendor.d/*mesa*.json \
+		/etc/glvnd/egl_vendor.d/*mesa*.json /usr/share/glvnd/egl_vendor.d/*mesa*.json; do
+		if [ -e "$f" ]; then
+			export __EGL_VENDOR_LIBRARY_FILENAMES="$f"
+			break
+		fi
+	done
+fi
+
+export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl
+exec quickshell -p "$shell"
