@@ -1,0 +1,461 @@
+# The bar on its own, with an app in its tray and a window beside it. The app is
+# a real StatusNotifierItem on the stand's bus, made by Qt in the stand's copy of
+# the shell, so its icon and its menu come through D-Bus as an app's do.
+
+fail() {
+	echo "bar: $1" >&2
+	exit 1
+}
+step() {
+	echo "bar: $1" >&2
+}
+same() {
+	[ "$2" = "$3" ] || fail "$1: got \"$2\", not \"$3\""
+}
+theme() {
+	printf '%s' "$1" >"$XDG_CONFIG_HOME/okaeri/theme.json"
+	sleep 0.5
+}
+# Writes standard input to file $1 in place, for the shell to see it.
+rewrite() {
+	cat >"$work/rewritten"
+	cat "$work/rewritten" >"$1"
+}
+
+# How many things shot $1 has on a bar $3 tall, $2 dark columns or more apart.
+# Short of the right end: at a fractional scale the screen can have a column more.
+things() {
+	magick "$out/$1.png" -crop "1396x$3+0+0" +repage -colorspace Gray -scale 1396x1! txt:- |
+		awk -v apart="$2" '
+			NR == 1 { next }
+			/gray\(0\)|#000000/ { gap++; next }
+			{
+				if (gap >= apart || !count)
+					count++
+				gap = 0
+			}
+			END { print count + 0 }
+		'
+}
+
+# The widths of the workspaces' pills in shot $1, from the left.
+pills() {
+	magick "$out/$1.png" -crop 200x1+0+17 +repage -colorspace Gray txt:- |
+		awk '
+			NR == 1 { next }
+			/gray\(0\)|#000000/ { if (run) printf "%d ", run; run = 0; next }
+			{ run++ }
+		' | sed 's/ $//'
+}
+
+shot before
+before=$(lane before | wc -l)
+
+magick -size 22x22 xc:white "$work/tray.png"
+cat >"$work/shell/Probe.qml" <<QML
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Qt.labs.platform as Labs
+
+Scope {
+	Labs.SystemTrayIcon {
+		id: app
+
+		visible: true
+		icon.source: "file://$work/tray.png"
+		onActivated: reason => console.info("okaeri-probe: activated", reason)
+		menu: Labs.Menu {
+			Labs.MenuItem {
+				text: "Open"
+				onTriggered: console.info("okaeri-probe: open")
+			}
+			Labs.MenuItem {
+				text: "Checked"
+				checkable: true
+				checked: true
+				onTriggered: console.info("okaeri-probe: checked")
+			}
+			Labs.MenuSeparator {}
+			Labs.MenuItem {
+				text: "Disabled"
+				enabled: false
+			}
+			Labs.Menu {
+				title: "More"
+				Labs.MenuItem {
+					text: "Deep"
+					onTriggered: console.info("okaeri-probe: deep")
+				}
+				Labs.MenuItem {
+					id: extra
+
+					text: "Extra"
+					visible: false
+				}
+				Labs.Menu {
+					title: "Further"
+					Labs.MenuItem {
+						text: "Near"
+					}
+					Labs.MenuItem {
+						text: "Deepest"
+						onTriggered: console.info("okaeri-probe: deepest")
+					}
+				}
+			}
+			Labs.MenuItem {
+				text: "Quit"
+			}
+		}
+	}
+
+	IpcHandler {
+		target: "probe"
+
+		function change(): void {
+			extra.visible = !extra.visible;
+		}
+
+		function leave(): void {
+			app.visible = false;
+		}
+
+		function come(): void {
+			app.visible = true;
+		}
+	}
+}
+QML
+# Says what becomes of a pill and what the clock shows, in this copy.
+sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted: console.info("okaeri: pill made")\n\t\t\tonWidthChanged: console.info("okaeri: pill", width)/' \
+	"$work/shell/bar/Workspaces.qml" | rewrite "$work/shell/bar/Workspaces.qml"
+sed 's/^\t\tid: time$/&\n\n\t\treadonly property string shows: visible ? text : "nothing"\n\n\t\tonShowsChanged: console.info("okaeri: clock:", shows)\n\t\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
+	"$work/shell/bar/Bar.qml" | rewrite "$work/shell/bar/Bar.qml"
+# And the control center, for a panel to open over a menu.
+sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \
+	"$work/shell/shell.qml" | rewrite "$work/shell/shell.qml"
+wait_log 'Reloading configuration'
+
+# Until the app is on the bar, and then where.
+wait_tray() {
+	for _ in $(seq 50); do
+		shot tray
+		[ "$(lane tray | wc -l)" -gt "$before" ] && break
+		sleep 0.1
+	done
+	[ "$(lane tray | wc -l)" -gt "$before" ] || fail "no icon in the tray"
+	tray=$(lane tray | head -n 1)
+}
+wait_tray
+
+step "The icon"
+acts() {
+	log | sed -n 's/.*okaeri: dry: tray //p'
+}
+seen=0
+# The next thing done to the app was $1, and the only one.
+did() {
+	seen=$((seen + 1))
+	for _ in $(seq 20); do
+		[ "$(acts | wc -l)" -ge "$seen" ] && break
+		sleep 0.1
+	done
+	same "what was done" "$(acts | sed -n "${seen}p")" "$1"
+	[ "$(acts | wc -l)" -eq "$seen" ] || fail "more than $1: $(acts | tail -n 1)"
+}
+move "$tray" 16
+click
+did activate
+click middle
+did "secondary activate"
+wheel 1
+did "scroll 1"
+wheel -2
+did "scroll -2"
+! log | grep -q 'okaeri-probe:' || fail "a dry run reached the app"
+
+step "A window with the keys"
+file=$XDG_RUNTIME_DIR/typed
+: >"$file"
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sh -c "cat >>$file" &
+for _ in $(seq 50); do
+	[ "$(niri msg --json windows | jq length)" = 1 ] && break
+	sleep 0.1
+done
+[ "$(niri msg --json windows | jq length)" = 1 ] || fail "no window"
+sleep 1
+lines=0
+# Types $1 and Enter, and the window got that as the next line, and no more.
+reaches() {
+	type "$1"
+	key Return
+	lines=$((lines + 1))
+	for _ in $(seq 20); do
+		[ "$(wc -l <"$file")" -ge "$lines" ] && break
+		sleep 0.1
+	done
+	same "what the window got" "$(sed -n "${lines}p" "$file")" "$1"
+}
+reaches first
+
+step "The menu has the keys"
+up() {
+	niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-panel")] | length'
+}
+# Until $1 of the panels are up, or fails after 3 s.
+wait_up() {
+	for _ in $(seq 30); do
+		[ "$(up)" = "$1" ] && return 0
+		sleep 0.1
+	done
+	fail "$(up) panels up, not $1"
+}
+menu() {
+	move "$tray" 16
+	click right
+	wait_up 1
+	sleep 0.3
+}
+# Row by row: to More in the app's menu, and into it.
+into_more() {
+	key Down
+	key Down
+	key Return
+	sleep 0.3
+}
+menu
+shot menu
+# Where every panel's card starts, and around the middle of the icon.
+pixel() {
+	magick "$out/$1.png" -format "%[pixel:p{$2,$3}]" info:
+}
+same "above the menu" "$(pixel menu "$tray" 41)" "$(pixel before "$tray" 41)"
+[ "$(pixel menu "$tray" 42)" != "$(pixel before "$tray" 42)" ] || fail "the menu doesn't start where a panel does"
+type abc
+key Down
+key Return
+did "menu 1"
+reaches after-a-row
+
+step "Escape"
+menu
+key Escape
+reaches after-escape
+menu
+into_more
+shot more
+key Escape
+sleep 0.2
+key Down
+key Return
+did "menu 1"
+reaches after-a-way-back
+
+step "A submenu has what's in it"
+menu
+into_more
+key Down
+key Return
+did "menu 1"
+reaches after-a-submenu
+menu
+into_more
+key Down
+key Down
+key Return
+sleep 0.3
+shot further
+key Down
+key Down
+key Return
+did "menu 2"
+reaches after-two-submenus
+
+step "The app changes a menu above the one shown"
+menu
+into_more
+key Down
+key Down
+key Return
+sleep 0.3
+ipc probe change
+sleep 0.5
+key Down
+key Down
+key Return
+did "menu 2"
+reaches after-a-change
+# And the row it added is there, where Further was.
+menu
+into_more
+key Down
+key Down
+key Return
+did "menu 2"
+reaches after-a-new-row
+ipc probe change
+
+step "A click elsewhere"
+menu
+move 300 600
+click
+reaches after-a-click
+
+step "The pointer"
+# As a hand gets there: the rows hear of it from the next events on.
+glide() {
+	move "$1" "$2"
+	wlrctl pointer move 1 0
+	wlrctl pointer move 1 0
+	sleep 0.1
+}
+menu
+glide "$tray" 191
+click
+sleep 0.3
+# Back, and into it again.
+glide "$tray" 68
+click
+sleep 0.3
+glide "$tray" 191
+click
+sleep 0.3
+glide "$tray" 106
+click
+did "menu 1"
+reaches after-the-pointer
+# A second click as it fades does nothing more.
+menu
+glide "$tray" 68
+wlrctl pointer click left
+wlrctl pointer click left
+sleep 0.4
+did "menu 0"
+reaches after-a-double-click
+
+step "The bar doesn't take the keys"
+move 400 16
+click
+reaches after-the-bar
+
+step "A panel takes a menu's place"
+menu
+ipc control toggle
+sleep 0.5
+wait_up 1
+key Escape
+wait_up 0
+reaches after-a-panel
+
+step "The app goes away"
+menu
+ipc probe leave
+wait_up 0
+reaches after-the-app
+ipc probe come
+wait_tray
+
+step "What's done reaches the app"
+# On this bus only the probe hears it, so here it can go through.
+sed 's/if (dry)/if (dry \&\& !what.startsWith("tray"))/' "$work/shell/services/Env.qml" | rewrite "$work/shell/services/Env.qml"
+sleep 1
+wait_tray
+move "$tray" 16
+click
+wait_log 'okaeri-probe: activated 3'
+menu
+key Return
+wait_log 'okaeri-probe: open'
+reaches after-open
+menu
+into_more
+key Down
+key Return
+wait_log 'okaeri-probe: deep'
+reaches after-deep
+menu
+into_more
+key Down
+key Down
+key Return
+sleep 0.3
+key Down
+key Down
+key Return
+wait_log 'okaeri-probe: deepest'
+reaches after-deepest
+
+step "The workspaces"
+# What the pills said from line $1 of the log on, as "made" and "pill" lines.
+said() {
+	log | tail -n "+$1" | sed -n 's/.*okaeri: pill //p'
+}
+focus() {
+	from=$(($(log | wc -l) + 1))
+	niri msg action focus-workspace "$1"
+	sleep 0.5
+}
+focused() {
+	niri msg --json workspaces | jq '.[] | select(.is_focused) | .idx'
+}
+same "the pills at first" "$(shot pills-1; pills pills-1)" "28 12 12 12"
+focus 3
+same "the pills on the third" "$(shot pills-3; pills pills-3)" "12 12 28 12"
+[ "$(said "$from" | grep -c made)" = 0 ] || fail "a change of workspace made the pills anew"
+[ "$(said "$from" | grep -cvE '^(12|28)$')" -gt 2 ] || fail "the pill didn't grow: $(said "$from" | tr '\n' ' ')"
+move 25 16
+click
+sleep 0.5
+same "a click on the first pill" "$(focused)" 1
+same "the pills back on the first" "$(shot pills-back; pills pills-back)" "28 12 12 12"
+niri msg action focus-workspace 2
+niri msg action move-workspace-up
+sleep 0.5
+same "the pills with the second moved up" "$(shot pills-moved; pills pills-moved)" "28 12 12 12"
+same "the moved workspace" "$(niri msg --json workspaces | jq -r '.[] | select(.is_focused) | .name')" two
+theme '{"animations":false}'
+focus 3
+same "the pills at once" "$(said "$from" | sort -n | tr '\n' ' ')" "12 28 "
+theme '{}'
+focus 1
+
+step "The clock on a narrow screen"
+# Everything on the bar stays apart as the screen gets narrower. Past where the
+# clock fits with its date it goes on without, and then it goes.
+clock() {
+	log | sed -n 's/.*okaeri: clock: //p' | tail -n 1
+}
+screen=$(niri msg --json outputs | jq -r 'keys[0]')
+move 300 600
+shot wide
+wide=$(things wide 10 34)
+shown=
+for scale in 2 2.2 2.4 2.6 2.8 3; do
+	niri msg output "$screen" scale "$scale"
+	sleep 1
+	shot "narrow-$scale"
+	case $(clock) in
+	nothing)
+		shown="$shown nothing"
+		left=$((wide - 1))
+		;;
+	*\ *)
+		shown="$shown date"
+		left=$wide
+		;;
+	*)
+		shown="$shown time"
+		left=$wide
+		;;
+	esac
+	same "what's on the bar at a scale of $scale" \
+		"$(things "narrow-$scale" "$(awk "BEGIN { print int(10 * $scale) }")" "$(awk "BEGIN { print int(34 * $scale) }")")" "$left"
+	[ "$left" = "$wide" ] || break
+done
+niri msg output "$screen" scale 1
+sleep 1
+case $shown in
+*date*time*nothing) ;;
+*) fail "the clock went through$shown" ;;
+esac

@@ -1,11 +1,18 @@
 #!/bin/sh
-# Runs the prototype on a headless sway pinned to the iGPU, with niri's real
+# Runs the whole shell on a headless sway pinned to the iGPU, with niri's real
 # event stream, and prints its start time, memory and idle CPU, on one and
-# two screens, next to the running Noctalia's. Leaves a shot in <out>. In
-# the repo, with quickshell, sway and grim in PATH:
+# two screens, next to the running Noctalia's. It only reads the desktop: its
+# bus is a private one, and with OKAERI_GUEST and OKAERI_DRY the notification
+# server and the polkit agent stay off and nothing changes. Leaves a shot in
+# <out>. In the repo:
 #
-#   tests/measure.sh <out>
+#   tests/tools.sh tests/measure.sh <out>
 set -eu
+
+if [ -z "${OKAERI_MEASURE_INNER:-}" ]; then
+	export OKAERI_MEASURE_INNER=1
+	exec setsid --wait dbus-run-session -- "$0" "$@"
+fi
 
 repo=$PWD
 out=${1:?usage: measure.sh <out>}
@@ -32,11 +39,12 @@ noctalia=$(systemctl --user show -P MainPID noctalia.service)
 # The real PipeWire: the bar shows its volume, and only reads it.
 export PIPEWIRE_RUNTIME_DIR="$XDG_RUNTIME_DIR"
 
-export XDG_RUNTIME_DIR="$work/run" XDG_CACHE_HOME="$work/cache" XDG_CONFIG_HOME="$work/config"
+export XDG_RUNTIME_DIR="$work/run" XDG_CACHE_HOME="$work/cache" XDG_CONFIG_HOME="$work/config" XDG_STATE_HOME="$work/state"
+export OKAERI_DRY=1 OKAERI_GUEST=1
 export WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=gles2
 export WLR_RENDER_DRM_DEVICE=/dev/dri/renderD128
 export __EGL_VENDOR_LIBRARY_FILENAMES=/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json
-export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl
+export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DESKTOP_PORTAL=1
 unset DISPLAY WAYLAND_DISPLAY SWAYSOCK
 mkdir -m 700 -p "$XDG_RUNTIME_DIR"
 
