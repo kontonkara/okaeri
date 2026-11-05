@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
 
-// The default output's volume, 0 to 1.
+// The default output's volume, 0 to 1, and the default microphone's.
 Singleton {
 	id: audio
 
@@ -12,6 +12,11 @@ Singleton {
 	readonly property bool ready: !!sink && sink.ready && !!sink.audio
 	readonly property real volume: ready ? sink.audio.volume : 0
 	readonly property bool muted: ready && sink.audio.muted
+
+	readonly property var source: Pipewire.defaultAudioSource
+	readonly property bool micReady: !!source && source.ready && !!source.audio
+	readonly property real micVolume: micReady ? source.audio.volume : 0
+	readonly property bool micMuted: micReady && source.audio.muted
 
 	function change(by) {
 		if (ready) {
@@ -25,8 +30,13 @@ Singleton {
 			Env.act(`mute ${!muted}`, () => sink.audio.muted = !muted);
 	}
 
+	function toggleMicMute() {
+		if (micReady)
+			Env.act(`mic mute ${!micMuted}`, () => source.audio.muted = !micMuted);
+	}
+
 	// Its properties are there only while tracked.
 	PwObjectTracker {
-		objects: audio.sink ? [audio.sink] : []
+		objects: [audio.sink, audio.source].filter(node => !!node)
 	}
 }

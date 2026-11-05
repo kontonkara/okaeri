@@ -6,19 +6,22 @@ import qs
 import qs.services
 import qs.ui
 
-// What the volume or the brightness just became, for a moment, at the bottom
-// of the screen in focus. Clicks and keys go to what's under it.
+// What the volume, the microphone or the brightness just became, for a moment,
+// at the bottom of the screen in focus. Clicks and keys go to what's under it.
 PanelWindow {
 	id: osd
 
 	readonly property var icons: ({
 		volume: "volume",
 		mute: "volumeOff",
-		brightness: "sun"
+		brightness: "sun",
+		mic: "mic",
+		micMute: "micOff"
 	})
 	readonly property real rise: Theme.u(8)
 	property string kind: "volume"
 	property real level: 0
+	readonly property bool off: kind === "mute" || kind === "micMute"
 	property bool shown: false
 
 	function show(kind, level) {
@@ -32,6 +35,10 @@ PanelWindow {
 		shown = true;
 		visible = true;
 		hold.restart();
+	}
+
+	function showMic() {
+		show(Audio.micMuted ? "micMute" : "mic", Audio.micVolume);
 	}
 
 	function showVolume() {
@@ -50,8 +57,8 @@ PanelWindow {
 	WlrLayershell.namespace: "okaeri-osd"
 	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-	// quickshell ipc call -- osd show volume 0.5, the kind being volume, mute or
-	// brightness. Without the --, `show` is a command of quickshell's own.
+	// quickshell ipc call -- osd show volume 0.5, the kind one of `icons`.
+	// Without the --, `show` is a command of quickshell's own.
 	IpcHandler {
 		target: "osd"
 
@@ -79,6 +86,13 @@ PanelWindow {
 		ready: Brightness.available
 		device: Brightness.device
 		onMoved: osd.show("brightness", Brightness.level)
+	}
+
+	Watch {
+		value: Audio.micMuted
+		ready: Audio.micReady
+		device: Audio.source
+		onMoved: osd.showMic()
 	}
 
 	Timer {
@@ -126,14 +140,14 @@ PanelWindow {
 			Icon {
 				anchors.verticalCenter: parent.verticalCenter
 				name: osd.icons[osd.kind]
-				color: osd.kind === "mute" ? Theme.colors.subtext : Theme.colors.text
+				color: osd.off ? Theme.colors.subtext : Theme.colors.text
 			}
 
 			Slider {
 				anchors.verticalCenter: parent.verticalCenter
 				value: osd.level
 				interactive: false
-				enabled: osd.kind !== "mute"
+				enabled: !osd.off
 
 				Behavior on value {
 					enabled: Theme.animate && osd.shown

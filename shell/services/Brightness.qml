@@ -51,12 +51,22 @@ Singleton {
 		printErrors: false
 	}
 
+	// This one tells of a change, but what it reads is what the panel was given:
+	// on amdgpu that's far under what was asked at the low end, and a step from it
+	// would hardly move.
 	FileView {
 		path: brightness.directory ? `${brightness.directory}/actual_brightness` : ""
-		blockLoading: true
 		watchChanges: true
 		printErrors: false
-		onFileChanged: reload()
+		onFileChanged: asked.reload()
+	}
+
+	FileView {
+		id: asked
+
+		path: brightness.directory ? `${brightness.directory}/brightness` : ""
+		blockLoading: true
+		printErrors: false
 		onLoaded: brightness.current = Number(text()) || 0
 	}
 }

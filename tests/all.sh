@@ -29,6 +29,7 @@ for script in tests/parts/*.sh; do
 	bar) root=Scope ;;
 	clipboard) root=ClipboardPanel ;;
 	control) root=ControlCenter ;;
+	keys) root=Keys ;;
 	launcher) root=Launcher ;;
 	notifications) root=NotificationCenter ;;
 	osd) root=Osd ;;

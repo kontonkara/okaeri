@@ -3,6 +3,7 @@ import Quickshell
 import qs.bar
 import qs.clipboard
 import qs.control
+import qs.keys
 import qs.launcher
 import qs.notifications
 import qs.osd
@@ -33,6 +34,8 @@ ShellRoot {
 	PolkitDialog {}
 
 	SessionMenu {}
+
+	Keys {}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"
