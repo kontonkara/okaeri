@@ -1,0 +1,45 @@
+#!/bin/sh
+# Opens okaeri in a niri of its own, in a window of the current session, on
+# the iGPU: nothing of the real desktop changes. Inside, Mod is Alt.
+set -eu
+
+repo=$(dirname "$(readlink -f "$0")")
+config=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/okaeri-try.XXXXXX")
+trap 'rm -f "$config"' EXIT
+
+cat >"$config" <<KDL
+workspace "one"
+workspace "two"
+workspace "three"
+workspace "four"
+
+hotkey-overlay {
+	skip-at-startup
+}
+
+prefer-no-csd
+
+spawn-at-startup "quickshell" "-p" "$repo/shell"
+
+binds {
+	Mod+T { spawn "kitty"; }
+	Mod+Q { close-window; }
+	Mod+1 { focus-workspace 1; }
+	Mod+2 { focus-workspace 2; }
+	Mod+3 { focus-workspace 3; }
+	Mod+4 { focus-workspace 4; }
+	Mod+Down { focus-workspace-down; }
+	Mod+Up { focus-workspace-up; }
+	Mod+Shift+E { quit skip-confirmation=true; }
+}
+KDL
+
+export __EGL_VENDOR_LIBRARY_FILENAMES=/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json
+export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl OKAERI_GALLERY=1 OKAERI_GUEST=1
+
+# In the background, so that a stop reaches niri instead of leaving it behind.
+nix shell --inputs-from "$HOME/nixos" nixpkgs#quickshell -c niri -c "$config" &
+niri=$!
+trap 'kill "$niri" 2>/dev/null || true' INT TERM
+wait "$niri" || true
+wait "$niri" 2>/dev/null || true
