@@ -3,9 +3,11 @@
 # sway on the iGPU, on a session bus of its own, with OKAERI_DRY=1: nothing of
 # the real desktop or the machine changes. A part is a directory of shell/
 # and its root type; other parts aren't loaded, so one that's half done
-# doesn't get in the way. Then it runs <script> with these at hand:
+# doesn't get in the way; with both empty it's the whole shell. Then it runs
+# <script> with these at hand:
 #
 #   shot NAME         a picture of the screen, <out>/NAME.png
+#   lane NAME         where things are on the bar in a shot
 #   ipc TARGET FN ... calls the shell's IpcHandler
 #   move X Y          the pointer to X Y of the 1400x900 screen
 #   click [BUTTON]    left, right or middle, at the pointer
@@ -15,7 +17,9 @@
 #   log               the shell's log so far
 #
 # $NIRI_SOCKET and $WAYLAND_DISPLAY are the inner niri's. The shell's log is
-# at <out>/qs.log. It fails when QML complained. In the repo:
+# at <out>/qs.log. The shell runs from a copy, $work/shell, and reloads as a
+# file there changes: write in place, it doesn't see a sed -i. It fails when
+# QML complained. In the repo:
 #
 #   tests/tools.sh tests/part.sh <part dir> <root type> <out> <script>
 set -eu
@@ -26,10 +30,14 @@ if [ -z "${OKAERI_PART_INNER:-}" ]; then
 	exec setsid --wait dbus-run-session -- "$0" "$@"
 fi
 
-part=${1:?usage: part.sh <part dir> <root type> <out> <script>}
-root=${2:?}
-out=$(readlink -f "${3:?}")
-script=$(readlink -f "${4:?}")
+[ "$#" -eq 4 ] || {
+	echo "usage: part.sh <part dir> <root type> <out> <script>" >&2
+	exit 1
+}
+part=$1
+root=$2
+out=$(readlink -f "$3")
+script=$(readlink -f "$4")
 repo=$PWD
 mkdir -p "$out"
 
@@ -62,9 +70,9 @@ unset DISPLAY WAYLAND_DISPLAY SWAYSOCK NIRI_SOCKET
 mkdir -m 700 -p "$XDG_RUNTIME_DIR"
 mkdir -p "$XDG_CONFIG_HOME/okaeri" "$XDG_CACHE_HOME" "$XDG_STATE_HOME"
 
-# The shell as it is, with only this part in it.
+# The shell as it is, with only this part in it, if it's a part.
 cp -r "$repo/shell" "$work/shell"
-cat >"$work/shell/shell.qml" <<QML
+[ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML
 import QtQuick
 import Quickshell
 import qs.bar
@@ -109,6 +117,11 @@ workspace "three"
 hotkey-overlay {
 	skip-at-startup
 }
+gestures {
+	hot-corners {
+		off
+	}
+}
 prefer-no-csd
 KDL
 WAYLAND_DISPLAY=$outer niri -c "$work/niri.kdl" >"$work/niri.log" 2>&1 &
@@ -137,8 +150,42 @@ sleep 0.5
 shot() {
 	WAYLAND_DISPLAY=$outer grim "$out/$1.png"
 }
+# Right after a reload it says it's not ready yet, and exits 0 all the same.
 ipc() {
-	quickshell ipc -p "$work/shell" call "$@"
+	for _ in $(seq 100); do
+		answer=$(quickshell ipc -p "$work/shell" call -- "$@") || return
+		case $answer in
+		"Not ready"*) sleep 0.1 ;;
+		*)
+			[ -z "$answer" ] || printf '%s\n' "$answer"
+			return 0
+			;;
+		esac
+	done
+	echo "part.sh: the shell takes no calls" >&2
+	return 1
+}
+# The middles of what's on the bar right of the clock in shot NAME, from the
+# left: the bell, the clipboard, and on to the control center. An app in the
+# tray would come first, and the stand's bus has one only if a test puts it
+# there. In the dark theme.
+lane() {
+	magick "$out/$1.png" -crop 560x34+840+0 +repage -colorspace Gray -scale 560x1! txt:- |
+		awk -F'[,:]' -v from=840 '
+			NR == 1 { next }
+			/gray\(0\)|#000000/ { gap++; next }
+			{
+				if (gap > 8 && last) {
+					print int((first + last) / 2) + from
+					first = 0
+				}
+				if (!first)
+					first = $1 + 0
+				last = $1 + 0
+				gap = 0
+			}
+			END { if (last) print int((first + last) / 2) + from }
+		'
 }
 # Where the pointer is isn't known at first: into the corner, then from there.
 move() {
@@ -177,7 +224,7 @@ wait_log() {
 . "$script"
 
 # What QML had to say, without Qt's own noise.
-if log | grep -E 'WARN|ERROR' | grep -vE 'host portal|textinput|Could not load icon' | grep -E 'qml|\.qml|TypeError|ReferenceError'; then
+if log | grep -E 'WARN|ERROR' | grep -vE 'host portal|textinput|Could not load icon' | grep -E 'qml|\.qml|TypeError|ReferenceError|destroyed'; then
 	echo "part.sh: QML complained" >&2
 	exit 1
 fi
