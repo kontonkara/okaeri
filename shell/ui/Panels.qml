@@ -5,6 +5,9 @@ import Quickshell
 
 // What the panels tell each other.
 Singleton {
+	// What's open.
+	property var open: []
+
 	// `panel` came up: what's in the same place makes way for it.
 	signal opened(var panel)
 }

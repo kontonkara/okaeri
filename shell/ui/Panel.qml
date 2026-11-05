@@ -72,6 +72,8 @@ PanelWindow {
 	WlrLayershell.namespace: "okaeri-panel"
 	WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
+	onShownChanged: Panels.open = shown ? Panels.open.concat([panel]) : Panels.open.filter(other => other !== panel)
+
 	Connections {
 		target: Panels
 
