@@ -100,9 +100,14 @@ Singleton {
 	property bool ready: false
 	property real volume: 0
 	property bool muted: false
+	property var source: "first"
+	property bool micReady: true
+	property real micVolume: 0.6
+	property bool micMuted: false
 
 	function change(by) {}
 	function toggleMute() {}
+	function toggleMicMute() {}
 }
 QML
 cat >"$work/Brightness.qml" <<'QML'
@@ -154,6 +159,10 @@ ShellRoot {
 		function sink(volume: real): void {
 			Audio.volume = volume;
 			Audio.sink = "second";
+		}
+
+		function mic(muted: bool): void {
+			Audio.micMuted = muted;
 		}
 
 		function brightness(level: real): void {
@@ -213,6 +222,16 @@ between "left after" "$(leaves "$since")" 1450 2300
 sleep 0.1
 shot gone
 same "where it was" "$(pixel gone $((left + 6)) $middle)" "$desk"
+
+# The microphone, as it's muted and back.
+ipc poke mic true
+comes_up "no card for the muted microphone"
+sleep 0.4
+shot mic-muted
+ipc poke mic false
+sleep 0.4
+shot mic
+leaves "$(now)" >/dev/null
 
 show mute 0.7
 sleep 0.4
