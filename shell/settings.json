@@ -9,7 +9,8 @@
 	},
 	"wallpaper": {
 		"path": "",
-		"fade": 1500
+		"fade": 1500,
+		"backdrop": false
 	},
 	"tray": {
 		"drawer": false,

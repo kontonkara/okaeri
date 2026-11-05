@@ -52,6 +52,29 @@ wait_color "back to the first" 336699
 settings "$work/brown #1?.png"
 wait_color "a name with # and ?" 996633
 
+# Blurred behind the overview, and out of the way on the desktop. Half and half,
+# for an edge that blurs.
+magick -size 800x1200 xc:black -size 800x1200 xc:white +append "$work/half.png"
+printf 'layer-rule {\n\tmatch namespace="^okaeri-backdrop$"\n\tplace-within-backdrop true\n}\nlayout {\n\tbackground-color "transparent"\n}\noverview {\n\tworkspace-shadow {\n\t\toff\n\t}\n}\n' >>"$work/niri.kdl"
+sleep 0.5
+printf '{ "wallpaper": { "path": "%s", "fade": 200, "backdrop": true } }\n' "$work/half.png" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 30); do
+	[ "$(niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-backdrop")] | length')" = 1 ] && break
+	sleep 0.1
+done
+[ "$(niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-backdrop")] | length')" = 1 ] || fail "no backdrop"
+sleep 1
+shot desktop
+# On the desktop the edge is sharp: a pixel either side of it is black and white.
+[ "$(pixel desktop 697 600)" = 000000 ] || fail "the desktop isn't the picture: $(pixel desktop 697 600)"
+[ "$(pixel desktop 703 600)" = FFFFFF ] || fail "the desktop isn't the picture: $(pixel desktop 703 600)"
+niri msg action toggle-overview
+sleep 1
+shot overview
+niri msg action toggle-overview
+sleep 0.6
+
+
 # Gone again.
 settings ""
 wait_layers 0 "without a path"
