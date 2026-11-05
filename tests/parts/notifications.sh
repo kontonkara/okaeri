@@ -14,13 +14,13 @@ if [ "${OKAERI_GUEST:-}" = 1 ]; then
 	return 0
 fi
 
-# 1400x900: the toasts and the panel start at 1010,42 and end at 1390.
-toast_x=1200
-top_close_x=1369
+# 1400x900: the toasts and the panel start at 1016,42 and end at 1396.
+toast_x=1206
+top_close_x=1375
 top_close_y=63
 empty_toggle_y=212
 # The top toast's picture.
-tile=40x40+1024+56
+tile=40x40+1030+56
 
 # With a limit: one with actions waits for an answer.
 send() {
@@ -101,7 +101,7 @@ settle
 shot empty
 is history 0
 is toasts 0
-backdrop=$(pixel empty 1200 500)
+backdrop=$(pixel empty 1206 500)
 
 # The very first: the entries load after its lookup, and it gets its icon then.
 step "The first one"
@@ -182,7 +182,7 @@ sender=$!
 wait_state toasts 1
 settle
 shot toast-actions
-move 1103 123
+move 1109 123
 click
 wait_log "okaeri: dry: notification action open"
 stop_sender
@@ -192,7 +192,7 @@ sender=$!
 wait_state toasts 1
 settle
 shot toast-default
-move 1200 80
+move 1206 80
 click
 wait_log "okaeri: dry: notification action default"
 stop_sender
@@ -203,7 +203,7 @@ sender=$!
 wait_state toasts 1
 settle
 shot toast-markup
-[ "$(pixel toast-markup 1340 122)" != 000000 ]
+[ "$(pixel toast-markup 1346 122)" != 000000 ]
 stop_sender
 reset
 
@@ -223,7 +223,7 @@ send -a Photos -h "variant:image-data:(2, 2, 8, true, 8, 4, [byte $red])" "With 
 wait_state toasts 1
 settle
 shot toast-pixels
-looks toast-pixels 1044 76 ff0000
+looks toast-pixels 1050 76 ff0000
 reset
 
 # What can be shown is, whatever its file is called. What can't is the bell,
@@ -312,7 +312,7 @@ send -a "" "$unbroken" "On top."
 wait_state toasts 1
 settle
 shot unbroken-nameless
-close_area=20x20+1359+53
+close_area=20x20+1365+53
 [ "$(area unbroken-named "$close_area")" = "$(area unbroken-nameless "$close_area")" ]
 reset
 
@@ -427,13 +427,13 @@ ipc notifications toggle
 wait_state panel true
 settle
 # The close button of the top one, and only that one goes.
-move 1357 113
+move 1363 113
 click
 wait_state history 3
 settle
 shot panel-closed-one
 # Clear all.
-move 1325 67
+move 1331 67
 click
 wait_state history 0
 stop_sender
@@ -454,13 +454,13 @@ wait_state panel true
 settle
 
 step "Do Not Disturb"
-move 1354 "$empty_toggle_y"
+move 1360 "$empty_toggle_y"
 click
 wait_state dnd true
 settle
 shot panel-dnd
 # Its knob went right: there it's the panel's color, off it was the track's.
-looks panel-dnd 1363 "$empty_toggle_y" 000000
+looks panel-dnd 1369 "$empty_toggle_y" 000000
 key Escape
 wait_state panel false
 settle
@@ -558,12 +558,12 @@ key Down
 key Down
 sleep 1
 shot panel-scrolled
-[ "$(area panel-long 356x700+1022+92)" != "$(area panel-scrolled 356x700+1022+92)" ]
+[ "$(area panel-long 356x700+1028+92)" != "$(area panel-scrolled 356x700+1028+92)" ]
 key Up
 key Up
 key Up
 # Back at the top, once the flick has ended.
-list_area=356x700+1022+92
+list_area=356x700+1028+92
 for _ in $(seq 8); do
 	shot panel-back
 	[ "$(area panel-long "$list_area")" = "$(area panel-back "$list_area")" ] && break
@@ -581,7 +581,7 @@ wait_state history 12
 settle
 shot panel-newest-closed
 # All but the ring on the next one.
-alike panel-long panel-newest-closed 300x700+1022+92
+alike panel-long panel-newest-closed 300x700+1028+92
 # The keys went on to the next one, and the list goes where they go, past what
 # showed: Message 4 of what's left.
 for _ in $(seq 8); do
@@ -654,7 +654,7 @@ wait_state panel true
 settle
 shot history-full-panel
 # On the newest, wherever it was left.
-looks history-full-panel 1040 92 "$(pixel panel-long 1040 92)"
+looks history-full-panel 1046 92 "$(pixel panel-long 1046 92)"
 key Escape
 wait_state panel false
 send -a Chat -t 1 "One more" "Still a hundred."
@@ -697,7 +697,7 @@ ipc notifications toggle
 wait_state panel true
 settle
 shot light-panel
-looks light-panel 1020 60 ffffff
+looks light-panel 1026 60 ffffff
 key Escape
 wait_state panel false
 stop_sender
@@ -717,7 +717,7 @@ send -a Files -A open=Open "No animations" "Still comes and goes." >/dev/null &
 sender=$!
 wait_state toasts 2
 shot square-toasts
-[ "$(pixel square-toasts 1010 42)" != "$backdrop" ]
+[ "$(pixel square-toasts 1016 42)" != "$backdrop" ]
 ipc notifications toggle
 wait_state panel true
 shot square-panel
@@ -877,7 +877,7 @@ send -a Files -A open=Open "Download finished" "report.pdf" >"$out/action" &
 sender=$!
 wait_state toasts 1
 settle
-move 1103 133
+move 1109 133
 wlrctl pointer click left
 wlrctl pointer click left
 wait "$sender"
@@ -893,7 +893,7 @@ ipc notifications toggle
 wait_state panel true
 settle
 shot action-panel
-move 1120 183
+move 1126 183
 click
 wait "$sender"
 [ "$(cat "$out/action")" = open ]

@@ -170,7 +170,7 @@ ipc() {
 # tray would come first, and the stand's bus has one only if a test puts it
 # there. In the dark theme.
 lane() {
-	magick "$out/$1.png" -crop 560x34+840+0 +repage -colorspace Gray -scale 560x1! txt:- |
+	magick "$out/$1.png" -crop 548x18+840+12 +repage -colorspace Gray -scale 548x1! txt:- |
 		awk -F'[,:]' -v from=840 '
 			NR == 1 { next }
 			/gray\(0\)|#000000/ { gap++; next }

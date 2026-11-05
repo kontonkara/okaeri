@@ -5,12 +5,9 @@ import qs
 import qs.clipboard
 import qs.control
 import qs.notifications
-import qs.services
-import qs.ui
 
 // The bar of a screen: the workspaces, the clock, and the tray, the bell, the
-// clipboard, the battery, the volume, the brightness and the control center.
-// The wheel changes the volume and the brightness, a click mutes.
+// clipboard, the battery and the control center.
 PanelWindow {
 	id: bar
 
@@ -19,9 +16,22 @@ PanelWindow {
 		left: true
 		right: true
 	}
+	margins {
+		top: Theme.edge
+		left: Theme.edge
+		right: Theme.edge
+	}
 	implicitHeight: Theme.barHeight
-	color: Theme.colors.background
+	color: "transparent"
 	WlrLayershell.namespace: "okaeri-bar"
+
+	Rectangle {
+		anchors.fill: parent
+		radius: Theme.cardRadius
+		color: Theme.colors.background
+		border.width: 1
+		border.color: Theme.border
+	}
 
 	SystemClock {
 		id: clock
@@ -33,7 +43,7 @@ PanelWindow {
 		id: workspaces
 
 		anchors.left: parent.left
-		anchors.leftMargin: Theme.u(12)
+		anchors.leftMargin: Theme.u(14)
 		anchors.verticalCenter: parent.verticalCenter
 		output: bar.screen ? bar.screen.name : ""
 	}
@@ -71,9 +81,9 @@ PanelWindow {
 		id: status
 
 		anchors.right: parent.right
-		anchors.rightMargin: Theme.u(10)
+		anchors.rightMargin: Theme.u(9)
 		anchors.verticalCenter: parent.verticalCenter
-		spacing: Theme.u(4)
+		spacing: Theme.u(6)
 
 		Tray {
 			anchors.verticalCenter: parent.verticalCenter
@@ -87,31 +97,8 @@ PanelWindow {
 
 		Battery {
 			anchors.verticalCenter: parent.verticalCenter
-			leftPadding: Theme.u(6)
-			rightPadding: Theme.u(4)
-		}
-
-		Button {
-			anchors.verticalCenter: parent.verticalCenter
-			height: Theme.u(28)
-			flat: true
-			activeFocusOnTab: false
-			icon: Audio.muted ? "volumeOff" : "volume"
-			text: `${Math.round(Audio.volume * 100)}%`
-			ink: Audio.muted ? Theme.colors.subtext : Theme.colors.text
-			onClicked: Audio.toggleMute()
-			onScrolled: steps => Audio.change(steps * 0.05)
-		}
-
-		Button {
-			anchors.verticalCenter: parent.verticalCenter
-			height: Theme.u(28)
-			visible: Brightness.available
-			flat: true
-			activeFocusOnTab: false
-			icon: "sun"
-			text: `${Math.round(Brightness.level * 100)}%`
-			onScrolled: steps => Brightness.change(steps * 0.05)
+			leftPadding: Theme.u(5)
+			rightPadding: Theme.u(5)
 		}
 
 		ControlCenterButton {

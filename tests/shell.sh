@@ -40,7 +40,7 @@ theme() {
 # machine's own volume, which someone may be changing.
 alike() {
 	[ "$(magick "$out/$1.png" "$out/$2.png" -compose difference -composite \
-		-crop 60x120+1010+42 +repage -format '%[fx:maxima * 255 < 8]' info:)" = 1 ]
+		-crop 60x120+1016+42 +repage -format '%[fx:maxima * 255 < 8]' info:)" = 1 ]
 }
 notifications() {
 	ipc notifications state | jq -e "$1" >/dev/null
@@ -215,10 +215,10 @@ sleep 0.5
 shot beside
 alike panel-alone beside || fail "a toast over the control center"
 [ "$(magick "$out/panel-alone.png" "$out/beside.png" -compose difference -composite \
-	-crop 370x60+622+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no toast beside the panel"
+	-crop 370x60+628+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no toast beside the panel"
 
 # Its close button, where it went to: the window's mask went along.
-move 981 63
+move 987 63
 click
 wait_up toasts 0 "the close button of a toast beside the panel"
 [ "$(up panel)" = 1 ] || fail "the panel closed with a click on a toast"
@@ -232,7 +232,7 @@ wait_up panel 0 "Escape from the control center"
 sleep 0.5
 shot corner
 [ "$(magick "$out/beside.png" "$out/corner.png" -compose difference -composite \
-	-crop 60x60+1020+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "the toast stayed aside"
+	-crop 60x60+1026+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "the toast stayed aside"
 ipc notifications clear
 wait_up toasts 0 "the toast after clear"
 
@@ -297,7 +297,7 @@ sleep 0.2
 shot square
 # The ring has a corner where it's whitest: all that's white there is the ring
 # and the icon in it.
-[ "$(magick "$out/square.png" -crop 42x46+1024+54 +repage -fill black +opaque white -trim +repage \
+[ "$(magick "$out/square.png" -crop 42x46+1030+54 +repage -fill black +opaque white -trim +repage \
 	-format '%[fx:p{0,0}.r>0.5]' info:)" = 1 ] ||
 	fail "the ring around a square button isn't square"
 key Escape
@@ -356,7 +356,7 @@ framed() {
 	echo "dialog: $(frame "$3-polkit" 700 450 "$2" 3)"
 	echo "toasts: $(frame "$3-toasts" 1200 90 "$2" 3)"
 	# Past the text on them, down the whole stack.
-	echo "stack: $(into "$3-toasts" "1x$((900 - $2))+1320+$2" 20)"
+	echo "stack: $(into "$3-toasts" "1x$((900 - $2))+1326+$2" 20)"
 }
 framed 1 35 whole-1 >"$out/frames-1"
 for scale in 1.25 1.3; do

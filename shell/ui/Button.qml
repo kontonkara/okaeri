@@ -12,6 +12,8 @@ Rectangle {
 	property string icon
 	property bool filled: false
 	property bool flat: false
+	// Beside what's on it, with text.
+	property real pad: Theme.u(14)
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
 	default property alias content: row.data
 
@@ -21,7 +23,7 @@ Rectangle {
 	// Notches of the wheel, up is positive.
 	signal scrolled(int steps)
 
-	implicitWidth: text ? row.implicitWidth + Theme.u(28) : height
+	implicitWidth: text ? row.implicitWidth + pad * 2 : height
 	implicitHeight: Theme.u(34)
 	radius: Theme.round(height)
 	color: filled ? Theme.colors.accent : flat ? "transparent" : Qt.alpha(Theme.colors.text, 0.1)

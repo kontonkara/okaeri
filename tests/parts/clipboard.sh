@@ -152,7 +152,7 @@ mark
 open_panel
 wait_new '6 entries'
 shot list
-color=$(pixel list 1040 242)
+color=$(pixel list 1046 242)
 case $color in
 000000 | 111111 | 222222 | FFFFFF) fail "no preview: $color" ;;
 esac
@@ -183,7 +183,7 @@ mark
 open_panel
 type 'He said'
 wait_new '1 entry'
-move 1100 121
+move 1106 121
 click
 wait_closed
 pasted_is "$files/tricky"
@@ -262,9 +262,9 @@ close_panel
 first=$(entries | sed -n 1p | cut -f 2-)
 mark
 open_panel
-move 1200 128
+move 1206 128
 shot hover
-move 1359 128
+move 1365 128
 click
 wait_new '2 entries'
 wait_gone "$first"
@@ -291,7 +291,7 @@ mark
 open_panel
 wait_new 'Newest 100 of 132'
 shot capped
-move 1200 300
+move 1206 300
 wtype -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down -k Down
 sleep 0.5
 shot capped-keys
@@ -338,7 +338,7 @@ shot clear-focus
 close_panel
 mark
 open_panel
-move 1070 563
+move 1076 563
 click
 wait_new '0 entries'
 sleep 0.3
@@ -373,8 +373,8 @@ printf 'on the clipboard' >"$files/current"
 wl-copy <"$files/current"
 wait_entry 'on the clipboard'
 open_panel
-move 1200 197
-move 1359 197
+move 1206 197
+move 1365 197
 mark
 click
 wait_new '6 entries'
@@ -390,8 +390,8 @@ pasted_is "$files/current"
 # what's there now takes nothing.
 fill 3 row
 open_panel
-move 1200 197
-move 1359 197
+move 1206 197
+move 1365 197
 mark
 click
 wait_new '2 entries'
@@ -413,7 +413,7 @@ copy 'copied twice' 'copied twice'
 sleep 0.5
 printf 'on the clipboard' | wl-copy
 wait_entry 'on the clipboard'
-move 1100 159
+move 1106 159
 click
 wait_closed
 pasted_is "$files/current"
@@ -424,7 +424,7 @@ fill 40 row
 open_panel
 down 25
 close_panel
-move 1200 300
+move 1206 300
 open_panel
 shot reopened
 key Return
@@ -443,19 +443,19 @@ mark
 wtype -k Delete
 for _ in $(seq 20); do
 	shot scrolled-at-once
-	[ "$(apart scrolled scrolled-at-once 356x38+1022+501)" = 0 ] || break
+	[ "$(apart scrolled scrolled-at-once 356x38+1028+501)" = 0 ] || break
 done
 wait_new '39 entries'
 wait_gone 'row 20'
 sleep 0.5
 shot scrolled-later
-same scrolled scrolled-at-once 356x399+1022+102
-same scrolled scrolled-later 356x399+1022+102
+same scrolled scrolled-at-once 356x399+1028+102
+same scrolled scrolled-later 356x399+1028+102
 key Delete
 wait_new '38 entries'
 wait_gone 'row 19'
-move 1200 300
-move 1359 300
+move 1206 300
+move 1365 300
 sleep 0.2
 shot scrolled-hover
 click
@@ -463,7 +463,7 @@ wait_new '37 entries'
 wait_gone 'row 26'
 sleep 0.5
 shot scrolled-trash
-same scrolled-hover scrolled-trash 356x171+1022+102
+same scrolled-hover scrolled-trash 356x171+1028+102
 click
 wait_new '36 entries'
 wait_gone 'row 25'
@@ -504,7 +504,7 @@ key Delete
 wait_new '39 entries'
 sleep 1
 shot mixed-later
-same mixed mixed-later 356x385+1022+102
+same mixed mixed-later 356x385+1028+102
 
 # Rows that go as soon as they came, while they decode, leave no picture. Each
 # Delete makes the top rows and drops them, and each key of the filter all rows.
@@ -552,11 +552,11 @@ sleep 0.5
 printf '{"scale":2}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.8
 shot large
-[ "$(pixel large 1200 890)" != 000000 ] || fail "the card goes off the screen"
+[ "$(pixel large 1206 897)" != 000000 ] || fail "the card goes off the screen"
 close_panel
 open_panel
 shot large-open
-[ "$(pixel large-open 1200 890)" != 000000 ] || fail "the card goes off the screen when opened"
+[ "$(pixel large-open 1206 897)" != 000000 ] || fail "the card goes off the screen when opened"
 close_panel
 printf '{"extends":"dark"}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.5

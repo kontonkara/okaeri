@@ -14,5 +14,6 @@
   "radius": null,
   "scale": 1,
   "animations": true,
-  "barHeight": 34
+  "barHeight": 34,
+  "barMargin": 4
 }

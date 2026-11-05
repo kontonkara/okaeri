@@ -16,6 +16,11 @@ theme() {
 	printf '%s' "$1" >"$XDG_CONFIG_HOME/okaeri/theme.json"
 	sleep 0.5
 }
+# Puts standard input in file $1 at once: a reload mustn't find it half written.
+swap() {
+	cat >"$work/rewritten"
+	mv "$work/rewritten" "$1"
+}
 # Writes standard input to file $1 in place, for the shell to see it.
 rewrite() {
 	cat >"$work/rewritten"
@@ -23,9 +28,11 @@ rewrite() {
 }
 
 # How many things shot $1 has on a bar $3 tall, $2 dark columns or more apart.
-# Short of the right end: at a fractional scale the screen can have a column more.
+# Inside the bar, off its edge and its round ends.
 things() {
-	magick "$out/$1.png" -crop "1396x$3+0+0" +repage -colorspace Gray -scale 1396x1! txt:- |
+	inset=$(($3 * 12 / 34))
+	width=$((1400 - 2 * inset))
+	magick "$out/$1.png" -crop "${width}x$((inset * 3 / 2))+$inset+$inset" +repage -colorspace Gray -scale "${width}x1!" txt:- |
 		awk -v apart="$2" '
 			NR == 1 { next }
 			/gray\(0\)|#000000/ { gap++; next }
@@ -40,7 +47,7 @@ things() {
 
 # The widths of the workspaces' pills in shot $1, from the left.
 pills() {
-	magick "$out/$1.png" -crop 200x1+0+17 +repage -colorspace Gray txt:- |
+	magick "$out/$1.png" -crop 200x1+6+17 +repage -colorspace Gray txt:- |
 		awk '
 			NR == 1 { next }
 			/gray\(0\)|#000000/ { if (run) printf "%d ", run; run = 0; next }
@@ -129,12 +136,12 @@ Scope {
 QML
 # Says what becomes of a pill and what the clock shows, in this copy.
 sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted: console.info("okaeri: pill made")\n\t\t\tonWidthChanged: console.info("okaeri: pill", width)/' \
-	"$work/shell/bar/Workspaces.qml" | rewrite "$work/shell/bar/Workspaces.qml"
+	"$work/shell/bar/Workspaces.qml" | swap "$work/shell/bar/Workspaces.qml"
 sed 's/^\t\tid: time$/&\n\n\t\treadonly property string shows: visible ? text : "nothing"\n\n\t\tonShowsChanged: console.info("okaeri: clock:", shows)\n\t\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
-	"$work/shell/bar/Bar.qml" | rewrite "$work/shell/bar/Bar.qml"
+	"$work/shell/bar/Bar.qml" | swap "$work/shell/bar/Bar.qml"
 # And the control center, for a panel to open over a menu.
 sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \
-	"$work/shell/shell.qml" | rewrite "$work/shell/shell.qml"
+	"$work/shell/shell.qml" | swap "$work/shell/shell.qml"
 wait_log 'Reloading configuration'
 
 # Until the app is on the bar, and then where.
@@ -431,7 +438,7 @@ move 300 600
 shot wide
 wide=$(things wide 10 34)
 shown=
-for scale in 2 2.2 2.4 2.6 2.8 3; do
+for scale in 2 2.4 2.8 3 3.2 3.4 3.6 3.8 4; do
 	niri msg output "$screen" scale "$scale"
 	sleep 1
 	shot "narrow-$scale"

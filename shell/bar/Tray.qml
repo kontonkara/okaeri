@@ -10,7 +10,7 @@ import qs.ui
 Row {
 	id: tray
 
-	spacing: Theme.u(2)
+	spacing: Theme.u(6)
 
 	TrayMenu {
 		id: menu
