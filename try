@@ -1,6 +1,7 @@
 #!/bin/sh
 # Opens okaeri in a niri of its own, in a window of the current session, on
-# the iGPU: nothing of the real desktop changes. Inside, Mod is Alt.
+# the iGPU: the windows and the workspaces in it are its own, but the volume,
+# the brightness, Wi-Fi and Bluetooth in it are the real ones. Inside, Mod is Alt.
 set -eu
 
 repo=$(dirname "$(readlink -f "$0")")
