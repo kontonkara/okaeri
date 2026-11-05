@@ -10,6 +10,7 @@ Row {
 	id: tray
 
 	readonly property var shown: SystemTray.items.values.filter(item => item.status !== Status.Passive && !Settings.tray.hidden.includes(item.id))
+	readonly property bool wanted: shown.length > 0
 
 	spacing: Theme.u(4)
 

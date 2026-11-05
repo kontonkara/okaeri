@@ -4,7 +4,6 @@ import qs.ui
 
 // The bell on the bar, with how many are unread. A click opens the history.
 Button {
-	anchors.verticalCenter: parent.verticalCenter
 	height: Theme.u(28)
 	flat: true
 	iconSize: Theme.barIcon

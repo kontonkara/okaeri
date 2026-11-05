@@ -15,6 +15,8 @@ Rectangle {
 	// Beside what's on it, with text.
 	property real pad: Theme.u(14)
 	property real iconSize: Theme.u(18)
+	// With this the wheel on it says scrolled(steps), and goes no further.
+	property bool takesWheel: false
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
 	default property alias content: row.data
 
@@ -100,6 +102,10 @@ Rectangle {
 				button.clicked();
 		}
 		onWheel: event => {
+			if (!button.takesWheel) {
+				event.accepted = false;
+				return;
+			}
 			// A touchpad comes in small parts of a notch.
 			wheel += event.angleDelta.y;
 			const steps = Math.trunc(wheel / 120);

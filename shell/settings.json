@@ -14,5 +14,10 @@
 	"tray": {
 		"drawer": false,
 		"hidden": []
+	},
+	"bar": {
+		"left": ["workspaces"],
+		"center": ["clock"],
+		"right": ["tray", "notifications", "clipboard", "battery", "control"]
 	}
 }

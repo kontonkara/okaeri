@@ -5,11 +5,24 @@ import qs
 import qs.clipboard
 import qs.control
 import qs.notifications
+import qs.services
 
-// The bar of a screen: the workspaces, the clock, and the tray, the bell, the
-// clipboard, the battery and the control center.
+// The bar of a screen: what Settings.bar names on its left, in its middle and
+// on its right, out of `parts`. The wheel on what doesn't use it changes the
+// brightness on its left half and the volume on its right.
 PanelWindow {
 	id: bar
+
+	readonly property var parts: ({
+		battery,
+		clipboard,
+		clock,
+		control,
+		keyboard,
+		notifications,
+		tray,
+		workspaces
+	})
 
 	anchors {
 		top: true
@@ -25,7 +38,93 @@ PanelWindow {
 	color: "transparent"
 	WlrLayershell.namespace: "okaeri-bar"
 
+	component Lane: Row {
+		id: lane
+
+		required property var names
+		// What the clock can take, if it's here.
+		property real room: Infinity
+
+		anchors.verticalCenter: parent.verticalCenter
+		spacing: Theme.u(4)
+
+		Repeater {
+			model: lane.names
+
+			Loader {
+				required property string modelData
+				readonly property real room: lane.room
+
+				anchors.verticalCenter: parent.verticalCenter
+				visible: item?.wanted ?? true
+				sourceComponent: bar.parts[modelData] ?? null
+
+				Component.onCompleted: {
+					if (!sourceComponent)
+						console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}`);
+				}
+			}
+		}
+	}
+
+	Component {
+		id: battery
+
+		Battery {
+			leftPadding: Theme.u(6)
+			rightPadding: Theme.u(6)
+		}
+	}
+
+	Component {
+		id: clipboard
+
+		ClipboardButton {}
+	}
+
+	Component {
+		id: keyboard
+
+		KeyboardLayout {}
+	}
+
+	Component {
+		id: clock
+
+		Clock {
+			room: parent ? parent.room : Infinity
+		}
+	}
+
+	Component {
+		id: control
+
+		ControlCenterButton {}
+	}
+
+	Component {
+		id: notifications
+
+		NotificationsButton {}
+	}
+
+	Component {
+		id: tray
+
+		Tray {}
+	}
+
+	Component {
+		id: workspaces
+
+		Workspaces {
+			output: bar.screen ? bar.screen.name : ""
+		}
+	}
+
 	Rectangle {
+		id: background
+
 		anchors.fill: parent
 		radius: Theme.cardRadius
 		color: Theme.colors.background
@@ -33,84 +132,58 @@ PanelWindow {
 		border.color: Theme.border
 	}
 
-	SystemClock {
-		id: clock
+	MouseArea {
+		property int wheel: 0
 
-		precision: SystemClock.Minutes
+		anchors.fill: parent
+		acceptedButtons: Qt.NoButton
+		onWheel: event => {
+			// A touchpad comes in small parts of a notch.
+			wheel += event.angleDelta.y;
+			const steps = Math.trunc(wheel / 120);
+			if (steps === 0)
+				return;
+			wheel -= steps * 120;
+			if (event.x < width / 2)
+				Brightness.change(steps * 0.05);
+			else
+				Audio.change(steps * 0.05);
+		}
 	}
 
-	Workspaces {
-		id: workspaces
+	Lane {
+		id: left
 
 		anchors.left: parent.left
 		anchors.leftMargin: Theme.u(14)
-		anchors.verticalCenter: parent.verticalCenter
-		output: bar.screen ? bar.screen.name : ""
+		names: Settings.bar.left
 	}
 
-	TextMetrics {
-		id: dated
+	// In the middle, or beside the right side on a narrow screen.
+	Lane {
+		id: center
 
-		font: time.font
-		text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
-	}
+		readonly property real from: left.x + left.width + Theme.u(12)
+		readonly property real to: right.x - Theme.u(12)
 
-	Text {
-		id: time
-
-		// What the two sides leave it.
-		readonly property real from: workspaces.x + workspaces.width + Theme.u(12)
-		readonly property real to: status.x - Theme.u(12)
-
-		// In the middle, or beside the right side on a narrow screen. Narrower
-		// still the date goes, and then the time.
 		x: Math.round(Math.max(from, Math.min((parent.width - width) / 2, to - width)))
-		anchors.verticalCenter: parent.verticalCenter
-		visible: width <= to - from
-		text: dated.advanceWidth <= to - from ? dated.text : Qt.formatDateTime(clock.date, "HH:mm")
-		color: Theme.colors.text
-		font.family: Theme.font
-		font.pixelSize: Theme.fontSize
-		font.weight: Theme.fontWeight
-		font.features: {
-			"tnum": 1
-		}
+		names: Settings.bar.center
+		room: to - from
 	}
 
-	Row {
-		id: status
+	Lane {
+		id: right
 
 		anchors.right: parent.right
 		anchors.rightMargin: Theme.u(8)
-		anchors.verticalCenter: parent.verticalCenter
-		spacing: Theme.u(4)
-
-		Tray {
-			anchors.verticalCenter: parent.verticalCenter
-		}
-
-		NotificationsButton {}
-
-		ClipboardButton {
-			anchors.verticalCenter: parent.verticalCenter
-		}
-
-		Battery {
-			anchors.verticalCenter: parent.verticalCenter
-			leftPadding: Theme.u(6)
-			rightPadding: Theme.u(6)
-		}
-
-		ControlCenterButton {
-			anchors.verticalCenter: parent.verticalCenter
-		}
+		names: Settings.bar.right
 	}
 
 	// For tests/measure.sh: when the first frame went out.
 	Connections {
 		id: firstFrame
 
-		target: time.Window.window
+		target: background.Window.window
 
 		function onFrameSwapped() {
 			console.info("okaeri: first frame", Date.now());
