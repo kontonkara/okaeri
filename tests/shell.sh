@@ -204,6 +204,38 @@ wait_up panel 1 "Escape from the launcher over the dialog"
 ipc polkit cancel
 wait_up panel 0 "the dialog after the launcher"
 
+step "A panel in the toasts' corner"
+ipc control toggle
+wait_up panel 1 "the control center"
+settle
+shot panel-alone
+timeout 30 notify-send -a Mail "Beside" "It goes next to the panel."
+wait_up toasts 1 "a toast with the control center open"
+sleep 0.5
+shot beside
+alike panel-alone beside || fail "a toast over the control center"
+[ "$(magick "$out/panel-alone.png" "$out/beside.png" -compose difference -composite \
+	-crop 370x60+622+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no toast beside the panel"
+
+# Its close button, where it went to: the window's mask went along.
+move 981 63
+click
+wait_up toasts 0 "the close button of a toast beside the panel"
+[ "$(up panel)" = 1 ] || fail "the panel closed with a click on a toast"
+
+# It comes up beside it, and goes back as the panel closes.
+timeout 30 notify-send -a Mail "Back" "It goes back to the corner."
+wait_up toasts 1 "another toast with the control center open"
+settle
+key Escape
+wait_up panel 0 "Escape from the control center"
+sleep 0.5
+shot corner
+[ "$(magick "$out/beside.png" "$out/corner.png" -compose difference -composite \
+	-crop 60x60+1020+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "the toast stayed aside"
+ipc notifications clear
+wait_up toasts 0 "the toast after clear"
+
 step "What they're for"
 timeout 30 notify-send -a Mail "Hello" "A toast over the whole shell."
 wait_up toasts 1 "a notification"
@@ -276,6 +308,7 @@ theme '{"scale":1.5}'
 tour bigger
 
 step "Whole pixels"
+move 300 600
 # The first $3 colors of shot $1 along crop $2, with $4 to turn it around. An
 # edge on a fraction of a pixel has more of them, and others.
 into() {

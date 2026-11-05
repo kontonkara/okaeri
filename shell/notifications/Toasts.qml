@@ -3,15 +3,35 @@ import Quickshell
 import Quickshell.Wayland
 import qs
 import qs.services
+import qs.ui
 
 // The toasts: top right on the screen in focus, under the bar, the newest on
-// top. They take no keys, and outside them the pointer goes through.
+// top, and beside a panel that opens there. They take no keys, and outside them
+// the pointer goes through.
 PanelWindow {
 	id: window
 
 	// What's on screen, with those on their way out.
 	property var cards: []
 	readonly property bool wanted: NotificationStore.toasts.length > 0 || cards.length > 0
+	// How far left they go for what's open in their corner.
+	readonly property real aside: {
+		const widths = Panels.open.filter(panel => panel.align === "top-right" && panel.screen === window.screen).map(panel => panel.panelWidth);
+		return widths.length ? Math.round(Math.max(...widths) + Theme.u(8)) : 0;
+	}
+
+	// The same, on its way there. Not the list's x: that follows the window's width
+	// too, and at a first show it would slide in from the far side.
+	property real shift: aside
+
+	Behavior on shift {
+		enabled: Theme.animate
+
+		NumberAnimation {
+			duration: 160
+			easing.type: Easing.OutCubic
+		}
+	}
 
 	onWantedChanged: {
 		if (wanted)
@@ -21,10 +41,10 @@ PanelWindow {
 
 	anchors {
 		top: true
+		left: true
 		right: true
 		bottom: true
 	}
-	implicitWidth: list.width + Theme.edge
 	visible: false
 	color: "transparent"
 	exclusionMode: ExclusionMode.Ignore
@@ -43,13 +63,18 @@ PanelWindow {
 		Region {
 			required property var modelData
 
-			item: modelData
+			// Not `item`, which wouldn't see the list move aside.
+			x: list.x + modelData.x
+			y: list.y + modelData.y - list.contentY
+			width: modelData.width
+			height: modelData.height
 		}
 	}
 
 	ListView {
 		id: list
 
+		x: Math.max(Theme.edge, parent.width - width - Theme.edge - window.shift)
 		y: Theme.below
 		width: Math.round(Theme.u(380))
 		height: parent.height - y
@@ -58,6 +83,7 @@ PanelWindow {
 		model: ScriptModel {
 			values: NotificationStore.toasts
 		}
+
 
 		add: Transition {
 			enabled: Theme.animate
