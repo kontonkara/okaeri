@@ -6,8 +6,9 @@ import qs
 import qs.services
 import qs.ui
 
-// What the volume, the microphone or the brightness just became, for a moment,
-// at the bottom of the screen in focus. Clicks and keys go to what's under it.
+// What the volume, the microphone, the brightness or the keyboard layout just
+// became, for a moment, at the bottom of the screen in focus. Clicks and keys go
+// to what's under it.
 PanelWindow {
 	id: osd
 
@@ -16,7 +17,8 @@ PanelWindow {
 		mute: "volumeOff",
 		brightness: "sun",
 		mic: "mic",
-		micMute: "micOff"
+		micMute: "micOff",
+		layout: "keyboard"
 	})
 	readonly property real rise: Theme.u(8)
 	property string kind: "volume"
@@ -39,6 +41,10 @@ PanelWindow {
 
 	function showMic() {
 		show(Audio.micMuted ? "micMute" : "mic", Audio.micVolume);
+	}
+
+	function showLayout() {
+		show("layout", 0);
 	}
 
 	function showVolume() {
@@ -95,6 +101,13 @@ PanelWindow {
 		onMoved: osd.showMic()
 	}
 
+	Watch {
+		value: Niri.layout
+		ready: Niri.layouts.length > 1
+		device: Niri.layouts.join()
+		onMoved: osd.showLayout()
+	}
+
 	Timer {
 		id: hold
 
@@ -143,10 +156,21 @@ PanelWindow {
 				color: osd.off ? Theme.colors.subtext : Theme.colors.text
 			}
 
+			Text {
+				anchors.verticalCenter: parent.verticalCenter
+				visible: osd.kind === "layout"
+				text: Niri.layoutLabel
+				color: Theme.colors.text
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+				font.weight: Theme.fontWeight
+			}
+
 			Slider {
 				anchors.verticalCenter: parent.verticalCenter
 				value: osd.level
 				interactive: false
+				visible: osd.kind !== "layout"
 				enabled: !osd.off
 
 				Behavior on value {
