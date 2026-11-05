@@ -1,0 +1,183 @@
+#!/bin/sh
+# Runs the bar and one part of the shell in a niri of its own, in a headless
+# sway on the iGPU, on a session bus of its own, with OKAERI_DRY=1: nothing of
+# the real desktop or the machine changes. A part is a directory of shell/
+# and its root type; other parts aren't loaded, so one that's half done
+# doesn't get in the way. Then it runs <script> with these at hand:
+#
+#   shot NAME         a picture of the screen, <out>/NAME.png
+#   ipc TARGET FN ... calls the shell's IpcHandler
+#   move X Y          the pointer to X Y of the 1400x900 screen
+#   click [BUTTON]    left, right or middle, at the pointer
+#   wheel STEPS       the wheel, up for a positive number
+#   type TEXT         keys, and key NAME for one (Escape, Return, Tab)
+#   wait_log TEXT     until the shell's log has TEXT, or fails after 5 s
+#   log               the shell's log so far
+#
+# $NIRI_SOCKET and $WAYLAND_DISPLAY are the inner niri's. The shell's log is
+# at <out>/qs.log. It fails when QML complained. In the repo:
+#
+#   tests/tools.sh tests/part.sh <part dir> <root type> <out> <script>
+set -eu
+
+# A session bus of its own, and a process group to stop in one go.
+if [ -z "${OKAERI_PART_INNER:-}" ]; then
+	export OKAERI_PART_INNER=1
+	exec setsid --wait dbus-run-session -- "$0" "$@"
+fi
+
+part=${1:?usage: part.sh <part dir> <root type> <out> <script>}
+root=${2:?}
+out=$(readlink -f "${3:?}")
+script=$(readlink -f "${4:?}")
+repo=$PWD
+mkdir -p "$out"
+
+real_run=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+work=$(mktemp -d "$real_run/okaeri.XXXXXX")
+
+stop() {
+	trap - EXIT INT TERM
+	# Everything here has the unique $work in its command line or environment.
+	for pid in ${qs_pid:-} ${niri_pid:-} ${sway_pid:-}; do
+		kill "$pid" 2>/dev/null || true
+	done
+	sleep 0.3
+	for pid in ${qs_pid:-} ${niri_pid:-} ${sway_pid:-}; do
+		kill -9 "$pid" 2>/dev/null || true
+		wait "$pid" 2>/dev/null || true
+	done
+	rm -rf "$work"
+}
+trap stop EXIT
+trap 'exit 1' INT TERM
+
+export PIPEWIRE_RUNTIME_DIR=$real_run
+export XDG_RUNTIME_DIR=$work/run XDG_CACHE_HOME=$work/cache XDG_CONFIG_HOME=$work/config XDG_STATE_HOME=$work/state
+export OKAERI_DRY=1 QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DESKTOP_PORTAL=1
+export WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=gles2 WLR_HEADLESS_OUTPUTS=1
+export WLR_RENDER_DRM_DEVICE=/dev/dri/renderD128
+export __EGL_VENDOR_LIBRARY_FILENAMES=/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json
+unset DISPLAY WAYLAND_DISPLAY SWAYSOCK NIRI_SOCKET
+mkdir -m 700 -p "$XDG_RUNTIME_DIR"
+mkdir -p "$XDG_CONFIG_HOME/okaeri" "$XDG_CACHE_HOME" "$XDG_STATE_HOME"
+
+# The shell as it is, with only this part in it.
+cp -r "$repo/shell" "$work/shell"
+cat >"$work/shell/shell.qml" <<QML
+import QtQuick
+import Quickshell
+import qs.bar
+import qs.$part
+
+ShellRoot {
+	Variants {
+		model: Quickshell.screens
+
+		Bar {
+			required property var modelData
+
+			screen: modelData
+		}
+	}
+
+	$root {}
+}
+QML
+
+printf 'xwayland disable\noutput * resolution 1400x900\ndefault_border none\n' >"$work/sway.conf"
+sway --unsupported-gpu -c "$work/sway.conf" >"$work/sway.log" 2>&1 &
+sway_pid=$!
+
+socket() {
+	(cd "$XDG_RUNTIME_DIR" && ls wayland-* 2>/dev/null | grep -v lock | sort | sed -n "$1p") || true
+}
+for _ in $(seq 100); do
+	outer=$(socket 1)
+	[ -n "$outer" ] && break
+	sleep 0.05
+done
+[ -n "$outer" ] || {
+	cat "$work/sway.log" >&2
+	exit 1
+}
+
+cat >"$work/niri.kdl" <<'KDL'
+workspace "one"
+workspace "two"
+workspace "three"
+hotkey-overlay {
+	skip-at-startup
+}
+prefer-no-csd
+KDL
+WAYLAND_DISPLAY=$outer niri -c "$work/niri.kdl" >"$work/niri.log" 2>&1 &
+niri_pid=$!
+for _ in $(seq 100); do
+	NIRI_SOCKET=$(ls "$XDG_RUNTIME_DIR"/niri.*.sock 2>/dev/null | head -n 1 || true)
+	inner=$(socket 2)
+	[ -n "$NIRI_SOCKET" ] && [ -n "$inner" ] && break
+	sleep 0.1
+done
+[ -n "${NIRI_SOCKET:-}" ] || {
+	cat "$work/niri.log" >&2
+	exit 1
+}
+export NIRI_SOCKET
+export WAYLAND_DISPLAY=$inner
+
+quickshell -p "$work/shell" >"$out/qs.log" 2>&1 &
+qs_pid=$!
+for _ in $(seq 100); do
+	grep -q 'okaeri: first frame' "$out/qs.log" && break
+	sleep 0.1
+done
+sleep 0.5
+
+shot() {
+	WAYLAND_DISPLAY=$outer grim "$out/$1.png"
+}
+ipc() {
+	quickshell ipc -p "$work/shell" call "$@"
+}
+# Where the pointer is isn't known at first: into the corner, then from there.
+move() {
+	wlrctl pointer move -3000 -3000
+	wlrctl pointer move "$1" "$2"
+	sleep 0.1
+}
+click() {
+	wlrctl pointer click "${1:-left}"
+	sleep 0.2
+}
+wheel() {
+	wlrctl pointer scroll "$((-15 * $1))" 0
+	sleep 0.2
+}
+type() {
+	wtype "$1"
+	sleep 0.2
+}
+key() {
+	wtype -k "$1"
+	sleep 0.2
+}
+log() {
+	sed 's/\x1b\[[0-9;]*m//g' "$out/qs.log"
+}
+wait_log() {
+	for _ in $(seq 50); do
+		log | grep -qF "$1" && return 0
+		sleep 0.1
+	done
+	echo "part.sh: no \"$1\" in the log" >&2
+	return 1
+}
+
+. "$script"
+
+# What QML had to say, without Qt's own noise.
+if log | grep -E 'WARN|ERROR' | grep -vE 'host portal|textinput|Could not load icon' | grep -E 'qml|\.qml|TypeError|ReferenceError'; then
+	echo "part.sh: QML complained" >&2
+	exit 1
+fi
