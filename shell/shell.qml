@@ -10,6 +10,7 @@ import qs.notifications
 import qs.osd
 import qs.polkit
 import qs.session
+import qs.wallpaper
 
 ShellRoot {
 	Variants {
@@ -39,6 +40,8 @@ ShellRoot {
 	Keys {}
 
 	Idle {}
+
+	Wallpaper {}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"
