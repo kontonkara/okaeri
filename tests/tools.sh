@@ -3,4 +3,4 @@
 exec nix shell --inputs-from "$HOME/nixos" \
 	nixpkgs#quickshell nixpkgs#sway nixpkgs#grim nixpkgs#wlrctl nixpkgs#wtype \
 	nixpkgs#libnotify nixpkgs#wl-clipboard nixpkgs#cliphist nixpkgs#dbus \
-	nixpkgs#jq nixpkgs#imagemagick -c "$@"
+	nixpkgs#jq nixpkgs#imagemagick nixpkgs#kitty nixpkgs#util-linux -c "$@"
