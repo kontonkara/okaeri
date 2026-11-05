@@ -49,12 +49,12 @@ toggle() {
 # from the screen's, its top under the bar.
 volume_y=76
 brightness_y=110
-mute_x=1045
-slider_left=1068
+mute_x=1051
+slider_left=1074
 slider_width=250
 wifi_y=172
-switch_x=1344
-fold_x=1150
+switch_x=1350
+fold_x=1156
 # Wi-Fi's rows, under its header, and Bluetooth's header when Wi-Fi is folded,
 # and under the six made-up networks.
 row_y=213
@@ -71,7 +71,7 @@ row() {
 outside_x=400
 outside_y=500
 strip() {
-	magick "$1" -crop 380x8+1010+892 +repage -format '%k' info:
+	magick "$1" -crop 380x8+1016+892 +repage -format '%k' info:
 }
 
 # How much two pictures differ in a part of them, 0 for not at all: letters
@@ -81,17 +81,17 @@ differ() {
 	magick "$out/$1.png" "$out/$2.png" -crop "$3" +repage -fuzz 5% -metric AE -compare -format '%[distortion]' info:
 }
 whole_row() {
-	echo "250x34+1060+$(($(row "$1") - 17))"
+	echo "250x34+1066+$(($(row "$1") - 17))"
 }
 lower_line() {
-	echo "250x12+1060+$(($(row "$1") + 5))"
+	echo "250x12+1066+$(($(row "$1") + 5))"
 }
 
 # Whether Wi-Fi's card has a color in it, red far from green. The themes are
 # black and white and the edges of letters reach 0.3: more than that is the
 # error color, or a color that came from somewhere else.
 color_in_wifi() {
-	magick "$out/$1.png" -crop 370x300+1015+150 +repage -channel RG -separate +channel \
+	magick "$out/$1.png" -crop 370x300+1021+150 +repage -channel RG -separate +channel \
 		-compose difference -composite -format '%[fx:maxima]' info: |
 		awk '{ print ($1 > 0.4 ? "yes" : "no") }'
 }
@@ -110,9 +110,9 @@ when 'dry: volume' wheel 1
 # With Wi-Fi folded the power profile's buttons are under Bluetooth.
 at $fold_x $wifi_y
 sleep 0.4
-when 'dry: power profile PowerSaver' at 1083 299
-when 'dry: power profile Balanced' at 1200 299
-when 'dry: power profile Performance' at 1316 299
+when 'dry: power profile PowerSaver' at 1089 299
+when 'dry: power profile Balanced' at 1206 299
+when 'dry: power profile Performance' at 1322 299
 at $fold_x $wifi_y
 sleep 0.4
 
@@ -377,8 +377,8 @@ sleep 0.4
 
 # Rows, by the pointer. 0 is connected, 1 known, 2 secured, 3 open, 4 one that
 # takes more than a password, 5 secured with a long name.
-action_x=1315
-row_x=1150
+action_x=1321
+row_x=1156
 toggle
 when 'dry: wifi disconnect' at $action_x "$(row 0)"
 never 'dry: wifi connect' at $row_x "$(row 0)"
@@ -389,8 +389,8 @@ never 'dry: wifi connect' at $row_x "$(row 2)"
 sleep 0.3
 shot dark-password
 
-eye_x=1256
-join_x=1321
+eye_x=1262
+join_x=1327
 field_below=35
 
 # The field has the keys, and the list holds still under it: it only loses
@@ -496,7 +496,7 @@ sleep 0.3
 shot dark-odd-names
 [ "$(color_in_wifi dark-odd-names)" = no ]
 [ "$(differ dark-before-try dark-odd-names "$(lower_line 2)")" = 0 ]
-wifi_title=100x16+1068+157
+wifi_title=100x16+1074+157
 [ "$(differ dark-before-try dark-odd-names $wifi_title)" = 0 ]
 ipc probe names
 key Escape
@@ -594,8 +594,8 @@ shot dark-scrolled
 ipc probe strength 'Network 39' 0.99
 sleep 0.4
 shot dark-scrolled-after
-top=$(magick "$out/dark-crowd.png" -crop 300x100+1060+195 +repage -format '%#' info:)
-kept=$(magick "$out/dark-scrolled-after.png" -crop 300x100+1060+195 +repage -format '%#' info:)
+top=$(magick "$out/dark-crowd.png" -crop 300x100+1066+195 +repage -format '%#' info:)
+kept=$(magick "$out/dark-scrolled-after.png" -crop 300x100+1066+195 +repage -format '%#' info:)
 [ "$top" != "$kept" ]
 
 # The same at twice the size.

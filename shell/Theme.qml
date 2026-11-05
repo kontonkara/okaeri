@@ -67,11 +67,12 @@ Singleton {
 	readonly property int fontWeight: values.fontWeight
 	readonly property bool animate: !!values.animations
 	readonly property real barHeight: u(values.barHeight)
+	readonly property real barMargin: u(values.barMargin)
 
-	// Where what opens under the bar starts, and how far it stays from the sides
-	// of the screen. Whole pixels: at a fraction its edges would smear.
-	readonly property int below: Math.round(barHeight + u(8))
-	readonly property int edge: Math.round(u(10))
+	// How far what opens stays from the sides of the screen, as the bar does, and
+	// where it starts under it. Whole pixels: at a fraction its edges would smear.
+	readonly property int edge: Math.round(barMargin)
+	readonly property int below: Math.round(barMargin + barHeight + u(4))
 
 	// `n` pixels at the UI scale.
 	function u(n) {
