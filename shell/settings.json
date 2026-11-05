@@ -6,5 +6,9 @@
 		"lock": 600,
 		"screenOff": 660,
 		"fade": 5
+	},
+	"wallpaper": {
+		"path": "",
+		"fade": 1500
 	}
 }
