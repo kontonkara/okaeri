@@ -2,8 +2,9 @@ import QtQuick
 import Quickshell.Io
 import qs
 import qs.ui
-// The volume, the brightness, Wi-Fi, Bluetooth and keeping awake. What's in it
-// is there only while it shows, so what's typed in it goes with it.
+// The volume, the brightness, Wi-Fi, Bluetooth, the power profile and keeping
+// awake. What's in it is there only while it shows, so what's typed in it goes
+// with it.
 Panel {
 	id: controlCenter
 
@@ -36,7 +37,7 @@ Panel {
 		sourceComponent: Column {
 			// What's left of the screen for a list, under the bar and with
 			// everything else around it.
-			readonly property real room: controlCenter.room - levels.height - wifi.foldedHeight - bluetooth.foldedHeight - awake.foldedHeight - spacing * 3
+			readonly property real room: controlCenter.room - levels.height - wifi.foldedHeight - bluetooth.foldedHeight - power.height - awake.foldedHeight - spacing * 4
 
 			spacing: Math.round(Theme.u(10))
 
@@ -54,6 +55,10 @@ Panel {
 				id: bluetooth
 
 				room: parent.room
+			}
+
+			PowerSection {
+				id: power
 			}
 
 			AwakeSection {

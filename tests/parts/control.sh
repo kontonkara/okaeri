@@ -107,6 +107,15 @@ at $((slider_left + slider_width / 2)) $volume_y
 wait_log 'dry: volume 0.'
 log | grep -E 'dry: volume 0\.(49|5)' >/dev/null
 when 'dry: volume' wheel 1
+# With Wi-Fi folded the power profile's buttons are under Bluetooth.
+at $fold_x $wifi_y
+sleep 0.4
+when 'dry: power profile PowerSaver' at 1083 299
+when 'dry: power profile Balanced' at 1200 299
+when 'dry: power profile Performance' at 1316 299
+at $fold_x $wifi_y
+sleep 0.4
+
 when 'dry: mute' at $mute_x $volume_y
 when 'dry: brightness' at $((slider_left + slider_width / 4)) $brightness_y
 
@@ -662,7 +671,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
