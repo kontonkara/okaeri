@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.bar
+import qs.launcher
 import qs.notifications
 import qs.osd
 
@@ -16,6 +17,8 @@ ShellRoot {
 	}
 
 	NotificationCenter {}
+
+	Launcher {}
 
 	Osd {}
 
