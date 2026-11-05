@@ -2,9 +2,10 @@ import QtQuick
 import qs
 import qs.ui
 
-// A card that folds: `icon`, `title` and `summary`, a switch that says
-// toggled(wanted), and under them what's put in it. One section of the panel
-// is unfolded at a time, the one Control.unfolded names, and only while on.
+// A card that folds, unless `folds` is off: `icon`, `title` and `summary`, a
+// switch that says toggled(wanted), and under them what's put in it. One section
+// of the panel is unfolded at a time, the one Control.unfolded names, and only
+// while on.
 Card {
 	id: section
 
@@ -14,6 +15,7 @@ Card {
 	property string summary
 	property bool checked: false
 	property bool canSwitch: true
+	property bool folds: true
 	readonly property bool unfolded: checked && Control.unfolded === name
 	readonly property real foldedHeight: header.height + padding * 2
 	default property alias folded: rows.data
@@ -39,7 +41,7 @@ Card {
 				radius: Math.max(0, Theme.cardRadius - Theme.u(4))
 				flat: true
 				onClicked: {
-					if (section.checked)
+					if (section.checked && section.folds)
 						Control.unfolded = section.unfolded ? "" : section.name;
 				}
 
@@ -92,7 +94,7 @@ Card {
 						anchors.right: parent.right
 						anchors.rightMargin: Theme.u(58)
 						anchors.verticalCenter: parent.verticalCenter
-						visible: section.checked
+						visible: section.checked && section.folds
 						name: "chevron"
 						size: Theme.u(16)
 						color: Theme.colors.subtext

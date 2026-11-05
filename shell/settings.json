@@ -1,5 +1,10 @@
 {
 	"session": {
 		"countdown": 10
+	},
+	"idle": {
+		"lock": 600,
+		"screenOff": 660,
+		"fade": 5
 	}
 }

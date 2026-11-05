@@ -33,4 +33,5 @@ Singleton {
 	property var user: ({})
 
 	readonly property var session: Object.assign({}, defaults.session, user.session)
+	readonly property var idle: Object.assign({}, defaults.idle, user.idle)
 }

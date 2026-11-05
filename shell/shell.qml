@@ -3,6 +3,7 @@ import Quickshell
 import qs.bar
 import qs.clipboard
 import qs.control
+import qs.idle
 import qs.keys
 import qs.launcher
 import qs.notifications
@@ -36,6 +37,8 @@ ShellRoot {
 	SessionMenu {}
 
 	Keys {}
+
+	Idle {}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"
