@@ -1,0 +1,33 @@
+import QtQuick
+import Quickshell.Bluetooth
+import qs
+import qs.ui
+
+// A device: how it stands, and a way to disconnect from one connected.
+Entry {
+	id: row
+
+	readonly property var device: modelData
+	readonly property bool busy: device.pairing || device.state === BluetoothDeviceState.Connecting || device.state === BluetoothDeviceState.Disconnecting
+
+	text: device.name
+	subtext: {
+		if (device.pairing)
+			return "Pairing...";
+		if (device.state === BluetoothDeviceState.Connecting)
+			return "Connecting...";
+		if (device.state === BluetoothDeviceState.Disconnecting)
+			return "Disconnecting...";
+		if (device.connected)
+			return device.batteryAvailable ? `Connected · ${Math.round(device.battery * 100)}%` : "Connected";
+		return device.paired ? "Paired" : "Nearby";
+	}
+	pickable: !device.connected && !busy
+	action: device.connected ? "Disconnect" : ""
+	onActed: Bt.disconnect(device)
+
+	Icon {
+		name: "bluetooth"
+		color: row.device.connected ? Theme.colors.text : Theme.colors.subtext
+	}
+}

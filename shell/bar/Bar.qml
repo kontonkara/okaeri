@@ -2,13 +2,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs
+import qs.control
 import qs.notifications
 import qs.services
 import qs.ui
 
 // The bar of a screen: the workspaces, the clock, and the tray, the bell, the
-// battery, the volume and the brightness. The wheel changes the volume and the
-// brightness, a click mutes.
+// battery, the volume, the brightness and the control center. The wheel
+// changes the volume and the brightness, a click mutes.
 PanelWindow {
 	id: bar
 
@@ -106,6 +107,10 @@ PanelWindow {
 			icon: "sun"
 			text: `${Math.round(Brightness.level * 100)}%`
 			onScrolled: steps => Brightness.change(steps * 0.05)
+		}
+
+		ControlCenterButton {
+			anchors.verticalCenter: parent.verticalCenter
 		}
 	}
 
