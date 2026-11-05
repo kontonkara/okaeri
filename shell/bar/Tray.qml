@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs
+import qs.services
 import qs.ui
 
 // The apps' icons. A click activates one, or opens its menu when that's all
@@ -24,23 +25,22 @@ Row {
 			required property var modelData
 
 			anchors.verticalCenter: parent.verticalCenter
-			implicitWidth: height
 			height: Theme.u(28)
 			visible: modelData.status !== Status.Passive
 			flat: true
 			activeFocusOnTab: false
 			onClicked: {
 				if (modelData.onlyMenu)
-					menu.show(modelData, entry);
+					menu.showFor(modelData, entry);
 				else
-					modelData.activate();
+					Env.act("tray activate", () => modelData.activate());
 			}
 			onRightClicked: {
 				if (modelData.hasMenu)
-					menu.show(modelData, entry);
+					menu.showFor(modelData, entry);
 			}
-			onMiddleClicked: modelData.secondaryActivate()
-			onScrolled: steps => modelData.scroll(steps, false)
+			onMiddleClicked: Env.act("tray secondary activate", () => modelData.secondaryActivate())
+			onScrolled: steps => Env.act(`tray scroll ${steps}`, () => modelData.scroll(steps, false))
 
 			IconImage {
 				anchors.verticalCenter: parent.verticalCenter
