@@ -1,34 +1,30 @@
 import QtQuick
 import Quickshell
 import qs
+import qs.services
 import qs.ui
 
 // An app's menu under its icon, submenus in the same place with a way back.
-// A click elsewhere closes it.
-PopupWindow {
-	id: popup
+// It's a panel and not a popup: a popup gets the keys through the surface it's
+// on, and the bar leaves them to the window in focus.
+Panel {
+	id: menu
 
-	// The menus above the one shown.
-	property var parents: []
+	// The menus on the way to the one shown, from the app's own on.
+	property var path: []
 
-	function show(item, under) {
-		anchor.item = under;
-		parents = [];
-		opener.menu = item.menu;
-		visible = true;
-		list.forceActiveFocus();
+	function showFor(item, under) {
+		middle = under.mapToItem(null, under.width / 2, 0).x;
+		path = [item.menu];
+		show(under.QsWindow.window.screen);
 	}
 
 	function enter(entry) {
-		parents = parents.concat([opener.menu]);
-		opener.menu = entry;
-		list.currentIndex = -1;
+		path = path.concat([entry]);
 	}
 
 	function back() {
-		opener.menu = parents[parents.length - 1];
-		parents = parents.slice(0, -1);
-		list.currentIndex = -1;
+		path = path.slice(0, -1);
 	}
 
 	// Without the icon a theme lacks: Qt would draw its placeholder.
@@ -38,62 +34,91 @@ PopupWindow {
 	}
 
 	readonly property var rows: {
-		const entries = opener.children ? opener.children.values : [];
+		const opener = openers.instances[openers.instances.length - 1];
+		const entries = opener?.children ? opener.children.values : [];
 		const rows = entries.map(entry => ({
 			entry,
 			separator: entry.isSeparator,
 			// A menu's underscore marks its access key.
 			text: entry.text.replace(/_(?!_)/g, "").replace(/__/g, "_"),
-			image: popup.image(entry.icon),
+			image: menu.image(entry.icon),
 			enabled: entry.enabled,
 			check: entry.checkState === Qt.Checked,
 			more: entry.hasChildren
 		}));
-		return parents.length ? [{ icon: "back", text: "Back", back: true }].concat(rows) : rows;
+		return path.length > 1 ? [{ icon: "back", text: "Back", back: true }].concat(rows) : rows;
 	}
 
-	anchor.edges: Edges.Bottom
-	anchor.gravity: Edges.Bottom
-	anchor.margins.bottom: -Theme.u(6)
-	grabFocus: true
-	color: "transparent"
-	implicitWidth: card.width
-	implicitHeight: card.height
+	align: "top"
+	panelWidth: Theme.u(280)
+	padding: Theme.u(6)
 
-	QsMenuOpener {
-		id: opener
+	onPanelOpened: {
+		list.pointer = null;
+		list.forceActiveFocus();
 	}
 
-	Card {
-		id: card
+	// Closed for the app too: it fills a menu as that opens.
+	onVisibleChanged: {
+		if (!visible)
+			path = [];
+	}
 
-		width: Theme.u(280)
-		height: Math.min(list.contentHeight, Theme.u(480)) + padding * 2
-		padding: Theme.u(6)
-		color: Theme.colors.background
+	// Its app went away.
+	onRowsChanged: {
+		if (shown && !openers.instances[0]?.menu)
+			hide();
+	}
 
-		List {
-			id: list
+	// Any panel takes a menu's place.
+	Connections {
+		target: Panels
 
-			width: parent.width
-			height: Math.min(contentHeight, Theme.u(480))
-			model: popup.rows
-			onActivated: (index, row) => {
-				if (row.back) {
-					popup.back();
-				} else if (row.more) {
-					popup.enter(row.entry);
-				} else {
-					row.entry.triggered();
-					popup.visible = false;
-				}
+		function onOpened(other) {
+			if (other !== menu)
+				menu.hide();
+		}
+	}
+
+	// One for each on the way: a menu that nobody holds open can take what's in
+	// it away, and the submenu shown with it. The app's own does.
+	Variants {
+		id: openers
+
+		model: menu.path
+
+		QsMenuOpener {
+			required property var modelData
+
+			menu: modelData
+		}
+	}
+
+	List {
+		id: list
+
+		width: parent.width
+		height: Math.min(contentHeight, Theme.u(480), menu.room)
+		focus: true
+		model: menu.rows
+		onActivated: (index, row) => {
+			// The rows still take clicks as the panel fades: a double click does.
+			if (!menu.shown)
+				return;
+			if (row.back) {
+				menu.back();
+			} else if (row.more) {
+				menu.enter(row.entry);
+			} else {
+				Env.act(`tray menu ${index}`, () => row.entry.triggered());
+				menu.hide();
 			}
-			Keys.onEscapePressed: {
-				if (popup.parents.length)
-					popup.back();
-				else
-					popup.visible = false;
-			}
+		}
+		Keys.onEscapePressed: {
+			if (menu.path.length > 1)
+				menu.back();
+			else
+				menu.hide();
 		}
 	}
 }
