@@ -33,6 +33,12 @@ Singleton {
 		act({ FocusWorkspace: { reference: { Id: id } } });
 	}
 
+	// Started by niri, in a scope of its own: what the shell starts goes when a
+	// service of it restarts.
+	function spawn(command) {
+		act({ Spawn: { command } });
+	}
+
 	function quit() {
 		act({ Quit: { skip_confirmation: true } });
 	}

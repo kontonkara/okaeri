@@ -111,15 +111,10 @@ Singleton {
 
 	function launch(entry) {
 		Env.act(`launch ${entry.id}`, () => {
-			// execute() doesn't look at this.
-			if (entry.runInTerminal) {
-				Quickshell.execDetached({
-					command: [...terminal(), "-e", ...entry.command],
-					workingDirectory: entry.workingDirectory
-				});
-			} else {
-				entry.execute();
-			}
+			// execute() would have it in the shell's scope, and doesn't look at this.
+			const command = entry.runInTerminal ? [...terminal(), "-e", ...entry.command] : entry.command;
+			const directory = entry.workingDirectory;
+			Niri.spawn(directory ? ["sh", "-c", 'cd "$0" && exec "$@"', directory, ...command] : command);
 		});
 		launches = Object.assign({}, launches, { [entry.id]: (launches[entry.id] || 0) + 1 });
 		file.setText(JSON.stringify(launches));
