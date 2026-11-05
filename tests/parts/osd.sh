@@ -418,3 +418,15 @@ shot real-brightness
 between "real brightness" "$(filled real-brightness ffffff)" 97 103
 [ "$(icon real-brightness)" = "$(icon brightness-dark)" ] || fail "no sun for a real brightness change"
 leaves "$(now)" >/dev/null
+
+# The keyboard layout, with two of them: a card as it changes, with no track.
+printf 'input {\n\tkeyboard {\n\t\txkb {\n\t\t\tlayout "us,ru"\n\t\t}\n\t}\n}\n' >>"$work/niri.kdl"
+sleep 1.6
+stays_off 300 "it showed as the layouts came"
+niri msg action switch-layout next
+comes_up "no card for the keyboard layout"
+sleep 0.4
+shot layout
+niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-osd" and .keyboard_interactivity == "None")' >/dev/null ||
+	fail "the layout's card took the keyboard"
+leaves "$(now)" >/dev/null
