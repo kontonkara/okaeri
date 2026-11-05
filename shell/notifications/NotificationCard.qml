@@ -6,19 +6,21 @@ import qs
 import qs.ui
 
 // One notification: its picture, where it's from, what it says, its actions
-// and a way to close it. A click on it is its default action, if it has one;
-// with the keys on it Enter or Space is that click.
+// and a way to close it. A click on it goes to where it came from, and a right
+// click closes it; with the keys on it Enter or Space is its default action.
 Card {
 	id: card
 
 	required property var notification
+	// With the close button: a toast goes by a right click.
+	property bool closable: true
 
 	readonly property var defaultAction: notification.actions.find(a => a.identifier === "default") || null
 	readonly property var buttons: notification.actions.filter(a => a.identifier !== "default")
 	readonly property bool critical: NotificationStore.critical(notification)
 	readonly property real side: Theme.u(40)
 	// What the top line leaves for the close button.
-	readonly property real beside: close.width + Theme.u(4)
+	readonly property real beside: closable ? close.width + Theme.u(4) : 0
 
 	// It closed with the keys on it.
 	signal keysLost
@@ -131,9 +133,14 @@ Card {
 		MouseArea {
 			anchors.fill: parent
 			anchors.margins: -card.padding
-			enabled: !!card.defaultAction
+			acceptedButtons: Qt.LeftButton | Qt.RightButton
 			cursorShape: Qt.PointingHandCursor
-			onClicked: NotificationStore.invoke(card.notification, card.defaultAction)
+			onClicked: event => {
+				if (event.button === Qt.RightButton)
+					card.notification.dismiss();
+				else
+					NotificationStore.activate(card.notification);
+			}
 		}
 
 		ClippingRectangle {
@@ -236,6 +243,8 @@ Card {
 
 		Button {
 			id: close
+
+			visible: card.closable
 
 			anchors.top: parent.top
 			anchors.right: parent.right

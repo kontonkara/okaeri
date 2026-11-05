@@ -115,6 +115,21 @@ Singleton {
 			panel.hide();
 	}
 
+	// To where it came from: its default action, or else its app's window, and it's
+	// done with then.
+	function activate(notification) {
+		const action = notification.actions.find(a => a.identifier === "default");
+		if (action) {
+			invoke(notification, action);
+			return;
+		}
+		const names = [notification.desktopEntry, notification.appName];
+		Env.act(`notification focus ${names.filter(name => !!name).join(" ")}`, () => Niri.focusApp(names));
+		notification.dismiss();
+		if (panel)
+			panel.hide();
+	}
+
 	function clear() {
 		const gone = all;
 		clearing = true;

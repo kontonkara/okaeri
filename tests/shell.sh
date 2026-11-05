@@ -217,10 +217,10 @@ alike panel-alone beside || fail "a toast over the control center"
 [ "$(magick "$out/panel-alone.png" "$out/beside.png" -compose difference -composite \
 	-crop 370x60+628+42 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no toast beside the panel"
 
-# Its close button, where it went to: the window's mask went along.
+# A right click on it, where it went to: the window's mask went along.
 move 987 63
-click
-wait_up toasts 0 "the close button of a toast beside the panel"
+click right
+wait_up toasts 0 "a right click on a toast beside the panel"
 [ "$(up panel)" = 1 ] || fail "the panel closed with a click on a toast"
 
 # It comes up beside it, and goes back as the panel closes.

@@ -171,6 +171,7 @@ PanelWindow {
 
 				width: parent.width
 				notification: toast.modelData
+				closable: false
 				color: Theme.colors.background
 			}
 
