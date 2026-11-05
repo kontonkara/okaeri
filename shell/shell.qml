@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.bar
+import qs.notifications
 
 ShellRoot {
 	Variants {
@@ -12,6 +13,8 @@ ShellRoot {
 			screen: modelData
 		}
 	}
+
+	NotificationCenter {}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"

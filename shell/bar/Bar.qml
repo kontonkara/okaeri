@@ -2,11 +2,12 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs
+import qs.notifications
 import qs.services
 import qs.ui
 
-// The bar of a screen: the workspaces, the clock, and the tray, the battery,
-// the volume and the brightness. The wheel changes the volume and the
+// The bar of a screen: the workspaces, the clock, and the tray, the bell, the
+// battery, the volume and the brightness. The wheel changes the volume and the
 // brightness, a click mutes.
 PanelWindow {
 	id: bar
@@ -75,6 +76,8 @@ PanelWindow {
 		Tray {
 			anchors.verticalCenter: parent.verticalCenter
 		}
+
+		NotificationsButton {}
 
 		Battery {
 			anchors.verticalCenter: parent.verticalCenter
