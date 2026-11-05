@@ -159,7 +159,7 @@ move 300 600
 wait_state toasts 0 20
 reset
 
-# A critical one stays past any timeout, and the close button closes it.
+# A critical one stays past any timeout, and a right click closes it.
 step "A critical one"
 send -a Battery -u critical -t 500 "Battery low" "Plug it in."
 wait_state toasts 1
@@ -169,8 +169,8 @@ settle
 shot toast-critical
 move "$top_close_x" "$top_close_y"
 # Twice: the second one finds it on its way out.
-wlrctl pointer click left
-wlrctl pointer click left
+wlrctl pointer click right
+wlrctl pointer click right
 wait_state toasts 0
 wait_state history 0
 reset
@@ -293,27 +293,13 @@ shot toast-name-lines
 looks toast-name-lines "$toast_x" 140 "$backdrop"
 reset
 
-# No app name: no icon of some other app, and the top line still leaves room
-# for the close button.
+# No app name: no icon of some other app.
 step "No app name"
 send -a "" "Nameless" "From nobody."
 wait_state toasts 1
 settle
 shot nameless
 [ "$(area nameless "$tile")" = "$bell" ]
-reset
-unbroken=AnUnbrokenSummaryThatHasNoSpacesAtAllAndGoesOnAndOnAndOnAndOnAndOnAndOnAndOnAndOn
-send -a App "$unbroken" "Under the name."
-wait_state toasts 1
-settle
-shot unbroken-named
-reset
-send -a "" "$unbroken" "On top."
-wait_state toasts 1
-settle
-shot unbroken-nameless
-close_area=20x20+1365+53
-[ "$(area unbroken-named "$close_area")" = "$(area unbroken-nameless "$close_area")" ]
 reset
 
 # Several at once: capped, newest on top, a critical one too.
@@ -645,7 +631,7 @@ wait_state toasts 1
 settle
 shot history-full
 move "$top_close_x" "$top_close_y"
-click
+click right
 wait_state history 100
 wait_state toasts 0
 move 300 600
@@ -745,6 +731,26 @@ wait_state panel false
 reset
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.5
+
+step "Clicks on a toast"
+# The left one goes to its app, the right one is the close button's.
+send -a Editor "To its app" "No default action."
+wait_state toasts 1
+settle
+move "$toast_x" 90
+click
+wait_log "okaeri: dry: notification focus Editor"
+wait_state toasts 0
+send -a Mail -A default=Open "Its action" "The right click doesn't take it." >/dev/null &
+sender=$!
+wait_state toasts 1
+settle
+move "$toast_x" 90
+click right
+wait_state toasts 0
+! log | grep -q "notification action default.*Mail" || fail "a right click took the action"
+stop_sender
+reset
 
 step "Clicks go through"
 if command -v kitty >/dev/null; then

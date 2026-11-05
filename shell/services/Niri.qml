@@ -4,11 +4,12 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// niri's workspaces, kept up to date from its event stream.
+// niri's workspaces and windows, kept up to date from its event stream.
 Singleton {
 	id: niri
 
 	property var workspaces: []
+	property var windows: []
 
 	// Those on the output, in order. A screen niri doesn't know (a test's
 	// headless one) gets them all.
@@ -39,11 +40,27 @@ Singleton {
 		act({ Spawn: { command } });
 	}
 
+	// To a window of the app that goes by one of `names`, if it has one.
+	function focusApp(names) {
+		const wanted = names.filter(name => !!name).map(name => name.toLowerCase());
+		const window = windows.find(w => wanted.some(name => (w.app_id || "").toLowerCase().includes(name)));
+		if (window)
+			act({ FocusWindow: { id: window.id } });
+	}
+
 	function quit() {
 		act({ Quit: { skip_confirmation: true } });
 	}
 
 	function handle(event) {
+		if (event.WindowsChanged) {
+			windows = event.WindowsChanged.windows;
+		} else if (event.WindowOpenedOrChanged) {
+			const window = event.WindowOpenedOrChanged.window;
+			windows = windows.filter(w => w.id !== window.id).concat([window]);
+		} else if (event.WindowClosed) {
+			windows = windows.filter(w => w.id !== event.WindowClosed.id);
+		}
 		if (event.WorkspacesChanged) {
 			workspaces = event.WorkspacesChanged.workspaces;
 		} else if (event.WorkspaceActivated) {
