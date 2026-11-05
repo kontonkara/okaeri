@@ -33,6 +33,7 @@ for script in tests/parts/*.sh; do
 	notifications) root=NotificationCenter ;;
 	osd) root=Osd ;;
 	polkit) root=PolkitDialog ;;
+	session) root=SessionMenu ;;
 	*)
 		echo "FAILED: $part has no root type here"
 		failed="$failed $part"

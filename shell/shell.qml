@@ -7,6 +7,7 @@ import qs.launcher
 import qs.notifications
 import qs.osd
 import qs.polkit
+import qs.session
 
 ShellRoot {
 	Variants {
@@ -30,6 +31,8 @@ ShellRoot {
 	Osd {}
 
 	PolkitDialog {}
+
+	SessionMenu {}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"
