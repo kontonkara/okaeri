@@ -4,14 +4,21 @@ import qs
 import qs.ui
 
 // The app launcher: what's typed picks from the apps and Enter launches the
-// selected one. The field keeps the keys, Up and Down reach the list from it.
+// selected one, or copies the answer to a sum. The field keeps the keys, Up and
+// Down reach the list from it.
 Panel {
 	id: launcher
+
+	// What the calculator makes of it, over the apps it finds.
+	function rows() {
+		const sum = Calculator.result ? [{ text: Calculator.result, subtext: Calculator.expression, icon: "calculator", sum: true }] : [];
+		return sum.concat(Apps.search(field.text));
+	}
 
 	// Not a binding: an app moving up for its launch would show as the panel
 	// fades.
 	function search() {
-		list.model = Apps.search(field.text);
+		list.model = rows();
 		list.currentIndex = 0;
 		list.positionViewAtBeginning();
 	}
@@ -20,7 +27,7 @@ Panel {
 	function refresh() {
 		const selected = list.model[list.currentIndex]?.entry?.id;
 		search();
-		list.currentIndex = Math.max(0, list.model.findIndex(row => row.entry.id === selected));
+		list.currentIndex = Math.max(0, list.model.findIndex(row => row.entry?.id === selected));
 	}
 
 	align: "center"
@@ -43,6 +50,16 @@ Panel {
 		}
 	}
 
+	// A moment after the keystroke.
+	Connections {
+		target: Calculator
+
+		function onResultChanged() {
+			if (launcher.shown)
+				launcher.search();
+		}
+	}
+
 	IpcHandler {
 		target: "launcher"
 
@@ -58,7 +75,10 @@ Panel {
 		focus: true
 		icon: "search"
 		placeholder: "Search apps"
-		onTextChanged: launcher.search()
+		onTextChanged: {
+			Calculator.ask(text);
+			launcher.search();
+		}
 		onAccepted: list.activate(list.currentIndex)
 		Keys.onUpPressed: list.move(-1)
 		Keys.onDownPressed: list.move(1)
@@ -79,7 +99,10 @@ Panel {
 				// The rows still take clicks as the panel fades: a double click does.
 				if (!launcher.shown)
 					return;
-				Apps.launch(row.entry);
+				if (row.sum)
+					Calculator.copy();
+				else
+					Apps.launch(row.entry);
 				launcher.hide();
 			}
 		}
