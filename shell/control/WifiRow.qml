@@ -8,7 +8,8 @@ import qs.ui
 Entry {
 	id: row
 
-	readonly property var network: modelData
+	// A network that went away is null here for a moment, as the row goes.
+	readonly property var network: modelData ?? ({})
 	readonly property bool takesKey: Wifi.takesKey(network)
 	readonly property bool isOpen: Wifi.isOpen(network)
 	readonly property bool joinable: network.connected || network.known || isOpen || takesKey
@@ -27,7 +28,7 @@ Entry {
 	signal keyGiven(string key)
 	signal keyDropped
 
-	text: network.name
+	text: network.name ?? ""
 	subtext: {
 		if (network.state === ConnectionState.Connecting)
 			return "Connecting...";

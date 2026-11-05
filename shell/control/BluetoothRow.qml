@@ -7,10 +7,11 @@ import qs.ui
 Entry {
 	id: row
 
-	readonly property var device: modelData
+	// A device that went away is null here for a moment, as the row goes.
+	readonly property var device: modelData ?? ({})
 	readonly property bool busy: device.pairing || device.state === BluetoothDeviceState.Connecting || device.state === BluetoothDeviceState.Disconnecting
 
-	text: device.name
+	text: device.name ?? ""
 	subtext: {
 		if (device.pairing)
 			return "Pairing...";
