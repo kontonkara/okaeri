@@ -137,8 +137,8 @@ QML
 # Says what becomes of a pill and what the clock shows, in this copy.
 sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted: console.info("okaeri: pill made")\n\t\t\tonWidthChanged: console.info("okaeri: pill", width)/' \
 	"$work/shell/bar/Workspaces.qml" | swap "$work/shell/bar/Workspaces.qml"
-sed 's/^\t\tid: time$/&\n\n\t\treadonly property string shows: visible ? text : "nothing"\n\n\t\tonShowsChanged: console.info("okaeri: clock:", shows)\n\t\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
-	"$work/shell/bar/Bar.qml" | swap "$work/shell/bar/Bar.qml"
+sed 's/^\tid: time$/&\n\n\treadonly property string shows: visible ? text : "nothing"\n\n\tonShowsChanged: console.info("okaeri: clock:", shows)\n\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
+	"$work/shell/bar/Clock.qml" | swap "$work/shell/bar/Clock.qml"
 # And the control center, for a panel to open over a menu.
 sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \
 	"$work/shell/shell.qml" | swap "$work/shell/shell.qml"
@@ -416,6 +416,84 @@ settings '{}'
 wait_tray
 tray=$(lane tray | head -n 1)
 
+step "What's on the bar"
+move 300 600
+sleep 0.2
+shot bar-all
+all=$(lane bar-all | wc -l)
+settings '{ "bar": { "right": ["control"] } }'
+shot bar-one
+same "what's on the right with one part" "$(lane bar-one | wc -l)" 1
+one=$(lane bar-one)
+settings '{ "bar": { "right": ["control", "battery"] } }'
+shot bar-swapped
+[ "$(lane bar-swapped | head -n 1)" -lt "$one" ] || fail "the battery didn't go after the control center"
+settings '{ "bar": { "center": [], "right": ["nothing", "clock"] } }'
+wait_log 'okaeri: no "nothing" for the bar'
+shot bar-clock
+[ "$(lane bar-clock | wc -l)" -ge 1 ] || fail "no clock on the right"
+settings '{}'
+shot bar-back
+same "what's on the bar afterwards" "$(lane bar-back | wc -l)" "$all"
+wait_tray
+
+step "The keyboard layout"
+# On the bar if it's asked for. With one layout it takes no room, with two it
+# shows the one that's on.
+settings '{ "bar": { "right": ["tray", "keyboard", "notifications", "clipboard", "battery", "control"] } }'
+move 300 600
+sleep 0.2
+shot layouts-one
+one=$(lane layouts-one | wc -l)
+cp "$work/niri.kdl" "$work/niri.kdl.one"
+printf 'input {\n\tkeyboard {\n\t\txkb {\n\t\t\tlayout "us,ru"\n\t\t}\n\t}\n}\n' >>"$work/niri.kdl"
+for _ in $(seq 30); do
+	shot layouts-two
+	[ "$(lane layouts-two | wc -l)" -gt "$one" ] && break
+	sleep 0.1
+done
+[ "$(lane layouts-two | wc -l)" -gt "$one" ] || fail "no keyboard layout on the bar"
+keyboard=$(lane layouts-two | sed -n 2p)
+move "$keyboard" 16
+click
+wait_log "okaeri: dry: layout next"
+move 300 600
+niri msg action switch-layout next
+sleep 0.4
+shot layouts-ru
+[ "$(magick "$out/layouts-two.png" "$out/layouts-ru.png" -compose difference -composite \
+	-crop "40x20+$((keyboard - 20))+11" +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "the layout on the bar didn't change"
+cat "$work/niri.kdl.one" >"$work/niri.kdl"
+sleep 0.5
+settings '{}'
+
+step "The wheel on the bar"
+levels() {
+	log | grep -cE "okaeri: dry: (volume|brightness) " || true
+}
+# The wheel at $1 $2 makes a line with $3, the next one.
+turns() {
+	before_lines=$(log | grep -c "okaeri: dry: $3 " || true)
+	move "$1" 16
+	wheel 1
+	sleep 0.2
+	[ "$(log | grep -c "okaeri: dry: $3 " || true)" -gt "$before_lines" ] || fail "no $3 from the wheel at $1"
+}
+turns 300 16 brightness
+turns 1000 16 volume
+# On a button with no use for it, it goes through.
+move 300 600
+sleep 0.2
+shot wheel-bar
+turns "$(lane wheel-bar | tail -n 1)" 16 volume
+# The app in the tray has one.
+at_levels=$(levels)
+tray=$(lane wheel-bar | head -n 1)
+move "$tray" 16
+wheel 1
+did "scroll 1"
+same "levels from the wheel on the tray" "$(levels)" "$at_levels"
+
 step "The app goes away"
 menu
 ipc probe leave
@@ -483,6 +561,46 @@ niri msg action move-workspace-up
 sleep 0.5
 same "the pills with the second moved up" "$(shot pills-moved; pills pills-moved)" "28 12 12 12"
 same "the moved workspace" "$(niri msg --json workspaces | jq -r '.[] | select(.is_focused) | .name')" two
+# The wheel goes from one to the next, and stops at the ends.
+niri msg action focus-workspace 1
+sleep 0.4
+move 25 16
+wheel 1
+sleep 0.4
+same "the wheel up on the first" "$(focused)" 1
+wheel -1
+sleep 0.4
+same "the wheel down" "$(focused)" 2
+wheel 1
+sleep 0.4
+same "the wheel back up" "$(focused)" 1
+
+# A window wanting attention marks its workspace, until it doesn't.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sleep 20 &
+wanting=$!
+sleep 1.5
+window=$(niri msg --json focused-window | jq .id)
+niri msg action focus-workspace 2
+move 300 600
+sleep 0.5
+shot pills-calm
+niri msg action set-window-urgent --id "$window"
+sleep 0.4
+shot pills-urgent
+color() {
+	magick "$out/$1.png" -format '%[hex:u.p{24,21}]' info: | cut -c1-6 | tr 'A-F' 'a-f'
+}
+same "an urgent workspace" "$(color pills-urgent)" ee6666
+[ "$(color pills-calm)" != ee6666 ] || fail "a calm workspace looks urgent"
+niri msg action unset-window-urgent --id "$window"
+sleep 0.4
+shot pills-over
+same "after the attention" "$(color pills-over)" "$(color pills-calm)"
+kill "$wanting"
+wait "$wanting" 2>/dev/null || true
+niri msg action focus-workspace 1
+sleep 0.4
+
 theme '{"animations":false}'
 focus 3
 same "the pills at once" "$(said "$from" | sort -n | tr '\n' ' ')" "12 28 "

@@ -4,12 +4,18 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// niri's workspaces and windows, kept up to date from its event stream.
+// niri's workspaces, windows and keyboard layouts, kept up to date from its event
+// stream.
 Singleton {
 	id: niri
 
 	property var workspaces: []
 	property var windows: []
+	// The keyboard layouts by name, and which is on.
+	property var layouts: []
+	property int layout: 0
+	// The one that's on, for short: its name's first letters.
+	readonly property string layoutLabel: (layouts[layout] ?? "").slice(0, 2).toUpperCase()
 
 	// Those on the output, in order. A screen niri doesn't know (a test's
 	// headless one) gets them all.
@@ -48,11 +54,21 @@ Singleton {
 			act({ FocusWindow: { id: window.id } });
 	}
 
+	function nextLayout() {
+		act({ SwitchLayout: { layout: "Next" } });
+	}
+
 	function quit() {
 		act({ Quit: { skip_confirmation: true } });
 	}
 
 	function handle(event) {
+		if (event.KeyboardLayoutsChanged) {
+			layouts = event.KeyboardLayoutsChanged.keyboard_layouts.names;
+			layout = event.KeyboardLayoutsChanged.keyboard_layouts.current_idx;
+		} else if (event.KeyboardLayoutSwitched) {
+			layout = event.KeyboardLayoutSwitched.idx;
+		}
 		if (event.WindowsChanged) {
 			windows = event.WindowsChanged.windows;
 		} else if (event.WindowOpenedOrChanged) {
@@ -60,6 +76,10 @@ Singleton {
 			windows = windows.filter(w => w.id !== window.id).concat([window]);
 		} else if (event.WindowClosed) {
 			windows = windows.filter(w => w.id !== event.WindowClosed.id);
+		}
+		if (event.WorkspaceUrgencyChanged) {
+			const change = event.WorkspaceUrgencyChanged;
+			workspaces = workspaces.map(w => w.id === change.id ? Object.assign({}, w, { is_urgent: change.urgent }) : w);
 		}
 		if (event.WorkspacesChanged) {
 			workspaces = event.WorkspacesChanged.workspaces;

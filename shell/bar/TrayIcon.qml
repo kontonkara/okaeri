@@ -18,6 +18,7 @@ Button {
 	height: Theme.u(28)
 	flat: true
 	activeFocusOnTab: false
+	takesWheel: true
 	onClicked: {
 		if (modelData.onlyMenu) {
 			trayMenu.showFor(modelData, entry);

@@ -12,7 +12,9 @@ Row {
 	readonly property bool charging: device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged || !UPower.onBattery
 	readonly property color tint: level <= 15 && !charging ? Theme.colors.error : Theme.colors.text
 
-	visible: device.isLaptopBattery && device.isPresent
+	readonly property bool wanted: device.isLaptopBattery && device.isPresent
+
+	visible: wanted
 	spacing: Theme.u(6)
 
 	Icon {
