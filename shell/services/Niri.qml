@@ -24,9 +24,17 @@ Singleton {
 		return Quickshell.screens.find(s => s.name === output) || Quickshell.screens[0];
 	}
 
-	function focus(id) {
-		request = JSON.stringify({ Action: { FocusWorkspace: { reference: { Id: id } } } });
+	function act(action) {
+		request = JSON.stringify({ Action: action });
 		requests.connected = true;
+	}
+
+	function focus(id) {
+		act({ FocusWorkspace: { reference: { Id: id } } });
+	}
+
+	function quit() {
+		act({ Quit: { skip_confirmation: true } });
 	}
 
 	function handle(event) {

@@ -25,6 +25,7 @@ spawn-at-startup "quickshell" "-p" "$repo/shell"
 binds {
 	Mod+T { spawn "kitty"; }
 	Mod+R { spawn "quickshell" "ipc" "-p" "$repo/shell" "call" "launcher" "toggle"; }
+	Mod+P { spawn "quickshell" "ipc" "-p" "$repo/shell" "call" "session" "toggle"; }
 	Mod+Q { close-window; }
 	Mod+1 { focus-workspace 1; }
 	Mod+2 { focus-workspace 2; }
