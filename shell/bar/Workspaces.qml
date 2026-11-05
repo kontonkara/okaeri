@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs
 import qs.services
 
@@ -11,7 +12,12 @@ Row {
 	spacing: Theme.u(6)
 
 	Repeater {
-		model: Niri.on(workspaces.output)
+		// By id, as each change makes them all anew: a pill that's made anew has
+		// nothing to animate from.
+		model: ScriptModel {
+			values: Niri.on(workspaces.output)
+			objectProp: "id"
+		}
 
 		Rectangle {
 			required property var modelData
