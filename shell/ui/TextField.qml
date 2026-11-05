@@ -69,6 +69,7 @@ Rectangle {
 			anchors.fill: parent
 			visible: input.text === ""
 			text: field.placeholder
+			textFormat: Text.PlainText
 			color: Theme.colors.dim
 			elide: Text.ElideRight
 			font: input.font
@@ -81,7 +82,6 @@ Rectangle {
 		anchors.right: parent.right
 		anchors.rightMargin: Theme.u(4)
 		anchors.verticalCenter: parent.verticalCenter
-		implicitWidth: height
 		height: parent.height - Theme.u(8)
 		visible: field.secret
 		flat: true

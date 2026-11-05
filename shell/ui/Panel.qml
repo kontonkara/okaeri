@@ -7,30 +7,42 @@ import qs.services
 // A panel over everything, on the screen in focus, at `align`: "top-right",
 // "top-left", "top" (under the bar) or "center". What's put in it goes on a
 // card `panelWidth` wide, as tall as it needs. show(), hide() and toggle();
-// Escape and a click elsewhere close it. It takes the keyboard while open:
-// give what should have the keys `focus: true`.
+// Escape, a click elsewhere and another panel opening in the same place close
+// it, unless it's `modal`, which is for whoever owns it to close. It takes the
+// keyboard while open: give what should have the keys `focus: true`.
 PanelWindow {
 	id: panel
 
 	property string align: "top-right"
+	// For "top" and "center": where across the screen the card has its middle.
+	property real middle: width / 2
 	property real panelWidth: Theme.u(380)
 	property real padding: Theme.u(12)
+	property bool modal: false
 	property bool shown: false
+	// How tall what's put in it can get: the screen, without the bar and the
+	// card's own edges.
+	readonly property real room: height - Theme.below - Theme.edge - padding * 2
 	default property alias content: body.data
 
 	signal panelOpened
 	signal panelClosed
 
-	function show() {
-		screen = Niri.focusedScreen;
+	// On screen `on`, if not the one in focus.
+	function show(on) {
+		screen = on ?? Niri.focusedScreen;
 		shown = true;
 		visible = true;
+		Panels.opened(panel);
 		panelOpened();
 	}
 
 	function hide() {
 		if (shown) {
 			shown = false;
+			// A fade that never got to start won't say it ended.
+			if (scope.opacity === 0)
+				visible = false;
 			panelClosed();
 		}
 	}
@@ -40,6 +52,11 @@ PanelWindow {
 			hide();
 		else
 			show();
+	}
+
+	function dismiss() {
+		if (!modal)
+			hide();
 	}
 
 	anchors {
@@ -55,22 +72,30 @@ PanelWindow {
 	WlrLayershell.namespace: "okaeri-panel"
 	WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
+	Connections {
+		target: Panels
+
+		function onOpened(other) {
+			if (other !== panel && other.align === panel.align)
+				panel.dismiss();
+		}
+	}
+
 	MouseArea {
 		anchors.fill: parent
 		acceptedButtons: Qt.AllButtons
-		onClicked: panel.hide()
+		onClicked: panel.dismiss()
 	}
 
 	FocusScope {
 		id: scope
 
-		readonly property real edge: Theme.u(10)
-		readonly property real below: Theme.barHeight + Theme.u(8)
-
-		x: panel.align === "top-right" ? parent.width - width - edge
-			: panel.align === "top-left" ? edge : (parent.width - width) / 2
-		y: panel.align === "center" ? (parent.height - height) / 2 : below
-		width: panel.panelWidth
+		// In whole pixels, or its edges would smear.
+		x: panel.align === "top-right" ? parent.width - width - Theme.edge
+			: panel.align === "top-left" ? Theme.edge
+			: Math.round(Math.max(Theme.edge, Math.min(panel.middle - width / 2, parent.width - width - Theme.edge)))
+		y: panel.align === "center" ? Math.round((parent.height - height) / 2) : Theme.below
+		width: Math.round(panel.panelWidth)
 		height: card.height
 		focus: true
 		opacity: panel.shown ? 1 : 0
@@ -87,7 +112,7 @@ PanelWindow {
 			}
 		}
 
-		Keys.onEscapePressed: panel.hide()
+		Keys.onEscapePressed: panel.dismiss()
 
 		Behavior on opacity {
 			enabled: Theme.animate
@@ -106,8 +131,11 @@ PanelWindow {
 		Rectangle {
 			id: card
 
+			// What's on it starts on a whole pixel too.
+			readonly property int inset: Math.round(panel.padding)
+
 			width: parent.width
-			height: body.implicitHeight + panel.padding * 2
+			height: Math.ceil(body.implicitHeight) + inset * 2
 			radius: Theme.cardRadius
 			color: Theme.colors.background
 			border.width: 1
@@ -122,10 +150,10 @@ PanelWindow {
 			Column {
 				id: body
 
-				x: panel.padding
-				y: panel.padding
-				width: parent.width - panel.padding * 2
-				spacing: Theme.u(10)
+				x: card.inset
+				y: card.inset
+				width: parent.width - card.inset * 2
+				spacing: Math.round(Theme.u(10))
 			}
 		}
 	}

@@ -10,8 +10,9 @@ Rectangle {
 	property real padding: Theme.u(14)
 	default property alias content: body.data
 
-	implicitWidth: body.implicitWidth + padding * 2
-	implicitHeight: body.implicitHeight + padding * 2
+	// Whole pixels: a window would cut a fraction off, and an edge would smear.
+	implicitWidth: Math.ceil(body.implicitWidth + padding * 2)
+	implicitHeight: Math.ceil(body.implicitHeight + padding * 2)
 	radius: Theme.cardRadius
 	color: Theme.colors.surface
 	border.width: 1
