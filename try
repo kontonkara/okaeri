@@ -40,7 +40,7 @@ export __EGL_VENDOR_LIBRARY_FILENAMES=/run/opengl-driver/share/glvnd/egl_vendor.
 export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl OKAERI_GALLERY=1 OKAERI_GUEST=1
 
 # In the background, so that a stop reaches niri instead of leaving it behind.
-nix shell --inputs-from "$HOME/nixos" nixpkgs#quickshell nixpkgs#wl-clipboard nixpkgs#cliphist -c niri -c "$config" &
+nix shell --inputs-from "$HOME/nixos" nixpkgs#quickshell nixpkgs#wl-clipboard nixpkgs#cliphist nixpkgs#libqalculate -c niri -c "$config" &
 niri=$!
 trap 'kill "$niri" 2>/dev/null || true' INT TERM
 wait "$niri" || true

@@ -202,7 +202,7 @@ wheel() {
 	sleep 0.2
 }
 type() {
-	wtype "$1"
+	wtype -- "$1"
 	sleep 0.2
 }
 key() {

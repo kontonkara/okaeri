@@ -110,6 +110,63 @@ pick password org.keepassxc.KeePassXC
 pick tg org.telegram.desktop
 pick lizard dev.lizardbyte.app.Sunshine
 pick ktty kitty
+
+# The exchange rates are fetched from the start.
+wait_log "okaeri: dry: exchange rates"
+
+# A sum comes first, and Enter copies the answer.
+copies() {
+	log | sed -n "s/.*okaeri: dry: copy //p"
+}
+copied=0
+copied() {
+	copied=$((copied + 1))
+	for _ in $(seq 20); do
+		[ "$(copies | wc -l)" -ge "$copied" ] && break
+		sleep 0.1
+	done
+	got=$(copies | sed -n "${copied}p")
+	[ "$got" = "$1" ] || fail "wanted a copy of \"$1\", got \"$got\""
+	nothing_launched
+}
+sum() {
+	open
+	type "$1"
+	sleep 0.2
+	key Return
+	copied "$2"
+	is_closed "a sum"
+}
+no_sum() {
+	open
+	type "$1"
+	sleep "${2:-0.2}"
+	key Return
+	sleep 0.2
+	[ "$(copies | wc -l)" -eq "$copied" ] || fail "$1 is a sum: $(copies | tail -n 1)"
+	nothing_launched
+	key Escape
+	is_closed "not a sum"
+}
+open
+type "2+2"
+sleep 0.2
+shot sum
+key Return
+copied 4
+is_closed "a sum"
+sum "(1+2)*3" 9
+sum "-5+3" -2
+sum "150*20%" 30
+sum "5 km to m" "5000 m"
+sum "sqrt(16)" 4
+sum "/calc 6*7" 42
+
+# Apps stay apps, and a sum that won't end doesn't hold up the next.
+no_sum 2048
+no_sum "99999999!" 1.4
+sum "1+1" 2
+pick fire firefox
 pick kpxc org.keepassxc.KeePassXC
 # Telegram, launched by now, only has "ra" inside a word.
 pick ra blackmagicraw-player
