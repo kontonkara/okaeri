@@ -3,7 +3,8 @@ import qs
 import qs.services
 import qs.ui
 
-// The volume, with a way to mute it, and the brightness when there's one.
+// The volume and the microphone, with a way to mute them, the brightness when
+// there's one, and the volume of each app playing.
 Card {
 	width: parent.width
 	padding: Theme.u(6)
@@ -34,6 +35,40 @@ Card {
 			Icon {
 				anchors.centerIn: parent
 				name: "sun"
+			}
+		}
+
+		Level {
+			visible: Audio.micReady
+			value: Audio.micVolume
+			onMoved: wanted => Audio.changeMic(wanted - Audio.micVolume)
+
+			Button {
+				anchors.centerIn: parent
+				height: Theme.u(28)
+				flat: true
+				icon: Audio.micMuted ? "micOff" : "mic"
+				ink: Audio.micMuted ? Theme.colors.subtext : Theme.colors.text
+				onClicked: Audio.toggleMicMute()
+			}
+		}
+
+		Repeater {
+			model: Audio.nodes
+
+			Level {
+				required property var modelData
+
+				label: Audio.streamName(modelData)
+				value: modelData.audio.volume
+				onMoved: wanted => Audio.changeStream(modelData, wanted)
+
+				Icon {
+					anchors.centerIn: parent
+					name: "volume"
+					size: Theme.u(16)
+					color: Theme.colors.subtext
+				}
 			}
 		}
 	}

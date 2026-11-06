@@ -96,6 +96,14 @@ color_in_wifi() {
 		awk '{ print ($1 > 0.4 ? "yes" : "no") }'
 }
 
+# The machine's microphone and what its apps play would move all of this: none
+# of it, up to the end. The reload is the only one so far.
+sed -e 's/^\treadonly property var nodes: .*/\tproperty var nodes: []/' -e 's/^\treadonly property bool micReady: .*/\tproperty bool micReady: false/' \
+	"$work/shell/services/Audio.qml" >"$work/Audio.qml"
+cat "$work/Audio.qml" >"$work/shell/services/Audio.qml"
+wait_log 'Reloading configuration'
+sleep 1
+
 # On what's here ---------------------------------------------------------
 
 when 'dry: wifi scan true' toggle
@@ -598,11 +606,12 @@ top=$(magick "$out/dark-crowd.png" -crop 300x100+1066+195 +repage -format '%#' i
 kept=$(magick "$out/dark-scrolled-after.png" -crop 300x100+1066+195 +repage -format '%#' info:)
 [ "$top" != "$kept" ]
 
-# The same at twice the size.
-printf '{"scale":2}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+# The same at a big size: twice would ask more of this 900 px screen than the
+# panel has to give, with all that's on it now.
+printf '{"scale":1.75}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.6
 shot dark-scale
-[ "$(magick "$out/dark-scale.png" -crop 760x8+620+892 +repage -format '%k' info:)" = 1 ]
+[ "$(magick "$out/dark-scale.png" -crop 760x4+620+896 +repage -format '%k' info:)" = 1 ]
 
 # In the light theme.
 printf '{"extends":"light"}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
@@ -670,8 +679,31 @@ shot light-bare
 key Escape
 sleep 0.4
 
+# What apps play, on a stand-in: the machine's own come and go.
+sed -e 's/^\tproperty var nodes: .*/\tproperty var nodes: [{ audio: { volume: 0.5 }, name: "x", properties: { "application.name": ".Player-wrapped" } }]/' \
+	-e 's/^\tproperty bool micReady: false$/\tproperty bool micReady: true/' \
+	-e 's/^\treadonly property real micVolume: .*/\tproperty real micVolume: 0.7/' \
+	-e 's/^\treadonly property bool micMuted: .*/\tproperty bool micMuted: false/' \
+	"$work/shell/services/Audio.qml" >"$work/Audio.qml"
+grep -q 'Player-wrapped' "$work/Audio.qml"
+reloads=$(seen "Reloading configuration")
+cat "$work/Audio.qml" >"$work/shell/services/Audio.qml"
+for _ in $(seq 50); do
+	[ "$(seen "Reloading configuration")" -gt "$reloads" ] && break
+	sleep 0.1
+done
+sleep 1
+toggle
+sleep 0.4
+shot app-volume
+when 'dry: app volume' at $((slider_left + slider_width / 2)) 192
+when 'dry: mic volume' at $((slider_left + slider_width / 2)) 144
+when 'dry: mic mute' at $mute_x 144
+key Escape
+sleep 0.4
+
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'app volume [0-9.]+|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
