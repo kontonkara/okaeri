@@ -22,7 +22,7 @@ Panel {
 	// and the gaps between them.
 	readonly property real listRoom: room - filter.height - clear.height - Theme.u(20)
 
-	align: "top-right"
+	align: Settings.corner("clipboard")
 
 	// For tests: how many, and never what.
 	onSummaryChanged: console.info("okaeri: clipboard:", summary)

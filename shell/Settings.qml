@@ -59,6 +59,12 @@ Singleton {
 		save();
 	}
 
+	// Where the panel of a part of the bar opens: the side the part is on, or the
+	// right if it's not on the bar.
+	function corner(part) {
+		return bar.left.includes(part) ? "top-left" : bar.center.includes(part) ? "top" : "top-right";
+	}
+
 	// `path` as a URL, with what would mean something else in one kept as a name.
 	function url(path) {
 		return path ? `file://${encodeURI(path).replace(/[?#]/g, encodeURIComponent)}` : "";
