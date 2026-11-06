@@ -72,6 +72,15 @@ mkdir -p "$XDG_CONFIG_HOME/okaeri" "$XDG_CACHE_HOME" "$XDG_STATE_HOME"
 
 # The shell as it is, with only this part in it, if it's a part.
 cp -r "$repo/shell" "$work/shell"
+# What failed here is what a test puts in $work/failed-system and failed-user,
+# not what failed on the machine.
+cat >"$work/systemctl" <<SH
+#!/bin/sh
+[ "\$1" = --user ] && scope=user || scope=system
+cat "$work/failed-\$scope" 2>/dev/null || echo '[]'
+SH
+chmod +x "$work/systemctl"
+sed -i "s|\"systemctl\"|\"$work/systemctl\"|" "$work/shell/services/Units.qml"
 [ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML
 import QtQuick
 import Quickshell

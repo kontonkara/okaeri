@@ -99,6 +99,7 @@ Singleton {
 
 	// Line icons on a 24x24 grid, as SVG paths, for Icon.
 	readonly property var icons: ({
+		alert: "M12 4l9.5 16.5h-19z M12 10v5 M12 18h.01",
 		apps: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z",
 		back: "M15 6l-6 6 6 6",
 		bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9z M10.3 21a2 2 0 0 0 3.4 0",

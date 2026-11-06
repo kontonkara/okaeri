@@ -549,6 +549,37 @@ done
 same "the workspace after two steps down" "$(focused)" 3
 niri msg action focus-workspace 1
 
+step "Failed units"
+move 300 600
+sleep 0.2
+shot units-none
+none=$(lane units-none | wc -l)
+printf '[{"unit":"broken.service","load":"loaded","active":"failed","sub":"failed","description":"Something of the system"}]\n' >"$work/failed-system"
+printf '[{"unit":"mine.service","load":"loaded","active":"failed","sub":"failed","description":"Something of the user"}]\n' >"$work/failed-user"
+ipc units check
+sleep 0.4
+shot units-two
+same "what's on the bar with failed units" "$(lane units-two | wc -l)" "$((none + 1))"
+failed=$(lane units-two | head -n 1)
+move "$failed" 16
+click
+wait_up 1
+sleep 0.3
+shot units-list
+key Escape
+wait_up 0
+# With the last of them gone it all goes, even with the list up.
+click
+wait_up 1
+printf '[]\n' >"$work/failed-system"
+printf '[]\n' >"$work/failed-user"
+ipc units check
+wait_up 0
+move 300 600
+sleep 0.3
+shot units-gone
+same "what's on the bar after the failed units" "$(lane units-gone | wc -l)" "$none"
+
 step "The wheel on the bar"
 levels() {
 	log | grep -cE "okaeri: dry: (volume|brightness) " || true

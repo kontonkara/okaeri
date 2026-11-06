@@ -22,6 +22,6 @@
 	"bar": {
 		"left": ["workspaces"],
 		"center": ["clock"],
-		"right": ["cast", "tray", "notifications", "clipboard", "battery", "control"]
+		"right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"]
 	}
 }
