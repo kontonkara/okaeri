@@ -64,6 +64,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Qt.labs.platform as Labs
+import qs.services
 
 Scope {
 	Labs.SystemTrayIcon {
@@ -130,6 +131,16 @@ Scope {
 
 		function come(): void {
 			app.visible = true;
+		}
+
+		// As if from niri: a nested one has no PipeWire casts.
+		function niri(event: string): void {
+			Niri.handle(JSON.parse(event));
+		}
+
+		function twice(): void {
+			Niri.act({ FocusWorkspaceDown: {} });
+			Niri.act({ FocusWorkspaceDown: {} });
 		}
 	}
 }
@@ -466,6 +477,77 @@ shot layouts-ru
 cat "$work/niri.kdl.one" >"$work/niri.kdl"
 sleep 0.5
 settings '{}'
+
+step "Showing the screen"
+# A PipeWire cast: stream $1, session $2, streaming or not ($3).
+pipewire() {
+	ipc probe niri "{\"CastStartedOrChanged\":{\"cast\":{\"stream_id\":$1,\"session_id\":$2,\"kind\":\"PipeWire\",\"target\":{\"Output\":{\"name\":\"HEADLESS-1\"}},\"is_dynamic_target\":false,\"is_active\":$3,\"pid\":null,\"pw_node_id\":7}}}"
+	sleep 0.3
+}
+move 300 600
+sleep 0.2
+shot casts-none
+none=$(lane casts-none | wc -l)
+pipewire 1 1 false
+shot casts-paused
+same "what's on the bar with a paused cast" "$(lane casts-paused | wc -l)" "$none"
+pipewire 1 1 true
+pipewire 2 2 true
+pipewire 3 2 true
+shot casts-two
+same "what's on the bar with casts" "$(lane casts-two | wc -l)" "$((none + 1))"
+# One click for all of them, once a session.
+cast=$(lane casts-two | head -n 1)
+move "$cast" 16
+click
+wait_log "okaeri: dry: cast stop 1"
+wait_log "okaeri: dry: cast stop 2"
+same "stops from a click" "$(log | grep -c "okaeri: dry: cast stop")" 2
+ipc probe niri '{"CastStopped":{"stream_id":1}}'
+ipc probe niri '{"CastStopped":{"stream_id":2}}'
+ipc probe niri '{"CastStopped":{"stream_id":3}}'
+move 300 600
+sleep 0.3
+shot casts-gone
+same "what's on the bar after the casts" "$(lane casts-gone | wc -l)" "$none"
+# A real one that niri can't stop: the icon alone, and a click does nothing.
+wf-recorder --no-dmabuf -f "$work/cast.mkv" >"$work/cast.log" 2>&1 &
+recorder=$!
+for _ in $(seq 50); do
+	[ "$(niri msg --json casts | jq length)" = 1 ] && break
+	sleep 0.1
+done
+[ "$(niri msg --json casts | jq length)" = 1 ] || {
+	cat "$work/cast.log" >&2
+	fail "niri sees no cast"
+}
+same "the cast's kind" "$(niri msg --json casts | jq -r '.[0].kind')" WlrScreencopy
+sleep 0.3
+shot cast-real
+same "what's on the bar with a real cast" "$(lane cast-real | wc -l)" "$((none + 1))"
+stops=$(log | grep -c "okaeri: dry: cast stop" || true)
+move "$(lane cast-real | head -n 1)" 16
+click
+same "stops from a cast that can't be" "$(log | grep -c "okaeri: dry: cast stop" || true)" "$stops"
+move 300 600
+kill "$recorder"
+wait "$recorder" || true
+sleep 0.5
+shot cast-real-gone
+same "what's on the bar after the real cast" "$(lane cast-real-gone | wc -l)" "$none"
+
+step "Two requests at once"
+focused() {
+	niri msg --json workspaces | jq '.[] | select(.is_focused) | .idx'
+}
+niri msg action focus-workspace 1
+ipc probe twice
+for _ in $(seq 20); do
+	[ "$(focused)" = 3 ] && break
+	sleep 0.1
+done
+same "the workspace after two steps down" "$(focused)" 3
+niri msg action focus-workspace 1
 
 step "The wheel on the bar"
 levels() {

@@ -107,6 +107,7 @@ Singleton {
 		bluetoothOff: "M7 7l10 10-5 5V2l5 5L7 17 M3 3l18 18",
 		bolt: "M13 3L5 13h6l-1 8 8-10h-6l1-8z",
 		calculator: "M6 3h12v18H6z M9 7h6 M9 12h.01 M12 12h.01 M15 12h.01 M9 16h.01 M12 16h.01 M15 16h.01",
+		cast: "M3 9V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6 M3 13a7 7 0 0 1 7 7 M3 17a3 3 0 0 1 3 3",
 		check: "M5 12.5l4.5 4.5L19 7.5",
 		chevron: "M9 6l6 6-6 6",
 		chip: "M8 8h8v8H8z M10 4v4 M14 4v4 M10 16v4 M14 16v4 M4 10h4 M4 14h4 M16 10h4 M16 14h4",

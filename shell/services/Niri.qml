@@ -11,6 +11,8 @@ Singleton {
 
 	property var workspaces: []
 	property var windows: []
+	// What's showing the screen or a window, as niri has it.
+	property var casts: []
 	// The keyboard layouts by name, and which is on.
 	property var layouts: []
 	property int layout: 0
@@ -32,7 +34,7 @@ Singleton {
 	}
 
 	function act(action) {
-		request = JSON.stringify({ Action: action });
+		waiting.push(JSON.stringify({ Action: action }));
 		requests.connected = true;
 	}
 
@@ -62,6 +64,10 @@ Singleton {
 		act({ SwitchLayout: { layout: "Next" } });
 	}
 
+	function stopCast(session) {
+		act({ StopCast: { session_id: session } });
+	}
+
 	function quit() {
 		act({ Quit: { skip_confirmation: true } });
 	}
@@ -80,6 +86,14 @@ Singleton {
 			windows = windows.filter(w => w.id !== window.id).concat([window]);
 		} else if (event.WindowClosed) {
 			windows = windows.filter(w => w.id !== event.WindowClosed.id);
+		}
+		if (event.CastsChanged) {
+			casts = event.CastsChanged.casts;
+		} else if (event.CastStartedOrChanged) {
+			const cast = event.CastStartedOrChanged.cast;
+			casts = casts.filter(c => c.stream_id !== cast.stream_id).concat([cast]);
+		} else if (event.CastStopped) {
+			casts = casts.filter(c => c.stream_id !== event.CastStopped.stream_id);
 		}
 		if (event.WorkspaceUrgencyChanged) {
 			const change = event.WorkspaceUrgencyChanged;
@@ -114,9 +128,9 @@ Singleton {
 		}
 	}
 
-	property string request: ""
+	property var waiting: []
 
-	// One request a connection, closed at the reply.
+	// One request a connection, closed at the reply, and the next on a new one.
 	Socket {
 		id: requests
 
@@ -124,8 +138,10 @@ Singleton {
 
 		onConnectedChanged: {
 			if (connected) {
-				write(niri.request + "\n");
+				write(niri.waiting.shift() + "\n");
 				flush();
+			} else if (niri.waiting.length) {
+				connected = true;
 			}
 		}
 

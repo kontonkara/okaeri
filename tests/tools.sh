@@ -6,4 +6,4 @@ export OKAERI_MPV_MPRIS
 exec nix shell --inputs-from "$HOME/nixos" \
 	nixpkgs#quickshell nixpkgs#sway nixpkgs#grim nixpkgs#wlrctl nixpkgs#wtype \
 	nixpkgs#libnotify nixpkgs#wl-clipboard nixpkgs#cliphist nixpkgs#dbus \
-	nixpkgs#jq nixpkgs#imagemagick nixpkgs#kitty nixpkgs#util-linux nixpkgs#mpv nixpkgs#libqalculate -c "$@"
+	nixpkgs#jq nixpkgs#imagemagick nixpkgs#kitty nixpkgs#util-linux nixpkgs#mpv nixpkgs#libqalculate nixpkgs#wf-recorder -c "$@"
