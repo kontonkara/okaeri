@@ -16,7 +16,8 @@ FloatingWindow {
 	readonly property var pages: [
 		{ text: "Bar", icon: "bar", page: barPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
-		{ text: "Wallpaper", icon: "image", page: wallpaperPage }
+		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
+		{ text: "Session", icon: "lock", page: sessionPage }
 	]
 	property int page: 0
 	// One size: that's also what makes niri open it floating, with no rule for it.
@@ -83,6 +84,12 @@ FloatingWindow {
 		id: wallpaperPage
 
 		WallpaperPage {}
+	}
+
+	Component {
+		id: sessionPage
+
+		SessionPage {}
 	}
 
 	Loader {
