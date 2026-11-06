@@ -9,7 +9,7 @@ Singleton {
 	// The panel sets this.
 	property bool open: false
 	// The section that's unfolded, by its name.
-	property string unfolded: "wifi"
+	property string unfolded: ""
 
 	signal toggled
 

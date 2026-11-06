@@ -100,6 +100,9 @@ color_in_wifi() {
 # of it, up to the end. The reload is the only one so far.
 sed -e 's/^\treadonly property var nodes: .*/\tproperty var nodes: []/' -e 's/^\treadonly property bool micReady: .*/\tproperty bool micReady: false/' \
 	"$work/shell/services/Audio.qml" >"$work/Audio.qml"
+# And Wi-Fi unfolded, as what's here goes by its rows.
+sed 's/^\tproperty string unfolded: ""$/\tproperty string unfolded: "wifi"/' "$work/shell/control/Control.qml" >"$work/Control.qml"
+mv "$work/Control.qml" "$work/shell/control/Control.qml"
 cat "$work/Audio.qml" >"$work/shell/services/Audio.qml"
 wait_log 'Reloading configuration'
 sleep 1
