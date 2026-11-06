@@ -8,6 +8,7 @@ import qs.ui
 // One notification: its picture, where it's from, what it says, its actions
 // and a way to close it. A click on it goes to where it came from, and a right
 // click closes it; with the keys on it Enter or Space is its default action.
+// niri's word of a screenshot shows the picture whole, and a click opens it.
 Card {
 	id: card
 
@@ -39,6 +40,7 @@ Card {
 	readonly property string file: icons.find(icon => icon.startsWith("/")) || ""
 	property string fileRead
 	readonly property string picture: icons.map(source).find(url => url !== "") || ""
+	readonly property bool shot: notification.appName === "niri" && file !== ""
 
 	function plain(icon) {
 		const name = (icon || "").replace("image://icon/", "");
@@ -140,12 +142,15 @@ Card {
 			onClicked: event => {
 				if (event.button === Qt.RightButton)
 					card.notification.dismiss();
+				else if (card.shot)
+					NotificationStore.open(card.notification, card.file);
 				else
 					NotificationStore.activate(card.notification);
 			}
 		}
 
 		ClippingRectangle {
+			visible: !card.shot
 			width: card.side
 			height: card.side
 			radius: Math.max(0, Theme.cardRadius - Theme.u(4))
@@ -172,7 +177,7 @@ Card {
 		Column {
 			id: words
 
-			x: card.side + Theme.u(12)
+			x: card.shot ? 0 : card.side + Theme.u(12)
 			width: parent.width - x
 			spacing: Theme.u(3)
 
@@ -238,6 +243,31 @@ Card {
 							color: action.ink
 							font.weight: Theme.fontWeight
 						}
+					}
+				}
+			}
+
+			// A frame of a set shape: the toast doesn't jump as the file loads.
+			Item {
+				width: parent.width
+				height: frame.y + frame.height
+				visible: card.shot
+
+				ClippingRectangle {
+					id: frame
+
+					y: Theme.u(6)
+					width: parent.width
+					height: Math.round(width * 9 / 16)
+					radius: Math.max(0, Theme.cardRadius - Theme.u(4))
+					color: Theme.hover
+
+					Image {
+						anchors.fill: parent
+						source: card.shot ? card.picture : ""
+						sourceSize.width: width
+						fillMode: Image.PreserveAspectFit
+						asynchronous: true
 					}
 				}
 			}

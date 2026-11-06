@@ -124,6 +124,7 @@ gestures {
 }
 prefer-no-csd
 KDL
+printf 'screenshot-path "%s/shots/%%s.png"\n' "$work" >>"$work/niri.kdl"
 WAYLAND_DISPLAY=$outer niri -c "$work/niri.kdl" >"$work/niri.log" 2>&1 &
 niri_pid=$!
 for _ in $(seq 100); do

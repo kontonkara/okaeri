@@ -753,6 +753,29 @@ wait_state toasts 0
 stop_sender
 reset
 
+step "A screenshot"
+# niri's own word of it: the picture whole, and the left click opens the file.
+niri msg action screenshot-screen
+wait_state toasts 1
+settle
+shot screenshot
+[ "$(magick "$out/screenshot.png" -crop 340x180+1030+125 +repage -format '%k' info:)" -gt 10 ] || fail "no picture on the toast"
+saved=$(ls "$work"/shots/*.png)
+move "$toast_x" 200
+click
+wait_log "okaeri: dry: notification open $saved"
+wait_state toasts 0
+sleep 1.1
+niri msg action screenshot-screen
+wait_state toasts 1
+settle
+move "$toast_x" 200
+click right
+wait_state toasts 0
+[ "$(log | grep -c "okaeri: dry: notification open")" = 1 ] || fail "a right click opened the screenshot"
+is history 0
+reset
+
 step "Do Not Disturb for a while"
 ipc notifications toggle
 wait_state panel true
