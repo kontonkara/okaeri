@@ -87,6 +87,8 @@ mkdir -p "$work/leds/input9::capslock" "$work/leds/input9::numlock"
 echo 0 >"$work/leds/input9::capslock/brightness"
 echo 0 >"$work/leds/input9::numlock/brightness"
 sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml"
+# So do the machine's outputs: a test that wants some puts its own.
+sed -i 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' "$work/shell/services/Audio.qml"
 # What the machine plays comes and goes, and would move the whole shell's shots.
 [ -n "$part" ] || sed -i 's/^\treadonly property var nodes: .*/\treadonly property var nodes: []/' "$work/shell/services/Audio.qml"
 [ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML

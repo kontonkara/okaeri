@@ -703,6 +703,7 @@ sleep 0.4
 
 # What apps play, on a stand-in: the machine's own come and go.
 sed -e 's/^\tproperty var nodes: .*/\tproperty var nodes: [{ audio: { volume: 0.5 }, name: "x", properties: { "application.name": ".Player-wrapped" } }]/' \
+	-e 's/^\tproperty var outputs: \[\]$/\tproperty var outputs: [{ description: "Speakers", nickname: "Built in", name: "alsa_output.one" }, { description: "Headphones", nickname: "Jack", name: "alsa_output.two" }]/' \
 	-e 's/^\tproperty bool micReady: false$/\tproperty bool micReady: true/' \
 	-e 's/^\treadonly property real micVolume: .*/\tproperty real micVolume: 0.7/' \
 	-e 's/^\treadonly property bool micMuted: .*/\tproperty bool micMuted: false/' \
@@ -718,14 +719,27 @@ sleep 1
 toggle
 sleep 0.4
 shot app-volume
-when 'dry: app volume' at $((slider_left + slider_width / 2)) 192
 when 'dry: mic volume' at $((slider_left + slider_width / 2)) 144
 when 'dry: mic mute' at $mute_x 144
+# Two outputs: a section for them, and a click on one moves the sound there.
+at 1200 206
+sleep 0.4
+shot outputs
+when 'dry: output' at 1200 285
+at 1200 206
+sleep 0.3
+# What plays, folded under a section of its own.
+at 1200 272
+sleep 0.4
+shot playback
+when 'dry: app volume' at $((slider_left + slider_width / 2)) 324
+at 1200 272
+sleep 0.3
 key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'app volume [0-9.]+|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'output|app volume [0-9.]+|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
