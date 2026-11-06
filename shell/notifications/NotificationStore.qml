@@ -157,6 +157,14 @@ Singleton {
 			panel.hide();
 	}
 
+	// The file it came with, in what opens such files, and it's done with then.
+	function open(notification, file) {
+		Env.act(`notification open ${file}`, () => Niri.spawn(["xdg-open", file]));
+		notification.dismiss();
+		if (panel)
+			panel.hide();
+	}
+
 	function clear() {
 		const gone = all;
 		clearing = true;
