@@ -3,11 +3,14 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
+import qs
 import qs.services
 
 // What the server holds and what's shown of it: the history, the toasts, how
 // many are unread and Do Not Disturb. NotificationCenter gives it `server` and
 // `panel`; next to another shell there's no server and it all stays empty.
+// Settings.notifications.rules hold back an app's: { app, toast, history }, app
+// being its name or desktop entry, in any case, and the others false to not show.
 Singleton {
 	id: store
 
@@ -27,8 +30,8 @@ Singleton {
 
 	// Newest first.
 	readonly property var all: server && !clearing ? server.trackedNotifications.values.slice().reverse() : []
-	// A transient one is for the moment, not for later.
-	readonly property var history: all.filter(n => !n.transient)
+	// What's for the moment isn't for later.
+	readonly property var history: all.filter(n => !fleeting(n))
 
 	property var toastIds: []
 	readonly property var up: all.filter(n => toastIds.includes(n.id))
@@ -54,6 +57,17 @@ Singleton {
 			takeDown(n => !critical(n));
 	}
 
+	// The rule for this one's app, or none.
+	function rule(notification) {
+		const names = [notification.appName, notification.desktopEntry].map(name => (name || "").toLowerCase());
+		return Settings.notifications.rules.find(rule => names.includes(rule.app.toLowerCase())) ?? {};
+	}
+
+	// For the moment, not for later.
+	function fleeting(notification) {
+		return notification.transient || rule(notification).history === false;
+	}
+
 	function critical(notification) {
 		return notification.urgency === NotificationUrgency.Critical;
 	}
@@ -70,7 +84,7 @@ Singleton {
 
 	// Toasts keep quiet, for now.
 	function quiet(notification) {
-		return !critical(notification) && (dnd || panelShown);
+		return !critical(notification) && (dnd || panelShown || rule(notification).toast === false);
 	}
 
 	function receive(notification) {
@@ -84,7 +98,7 @@ Singleton {
 		const shows = !quiet(notification) && (!notification.lastGeneration || critical(notification));
 		// Only in the server's list after this returns. A transient one that
 		// won't show has no reason to get there.
-		notification.tracked = shows || !notification.transient;
+		notification.tracked = shows || !fleeting(notification);
 		if (shows)
 			show(notification);
 	}
@@ -99,7 +113,7 @@ Singleton {
 	function takeDown(gone) {
 		const leaving = up.filter(gone);
 		toastIds = toastIds.filter(id => !leaving.some(n => n.id === id));
-		leaving.filter(n => n.transient).forEach(n => n.expire());
+		leaving.filter(fleeting).forEach(n => n.expire());
 	}
 
 	// How long a toast stays, in ms; 0 is until it's closed.

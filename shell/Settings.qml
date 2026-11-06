@@ -37,4 +37,5 @@ Singleton {
 	readonly property var wallpaper: Object.assign({}, defaults.wallpaper, user.wallpaper)
 	readonly property var tray: Object.assign({}, defaults.tray, user.tray)
 	readonly property var bar: Object.assign({}, defaults.bar, user.bar)
+	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications)
 }

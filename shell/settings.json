@@ -16,6 +16,9 @@
 		"drawer": false,
 		"hidden": []
 	},
+	"notifications": {
+		"rules": []
+	},
 	"bar": {
 		"left": ["workspaces"],
 		"center": ["clock"],
