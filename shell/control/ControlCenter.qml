@@ -37,7 +37,7 @@ Panel {
 		sourceComponent: Column {
 			// What's left of the screen for a list, under the bar and with
 			// everything else around it.
-			readonly property real room: controlCenter.room - levels.height - wifi.foldedHeight - bluetooth.foldedHeight - power.height - awake.foldedHeight - spacing * 4
+			readonly property real room: controlCenter.room - levels.height - wifi.foldedHeight - bluetooth.foldedHeight - power.height - awake.foldedHeight - more.height - spacing * 5
 
 			spacing: Math.round(Theme.u(10))
 
@@ -63,6 +63,19 @@ Panel {
 
 			AwakeSection {
 				id: awake
+			}
+
+			Button {
+				id: more
+
+				width: parent.width
+				flat: true
+				icon: "gear"
+				text: "Settings"
+				onClicked: {
+					controlCenter.hide();
+					Settings.asked();
+				}
 			}
 		}
 	}

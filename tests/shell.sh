@@ -236,6 +236,35 @@ shot corner
 ipc notifications clear
 wait_up toasts 0 "the toast after clear"
 
+step "The settings from the control center"
+move 300 600
+settle
+shot no-control
+ipc control toggle
+wait_up panel 1 "the control center"
+settle
+shot control-open
+# It's as tall as what the machine has: the button is at the end of what it covers.
+box=$(magick "$out/no-control.png" "$out/control-open.png" -compose difference -composite \
+	-crop 1x800+1206+60 +repage -threshold 3% -format '%@' info:)
+height=${box#*x}
+move 1206 $((60 + ${box##*+} + ${height%%+*} - 28))
+click
+sleep 0.6
+wait_up panel 0 "the control center, gone for the settings"
+settings_up() {
+	niri msg --json windows | jq '[.[] | select(.title == "Settings")] | length'
+}
+[ "$(settings_up)" = 1 ] || fail "no settings window"
+shot settings-open
+[ "$(magick "$out/no-control.png" "$out/settings-open.png" -compose difference -composite \
+	-crop 1x700+700+100 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no settings in the middle"
+[ "$(magick "$out/no-control.png" "$out/settings-open.png" -compose difference -composite \
+	-crop 300x100+1060+60 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 0 ] || fail "the control center stayed"
+key Escape
+sleep 0.3
+[ "$(settings_up)" = 0 ] || fail "the settings after Escape"
+
 step "The session from the launcher"
 ipc launcher toggle
 wait_up panel 1 "the launcher"
@@ -368,8 +397,9 @@ framed() {
 	shot "$3-toasts"
 	ipc notifications clear
 	wait_up toasts 0 "toasts at $1"
-	# The cards on the control center too, so five of them.
-	echo "control: $(frame "$3-control" 1200 110 "$2" 5)"
+	# The cards on the control center too, so five of them, and beside the text of
+	# the button at its end.
+	echo "control: $(frame "$3-control" 1300 110 "$2" 5)"
 	echo "launcher: $(frame "$3-launcher" 700 450 "$2" 3)"
 	echo "dialog: $(frame "$3-polkit" 700 450 "$2" 3)"
 	echo "toasts: $(frame "$3-toasts" 1200 90 "$2" 3)"

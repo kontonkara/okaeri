@@ -1,0 +1,238 @@
+# The settings window with the real pointer: what it changes goes to the shell's
+# own file, over a config that can't be written, and the bar follows.
+
+fail() {
+	echo "settings: $1" >&2
+	exit 1
+}
+step() {
+	echo "settings: $1" >&2
+}
+same() {
+	[ "$2" = "$3" ] || fail "$1: got \"$2\", not \"$3\""
+}
+
+own=$XDG_STATE_HOME/okaeri/settings.json
+config=$XDG_CONFIG_HOME/okaeri/settings.json
+# 1400x900: the pages, the drawer's switch, the rows of the lanes and the pictures.
+menu_x=420
+bar_y=216
+tray_y=254
+wallpaper_y=292
+back_y=722
+switch_x=1034
+drawer_y=233
+left_y=251
+middle_y=374
+right_y=497
+right2_y=533
+off_y=620
+off_gap_y=659
+field_y=217
+picture_y=299
+
+value() {
+	jq -c "$1" "$own"
+}
+up() {
+	niri msg --json windows | jq '[.[] | select(.title == "Settings")] | length'
+}
+wait_up() {
+	for _ in $(seq 30); do
+		[ "$(up)" = "$1" ] && return 0
+		sleep 0.1
+	done
+	fail "$(up) windows up, not $1"
+}
+pixel() {
+	magick "$out/$1.png" -format "%[hex:u.p{$2,$3}]" info: | cut -c1-6
+}
+# The right end of the switch at height $2 in shot $1: the knob, on one that's on.
+knob() {
+	magick "$out/$1.png" -format "%[pixel:p{$((switch_x + 9)),$2}]" info:
+}
+# To the page at height $1.
+page() {
+	move "$menu_x" "$1"
+	click
+	sleep 0.4
+}
+# Takes what's at $1 $2 to $3 $4.
+drag() {
+	move "$1" "$2"
+	hold
+	move "$3" "$4"
+	let_go
+	sleep 0.2
+}
+# The folder field, with $1 in it.
+folder() {
+	move 790 "$field_y"
+	click
+	wtype -M ctrl a -m ctrl
+	type "$1"
+	key Return
+	sleep 0.5
+}
+
+step "A config that can't be written"
+printf '{ "tray": { "drawer": true } }\n' >"$config"
+chmod 444 "$config"
+sleep 0.4
+ipc settings toggle
+wait_up 1
+sleep 0.4
+[ ! -e "$own" ] || fail "a file before anything changed"
+page "$tray_y"
+shot open
+on=$(knob open "$drawer_y")
+
+step "Over the config"
+move "$switch_x" "$drawer_y"
+click
+sleep 0.3
+same "the drawer in the shell's file" "$(value .tray.drawer)" false
+same "the config" "$(cat "$config")" '{ "tray": { "drawer": true } }'
+shot drawer-off
+[ "$(knob drawer-off "$drawer_y")" != "$on" ] || fail "the switch didn't follow"
+
+step "A part held"
+page "$bar_y"
+move 554 "$middle_y"
+hold
+move 700 "$left_y"
+sleep 0.3
+shot held
+same "what's held, at the pointer" "$(pixel held 676 "$left_y")" FFFFFF
+same "the bar while it's held" "$(value .bar)" null
+let_go
+sleep 0.3
+
+step "To another lane"
+same "the left" "$(value .bar.left)" '["workspaces","clock"]'
+same "the middle" "$(value .bar.center)" '[]'
+move 300 800
+sleep 0.3
+shot no-clock
+[ "$(magick "$out/no-clock.png" -crop 200x20+600+10 +repage -format '%[fx:maxima]' info:)" = 0 ] || fail "the clock is still in the middle"
+[ "$(magick "$out/no-clock.png" -crop 100x20+130+10 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "the clock isn't on the left"
+
+step "Along a lane"
+drag 559 "$right2_y" 762 "$right_y"
+same "the right" "$(value .bar.right)" '["cast","units","battery","tray","notifications","clipboard","control"]'
+
+step "Off the bar"
+drag 795 "$right_y" 800 "$off_gap_y"
+same "the right" "$(value .bar.right)" '["cast","units","tray","notifications","clipboard","control"]'
+
+step "Back on it"
+drag 660 "$off_y" 800 "$right2_y"
+same "the right" "$(value .bar.right)" '["cast","units","tray","notifications","clipboard","control","keyboard"]'
+
+step "What has to stay"
+drag 584 "$right2_y" 800 "$off_gap_y"
+same "the right" "$(value .bar.right)" '["cast","units","tray","notifications","clipboard","control","keyboard"]'
+
+step "A click is no drag"
+before=$(value .bar)
+move 584 "$right2_y"
+hold
+let_go
+same "the bar" "$(value .bar)" "$before"
+
+step "The pictures of a folder"
+mkdir "$work/pictures"
+magick -size 1600x900 xc:'#336699' "$work/pictures/a blue.png"
+magick -size 1600x900 xc:'#996633' "$work/pictures/brown #1?.png"
+magick -size 1600x900 xc:'#339966' "$work/pictures/green.PNG"
+printf 'not a picture\n' >"$work/pictures/notes.md"
+page "$wallpaper_y"
+folder "$work/pictures"
+same "the folder" "$(value .wallpaper.folder)" "\"$work/pictures\""
+sleep 0.5
+shot pictures
+same "the first" "$(pixel pictures 606 "$picture_y")" 336699
+same "the second" "$(pixel pictures 790 "$picture_y")" 996633
+same "the third" "$(pixel pictures 974 "$picture_y")" 339966
+same "after those" "$(pixel pictures 606 403)" 000000
+
+step "One to pick"
+move 790 "$picture_y"
+click
+sleep 0.3
+same "the wallpaper" "$(value .wallpaper.path)" "\"$work/pictures/brown #1?.png\""
+move 300 800
+sleep 0.3
+shot picked
+same "its ring" "$(pixel picked 703 "$picture_y")" FFFFFF
+same "another's edge" "$(pixel picked 887 "$picture_y")" 339966
+
+step "A folder that isn't there"
+folder "~/no such folder"
+same "the folder" "$(value .wallpaper.folder)" "\"$HOME/no such folder\""
+move 300 800
+sleep 0.3
+shot nothing
+same "where a picture was" "$(pixel nothing 606 "$picture_y")" 000000
+[ "$(magick "$out/nothing.png" -crop 200x30+690+469 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
+
+step "It stays"
+key Escape
+wait_up 0
+reloads=$(log | grep -c 'Reloading configuration' || true)
+cat "$work/shell/shell.qml" >"$work/reloaded.qml"
+cat "$work/reloaded.qml" >"$work/shell/shell.qml"
+for _ in $(seq 50); do
+	[ "$(log | grep -c 'Reloading configuration' || true)" -gt "$reloads" ] && break
+	sleep 0.1
+done
+sleep 1
+ipc settings toggle
+wait_up 1
+sleep 0.4
+page "$tray_y"
+shot reloaded
+same "the drawer's switch after a reload" "$(knob reloaded "$drawer_y")" "$(knob drawer-off "$drawer_y")"
+
+step "A window of its own"
+# What closes a window closes this one, and not what's under it; a click
+# elsewhere doesn't.
+kitty --class under -o confirm_os_window_close=0 sh -c 'sleep 60' >/dev/null 2>&1 &
+under=$!
+for _ in $(seq 50); do
+	[ "$(niri msg --json windows | jq '[.[] | select(.app_id == "under")] | length')" = 1 ] && break
+	sleep 0.1
+done
+ipc settings toggle
+sleep 0.2
+ipc settings toggle
+wait_up 1
+sleep 0.4
+same "the focus" "$(niri msg --json focused-window | jq -r .title)" Settings
+move 1300 800
+click
+sleep 0.3
+same "after a click elsewhere" "$(up)" 1
+ipc settings toggle
+wait_up 0
+ipc settings toggle
+wait_up 1
+sleep 0.4
+niri msg action close-window
+wait_up 0
+same "what's under it" "$(niri msg --json windows | jq '[.[] | select(.app_id == "under")] | length')" 1
+kill "$under"
+ipc settings toggle
+wait_up 1
+sleep 0.4
+page "$tray_y"
+
+step "Back to the config"
+move "$menu_x" "$back_y"
+click
+sleep 0.3
+same "the shell's file" "$(value .)" '{}'
+shot back
+same "the drawer's switch" "$(knob back "$drawer_y")" "$on"
+key Escape
+wait_up 0

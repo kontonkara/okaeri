@@ -11,6 +11,7 @@
 #   ipc TARGET FN ... calls the shell's IpcHandler
 #   move X Y          the pointer to X Y of the 1400x900 screen
 #   click [BUTTON]    left, right or middle, at the pointer
+#   hold, let_go      the left button down and up, for a drag
 #   wheel STEPS       the wheel, up for a positive number
 #   type TEXT         keys, and key NAME for one (Escape, Return, Tab)
 #   wait_log TEXT     until the shell's log has TEXT, or fails after 5 s
@@ -47,7 +48,7 @@ work=$(mktemp -d "$real_run/okaeri.XXXXXX")
 stop() {
 	trap - EXIT INT TERM
 	# Everything here has the unique $work in its command line or environment.
-	for pid in ${qs_pid:-} ${niri_pid:-} ${sway_pid:-}; do
+	for pid in ${hold_pid:-} ${qs_pid:-} ${niri_pid:-} ${sway_pid:-}; do
 		kill "$pid" 2>/dev/null || true
 	done
 	sleep 0.3
@@ -205,6 +206,16 @@ move() {
 }
 click() {
 	wlrctl pointer click "${1:-left}"
+	sleep 0.2
+}
+hold() {
+	python3 "$repo/tests/hold.py" &
+	hold_pid=$!
+	sleep 0.3
+}
+let_go() {
+	kill "$hold_pid"
+	wait "$hold_pid"
 	sleep 0.2
 }
 wheel() {
