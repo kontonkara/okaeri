@@ -33,6 +33,16 @@ Singleton {
 	// What's for the moment isn't for later.
 	readonly property var history: all.filter(n => !fleeting(n))
 
+	// The history by app, the one heard from last first, for the panel.
+	readonly property var apps: [...new Set(history.map(n => n.appName))]
+	readonly property var grouped: apps.reduce((all, app) => all.concat(history.filter(n => n.appName === app)), [])
+	// With several apps each shows its newest, but for those opened here.
+	property var opened: []
+	readonly property var shown: apps.length < 2 ? grouped : apps.reduce((all, app) => {
+		const own = history.filter(n => n.appName === app);
+		return all.concat(opened.includes(app) ? own : own.slice(0, 1));
+	}, [])
+
 	property var toastIds: []
 	readonly property var up: all.filter(n => toastIds.includes(n.id))
 	readonly property bool panelShown: !!panel && panel.shown
@@ -146,6 +156,22 @@ Singleton {
 
 	function clear() {
 		const gone = all;
+		clearing = true;
+		gone.forEach(n => n.dismiss());
+		clearing = false;
+	}
+
+	function toggleApp(app) {
+		opened = opened.includes(app) ? opened.filter(other => other !== app) : opened.concat([app]);
+	}
+
+	// How many it has in the history.
+	function countOf(app) {
+		return history.filter(n => n.appName === app).length;
+	}
+
+	function clearApp(app) {
+		const gone = history.filter(n => n.appName === app);
 		clearing = true;
 		gone.forEach(n => n.dismiss());
 		clearing = false;

@@ -60,7 +60,9 @@ Scope {
 				toasts: NotificationStore.toasts.length,
 				unread: NotificationStore.unread,
 				dnd: NotificationStore.dnd,
-				panel: NotificationStore.panelShown
+				panel: NotificationStore.panelShown,
+				order: NotificationStore.grouped.map(n => n.appName),
+				shown: NotificationStore.shown.length
 			});
 		}
 	}

@@ -11,6 +11,7 @@ Panel {
 	// It opens on the newest, and nothing has the keys at first: no ring until
 	// Tab takes it somewhere.
 	onPanelOpened: {
+		NotificationStore.opened = [];
 		list.positionViewAtBeginning();
 		header.forceActiveFocus();
 	}
@@ -93,7 +94,67 @@ Panel {
 		// A current card would get the keys when the list does.
 		currentIndex: -1
 		model: ScriptModel {
-			values: NotificationStore.history
+			values: NotificationStore.shown
+		}
+
+		// With one app it would only say what the cards do.
+		section.property: NotificationStore.apps.length > 1 ? "modelData.appName" : ""
+		section.delegate: Item {
+			id: heading
+
+			required property string section
+			readonly property int many: NotificationStore.countOf(section)
+
+			width: ListView.view.width
+			height: Theme.u(30)
+
+			MouseArea {
+				anchors.fill: parent
+				enabled: heading.many > 1
+				cursorShape: Qt.PointingHandCursor
+				onClicked: NotificationStore.toggleApp(heading.section)
+			}
+
+			Row {
+				anchors.left: parent.left
+				anchors.leftMargin: Theme.u(4)
+				anchors.right: closeApp.left
+				anchors.verticalCenter: parent.verticalCenter
+				spacing: Theme.u(4)
+
+				Text {
+					anchors.verticalCenter: parent.verticalCenter
+					width: Math.min(implicitWidth, parent.width - Theme.u(20))
+					text: (heading.section || "Unknown") + (heading.many > 1 ? ` · ${heading.many}` : "")
+					textFormat: Text.PlainText
+					color: Theme.colors.subtext
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+				}
+
+				Icon {
+					anchors.verticalCenter: parent.verticalCenter
+					visible: heading.many > 1
+					name: "chevron"
+					size: Theme.u(12)
+					color: Theme.colors.subtext
+					rotation: NotificationStore.opened.includes(heading.section) ? 90 : 0
+				}
+			}
+
+			Button {
+				id: closeApp
+
+				anchors.right: parent.right
+				anchors.verticalCenter: parent.verticalCenter
+				height: Theme.u(24)
+				flat: true
+				activeFocusOnTab: false
+				icon: "close"
+				iconSize: Theme.u(14)
+				onClicked: NotificationStore.clearApp(heading.section)
+			}
 		}
 
 		Keys.onUpPressed: scroll(-1)
@@ -133,6 +194,7 @@ Panel {
 
 			width: ListView.view.width
 			notification: modelData
+			showsApp: NotificationStore.apps.length < 2
 			// They go on with the one that takes its place.
 			onKeysLost: Qt.callLater(list.enter, index, 1)
 
