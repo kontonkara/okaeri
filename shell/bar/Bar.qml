@@ -15,6 +15,7 @@ PanelWindow {
 
 	readonly property var parts: ({
 		battery,
+		cast,
 		clipboard,
 		clock,
 		control,
@@ -74,6 +75,12 @@ PanelWindow {
 			leftPadding: Theme.u(6)
 			rightPadding: Theme.u(6)
 		}
+	}
+
+	Component {
+		id: cast
+
+		Cast {}
 	}
 
 	Component {
