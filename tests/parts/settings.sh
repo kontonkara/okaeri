@@ -19,6 +19,7 @@ menu_x=420
 bar_y=216
 tray_y=254
 wallpaper_y=292
+session_y=330
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -30,6 +31,11 @@ off_y=620
 off_gap_y=659
 field_y=217
 picture_y=299
+lower_x=948
+higher_x=1040
+lock_y=255
+screens_y=295
+wait_y=395
 
 value() {
 	jq -c "$1" "$own"
@@ -175,6 +181,34 @@ sleep 0.3
 shot nothing
 same "where a picture was" "$(pixel nothing 606 "$picture_y")" 000000
 [ "$(magick "$out/nothing.png" -crop 200x30+690+469 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
+
+step "When things happen by themselves"
+# The arrow at $1 on the line at $2.
+arrow() {
+	move "$1" "$2"
+	click
+}
+page "$session_y"
+arrow "$higher_x" "$lock_y"
+same "the lock, one up" "$(value .idle.lock)" 900
+arrow "$lower_x" "$lock_y"
+arrow "$lower_x" "$lock_y"
+same "the lock, two down" "$(value .idle.lock)" 300
+# Eleven minutes isn't one of them: the next up is the next that is.
+arrow "$higher_x" "$screens_y"
+same "the screens, from what's not on the list" "$(value .idle.screenOff)" 900
+move 700 "$lock_y"
+wheel 1
+same "the lock by the wheel" "$(value .idle.lock)" 600
+wheel -2
+same "the lock, two notches down" "$(value .idle.lock)" 180
+wheel -9
+same "the lock at the end of the list" "$(value .idle.lock)" 0
+arrow "$lower_x" "$lock_y"
+same "the lock past that" "$(value .idle.lock)" 0
+arrow "$lower_x" "$wait_y"
+same "the session menu's wait" "$(value .session.countdown)" 5
+shot session
 
 step "It stays"
 key Escape
