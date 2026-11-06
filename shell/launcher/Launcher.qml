@@ -47,7 +47,7 @@ Panel {
 	}
 
 	align: "center"
-	panelWidth: Theme.u(520)
+	panelWidth: Theme.u(600)
 
 	onPanelOpened: {
 		Session.check();
@@ -111,6 +111,8 @@ Panel {
 			id: list
 
 			anchors.fill: parent
+			rowHeight: Theme.u(46)
+			iconSize: Theme.u(26)
 			activeFocusOnTab: false
 			onActivated: (index, row) => {
 				// The rows still take clicks as the panel fades: a double click does.

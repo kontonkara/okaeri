@@ -54,7 +54,7 @@ press() {
 
 # Where row $1 of the panel is on the 1400x900 screen.
 row() {
-	echo $((342 + 38 * $1))
+	echo $((312 + 46 * $1))
 }
 
 # To a place as a hand gets there: move jumps, in one event, and it takes the
@@ -80,7 +80,7 @@ is_closed() {
 # A picture of the rows alone, and whether two of them show the same.
 rows() {
 	shot "$1"
-	magick "$out/$1.png" -crop 500x300+450+325 +repage "$out/$1-rows.png"
+	magick "$out/$1.png" -crop 500x300+450+295 +repage "$out/$1-rows.png"
 }
 
 same() {
@@ -315,7 +315,7 @@ sleep 0.3
 launched firefox
 
 # A click in the field isn't a click elsewhere, one outside is.
-move 700 292
+move 700 261
 open
 click
 type fire
@@ -463,10 +463,10 @@ open
 type icon
 shot icons
 for index in 0 1; do
-	[ "$(magick "$out/icons.png" -format "%[pixel:p{470,$(row "$index")}]" info:)" = "srgb(255,0,0)" ] ||
+	[ "$(magick "$out/icons.png" -format "%[pixel:p{435,$(row "$index")}]" info:)" = "srgb(255,0,0)" ] ||
 		fail "row $index doesn't have its file for an icon"
 done
-[ "$(magick "$out/icons.png" -crop 18x18+461+$(($(row 2) - 9)) +repage -format '%[fx:maxima]' info:)" != 0 ] ||
+[ "$(magick "$out/icons.png" -crop 26x26+422+$(($(row 2) - 13)) +repage -format '%[fx:maxima]' info:)" != 0 ] ||
 	fail "an icon that isn't there left nothing in its place"
 key Escape
 is_closed "Escape over the icons"
@@ -476,7 +476,7 @@ ipc entries add odd.Markup '<font color="#ff0000">Reddish</font>' nosuchicon
 open
 type reddish
 shot markup
-magick "$out/markup.png" -crop 400x30+490+$(($(row 0) - 15)) +repage -channel RG -separate +channel \
+magick "$out/markup.png" -crop 400x30+458+$(($(row 0) - 15)) +repage -channel RG -separate +channel \
 	-compose difference -composite -format '%[fx:maxima]' info: | awk '{ exit !($1 < 0.4) }' ||
 	fail "a name was taken for markup"
 key Escape
