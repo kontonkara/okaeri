@@ -10,6 +10,7 @@ import qs.notifications
 import qs.osd
 import qs.polkit
 import qs.session
+import qs.settings
 import qs.wallpaper
 
 ShellRoot {
@@ -36,6 +37,8 @@ ShellRoot {
 	PolkitDialog {}
 
 	SessionMenu {}
+
+	SettingsWindow {}
 
 	Keys {}
 

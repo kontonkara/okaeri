@@ -5,10 +5,14 @@ import Quickshell
 import Quickshell.Io
 
 // What the shell does, as Theme is how it looks: settings.json (it has every
-// key), and the user's okaeri/settings.json over it, which takes effect as it's
-// saved. Sections merge key by key.
+// key), the user's okaeri/settings.json over it, which takes effect as it's
+// saved, and over those what the settings window changed, in a file of the shell's
+// own: the user's can be read-only. Sections merge key by key.
 Singleton {
 	id: settings
+
+	// Someone wants the settings window.
+	signal asked
 
 	FileView {
 		id: defaultsFile
@@ -29,13 +33,44 @@ Singleton {
 		onLoadFailed: settings.user = {}
 	}
 
+	FileView {
+		id: ownFile
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/settings.json`
+		blockLoading: true
+		printErrors: false
+		onLoaded: settings.own = Theme.parse(text(), path)
+		onLoadFailed: settings.own = {}
+	}
+
 	readonly property var defaults: Theme.parse(defaultsFile.text(), defaultsFile.path)
 	property var user: ({})
+	property var own: ({})
 
-	readonly property var session: Object.assign({}, defaults.session, user.session)
-	readonly property var idle: Object.assign({}, defaults.idle, user.idle)
-	readonly property var wallpaper: Object.assign({}, defaults.wallpaper, user.wallpaper)
-	readonly property var tray: Object.assign({}, defaults.tray, user.tray)
-	readonly property var bar: Object.assign({}, defaults.bar, user.bar)
-	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications)
+	readonly property var session: Object.assign({}, defaults.session, user.session, own.session)
+	readonly property var idle: Object.assign({}, defaults.idle, user.idle, own.idle)
+	readonly property var wallpaper: Object.assign({}, defaults.wallpaper, user.wallpaper, own.wallpaper)
+	readonly property var tray: Object.assign({}, defaults.tray, user.tray, own.tray)
+	readonly property var bar: Object.assign({}, defaults.bar, user.bar, own.bar)
+	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications, own.notifications)
+
+	function set(section, key, value) {
+		own = Object.assign({}, own, { [section]: Object.assign({}, own[section], { [key]: value }) });
+		save();
+	}
+
+	// `path` as a URL, with what would mean something else in one kept as a name.
+	function url(path) {
+		return path ? `file://${encodeURI(path).replace(/[?#]/g, encodeURIComponent)}` : "";
+	}
+
+	// Back to what the files say.
+	function reset() {
+		own = {};
+		save();
+	}
+
+	function save() {
+		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
+	}
 }

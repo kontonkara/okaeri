@@ -9,15 +9,11 @@ import qs
 Scope {
 	id: wallpaper
 
-	function url(path) {
-		return path ? `file://${encodeURI(path).replace(/[?#]/g, encodeURIComponent)}` : "";
-	}
-
 	Variants {
 		model: Settings.wallpaper.path && Settings.wallpaper.backdrop ? Quickshell.screens : []
 
 		Backdrop {
-			source: wallpaper.url(Settings.wallpaper.path)
+			source: Settings.url(Settings.wallpaper.path)
 		}
 	}
 
@@ -37,7 +33,7 @@ Scope {
 			function load() {
 				if (!path)
 					return;
-				next.source = wallpaper.url(path);
+				next.source = Settings.url(path);
 				if (next.status === Image.Ready)
 					reveal();
 			}

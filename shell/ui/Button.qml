@@ -15,6 +15,8 @@ Rectangle {
 	// Beside what's on it, with text.
 	property real pad: Theme.u(14)
 	property real iconSize: Theme.u(18)
+	// What's on it starts at its left, for one in a list, not in its middle.
+	property bool atStart: false
 	// With this the wheel on it says scrolled(steps), and goes no further.
 	property bool takesWheel: false
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
@@ -57,7 +59,10 @@ Rectangle {
 	Row {
 		id: row
 
-		anchors.centerIn: parent
+		anchors.centerIn: button.atStart ? undefined : parent
+		anchors.left: button.atStart ? parent.left : undefined
+		anchors.leftMargin: button.pad
+		anchors.verticalCenter: button.atStart ? parent.verticalCenter : undefined
 		spacing: Theme.u(6)
 
 		Icon {

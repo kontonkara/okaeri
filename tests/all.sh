@@ -36,6 +36,7 @@ for script in tests/parts/*.sh; do
 	osd) root=Osd ;;
 	polkit) root=PolkitDialog ;;
 	session) root=SessionMenu ;;
+	settings) root=SettingsWindow ;;
 	wallpaper) root=Wallpaper ;;
 	*)
 		echo "FAILED: $part has no root type here"

@@ -9,6 +9,7 @@
 	},
 	"wallpaper": {
 		"path": "",
+		"folder": "",
 		"fade": 1500,
 		"backdrop": false
 	},
