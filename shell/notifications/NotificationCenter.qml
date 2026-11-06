@@ -49,8 +49,12 @@ Scope {
 			NotificationStore.clear();
 		}
 
+		function dndFor(seconds: int): void {
+			NotificationStore.dndFor(seconds);
+		}
+
 		function dnd(on: bool): void {
-			NotificationStore.dnd = on;
+			NotificationStore.setDnd(on, 0);
 		}
 
 		// For tests and scripts.

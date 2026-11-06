@@ -16,11 +16,14 @@ Card {
 	property bool checked: false
 	property bool canSwitch: true
 	property bool folds: true
+	property bool takesWheel: false
 	readonly property bool unfolded: checked && Control.unfolded === name
 	readonly property real foldedHeight: header.height + padding * 2
 	default property alias folded: rows.data
 
 	signal toggled(bool wanted)
+	// Notches of the wheel, with `takesWheel`.
+	signal scrolled(int steps)
 
 	width: parent.width
 	padding: Theme.u(6)
@@ -40,6 +43,8 @@ Card {
 				anchors.fill: parent
 				radius: Math.max(0, Theme.cardRadius - Theme.u(4))
 				flat: true
+				takesWheel: section.takesWheel
+				onScrolled: steps => section.scrolled(steps)
 				onClicked: {
 					if (section.checked && section.folds)
 						Control.unfolded = section.unfolded ? "" : section.name;

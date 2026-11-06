@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import qs
 import qs.services
@@ -62,14 +61,6 @@ Scope {
 		onIsIdleChanged: {
 			if (isIdle)
 				Env.act("screens off", () => Niri.act({ PowerOffMonitors: {} }));
-		}
-	}
-
-	IpcHandler {
-		target: "awake"
-
-		function toggle(): void {
-			Awake.toggle();
 		}
 	}
 

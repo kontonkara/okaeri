@@ -753,6 +753,24 @@ wait_state toasts 0
 stop_sender
 reset
 
+step "Do Not Disturb for a while"
+ipc notifications toggle
+wait_state panel true
+settle
+move 1100 "$empty_toggle_y"
+wheel 1
+wait_state dnd true
+settle
+shot dnd-wheel
+wheel -1
+wait_state dnd false
+key Escape
+wait_state panel false
+ipc notifications dndFor 2
+wait_state dnd true
+sleep 3.2
+is dnd false
+
 step "Rules"
 printf '{ "notifications": { "rules": [ { "app": "quiet", "toast": false }, { "app": "Passing", "history": false }, { "app": "muted", "toast": false, "history": false } ] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.4
