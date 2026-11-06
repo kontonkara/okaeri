@@ -14,6 +14,8 @@ Card {
 	required property var notification
 	// With the close button: a toast goes by a right click.
 	property bool closable: true
+	// With its app's name: under a heading that says it, there's no need.
+	property bool showsApp: true
 
 	readonly property var defaultAction: notification.actions.find(a => a.identifier === "default") || null
 	readonly property var buttons: notification.actions.filter(a => a.identifier !== "default")
@@ -178,7 +180,7 @@ Card {
 				id: app
 
 				width: parent.width - card.beside
-				text: card.notification.appName
+				text: card.showsApp ? card.notification.appName : ""
 				wrapMode: Text.NoWrap
 				maximumLineCount: 1
 				color: Theme.colors.subtext

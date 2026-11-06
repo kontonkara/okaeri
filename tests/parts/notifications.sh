@@ -379,10 +379,10 @@ reset
 step "The panel"
 send -a Mail "First" "The oldest of them."
 wait_state history 1
-send -a Files -A open=Open "Second" "With an action." >/dev/null &
+send -a Mail -A open=Open "Second" "With an action." >/dev/null &
 sender=$!
 wait_state history 2
-send -a Battery -u critical "Third" "Critical, and the newest."
+send -a Mail -u critical "Third" "Critical, and the newest."
 wait_state toasts 3
 is unread 3
 ipc notifications toggle
@@ -778,6 +778,47 @@ wait_state toasts 1
 reset
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.4
+
+step "By app"
+send -a Mail -t 1 "One" "A letter."
+send -a Chat -t 1 "Two" "A message."
+send -a Mail -t 1 "Three" "Another letter."
+wait_state history 3
+notifications_order() {
+	ipc notifications state | jq -c .order
+}
+[ "$(notifications_order)" = '["Mail","Mail","Chat"]' ] || fail "not by app: $(notifications_order)"
+wait_state toasts 0
+ipc notifications toggle
+wait_state panel true
+settle
+shot by-app
+# Folded to the newest of each, and a click on the heading shows the rest.
+is shown 2
+move 1200 106
+click
+wait_state shown 3
+settle
+shot by-app-open
+click
+wait_state shown 2
+# Opened again, it starts folded.
+click
+wait_state shown 3
+key Escape
+wait_state panel false
+ipc notifications toggle
+wait_state panel true
+settle
+is shown 2
+# The first group's close button: all of it goes.
+move 1370 106
+click
+wait_state history 1
+[ "$(notifications_order)" = '["Chat"]' ] || fail "the wrong app went: $(notifications_order)"
+key Escape
+wait_state panel false
+reset
 
 step "Clicks go through"
 if command -v kitty >/dev/null; then
