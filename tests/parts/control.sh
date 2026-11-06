@@ -103,7 +103,10 @@ sed -e 's/^\treadonly property var nodes: .*/\tproperty var nodes: []/' -e 's/^\
 # And Wi-Fi unfolded, as what's here goes by its rows.
 sed 's/^\tproperty string unfolded: ""$/\tproperty string unfolded: "wifi"/' "$work/shell/control/Control.qml" >"$work/Control.qml"
 mv "$work/Control.qml" "$work/shell/control/Control.qml"
-cat "$work/Audio.qml" >"$work/shell/services/Audio.qml"
+mv "$work/Audio.qml" "$work/shell/services/Audio.qml"
+# Those go unseen. A line more elsewhere reloads it all: a reload that finds
+# Audio.qml cut off while it's written doesn't take it for a singleton.
+printf '\n' >>"$work/shell/shell.qml"
 wait_log 'Reloading configuration'
 sleep 1
 
