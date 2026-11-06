@@ -22,6 +22,7 @@ PanelWindow {
 		keyboard,
 		notifications,
 		tray,
+		units,
 		workspaces
 	})
 
@@ -119,6 +120,12 @@ PanelWindow {
 		id: tray
 
 		Tray {}
+	}
+
+	Component {
+		id: units
+
+		FailedUnits {}
 	}
 
 	Component {
