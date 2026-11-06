@@ -23,11 +23,21 @@ Singleton {
 	readonly property var streams: Pipewire.nodes.values.filter(node => node.isStream)
 	readonly property var nodes: streams.filter(node => node.isSink && !!node.audio && !!node.properties["application.name"])
 
+	// Where sound can go: the sinks of devices, not the filters on the way to them.
+	// They go by their names, as properties would take tracking each, and that's
+	// not for what sits on a GPU that sleeps.
+	readonly property var outputs: Pipewire.nodes.values.filter(node => node.isSink && !node.isStream && /^(alsa|bluez)_output/.test(node.name))
+
 	function change(by) {
 		if (ready) {
 			const level = Math.max(0, Math.min(1, volume + by));
 			Env.act(`volume ${level}`, () => sink.audio.volume = level);
 		}
+	}
+
+	function use(node) {
+		if (node !== sink)
+			Env.act("output", () => Pipewire.preferredDefaultAudioSink = node);
 	}
 
 	function toggleMute() {

@@ -3,9 +3,9 @@ import qs
 import qs.ui
 
 // A card that folds, unless `folds` is off: `icon`, `title` and `summary`, a
-// switch that says toggled(wanted), and under them what's put in it. One section
-// of the panel is unfolded at a time, the one Control.unfolded names, and only
-// while on.
+// switch that says toggled(wanted), unless `switches` is off, and under them
+// what's put in it. One section of the panel is unfolded at a time, the one
+// Control.unfolded names, and only while on.
 Card {
 	id: section
 
@@ -15,6 +15,7 @@ Card {
 	property string summary
 	property bool checked: false
 	property bool canSwitch: true
+	property bool switches: true
 	property bool folds: true
 	property bool takesWheel: false
 	readonly property bool unfolded: checked && Control.unfolded === name
@@ -97,7 +98,7 @@ Card {
 						id: chevron
 
 						anchors.right: parent.right
-						anchors.rightMargin: Theme.u(58)
+						anchors.rightMargin: Theme.u(section.switches ? 58 : 14)
 						anchors.verticalCenter: parent.verticalCenter
 						visible: section.checked && section.folds
 						name: "chevron"
@@ -121,6 +122,7 @@ Card {
 				anchors.right: parent.right
 				anchors.rightMargin: Theme.u(8)
 				anchors.verticalCenter: parent.verticalCenter
+				visible: section.switches
 				enabled: section.canSwitch
 				checked: section.checked
 				onToggled: wanted => section.toggled(wanted)
