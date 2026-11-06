@@ -18,6 +18,18 @@ Singleton {
 	})
 	property bool canSuspend: false
 	property bool canFirmware: false
+	// What can be asked for, in the menu and the launcher alike.
+	readonly property var actions: [
+		{ action: "lock", text: "Lock", icon: "lock", doing: "Locking" },
+		{ action: "suspend", text: "Suspend", icon: "moon", doing: "Suspending", shows: canSuspend },
+		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out" },
+		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting" },
+		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", shows: canFirmware },
+		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down" }
+	].filter(row => row.shows !== false)
+
+	// One of `actions` from elsewhere: the menu counts it down.
+	signal asked(var row)
 
 	// It can change, with what's holding the machine awake.
 	function check() {

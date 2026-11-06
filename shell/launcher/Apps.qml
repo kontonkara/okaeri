@@ -102,6 +102,12 @@ Singleton {
 		});
 	}
 
+	// The picture of the app with this id in a window, "" if there's none.
+	function imageOf(id) {
+		const app = known.find(app => app.entry.id.toLowerCase() === (id || "").toLowerCase());
+		return app ? image(app.entry.icon) : "";
+	}
+
 	// What runs a terminal app: $TERMINAL, or the first terminal of the apps.
 	function terminal() {
 		const own = Quickshell.env("TERMINAL");

@@ -46,12 +46,16 @@ Singleton {
 		act({ Spawn: { command } });
 	}
 
+	function focusWindow(id) {
+		act({ FocusWindow: { id } });
+	}
+
 	// To a window of the app that goes by one of `names`, if it has one.
 	function focusApp(names) {
 		const wanted = names.filter(name => !!name).map(name => name.toLowerCase());
 		const window = windows.find(w => wanted.some(name => (w.app_id || "").toLowerCase().includes(name)));
 		if (window)
-			act({ FocusWindow: { id: window.id } });
+			focusWindow(window.id);
 	}
 
 	function nextLayout() {

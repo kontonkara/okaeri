@@ -13,15 +13,6 @@ Panel {
 	property var pending: null
 	property int left: 0
 
-	readonly property var rows: [
-		{ action: "lock", text: "Lock", icon: "lock", doing: "Locking" },
-		{ action: "suspend", text: "Suspend", icon: "moon", doing: "Suspending", shows: Session.canSuspend },
-		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out" },
-		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting" },
-		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", shows: Session.canFirmware },
-		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down" }
-	].filter(row => row.shows !== false)
-
 	function pick(row) {
 		left = Settings.session.countdown;
 		if (left > 0) {
@@ -53,6 +44,15 @@ Panel {
 	}
 	onPanelClosed: pending = null
 
+	Connections {
+		target: Session
+
+		function onAsked(row) {
+			menu.show();
+			menu.pick(row);
+		}
+	}
+
 	IpcHandler {
 		target: "session"
 
@@ -78,7 +78,7 @@ Panel {
 		width: parent.width
 		visible: !menu.pending
 		focus: true
-		model: menu.rows
+		model: Session.actions
 		onActivated: (index, row) => {
 			// The rows still take clicks as the panel fades.
 			if (menu.shown)
