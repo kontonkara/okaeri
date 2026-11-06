@@ -14,7 +14,7 @@ Rectangle {
 	implicitWidth: Math.ceil(body.implicitWidth + padding * 2)
 	implicitHeight: Math.ceil(body.implicitHeight + padding * 2)
 	radius: Theme.cardRadius
-	color: Theme.colors.surface
+	color: Theme.surface
 	border.width: 1
 	border.color: Theme.border
 

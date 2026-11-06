@@ -46,7 +46,7 @@ Item {
 		height: Theme.u(44)
 		visible: row.picture
 		radius: Math.max(0, Theme.cardRadius - Theme.u(8))
-		color: Theme.colors.surface
+		color: Theme.surface
 
 		Image {
 			id: image

@@ -66,6 +66,9 @@ Singleton {
 	readonly property real fontSize: u(values.fontSize)
 	readonly property int fontWeight: values.fontWeight
 	readonly property bool animate: !!values.animations
+	// Panels let what's under them through, blurred, where the compositor has that.
+	// In niri that's the wallpaper, unless a rule for okaeri-panel says xray false.
+	readonly property bool blur: !!values.blur
 	readonly property real barHeight: u(values.barHeight)
 	readonly property real barMargin: u(values.barMargin)
 	readonly property real barIcon: u(values.barIcon)
@@ -83,6 +86,9 @@ Singleton {
 	// The theme's corner radius at the UI scale, or -1 for round.
 	readonly property real radius: typeof values.radius === "number" ? u(values.radius) : -1
 
+	// What a panel is filled with, and what's on it.
+	readonly property color panel: Qt.alpha(colors.background, blur ? 0.72 : 1)
+	readonly property color surface: Qt.alpha(colors.surface, blur ? 0.6 : 1)
 	// Under the pointer, pressed, and the edge of a card.
 	readonly property color hover: Qt.alpha(colors.text, 0.08)
 	readonly property color pressed: Qt.alpha(colors.text, 0.16)
