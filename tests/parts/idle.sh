@@ -80,6 +80,14 @@ silent "while awake"
 ipc awake toggle
 wake
 
+# For a while, and then it's idling again.
+ipc awake forSeconds 2
+sleep 3.4
+silent "while awake for a while"
+wake
+wait_fades 1 40 "after keeping awake ended"
+wake
+
 # 0 is never.
 settings '{ "idle": { "lock": 0, "screenOff": 0, "fade": 1 } }'
 wake

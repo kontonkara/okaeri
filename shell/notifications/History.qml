@@ -230,13 +230,32 @@ Panel {
 		width: parent.width
 		height: Math.max(label.implicitHeight, toggle.implicitHeight) + Theme.u(4)
 
+		MouseArea {
+			property int wheel: 0
+
+			anchors.fill: parent
+			acceptedButtons: Qt.NoButton
+			onWheel: event => {
+				// A touchpad comes in small parts of a notch.
+				wheel += event.angleDelta.y;
+				const steps = Math.trunc(wheel / 120);
+				if (steps !== 0) {
+					wheel -= steps * 120;
+					NotificationStore.stepDnd(steps);
+				}
+			}
+		}
+
 		Text {
 			id: label
 
 			anchors.left: parent.left
 			anchors.leftMargin: Theme.u(4)
 			anchors.verticalCenter: parent.verticalCenter
-			text: "Do Not Disturb"
+			anchors.right: toggle.left
+			anchors.rightMargin: Theme.u(6)
+			text: NotificationStore.dndLabel ? `Do Not Disturb · ${NotificationStore.dndLabel}` : "Do Not Disturb"
+			elide: Text.ElideRight
 			color: Theme.colors.text
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
@@ -249,7 +268,7 @@ Panel {
 			anchors.rightMargin: Theme.u(4)
 			anchors.verticalCenter: parent.verticalCenter
 			checked: NotificationStore.dnd
-			onToggled: wanted => NotificationStore.dnd = wanted
+			onToggled: wanted => NotificationStore.setDnd(wanted, 0)
 
 			Keys.onBacktabPressed: list.enter(list.count - 1, -1)
 		}

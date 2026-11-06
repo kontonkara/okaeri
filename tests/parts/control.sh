@@ -118,12 +118,28 @@ at $((slider_left + slider_width / 2)) $volume_y
 wait_log 'dry: volume 0.'
 log | grep -E 'dry: volume 0\.(49|5)' >/dev/null
 when 'dry: volume' wheel 1
+fail_awake() {
+	echo "control: $1" >&2
+	exit 1
+}
 # With Wi-Fi folded the power profile's buttons are under Bluetooth.
 at $fold_x $wifi_y
 sleep 0.4
 when 'dry: power profile PowerSaver' at 1089 299
 when 'dry: power profile Balanced' at 1206 299
 when 'dry: power profile Performance' at 1322 299
+# Under them keeping awake: the wheel gives it half an hour, and takes it back.
+awake() {
+	ipc awake state | jq -r .on
+}
+move $fold_x 385
+wheel 1
+sleep 0.3
+[ "$(awake)" = true ] || fail_awake "the wheel didn't turn it on"
+shot awake-wheel
+wheel -1
+sleep 0.3
+[ "$(awake)" = false ] || fail_awake "the wheel didn't turn it off"
 at $fold_x $wifi_y
 sleep 0.4
 

@@ -17,6 +17,9 @@ Singleton {
 	property var server: null
 	property var panel: null
 	property alias dnd: kept.dnd
+	// When Do Not Disturb ends by itself, 0 for never.
+	property alias dndUntil: kept.dndUntil
+	readonly property alias dndLabel: timer.label
 
 	// How many toasts show, how long one stays when its app doesn't say, and
 	// how many the history holds: past that the oldest go.
@@ -177,9 +180,32 @@ Singleton {
 		clearing = false;
 	}
 
+	// `notches` of the wheel on: half an hour each, and off at nothing left.
+	function stepDnd(notches) {
+		const end = timer.stepped(notches);
+		setDnd(end > 0, end);
+	}
+
+	// For scripts: `seconds` from now.
+	function dndFor(seconds) {
+		setDnd(true, timer.after(seconds));
+	}
+
+	function setDnd(wanted, end) {
+		dnd = wanted;
+		dndUntil = wanted ? end : 0;
+	}
+
 	function togglePanel() {
 		if (panel)
 			panel.toggle();
+	}
+
+	Expiry {
+		id: timer
+
+		until: store.dndUntil
+		onOver: store.setDnd(false, 0)
 	}
 
 	// What a reload leaves as it was.
@@ -187,6 +213,7 @@ Singleton {
 		id: kept
 
 		property bool dnd: false
+		property double dndUntil: 0
 		property int seenId: 0
 
 		reloadableId: "notifications"
