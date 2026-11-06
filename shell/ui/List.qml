@@ -10,7 +10,9 @@ import qs
 ListView {
 	id: list
 
-	readonly property real rowHeight: Theme.u(38)
+	property real rowHeight: Theme.u(38)
+	// Of the pictures on its rows.
+	property real iconSize: Theme.u(18)
 	// Where the pointer last was in the window, null for not seen yet: set that
 	// at an opening, and the row it opened on doesn't count as moved onto.
 	property var pointer: null
@@ -111,6 +113,7 @@ ListView {
 				anchors.verticalCenter: parent.verticalCenter
 				visible: !!row.modelData.icon && !picture.visible
 				name: row.modelData.icon || ""
+				size: list.iconSize
 				color: Theme.colors.subtext
 			}
 
@@ -120,7 +123,7 @@ ListView {
 				anchors.verticalCenter: parent.verticalCenter
 				visible: !!row.modelData.image && status !== Image.Error
 				source: row.modelData.image || ""
-				implicitSize: Theme.u(18)
+				implicitSize: list.iconSize
 			}
 
 			Column {
