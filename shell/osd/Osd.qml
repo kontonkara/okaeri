@@ -6,9 +6,9 @@ import qs
 import qs.services
 import qs.ui
 
-// What the volume, the microphone, the brightness or the keyboard layout just
-// became, for a moment, at the bottom of the screen in focus. Clicks and keys go
-// to what's under it.
+// What the volume, the microphone, the brightness, the keyboard layout or a lock
+// key just became, for a moment, at the bottom of the screen in focus. Clicks and
+// keys go to what's under it.
 PanelWindow {
 	id: osd
 
@@ -18,12 +18,19 @@ PanelWindow {
 		brightness: "sun",
 		mic: "mic",
 		micMute: "micOff",
-		layout: "keyboard"
+		layout: "keyboard",
+		caps: "capsLock",
+		num: "numLock"
 	})
 	readonly property real rise: Theme.u(8)
 	property string kind: "volume"
 	property real level: 0
-	readonly property bool off: kind === "mute" || kind === "micMute"
+	readonly property bool lock: kind === "caps" || kind === "num"
+	readonly property bool off: kind === "mute" || kind === "micMute" || (lock && level === 0)
+	// What it says in words, if that's what it shows and not a level.
+	readonly property string label: kind === "layout" ? Niri.layoutLabel
+		: lock ? `${kind === "caps" ? "Caps Lock" : "Num Lock"} ${off ? "off" : "on"}`
+		: ""
 	property bool shown: false
 
 	function show(kind, level) {
@@ -108,6 +115,20 @@ PanelWindow {
 		onMoved: osd.showLayout()
 	}
 
+	Watch {
+		value: Locks.caps
+		ready: Locks.ready
+		device: Locks.device
+		onMoved: osd.show("caps", Locks.caps ? 1 : 0)
+	}
+
+	Watch {
+		value: Locks.num
+		ready: Locks.ready
+		device: Locks.device
+		onMoved: osd.show("num", Locks.num ? 1 : 0)
+	}
+
 	Timer {
 		id: hold
 
@@ -158,8 +179,8 @@ PanelWindow {
 
 			Text {
 				anchors.verticalCenter: parent.verticalCenter
-				visible: osd.kind === "layout"
-				text: Niri.layoutLabel
+				visible: osd.label !== ""
+				text: osd.label
 				color: Theme.colors.text
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize
@@ -170,7 +191,7 @@ PanelWindow {
 				anchors.verticalCenter: parent.verticalCenter
 				value: osd.level
 				interactive: false
-				visible: osd.kind !== "layout"
+				visible: osd.label === ""
 				enabled: !osd.off
 
 				Behavior on value {

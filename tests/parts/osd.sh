@@ -430,3 +430,30 @@ shot layout
 niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-osd" and .keyboard_interactivity == "None")' >/dev/null ||
 	fail "the layout's card took the keyboard"
 leaves "$(now)" >/dev/null
+
+# The lock keys, by their lights: a card as one changes, saying which and how.
+light() {
+	echo "$2" >"$work/leds/input9::$1/brightness"
+}
+# Whether two shots show something else where the card is.
+cards_differ() {
+	[ "$(magick "$out/$1.png" "$out/$2.png" -compose difference -composite -crop 400x120+500+760 +repage -format '%[fx:maxima]' info:)" != 0 ]
+}
+stays_off 500 "a card for a light that didn't change"
+light capslock 1
+comes_up "no card for CapsLock on"
+sleep 0.4
+shot caps-on
+leaves "$(now)" >/dev/null
+light capslock 0
+comes_up "no card for CapsLock off"
+sleep 0.4
+shot caps-off
+leaves "$(now)" >/dev/null
+cards_differ caps-on caps-off || fail "CapsLock on and off look the same"
+light numlock 1
+comes_up "no card for NumLock"
+sleep 0.4
+shot num-on
+leaves "$(now)" >/dev/null
+cards_differ caps-on num-on || fail "CapsLock and NumLock look the same"
