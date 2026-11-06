@@ -236,6 +236,24 @@ shot corner
 ipc notifications clear
 wait_up toasts 0 "the toast after clear"
 
+step "The session from the launcher"
+ipc launcher toggle
+wait_up panel 1 "the launcher"
+settle
+type reboot
+sleep 0.2
+shot session-row
+key Return
+sleep 0.5
+wait_up panel 1 "the session menu from the launcher"
+shot session-from-launcher
+key Escape
+sleep 0.3
+[ "$(up panel)" = 1 ] || fail "Escape on the countdown closed the menu"
+key Escape
+wait_up panel 0 "the session menu, closing"
+! log | grep -q "okaeri: dry: session" || fail "the session did something"
+
 step "What they're for"
 timeout 30 notify-send -a Mail "Hello" "A toast over the whole shell."
 wait_up toasts 1 "a notification"

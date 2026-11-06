@@ -1,18 +1,34 @@
 import QtQuick
 import Quickshell.Io
 import qs
+import qs.services
 import qs.ui
 
 // The app launcher: what's typed picks from the apps and Enter launches the
-// selected one, or copies the answer to a sum. The field keeps the keys, Up and
-// Down reach the list from it.
+// selected one, copies the answer to a sum, or goes to an open window or to the
+// session menu. The field keeps the keys, Up and Down reach the list from it.
 Panel {
 	id: launcher
 
-	// What the calculator makes of it, over the apps it finds.
+	// What the calculator makes of it, the apps it finds, and after them the open
+	// windows and what the session can do.
 	function rows() {
+		const wanted = field.text.trim().toLowerCase();
 		const sum = Calculator.result ? [{ text: Calculator.result, subtext: Calculator.expression, icon: "calculator", sum: true }] : [];
-		return sum.concat(Apps.search(field.text));
+		const windows = !wanted ? [] : Niri.windows.filter(w => [w.title, w.app_id].some(text => (text || "").toLowerCase().includes(wanted))).map(w => ({
+			window: w.id,
+			text: w.title,
+			subtext: "Open window",
+			image: Apps.imageOf(w.app_id),
+			icon: "apps"
+		}));
+		const session = wanted.length < 2 ? [] : Session.actions.filter(row => row.text.toLowerCase().includes(wanted)).map(row => ({
+			session: row,
+			text: row.text,
+			subtext: "Session",
+			icon: row.icon
+		}));
+		return sum.concat(Apps.search(field.text), windows, session);
 	}
 
 	// Not a binding: an app moving up for its launch would show as the panel
@@ -34,6 +50,7 @@ Panel {
 	panelWidth: Theme.u(520)
 
 	onPanelOpened: {
+		Session.check();
 		field.text = "";
 		list.pointer = null;
 		field.take();
@@ -99,7 +116,11 @@ Panel {
 				// The rows still take clicks as the panel fades: a double click does.
 				if (!launcher.shown)
 					return;
-				if (row.sum)
+				if (row.window)
+					Niri.focusWindow(row.window);
+				else if (row.session)
+					Session.asked(row.session);
+				else if (row.sum)
 					Calculator.copy();
 				else
 					Apps.launch(row.entry);

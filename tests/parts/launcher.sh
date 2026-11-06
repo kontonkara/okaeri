@@ -162,6 +162,29 @@ sum "5 km to m" "5000 m"
 sum "sqrt(16)" 4
 sum "/calc 6*7" 42
 
+# An open window, under the apps: Enter goes to it.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --title okaeri-first --config NONE -o confirm_os_window_close=0 sleep 30 &
+first_window=$!
+sleep 1.5
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --title okaeri-second --config NONE -o confirm_os_window_close=0 sleep 30 &
+second_window=$!
+sleep 1.5
+title() {
+	niri msg --json focused-window | jq -r .title
+}
+[ "$(title)" = okaeri-second ] || fail "the second window isn't in focus: $(title)"
+open
+type okaeri-first
+sleep 0.2
+shot window-row
+key Return
+sleep 0.4
+[ "$(title)" = okaeri-first ] || fail "Enter didn't go to the window: $(title)"
+nothing_launched
+kill "$first_window" "$second_window"
+wait "$first_window" "$second_window" 2>/dev/null || true
+sleep 0.4
+
 # Apps stay apps, and a sum that won't end doesn't hold up the next.
 no_sum 2048
 no_sum "99999999!" 1.4
