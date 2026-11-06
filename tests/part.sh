@@ -82,6 +82,8 @@ cat "$work/failed-\$scope" 2>/dev/null || echo '[]'
 SH
 chmod +x "$work/systemctl"
 sed -i "s|\"systemctl\"|\"$work/systemctl\"|" "$work/shell/services/Units.qml"
+# What the machine plays comes and goes, and would move the whole shell's shots.
+[ -n "$part" ] || sed -i 's/^\treadonly property var nodes: .*/\treadonly property var nodes: []/' "$work/shell/services/Audio.qml"
 [ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML
 import QtQuick
 import Quickshell
