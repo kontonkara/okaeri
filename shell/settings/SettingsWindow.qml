@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import qs
 import qs.services
 import qs.ui
@@ -40,7 +41,15 @@ FloatingWindow {
 	implicitHeight: fixed.height
 	minimumSize: fixed
 	maximumSize: fixed
-	color: Theme.colors.background
+	color: Theme.panel
+	BackgroundEffect.blurRegion: Theme.blur ? glass : null
+
+	Region {
+		id: glass
+
+		item: window.contentItem
+		radius: Theme.cardRadius
+	}
 
 	Connections {
 		target: Settings

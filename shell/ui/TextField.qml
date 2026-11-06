@@ -27,7 +27,7 @@ Rectangle {
 	implicitWidth: Theme.u(260)
 	implicitHeight: Theme.u(38)
 	radius: Theme.round(height)
-	color: Theme.colors.surface
+	color: Theme.surface
 	border.width: Math.max(1, Theme.u(input.activeFocus ? 2 : 1))
 	border.color: input.activeFocus ? Theme.colors.accent : Theme.border
 	opacity: enabled ? 1 : 0.5

@@ -438,6 +438,45 @@ for scale in 1.25 1.3; do
 	diff "$out/frames-1" "$out/frames-$scale" >&2 || fail "the edges at a scale of $scale aren't those of 1"
 done
 
+step "Blur"
+# How bright shot $1 is at $2 $3.
+bright() {
+	magick "$out/$1.png" -format "%[fx:int(p{$2,$3}.r*255)]" info:
+}
+# A wallpaper that's black up to $1, and white after it.
+edge() {
+	magick -size "$1x900" xc:black -size "$((1400 - $1))x900" xc:white +append "$work/edge-$1.png"
+	printf '{ "wallpaper": { "path": "%s/edge-%s.png", "fade": 0 } }\n' "$work" "$1" >"$config"
+	sleep 0.5
+}
+# Panel $1 up for shot $2, and down again.
+glimpse() {
+	ipc "$1" toggle
+	wait_up panel 1 "$1 for $2"
+	settle
+	shot "$2"
+	key Escape
+	wait_up panel 0 "Escape from $1 for $2"
+}
+# The edges are just inside the panels' left ends, under their padding: only
+# blur brings light to the black side, and it has to reach that far.
+theme '{}'
+edge 1030
+glimpse control opaque
+[ "$(bright opaque 1036 50)" = 0 ] || fail "the wallpaper shows through without blur"
+theme '{"blur":true}'
+glimpse control glass
+[ "$(bright glass 1024 50)" -gt 8 ] || fail "no blur at the left end of a panel in a corner"
+[ "$(bright glass 1036 50)" -gt "$(bright glass 1024 50)" ] || fail "no wallpaper through the panel"
+edge 410
+glimpse launcher glass-middle
+[ "$(bright glass-middle 405 450)" -gt 8 ] || fail "no blur at the left end of a panel in the middle"
+# Its edge over white is as dark as the rest of it, near enough: no light line.
+edge 1
+glimpse launcher glass-white
+[ "$(bright glass-white 400 450)" -lt 120 ] || fail "a light line around a panel: $(bright glass-white 400 450)"
+printf '{}' >"$config"
+
 step "A reload with a panel up"
 theme '{}'
 ipc control toggle
