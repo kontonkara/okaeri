@@ -707,6 +707,7 @@ shot square-toasts
 ipc notifications toggle
 wait_state panel true
 shot square-panel
+settle
 key Escape
 wait_state panel false
 stop_sender
@@ -751,6 +752,32 @@ wait_state toasts 0
 ! log | grep -q "notification action default.*Mail" || fail "a right click took the action"
 stop_sender
 reset
+
+step "Rules"
+printf '{ "notifications": { "rules": [ { "app": "quiet", "toast": false }, { "app": "Passing", "history": false }, { "app": "muted", "toast": false, "history": false } ] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.4
+# No toast, in the history all the same.
+send -a Quiet "No toast" "Only in the history."
+wait_state history 1
+sleep 0.4
+is toasts 0
+# A toast, and gone when it's gone.
+send -a Passing -t 500 "No history" "Only a toast."
+wait_state toasts 1
+is history 1
+wait_state toasts 0
+is history 1
+# Neither.
+send -a Muted "Nothing" "Not at all."
+sleep 0.4
+is toasts 0
+is history 1
+# A critical one comes through all the same.
+send -a Muted -u critical "Urgent" "It shows."
+wait_state toasts 1
+reset
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.4
 
 step "Clicks go through"
 if command -v kitty >/dev/null; then
