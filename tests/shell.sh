@@ -177,6 +177,32 @@ wait_up panel 1 "Escape from two panels"
 key Escape
 wait_up panel 0 "Escape from the other one"
 
+step "Where the buttons are"
+# Whether what's at $2 150 in shot $1 is the desktop, as it is at the middle of
+# the screen's lower edge.
+desktop() {
+	[ "$(magick "$out/$1.png" -format "%[hex:u.p{$2,150}]" info:)" = "$(magick "$out/$1.png" -format '%[hex:u.p{700,880}]' info:)" ]
+}
+config=$XDG_CONFIG_HOME/okaeri/settings.json
+printf '{ "bar": { "left": ["workspaces", "control"], "center": ["clock", "clipboard"], "right": ["notifications"] } }' >"$config"
+sleep 0.5
+ipc control toggle
+wait_up panel 1 "the control center on the left"
+settle
+shot left-control
+desktop left-control 200 && fail "the control center isn't on the left"
+desktop left-control 1200 || fail "the control center is still on the right"
+ipc clipboard toggle
+wait_up panel 2 "the clipboard in the middle, beside the control center"
+settle
+shot middle-clipboard
+desktop middle-clipboard 700 && fail "the clipboard isn't in the middle"
+key Escape
+key Escape
+wait_up panel 0 "Escape from the left and the middle"
+printf '{}' >"$config"
+sleep 0.5
+
 step "Two panels in one place"
 # The second takes over, keys and all.
 ipc clipboard toggle

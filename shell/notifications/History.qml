@@ -8,6 +8,8 @@ import qs.ui
 Panel {
 	id: history
 
+	align: Settings.corner("notifications")
+
 	// It opens on the newest, and nothing has the keys at first: no ring until
 	// Tab takes it somewhere.
 	onPanelOpened: {

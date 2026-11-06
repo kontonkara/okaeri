@@ -8,7 +8,7 @@ import qs.ui
 Panel {
 	id: controlCenter
 
-	align: "top-right"
+	align: Settings.corner("control")
 	onShownChanged: Control.open = shown
 	// A reload takes it away without closing it, and what's scanning would go
 	// on with nobody left to stop it.
