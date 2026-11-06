@@ -7,12 +7,14 @@ Item {
 	id: level
 
 	property alias value: slider.value
+	// Over the slider, for one that needs saying what it is.
+	property string label: ""
 	default property alias front: front.data
 
 	signal moved(real wanted)
 
 	width: parent.width
-	height: Theme.u(34)
+	height: Theme.u(label ? 44 : 34)
 
 	Item {
 		id: front
@@ -29,7 +31,22 @@ Item {
 		anchors.right: percent.left
 		anchors.rightMargin: Theme.u(10)
 		anchors.verticalCenter: parent.verticalCenter
+		anchors.verticalCenterOffset: level.label ? Theme.u(8) : 0
 		onMoved: wanted => level.moved(wanted)
+	}
+
+	Text {
+		anchors.left: slider.left
+		anchors.right: slider.right
+		anchors.top: parent.top
+		anchors.topMargin: Theme.u(4)
+		visible: level.label !== ""
+		text: level.label
+		textFormat: Text.PlainText
+		color: Theme.colors.subtext
+		elide: Text.ElideRight
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(2)
 	}
 
 	Text {
