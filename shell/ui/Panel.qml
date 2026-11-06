@@ -100,30 +100,54 @@ PanelWindow {
 		width: Math.round(panel.panelWidth)
 		height: card.height
 		focus: true
-		opacity: panel.shown ? 1 : 0
-		transform: Translate {
-			y: panel.shown ? 0 : -Theme.u(8)
-
-			Behavior on y {
-				enabled: Theme.animate
-
-				NumberAnimation {
-					duration: 160
-					easing.type: Easing.OutCubic
-				}
-			}
-		}
+		opacity: 0
+		scale: 0.94
+		// It grows out of where it belongs.
+		transformOrigin: panel.align === "top-right" ? Item.TopRight
+			: panel.align === "top-left" ? Item.TopLeft
+			: panel.align === "top" ? Item.Top
+			: Item.Center
 
 		Keys.onEscapePressed: panel.dismiss()
 
-		Behavior on opacity {
-			enabled: Theme.animate
+		states: State {
+			name: "shown"
+			when: panel.shown
 
-			NumberAnimation {
-				duration: 160
-				easing.type: Easing.OutCubic
+			PropertyChanges {
+				scope.opacity: 1
+				scope.scale: 1
 			}
 		}
+
+		transitions: [
+			Transition {
+				to: "shown"
+				enabled: Theme.animate
+
+				NumberAnimation {
+					property: "opacity"
+					duration: 140
+					easing.type: Easing.OutCubic
+				}
+
+				NumberAnimation {
+					property: "scale"
+					duration: 240
+					easing.type: Easing.OutQuint
+				}
+			},
+			Transition {
+				from: "shown"
+				enabled: Theme.animate
+
+				NumberAnimation {
+					properties: "opacity,scale"
+					duration: 130
+					easing.type: Easing.InCubic
+				}
+			}
+		]
 
 		onOpacityChanged: {
 			if (opacity === 0)
