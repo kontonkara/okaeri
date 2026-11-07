@@ -152,6 +152,84 @@ hold
 let_go
 same "the bar" "$(value .bar)" "$before"
 
+step "A part's own settings"
+# Up to the lanes: a part's card took the page down to it.
+to_top() {
+	move 700 400
+	notch -30
+	sleep 0.6
+}
+# The part at $1 $2: its card comes up at the foot of the page.
+choose() {
+	to_top
+	move "$1" "$2"
+	click
+	sleep 0.8
+}
+choose 745 "$left_y"
+shot part-clock
+move "$switch_x" 712
+click
+sleep 0.3
+same "seconds" "$(value .clock.seconds)" true
+move "$higher_x" 566
+click
+sleep 0.3
+same "the date" "$(value .clock.date)" '"after"'
+move 968 616
+click
+wtype -M ctrl a -m ctrl
+type 'yyyy'
+key Return
+sleep 0.3
+same "how the date's written" "$(value .clock.dateFormat)" '"yyyy"'
+choose 577 "$left_y"
+shot part-workspaces
+move "$switch_x" 655
+click
+sleep 0.3
+same "the empty ones" "$(value .workspaces.empty)" false
+choose 559 "$off_y"
+shot part-battery
+move "$higher_x" 655
+click
+sleep 0.3
+same "when the battery shows" "$(value .battery.show)" '"battery"'
+# One with a page of its own: a way there.
+choose 785 "$right_y"
+shot part-tray
+move 1021 708
+click
+sleep 0.5
+move "$switch_x" "$drawer_y"
+click
+sleep 0.3
+same "the drawer, from the tray's page" "$(value .tray.drawer)" true
+# Off again, as a later step has it.
+click
+sleep 0.3
+same "the drawer, off again" "$(value .tray.drawer)" false
+
+step "All of the bar, and its screens"
+page "$bar_y"
+move 700 400
+notch 30
+sleep 0.6
+shot bar-all
+move "$higher_x" 550
+click
+sleep 0.3
+same "the wheel" "$(value .bar.wheel)" '"volume"'
+move "$switch_x" 600
+click
+sleep 0.3
+same "tips" "$(value .bar.tips)" false
+# The only screen keeps its bar.
+move "$switch_x" 705
+click
+sleep 0.3
+same "screens without a bar" "$(value .bar.hideOn)" null
+
 step "The pictures of a folder"
 mkdir "$work/pictures"
 magick -size 1600x900 xc:'#336699' "$work/pictures/a blue.png"

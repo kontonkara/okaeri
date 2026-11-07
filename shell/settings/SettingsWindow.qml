@@ -123,7 +123,9 @@ FloatingWindow {
 	Component {
 		id: barPage
 
-		BarPage {}
+		BarPage {
+			onOpens: name => window.page = window.pages.findIndex(entry => entry.text === name)
+		}
 	}
 
 	Component {
