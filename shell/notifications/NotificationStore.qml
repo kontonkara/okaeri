@@ -221,6 +221,16 @@ Singleton {
 		return notification.expireTimeout < 0 ? defaultTimeout : notification.expireTimeout;
 	}
 
+	// What it says, on the clipboard.
+	function copy(notification) {
+		const text = [notification.summary, notification.body].filter(part => part !== "").join("\n");
+		Env.act("notification copy", () => Quickshell.execDetached(["wl-copy", "--", text]));
+	}
+
+	function reply(notification, text) {
+		Env.act("notification reply", () => notification.sendInlineReply(text));
+	}
+
 	function invoke(notification, action) {
 		Env.act(`notification action ${action.identifier}`, () => action.invoke());
 		if (panel)

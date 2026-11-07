@@ -16,6 +16,7 @@ Scope {
 			actionsSupported: true
 			imageSupported: true
 			persistenceSupported: true
+			inlineReplySupported: true
 			onNotification: notification => NotificationStore.receive(notification)
 		}
 	}
