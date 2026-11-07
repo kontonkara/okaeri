@@ -4,6 +4,10 @@
 # doesn't show right now. Those come in through Probe, a file only this test
 # has, put into the shell's copy, which Quickshell then reloads.
 
+fail() {
+	echo "control: $1" >&2
+	exit 1
+}
 seen() {
 	log | grep -cF "$1" || true
 }
@@ -253,6 +257,11 @@ Scope {
 	IpcHandler {
 		target: "probe"
 
+		function reaches(name: string, screens: string): bool {
+			Audio.screens = screens.split(",");
+			return Audio.reaches({ name });
+		}
+
 		function radios(): void {
 			Wifi.enabled = true;
 			Wifi.device = wifiCard;
@@ -413,6 +422,12 @@ toggle
 when 'dry: wifi disconnect' at $action_x "$(row 0)"
 never 'dry: wifi connect' at $row_x "$(row 0)"
 when 'dry: wifi connect' at $row_x "$(row 1)"
+# A saved one goes on a second click, soon after the first.
+forget_x=1345
+never 'dry: wifi forget' at $forget_x "$(row 1)"
+sleep 0.2
+shot dark-forget
+when 'dry: wifi forget' at $forget_x "$(row 1)"
 when 'dry: wifi connect' at $row_x "$(row 3)"
 never 'dry: wifi connect' at $row_x "$(row 4)"
 never 'dry: wifi connect' at $row_x "$(row 2)"
@@ -571,6 +586,9 @@ toggle
 
 when 'dry: bluetooth disconnect' at $action_x "$(bt_row 0)"
 when 'dry: bluetooth connect' at $row_x "$(bt_row 1)"
+never 'dry: bluetooth forget' at $forget_x "$(bt_row 1)"
+sleep 0.2
+when 'dry: bluetooth forget' at $forget_x "$(bt_row 1)"
 
 # Two pairings at once each end in connecting, with `paired` coming before the
 # end of the pairing or after it.
@@ -738,8 +756,28 @@ sleep 0.3
 key Escape
 sleep 0.4
 
+# A GPU's output goes by whether that GPU has a screen, and others aren't asked.
+hdmi=alsa_output.pci-0000_01_00.1.hdmi-stereo
+[ "$(ipc probe reaches "$hdmi" 0000:06:00)" = false ] || fail "an output with no screen"
+[ "$(ipc probe reaches "$hdmi" 0000:06:00,0000:01:00)" = true ] || fail "no output with a screen"
+[ "$(ipc probe reaches alsa_output.pci-0000_06_00.6.analog-stereo none)" = true ] || fail "no speakers"
+[ "$(ipc probe reaches bluez_output.AA_BB.1 none)" = true ] || fail "no headphones"
+
+# What the settings leave out isn't there, and comes back.
+toggle
+sleep 0.5
+shot all-sections
+printf '{ "control": { "hidden": ["wifi", "bluetooth", "power", "awake"] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.7
+shot few-sections
+[ "$(magick compare -metric AE "$out/all-sections.png" "$out/few-sections.png" null: 2>&1 | cut -d' ' -f1)" != 0 ] || fail "the settings left nothing out"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.7
+key Escape
+sleep 0.4
+
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|output|app volume [0-9.]+|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|app volume [0-9.]+|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

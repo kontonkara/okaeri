@@ -18,13 +18,14 @@ config=$XDG_CONFIG_HOME/okaeri/settings.json
 menu_x=420
 bar_y=216
 tray_y=254
-launcher_y=292
-clipboard_y=330
-notifications_y=368
-sounds_y=406
-wallpaper_y=444
-look_y=482
-session_y=520
+control_y=292
+launcher_y=330
+clipboard_y=368
+notifications_y=406
+sounds_y=444
+wallpaper_y=482
+look_y=520
+session_y=558
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -222,6 +223,17 @@ same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
 arrow "$higher_x" "$battery_y"
 same "the warning, two up" "$(value .battery.warning)" 25
+
+step "The control center's page"
+page "$control_y"
+shot control-page
+move "$switch_x" 354
+click
+sleep 0.3
+same "what's left out" "$(value .control.hidden)" '["wifi"]'
+click
+sleep 0.3
+same "what's left out, back" "$(value .control.hidden)" '[]'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"

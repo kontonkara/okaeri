@@ -3,7 +3,8 @@ import Quickshell.Bluetooth
 import qs
 import qs.ui
 
-// A device: how it stands, and a way to disconnect from one connected.
+// A device: how it stands, and a way to disconnect from one connected and to
+// forget a paired one.
 Entry {
 	id: row
 
@@ -24,8 +25,14 @@ Entry {
 		return device.paired ? "Paired" : "Nearby";
 	}
 	pickable: !device.connected && !busy
-	action: device.connected ? "Disconnect" : ""
-	onActed: Bt.disconnect(device)
+	action: device.connected ? "Disconnect" : device.paired ? "Forget" : ""
+	risky: !device.connected
+	onActed: {
+		if (device.connected)
+			Bt.disconnect(device);
+		else
+			Bt.forget(device);
+	}
 
 	Icon {
 		name: "bluetooth"

@@ -7,7 +7,7 @@ import qs.ui
 // make the panel grow by itself.
 Section {
 	name: "playback"
-	visible: Audio.nodes.length > 0
+	wanted: Audio.nodes.length > 0
 	icon: "music"
 	title: "Playback"
 	summary: [...new Set(Audio.nodes.map(node => Audio.streamName(node)))].join(", ")

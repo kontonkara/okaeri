@@ -30,7 +30,7 @@ Section {
 	}
 
 	name: "wifi"
-	visible: !!Wifi.device
+	wanted: !!Wifi.device
 	icon: Wifi.enabled ? "wifi" : "wifiOff"
 	title: "Wi-Fi"
 	summary: {

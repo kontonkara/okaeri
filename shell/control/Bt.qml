@@ -51,6 +51,10 @@ Singleton {
 		Env.act("bluetooth disconnect", () => device.disconnect());
 	}
 
+	function forget(device) {
+		Env.act("bluetooth forget", () => device.forget());
+	}
+
 	onDiscoveringChanged: discover()
 
 	// This starts with the first opening, already discovering if the adapter

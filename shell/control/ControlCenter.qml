@@ -37,7 +37,7 @@ Panel {
 		sourceComponent: Column {
 			// What's left of the screen for a list, under the bar and with
 			// everything else around it.
-			readonly property real room: controlCenter.room - levels.height - wifi.foldedHeight - bluetooth.foldedHeight - power.height - awake.foldedHeight - more.height - spacing * 5 - (output.visible ? output.foldedHeight + spacing : 0) - (playback.visible ? playback.foldedHeight + spacing : 0)
+			readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, playback, wifi, bluetooth, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
 
 			spacing: Math.round(Theme.u(10))
 
@@ -69,6 +69,8 @@ Panel {
 
 			PowerSection {
 				id: power
+
+				visible: !Settings.control.hidden.includes("power")
 			}
 
 			AwakeSection {

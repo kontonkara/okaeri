@@ -10,6 +10,9 @@
 	"battery": {
 		"warning": 20
 	},
+	"control": {
+		"hidden": []
+	},
 	"launcher": {
 		"pinned": [],
 		"hidden": [],

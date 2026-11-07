@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs
 
@@ -28,7 +29,21 @@ Singleton {
 	// Where sound can go: the sinks of devices, not the filters on the way to them.
 	// They go by their names, as properties would take tracking each, and that's
 	// not for what sits on a GPU that sleeps.
-	readonly property var outputs: Pipewire.nodes.values.filter(node => node.isSink && !node.isStream && /^(alsa|bluez)_output/.test(node.name))
+	readonly property var outputs: Pipewire.nodes.values.filter(node => node.isSink && !node.isStream && /^(alsa|bluez)_output/.test(node.name) && reaches(node))
+	// The PCI addresses of what has a screen on it, without the function.
+	property var screens: []
+
+	// What comes out of a GPU's audio goes nowhere without a screen on that GPU, and
+	// one in use stays, for the list to say where the sound is.
+	function reaches(node) {
+		const gpu = node.name.match(/^alsa_output\.pci-(\w+)_(\w+)_(\w+)\.\d\.(hdmi|dp)/i);
+		return !gpu || node === sink || screens.includes(`${gpu[1]}:${gpu[2]}:${gpu[3]}`);
+	}
+
+	// sysfs says what it last saw: this doesn't wake a GPU that sleeps.
+	function checkScreens() {
+		screenCheck.running = true;
+	}
 
 	function change(by) {
 		if (ready) {
@@ -69,6 +84,18 @@ Singleton {
 	function toggleMicMute() {
 		if (micReady)
 			Env.act(`mic mute ${!micMuted}`, () => source.audio.muted = !micMuted);
+	}
+
+	Component.onCompleted: checkScreens()
+
+	Process {
+		id: screenCheck
+
+		command: ["sh", "-c", 'for status in /sys/class/drm/card*-*/status; do [ "$(cat "$status")" = connected ] && basename "$(readlink -f "${status%/*}/device/device")"; done; true']
+
+		stdout: StdioCollector {
+			onStreamFinished: audio.screens = text.trim().split("\n").map(address => address.replace(/\.\d+$/, ""))
+		}
 	}
 
 	// Its properties are there only while tracked.
