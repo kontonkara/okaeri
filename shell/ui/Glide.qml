@@ -29,6 +29,20 @@ MouseArea {
 			view.contentY = goal;
 	}
 
+	// Glides to where what's from `top` to `bottom` of it shows, or as much as fits.
+	function reveal(top, bottom) {
+		const y = view.contentY;
+		const to = bottom > y + view.height ? Math.min(top, bottom - view.height) : top < y ? top : y;
+		if (to === y)
+			return;
+		view.cancelFlick();
+		goal = inside(to);
+		if (Theme.animate)
+			gliding.restart();
+		else
+			view.contentY = goal;
+	}
+
 	function follow(pixels) {
 		gliding.stop();
 		view.cancelFlick();

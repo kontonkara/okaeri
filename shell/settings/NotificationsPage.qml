@@ -154,6 +154,12 @@ Flickable {
 			}
 
 			Setting {
+				text: "How many are unread, on the bell"
+				checked: Settings.notifications.bellCount
+				onToggled: wanted => page.set("bellCount", wanted)
+			}
+
+			Setting {
 				text: "Keep it over a restart"
 				subtext: "In a file only you can read, without the pictures that came as data"
 				checked: Settings.notifications.keep
