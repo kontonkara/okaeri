@@ -18,13 +18,15 @@ Item {
 
 	readonly property var list: ListView.view
 	readonly property bool picture: !!modelData.picture
-	readonly property string file: `${Clipboard.pictures}/${modelData.id}-${Date.now()}`
+	readonly property bool pinned: !!modelData.pinned
+	// Where its picture is. A pinned one's has it for good.
+	readonly property string file: pinned ? modelData.file : `${Clipboard.pictures}/${modelData.id}-${Date.now()}`
 
 	width: list.width
 	height: list.heightOf(modelData)
 
 	Component.onDestruction: {
-		if (picture)
+		if (picture && !pinned)
 			Clipboard.discard(file);
 	}
 
@@ -44,7 +46,7 @@ Item {
 			color: Theme.surface
 
 			Process {
-				running: true
+				running: !row.pinned
 				command: ["sh", "-c", 'mkdir -p "${3%/*}" && cliphist -db-path "$1" decode "$2" >"$3"', "sh", Clipboard.database, row.modelData.id, row.file]
 				onExited: code => {
 					if (code === 0)
@@ -58,11 +60,12 @@ Item {
 				anchors.fill: parent
 				asynchronous: true
 				cache: false
+				source: row.pinned ? `file://${row.file}` : ""
 				fillMode: Image.PreserveAspectCrop
 				// Not by the theme's scale: a new size would read the file again.
 				sourceSize: Qt.size(256, 256)
 				onStatusChanged: {
-					if (status === Image.Ready || status === Image.Error)
+					if (!row.pinned && (status === Image.Ready || status === Image.Error))
 						Quickshell.execDetached(["rm", "-f", "--", row.file]);
 				}
 			}
@@ -83,13 +86,17 @@ Item {
 		// Only when it moved: a row that comes to a resting pointer isn't picked,
 		// and neither is the one a panel opened under it.
 		onPositionChanged: event => row.list.follow(row.index, mapToItem(null, event.x, event.y))
-		onClicked: row.list.activate(row.index)
+		onClicked: event => {
+			row.list.shiftHeld = !!(event.modifiers & Qt.ShiftModifier);
+			row.list.activate(row.index);
+			row.list.shiftHeld = false;
+		}
 	}
 
 	Column {
 		anchors.left: row.picture ? preview.right : parent.left
 		anchors.leftMargin: Theme.u(10)
-		anchors.right: remove.left
+		anchors.right: pin.left
 		anchors.rightMargin: Theme.u(6)
 		anchors.verticalCenter: parent.verticalCenter
 
@@ -116,13 +123,28 @@ Item {
 	}
 
 	Button {
+		id: pin
+
+		anchors.right: row.pinned ? parent.right : remove.left
+		anchors.rightMargin: row.pinned ? Theme.u(5) : 0
+		anchors.verticalCenter: parent.verticalCenter
+		height: Theme.u(28)
+		visible: row.pinned || row.ListView.isCurrentItem
+		flat: true
+		activeFocusOnTab: false
+		icon: "pin"
+		ink: row.pinned ? Theme.colors.accent : Theme.colors.subtext
+		onClicked: row.list.togglePin(row.index)
+	}
+
+	Button {
 		id: remove
 
 		anchors.right: parent.right
 		anchors.rightMargin: Theme.u(5)
 		anchors.verticalCenter: parent.verticalCenter
 		height: Theme.u(28)
-		visible: row.ListView.isCurrentItem
+		visible: !row.pinned && row.ListView.isCurrentItem
 		flat: true
 		activeFocusOnTab: false
 		icon: "trash"

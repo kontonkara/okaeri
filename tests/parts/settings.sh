@@ -19,11 +19,12 @@ menu_x=420
 bar_y=216
 tray_y=254
 launcher_y=292
-notifications_y=330
-sounds_y=368
-wallpaper_y=406
-look_y=444
-session_y=482
+clipboard_y=330
+notifications_y=368
+sounds_y=406
+wallpaper_y=444
+look_y=482
+session_y=520
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -249,6 +250,18 @@ move "$switch_x" 463
 click
 sleep 0.3
 same "the hidden" "$(value .launcher.hidden)" '[]'
+
+step "The clipboard's page"
+page "$clipboard_y"
+shot clipboard-page
+move "$switch_x" 234
+click
+sleep 0.3
+same "Enter pastes" "$(value .clipboard.paste)" true
+arrow "$higher_x" 284
+same "the rows" "$(value .clipboard.rows)" 200
+arrow "$lower_x" 334
+same "the history" "$(value .clipboard.keep)" 500
 
 step "The notifications' page"
 printf '{ "tray": { "drawer": true }, "notifications": { "rules": [{ "app": "Spam", "toast": false }] } }\n' >"$config.new"

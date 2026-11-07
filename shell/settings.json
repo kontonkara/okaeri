@@ -16,6 +16,11 @@
 		"usage": true,
 		"sums": true
 	},
+	"clipboard": {
+		"paste": false,
+		"rows": 100,
+		"keep": 750
+	},
 	"sounds": {
 		"volume": 25,
 		"notifications": true,

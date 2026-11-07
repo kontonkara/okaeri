@@ -13,6 +13,7 @@
   systemd,
   util-linux,
   wl-clipboard,
+  wtype,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -49,6 +50,7 @@ stdenvNoCC.mkDerivation {
           systemd
           util-linux
           wl-clipboard
+          wtype
         ]
       } \
       --suffix XDG_DATA_DIRS : ${sound-theme-freedesktop}/share

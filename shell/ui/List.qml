@@ -14,6 +14,8 @@ ListView {
 	property real rowHeight: Theme.u(38)
 	// Of the pictures on its rows.
 	property real iconSize: Theme.u(18)
+	// While activated() goes out: it came with Shift.
+	property bool shiftHeld: false
 	// Where the pointer last was in the window, null for not seen yet: set that
 	// at an opening, and the row it opened on doesn't count as moved onto.
 	property var pointer: null
@@ -71,9 +73,11 @@ ListView {
 			move(1);
 		else if (event.key === Qt.Key_Up)
 			move(-1);
-		else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)
+		else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+			shiftHeld = !!(event.modifiers & Qt.ShiftModifier);
 			activate(currentIndex);
-		else
+			shiftHeld = false;
+		} else
 			return;
 		event.accepted = true;
 	}
