@@ -11,6 +11,7 @@ Singleton {
 
 	property var workspaces: []
 	property var windows: []
+	readonly property var focusedWindow: windows.find(w => w.is_focused) ?? null
 	// What's showing the screen or a window, as niri has it.
 	property var casts: []
 	// The keyboard layouts by name, and which is on.
@@ -83,9 +84,14 @@ Singleton {
 			windows = event.WindowsChanged.windows;
 		} else if (event.WindowOpenedOrChanged) {
 			const window = event.WindowOpenedOrChanged.window;
-			windows = windows.filter(w => w.id !== window.id).concat([window]);
+			const others = windows.filter(w => w.id !== window.id);
+			// One that comes with the focus takes it from the rest.
+			windows = (window.is_focused ? others.map(w => Object.assign({}, w, { is_focused: false })) : others).concat([window]);
 		} else if (event.WindowClosed) {
 			windows = windows.filter(w => w.id !== event.WindowClosed.id);
+		} else if (event.WindowFocusChanged) {
+			const id = event.WindowFocusChanged.id;
+			windows = windows.map(w => Object.assign({}, w, { is_focused: w.id === id }));
 		}
 		if (event.CastsChanged) {
 			casts = event.CastsChanged.casts;

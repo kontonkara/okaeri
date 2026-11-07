@@ -20,7 +20,9 @@ PanelWindow {
 		clock,
 		control,
 		keyboard,
+		media,
 		notifications,
+		title,
 		tray,
 		units,
 		workspaces
@@ -111,9 +113,21 @@ PanelWindow {
 	}
 
 	Component {
+		id: media
+
+		NowPlaying {}
+	}
+
+	Component {
 		id: notifications
 
 		NotificationsButton {}
+	}
+
+	Component {
+		id: title
+
+		WindowTitle {}
 	}
 
 	Component {

@@ -21,7 +21,7 @@
 		"rules": []
 	},
 	"bar": {
-		"left": ["workspaces"],
+		"left": ["workspaces", "media"],
 		"center": ["clock"],
 		"right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"]
 	}

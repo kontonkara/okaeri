@@ -115,7 +115,7 @@ let_go
 sleep 0.3
 
 step "To another lane"
-same "the left" "$(value .bar.left)" '["workspaces","clock"]'
+same "the left" "$(value .bar.left)" '["workspaces","media","clock"]'
 same "the middle" "$(value .bar.center)" '[]'
 move 300 800
 sleep 0.3
