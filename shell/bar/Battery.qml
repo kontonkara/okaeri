@@ -1,19 +1,20 @@
 import QtQuick
-import Quickshell.Services.UPower
 import qs
 import qs.services
 import qs.ui
 
-// The laptop's battery, when there is one.
+// The laptop's battery, when there is one: always, on battery or when it's low,
+// as Settings.battery.show says, and beside it the percent, the time left or
+// nothing.
 Row {
 	id: battery
 
-	readonly property var device: UPower.displayDevice
-	readonly property int level: Math.round(device.percentage * 100)
-	readonly property bool charging: device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged || !UPower.onBattery
+	readonly property var own: Settings.battery
+	readonly property int level: Power.charge
+	readonly property bool charging: !Power.draining
 	readonly property color tint: Power.low ? Theme.colors.error : Theme.colors.text
 
-	readonly property bool wanted: device.isLaptopBattery && device.isPresent
+	readonly property bool wanted: Power.present && (own.show === "always" || (own.show === "battery" && Power.draining) || (own.show === "low" && Power.low))
 
 	visible: wanted
 	spacing: Theme.u(6)
@@ -65,7 +66,8 @@ Row {
 
 	Text {
 		anchors.verticalCenter: parent.verticalCenter
-		text: `${battery.level}%`
+		visible: battery.own.label !== "none"
+		text: battery.own.label === "time" && Power.timeLeft > 0 ? Power.clock(Power.timeLeft) : `${battery.level}%`
 		color: battery.tint
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize

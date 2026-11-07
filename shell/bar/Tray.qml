@@ -4,12 +4,15 @@ import Quickshell.Services.SystemTray
 import qs
 import qs.ui
 
-// The apps' icons, but for those Settings.tray.hidden names by id: on the bar,
-// or with Settings.tray.drawer behind a button that shows them in a panel.
+// The apps' icons, but for those Settings.tray.hidden names by id, and the quiet
+// ones unless Settings.tray.passive: on the bar, or with Settings.tray.drawer
+// behind a button that shows them in a panel, all but those Settings.tray.pinned
+// keeps on the bar.
 Row {
 	id: tray
 
-	readonly property var shown: SystemTray.items.values.filter(item => item.status !== Status.Passive && !Settings.tray.hidden.includes(item.id))
+	readonly property var shown: SystemTray.items.values.filter(item => (Settings.tray.passive || item.status !== Status.Passive) && !Settings.tray.hidden.includes(item.id))
+	readonly property var drawn: Settings.tray.drawer ? shown.filter(item => !Settings.tray.pinned.includes(item.id)) : []
 	readonly property bool wanted: shown.length > 0
 
 	spacing: Theme.u(4)
@@ -21,7 +24,7 @@ Row {
 	TrayDrawer {
 		id: drawer
 
-		items: tray.shown
+		items: tray.drawn
 		trayMenu: menu
 	}
 
@@ -30,7 +33,7 @@ Row {
 
 		anchors.verticalCenter: parent.verticalCenter
 		height: Theme.u(28)
-		visible: Settings.tray.drawer && tray.shown.length > 0
+		visible: tray.drawn.length > 0
 		flat: true
 		activeFocusOnTab: false
 		icon: "tray"
@@ -40,7 +43,7 @@ Row {
 
 	Repeater {
 		model: ScriptModel {
-			values: Settings.tray.drawer ? [] : tray.shown
+			values: tray.shown.filter(item => !tray.drawn.includes(item))
 		}
 
 		TrayIcon {

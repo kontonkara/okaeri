@@ -97,7 +97,9 @@ sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml"
 sed -i 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' "$work/shell/services/Audio.qml"
 # The machine's battery could run low under a test: here it's what a test says.
 sed -i -e 's/^\treadonly property int charge: .*/\tproperty int charge: 100/' \
-	-e 's/^\treadonly property bool draining: .*/\tproperty bool draining: false/' "$work/shell/services/Power.qml"
+	-e 's/^\treadonly property bool draining: .*/\tproperty bool draining: false/' \
+	-e 's/^\treadonly property bool present: .*/\tproperty bool present: true/' \
+	-e 's/^\treadonly property real timeLeft: .*/\tproperty real timeLeft: 0/' "$work/shell/services/Power.qml"
 # What the machine plays comes and goes, and would move the whole shell's shots.
 [ -n "$part" ] || sed -i 's/^\treadonly property var nodes: .*/\treadonly property var nodes: []/' "$work/shell/services/Audio.qml"
 [ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML

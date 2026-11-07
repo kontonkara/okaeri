@@ -8,7 +8,9 @@
 		"fade": 5
 	},
 	"battery": {
-		"warning": 20
+		"warning": 20,
+		"show": "always",
+		"label": "percent"
 	},
 	"control": {
 		"hidden": []
@@ -39,7 +41,9 @@
 	},
 	"tray": {
 		"drawer": false,
-		"hidden": []
+		"hidden": [],
+		"pinned": [],
+		"passive": false
 	},
 	"notifications": {
 		"timeout": 6,
@@ -52,11 +56,24 @@
 		"actions": true,
 		"stack": true,
 		"bellAlways": true,
+		"bellCount": true,
 		"quietSharing": false,
 		"keep": true,
 		"history": 100,
 		"maxAge": 0,
 		"rules": []
+	},
+	"clock": {
+		"date": "before",
+		"dateFormat": "ddd d MMM",
+		"hours12": false,
+		"seconds": false
+	},
+	"workspaces": {
+		"labels": "none",
+		"occupied": true,
+		"empty": true,
+		"reverse": false
 	},
 	"bar": {
 		"left": ["workspaces", "media"],
