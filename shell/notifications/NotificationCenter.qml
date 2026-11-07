@@ -32,6 +32,8 @@ Scope {
 		value: history
 	}
 
+	BatteryWarning {}
+
 	Toasts {}
 
 	History {

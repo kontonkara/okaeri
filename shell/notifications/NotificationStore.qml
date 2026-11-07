@@ -172,6 +172,11 @@ Singleton {
 		clearing = false;
 	}
 
+	// One that's over, from the toasts and the history alike.
+	function withdraw(id) {
+		all.find(n => n.id === id)?.dismiss();
+	}
+
 	function toggleApp(app) {
 		opened = opened.includes(app) ? opened.filter(other => other !== app) : opened.concat([app]);
 	}

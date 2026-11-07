@@ -7,6 +7,9 @@
 		"screenOff": 660,
 		"fade": 5
 	},
+	"battery": {
+		"warning": 20
+	},
 	"wallpaper": {
 		"path": "",
 		"folder": "",

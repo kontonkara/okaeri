@@ -210,6 +210,14 @@ arrow "$lower_x" "$wait_y"
 same "the session menu's wait" "$(value .session.countdown)" 5
 shot session
 
+step "The battery's line"
+battery_y=495
+arrow "$lower_x" "$battery_y"
+same "the warning" "$(value .battery.warning)" 15
+arrow "$higher_x" "$battery_y"
+arrow "$higher_x" "$battery_y"
+same "the warning, two up" "$(value .battery.warning)" 25
+
 step "It stays"
 key Escape
 wait_up 0

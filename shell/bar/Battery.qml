@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Services.UPower
 import qs
+import qs.services
 import qs.ui
 
 // The laptop's battery, when there is one.
@@ -10,7 +11,7 @@ Row {
 	readonly property var device: UPower.displayDevice
 	readonly property int level: Math.round(device.percentage * 100)
 	readonly property bool charging: device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged || !UPower.onBattery
-	readonly property color tint: level <= 15 && !charging ? Theme.colors.error : Theme.colors.text
+	readonly property color tint: Power.low ? Theme.colors.error : Theme.colors.text
 
 	readonly property bool wanted: device.isLaptopBattery && device.isPresent
 

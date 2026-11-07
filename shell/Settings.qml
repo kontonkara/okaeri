@@ -49,6 +49,7 @@ Singleton {
 
 	readonly property var session: Object.assign({}, defaults.session, user.session, own.session)
 	readonly property var idle: Object.assign({}, defaults.idle, user.idle, own.idle)
+	readonly property var battery: Object.assign({}, defaults.battery, user.battery, own.battery)
 	readonly property var wallpaper: Object.assign({}, defaults.wallpaper, user.wallpaper, own.wallpaper)
 	readonly property var tray: Object.assign({}, defaults.tray, user.tray, own.tray)
 	readonly property var bar: Object.assign({}, defaults.bar, user.bar, own.bar)

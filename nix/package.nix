@@ -6,6 +6,7 @@
   bash,
   cliphist,
   libqalculate,
+  libnotify,
   coreutils,
   systemd,
   util-linux,
@@ -40,6 +41,7 @@ stdenvNoCC.mkDerivation {
           bash
           cliphist
           libqalculate
+          libnotify
           coreutils
           systemd
           util-linux

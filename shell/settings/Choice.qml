@@ -2,10 +2,11 @@ import QtQuick
 import qs
 import qs.ui
 
-// A line to pick a number of seconds out of `values`, from low to high, by the
+// A line to pick a number out of `values`, from low to high, by the
 // arrows or the wheel: `text`, and `subtext` if it has one. It shows `value`, which
 // can be one that's not among them, as a config can say anything, and says
-// chosen(value), as Setting does. 0 reads as `none`.
+// chosen(value), as Setting does. 0 reads as `none`, and with a `unit` it's not
+// seconds but numbers of that.
 Item {
 	id: choice
 
@@ -14,6 +15,7 @@ Item {
 	required property var values
 	property real value: 0
 	property string none: "Never"
+	property string unit
 	readonly property real lower: values.filter(other => other < value).pop() ?? -1
 	readonly property real higher: values.find(other => other > value) ?? -1
 
@@ -95,7 +97,7 @@ Item {
 			anchors.verticalCenter: parent.verticalCenter
 			width: Theme.u(64)
 			horizontalAlignment: Text.AlignHCenter
-			text: choice.value === 0 ? choice.none : choice.value < 60 ? `${choice.value} s` : `${Math.round(choice.value / 60)} min`
+			text: choice.value === 0 ? choice.none : choice.unit ? `${choice.value}${choice.unit}` : choice.value < 60 ? `${choice.value} s` : `${Math.round(choice.value / 60)} min`
 			color: Theme.colors.text
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
