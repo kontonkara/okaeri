@@ -27,5 +27,9 @@ if [ "$uses_nvidia" = false ]; then
 	done
 fi
 
+# A shell draws little, and Mesa's threads for each context would only take memory,
+# with a context for every window.
+export mesa_glthread=false GALLIUM_THREAD=0
+
 export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl
 exec quickshell -p "$shell"

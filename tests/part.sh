@@ -67,6 +67,8 @@ trap 'exit 1' INT TERM
 export PIPEWIRE_RUNTIME_DIR=$real_run
 export XDG_RUNTIME_DIR=$work/run XDG_CACHE_HOME=$work/cache XDG_CONFIG_HOME=$work/config XDG_STATE_HOME=$work/state
 export OKAERI_DRY=1 QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DESKTOP_PORTAL=1
+# As bin/okaeri has it.
+export mesa_glthread=false GALLIUM_THREAD=0
 export WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=gles2 WLR_HEADLESS_OUTPUTS=1
 export WLR_RENDER_DRM_DEVICE=/dev/dri/renderD128
 export __EGL_VENDOR_LIBRARY_FILENAMES=/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json
