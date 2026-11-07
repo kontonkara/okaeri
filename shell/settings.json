@@ -43,8 +43,12 @@
 	},
 	"notifications": {
 		"timeout": 6,
+		"timeoutLow": 3,
+		"timeoutCritical": 0,
+		"appsDecide": true,
 		"cap": 4,
 		"stack": true,
+		"quietSharing": false,
 		"keep": true,
 		"history": 100,
 		"maxAge": 0,

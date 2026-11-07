@@ -11,8 +11,11 @@ import qs.services
 // many are unread and Do Not Disturb. NotificationCenter gives it `server` and
 // `panel`; next to another shell there's no server and it all stays empty. The
 // history is kept over a restart, in a directory only the user can read.
-// Settings.notifications.rules hold back an app's: { app, toast, history }, app
-// being its name or desktop entry, in any case, and the others false to not show.
+// Settings.notifications.rules say what's done with some: { app, text, toast,
+// history, sound, bypass, timeout }, app being its name or desktop entry, in any
+// case, and all if left out, text words it has to have, and the others what's
+// different for it: false to not show or sound, bypass to go through Do Not Disturb,
+// timeout in seconds, 0 to stay.
 Singleton {
 	id: store
 
@@ -23,10 +26,8 @@ Singleton {
 	property alias dndUntil: kept.dndUntil
 	readonly property alias dndLabel: timer.label
 
-	// How many toasts show, how long one stays when its app doesn't say, and
-	// how many the history holds: past that the oldest go.
+	// How many toasts show, and how many the history holds: past that the oldest go.
 	readonly property int cap: Settings.notifications.cap
-	readonly property int defaultTimeout: Settings.notifications.timeout * 1000
 	readonly property int historyCap: Settings.notifications.history
 
 	// While clear() works: all of this goes over the list once, not once for
@@ -70,6 +71,8 @@ Singleton {
 	// these: objects don't go through it, and only a test ever reloads.
 	property var times: ({})
 	property var repeats: ({})
+	// The screen's going out to someone.
+	readonly property bool sharing: Settings.notifications.quietSharing && Niri.casts.length > 0
 	readonly property int unread: panelShown ? 0 : history.filter(n => isUnread(n)).length
 
 	onUpChanged: Qt.callLater(trim)
@@ -91,10 +94,16 @@ Singleton {
 			takeDown(n => !critical(n));
 	}
 
-	// The rule for this one's app, or none.
+	onSharingChanged: {
+		if (sharing)
+			takeDown(n => !critical(n));
+	}
+
+	// The first rule for this one, or none.
 	function rule(notification) {
 		const names = [notification.appName, notification.desktopEntry].map(name => (name || "").toLowerCase());
-		return Settings.notifications.rules.find(rule => names.includes(rule.app.toLowerCase())) ?? {};
+		const words = `${notification.summary} ${notification.body}`.toLowerCase();
+		return Settings.notifications.rules.find(rule => (!rule.app || names.includes(rule.app.toLowerCase())) && (!rule.text || words.includes(rule.text.toLowerCase()))) ?? {};
 	}
 
 	// When it came in, in ms, 0 if that isn't known.
@@ -157,7 +166,8 @@ Singleton {
 
 	// Toasts keep quiet, for now.
 	function quiet(notification) {
-		return !critical(notification) && (dnd || panelShown || rule(notification).toast === false);
+		const own = rule(notification);
+		return !critical(notification) && (panelShown || own.toast === false || ((dnd || sharing) && !own.bypass));
 	}
 
 	function receive(notification) {
@@ -196,7 +206,7 @@ Singleton {
 		if (notification.appName === "niri") {
 			if (Settings.sounds.screenshots)
 				Sounds.play("screen-capture");
-		} else if (Settings.sounds.notifications && notification.urgency !== NotificationUrgency.Low) {
+		} else if (Settings.sounds.notifications && notification.urgency !== NotificationUrgency.Low && rule(notification).sound !== false) {
 			Sounds.play(critical(notification) ? "dialog-warning" : "message-new-instant");
 		}
 	}
@@ -216,9 +226,14 @@ Singleton {
 
 	// How long a toast stays, in ms; 0 is until it's closed.
 	function lifetime(notification) {
+		const own = rule(notification).timeout;
+		if (own !== undefined)
+			return own * 1000;
 		if (critical(notification))
-			return 0;
-		return notification.expireTimeout < 0 ? defaultTimeout : notification.expireTimeout;
+			return Settings.notifications.timeoutCritical * 1000;
+		if (Settings.notifications.appsDecide && notification.expireTimeout >= 0)
+			return notification.expireTimeout;
+		return (notification.urgency === NotificationUrgency.Low ? Settings.notifications.timeoutLow : Settings.notifications.timeout) * 1000;
 	}
 
 	// What it says, on the clipboard.
