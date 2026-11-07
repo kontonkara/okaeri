@@ -29,6 +29,8 @@
 	"notifications": {
 		"timeout": 6,
 		"cap": 4,
+		"keep": true,
+		"history": 100,
 		"rules": []
 	},
 	"bar": {

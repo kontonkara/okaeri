@@ -260,15 +260,15 @@ same "how long" "$(value .notifications.timeout)" 8
 arrow "$lower_x" 305
 same "how many" "$(value .notifications.cap)" 3
 # Spam's history off too, then both on, which leaves no rule.
-move 1018 425
+move 1018 570
 click
 sleep 0.3
 same "two things held back" "$(value .notifications.rules)" '[{"app":"Spam","toast":false,"history":false}]'
-move 1018 425
+move 1018 570
 click
 sleep 0.3
 same "one again" "$(value '.notifications.rules[0].history')" true
-move 946 425
+move 946 570
 click
 sleep 0.3
 same "nothing held back" "$(value .notifications.rules)" '[]'

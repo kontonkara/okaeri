@@ -917,6 +917,8 @@ wait_state toasts 2
 wait_state toasts 0 80
 send -a Battery -u critical "Still here" "Critical: up again after the reload."
 wait_state toasts 1
+# A reload reads the file, and what changed reaches that a moment later.
+sleep 0.8
 printf '\n// Once more.\n' >>"$work/shell/bar/Bar.qml"
 wait_log 'Reloading configuration'
 wait_state history 3
@@ -972,6 +974,7 @@ step "A real action"
 # but notify-send, on the stand's private bus.
 sed 's/^\t\tif (dry)$/\t\tif (dry \&\& !what.startsWith("notification action"))/' "$work/shell/services/Env.qml" >"$work/Env.qml"
 grep -q 'what.startsWith' "$work/Env.qml"
+sleep 0.8
 cat "$work/Env.qml" >"$work/shell/services/Env.qml"
 for _ in $(seq 50); do
 	[ "$(log | grep -c 'Reloading configuration')" -ge 2 ] && break
@@ -1084,4 +1087,76 @@ ipc battery set 3 true
 settle
 is history 0
 ipc battery set 100 false
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+
+step "Over a restart"
+restart() {
+	kill "$qs_pid"
+	wait "$qs_pid" 2>/dev/null || true
+	quickshell -p "$work/shell" >>"$out/qs.log" 2>&1 &
+	qs_pid=$!
+	sleep 3
+}
+kept=$XDG_STATE_HOME/okaeri/notifications/history.json
+send -a Mail "Older" "from the first app"
+send -a Chat "Newer" "from the second"
+send -a Passing --transient "Gone by"
+wait_state history 2
+sleep 1
+[ "$(stat -c %a "$(dirname "$kept")")" = 700 ] || {
+	echo "notifications: anyone can read the history" >&2
+	return 1
+}
+[ "$(jq length "$kept")" = 2 ] || {
+	echo "notifications: the file has $(jq -c . "$kept")" >&2
+	return 1
+}
+restart
+wait_state history 2
+is toasts 0
+is unread 2
+[ "$(state 'order | join(" ")')" = "Chat Mail" ] || {
+	echo "notifications: in the order $(state order)" >&2
+	return 1
+}
+ipc notifications toggle
+wait_state panel true
+settle
+shot past-panel
+ipc notifications toggle
+wait_state panel false
+is unread 0
+sleep 1
+restart
+wait_state history 2
+is unread 0
+# New ones go over them, a reload doesn't make two of what's still there.
+send -a Chat "Newest"
+wait_state history 3
+sleep 1
+printf '\n' >>"$work/shell/shell.qml"
+sleep 2.5
+wait_state history 3
+# Clearing goes for them too, and it stays cleared.
+ipc notifications clear
+wait_state history 0
+sleep 1
+[ "$(jq length "$kept")" = 0 ] || {
+	echo "notifications: cleared, the file has $(jq -c . "$kept")" >&2
+	return 1
+}
+restart
+wait_state history 0
+# Turned off, nothing's kept, and what was there goes.
+send -a Chat "Kept for a moment"
+wait_state history 1
+sleep 1
+printf '{ "notifications": { "keep": false } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 1.5
+[ "$(jq length "$kept")" = 0 ] || {
+	echo "notifications: off, the file has $(jq -c . "$kept")" >&2
+	return 1
+}
+restart
+wait_state history 0
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
