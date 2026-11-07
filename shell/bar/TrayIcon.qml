@@ -19,6 +19,7 @@ Button {
 	flat: true
 	activeFocusOnTab: false
 	takesWheel: true
+	tip: modelData.tooltipTitle || modelData.title || modelData.id
 	onClicked: {
 		if (modelData.onlyMenu) {
 			trayMenu.showFor(modelData, entry);

@@ -9,5 +9,6 @@ Button {
 	iconSize: Theme.barIcon
 	activeFocusOnTab: false
 	icon: "sliders"
+	tip: "Control center"
 	onClicked: Control.toggle()
 }

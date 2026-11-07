@@ -21,6 +21,7 @@ Button {
 	activeFocusOnTab: false
 	icon: "cast"
 	text: enabled ? "Stop" : ""
+	tip: enabled ? "The screen is shared: a click stops it" : "The screen is shared"
 	ink: Theme.colors.error
 	onClicked: {
 		for (const session of sessions)

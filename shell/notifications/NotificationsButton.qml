@@ -14,6 +14,7 @@ Button {
 	activeFocusOnTab: false
 	icon: NotificationStore.dnd ? "bellOff" : "bell"
 	text: Settings.notifications.bellCount && NotificationStore.unread > 0 ? `${NotificationStore.unread}` : ""
+	tip: [NotificationStore.unread > 0 ? `${NotificationStore.unread} unread` : "Notifications", NotificationStore.dnd ? (NotificationStore.dndLabel ? `Do Not Disturb · ${NotificationStore.dndLabel}` : "Do Not Disturb") : ""].filter(part => part !== "").join(", ")
 	ink: NotificationStore.dnd ? Theme.colors.subtext : Theme.colors.text
 	onClicked: NotificationStore.togglePanel()
 	onRightClicked: NotificationStore.setDnd(!NotificationStore.dnd, 0)

@@ -28,6 +28,8 @@ PanelWindow {
 		units,
 		workspaces
 	})
+	// Under all of it, for Tip.
+	readonly property real tipsFrom: Theme.barHeight + Theme.u(6)
 
 	anchors {
 		top: true

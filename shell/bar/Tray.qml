@@ -37,6 +37,7 @@ Row {
 		flat: true
 		activeFocusOnTab: false
 		icon: "tray"
+		tip: "Tray"
 		iconSize: Theme.barIcon
 		onClicked: drawer.showUnder(opener)
 	}

@@ -835,6 +835,36 @@ case $shown in
 *) fail "the clock went through$shown" ;;
 esac
 
+step "Tips"
+# Whether shot $1 has anything under the bar around $2, where shot $3 has not.
+under() {
+	[ "$(magick "$out/$1.png" "$out/$3.png" -compose difference -composite \
+		-crop "200x40+$(($2 - 100))+44" +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ]
+}
+move 300 600
+sleep 0.8
+shot tips-none
+move 700 16
+sleep 1.2
+shot tip-clock
+under tip-clock 700 tips-none || fail "no tip under the clock"
+move 300 600
+sleep 0.5
+shot tips-gone
+under tips-gone 700 tips-none && fail "the tip stayed"
+move "$tray" 16
+sleep 1.2
+shot tip-tray
+under tip-tray "$tray" tips-none || fail "no tip under the tray's icon"
+move 300 600
+settings '{ "bar": { "tips": false } }'
+move 700 16
+sleep 1.2
+shot tip-off
+under tip-off 700 tips-none && fail "a tip with them off"
+move 300 600
+settings '{}'
+
 step "The screens with a bar"
 bars() {
 	niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-bar")] | length'

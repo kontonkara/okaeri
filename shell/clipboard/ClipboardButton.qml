@@ -10,5 +10,6 @@ Button {
 	iconSize: Theme.barIcon
 	activeFocusOnTab: false
 	icon: "clipboard"
+	tip: "Clipboard"
 	onClicked: Clipboard.toggle()
 }
