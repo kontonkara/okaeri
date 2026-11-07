@@ -877,7 +877,7 @@ reset
 step "Clicks go through"
 if command -v kitty >/dev/null; then
 	# Two windows in the inner niri, the right one under the toasts. With no
-	# bus: on one it would start portals and a keyring.
+	# bus: on one it would ask for portals and a keyring.
 	DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sleep 40 &
 	left_pid=$!
 	sleep 1.5

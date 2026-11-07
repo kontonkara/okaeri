@@ -9,9 +9,10 @@
 #   tests/tools.sh tests/measure.sh <out>
 set -eu
 
+# A bus that starts no services, as tests/part.sh has.
 if [ -z "${OKAERI_MEASURE_INNER:-}" ]; then
 	export OKAERI_MEASURE_INNER=1
-	exec setsid --wait dbus-run-session -- "$0" "$@"
+	exec setsid --wait dbus-run-session --config-file="$(dirname "$0")/bus.conf" -- "$0" "$@"
 fi
 
 repo=$PWD
