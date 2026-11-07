@@ -697,3 +697,68 @@ key Return
 sleep 0.3
 [ "$(jq -r .wallpaper.path "$own")" = "$work/walls/green field.png" ] || fail "the wallpaper: $(jq -r .wallpaper.path "$own")"
 is_closed "a wallpaper"
+
+# Weight in the wheel and the touchpad, over a list long enough for them.
+for number in $(seq 20); do
+	ipc entries add "long.$number" "Longlist $number" nosuchicon
+done
+at() {
+	ipc launcher scrolled
+}
+# Until it's at rest, and says where.
+rest() {
+	before=-1
+	for _ in $(seq 40); do
+		now=$(at)
+		[ "$now" = "$before" ] && break
+		before=$now
+		sleep 0.1
+	done
+	echo "$now"
+}
+open
+type longlist
+glide 700 "$(row 3)"
+[ "$(at)" = 0 ] || fail "it opened scrolled to $(at)"
+# A notch glides there, it doesn't jump, and two add up.
+notch 1
+early=$(at)
+one=$(rest)
+awk "BEGIN { exit !($one > 80 && $one < 100) }" || fail "a notch went to $one"
+awk "BEGIN { exit !($early < $one) }" || fail "a notch jumped there: $early of $one"
+notch 1
+notch 1
+two=$(rest)
+awk "BEGIN { exit !($two > $one * 2.5) }" || fail "two notches went to $two from $one"
+# Back up, not past the top, and the keys are still in the field.
+notch -8
+[ "$(rest)" = 0 ] || fail "the wheel went past the top: $(at)"
+# The fingers set it going and it keeps on after they've left, for a while.
+swipe 300
+left=$(at)
+sleep 0.15
+on=$(at)
+awk "BEGIN { exit !($left > 100 && $on > $left) }" || fail "the fingers left it at $left, then it was at $on"
+far=$(rest)
+awk "BEGIN { exit !($far > $on) }" || fail "it stopped at once: $on, then $far"
+key Escape
+is_closed "Escape after scrolling"
+
+# With no animations it all goes at once.
+echo '{"animations":false}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+sleep 0.5
+open
+type longlist
+glide 700 "$(row 3)"
+notch 1
+sleep 0.05
+early=$(at)
+[ "$early" = "$(rest)" ] || fail "it glides without animations"
+swipe 300
+left=$(at)
+sleep 0.3
+[ "$left" = "$(at)" ] || fail "it goes on without animations"
+key Escape
+is_closed "Escape without animations again"
+echo '{}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+

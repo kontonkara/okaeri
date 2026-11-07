@@ -17,6 +17,10 @@ Flickable {
 	clip: true
 	boundsBehavior: Flickable.StopAtBounds
 
+	Glide {
+		view: page
+	}
+
 	Card {
 		id: card
 

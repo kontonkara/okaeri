@@ -146,10 +146,42 @@ FloatingWindow {
 			}
 
 			Loader {
+				id: content
+
 				x: menu.width + Math.round(Theme.u(12))
 				width: parent.width - x
 				height: parent.height
 				sourceComponent: window.pages[window.page].page
+				transform: Translate {
+					id: slide
+				}
+				onLoaded: {
+					if (Theme.animate)
+						appear.restart();
+				}
+			}
+
+			// A new page comes up a little, out of nothing.
+			ParallelAnimation {
+				id: appear
+
+				NumberAnimation {
+					target: content
+					property: "opacity"
+					from: 0
+					to: 1
+					duration: 140
+					easing.type: Easing.OutCubic
+				}
+
+				NumberAnimation {
+					target: slide
+					property: "y"
+					from: Theme.u(8)
+					to: 0
+					duration: 180
+					easing.type: Easing.OutCubic
+				}
 			}
 		}
 	}
