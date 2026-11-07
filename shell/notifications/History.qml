@@ -103,8 +103,7 @@ Panel {
 			view: list
 		}
 
-		// With one app it would only say what the cards do.
-		section.property: NotificationStore.apps.length > 1 ? "modelData.appName" : ""
+		section.property: NotificationStore.headed ? "modelData.appName" : ""
 		section.delegate: Item {
 			id: heading
 
@@ -200,7 +199,7 @@ Panel {
 
 			width: ListView.view.width
 			notification: modelData
-			showsApp: NotificationStore.apps.length < 2
+			showsApp: !NotificationStore.headed
 			// They go on with the one that takes its place.
 			onKeysLost: Qt.callLater(list.enter, index, 1)
 

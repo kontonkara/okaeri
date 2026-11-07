@@ -44,8 +44,10 @@
 	"notifications": {
 		"timeout": 6,
 		"cap": 4,
+		"stack": true,
 		"keep": true,
 		"history": 100,
+		"maxAge": 0,
 		"rules": []
 	},
 	"bar": {

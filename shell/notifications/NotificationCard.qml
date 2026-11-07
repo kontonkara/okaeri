@@ -5,7 +5,7 @@ import Quickshell.Widgets
 import qs
 import qs.ui
 
-// One notification: its picture, where it's from, what it says, its actions
+// One notification: its picture, where it's from, when, what it says, its actions
 // and a way to close it. A click on it goes to where it came from, and a right
 // click closes it; with the keys on it Enter or Space is its default action.
 // niri's word of a screenshot shows the picture whole, and a click opens it.
@@ -15,6 +15,8 @@ Card {
 	required property var notification
 	// With the close button: a toast goes by a right click.
 	property bool closable: true
+	// What only the history has room for, or use.
+	readonly property bool inHistory: closable
 	// With its app's name: under a heading that says it, there's no need.
 	property bool showsApp: true
 
@@ -195,7 +197,7 @@ Card {
 				id: app
 
 				width: parent.width - card.beside
-				text: card.showsApp ? card.notification.appName : ""
+				text: [card.showsApp ? card.notification.appName : "", NotificationStore.repeatsOf(card.notification) > 1 ? `×${NotificationStore.repeatsOf(card.notification)}` : "", card.inHistory ? NotificationStore.when(card.notification) : ""].filter(part => part !== "").join(" · ")
 				wrapMode: Text.NoWrap
 				maximumLineCount: 1
 				color: Theme.colors.subtext

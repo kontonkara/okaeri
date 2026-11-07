@@ -412,8 +412,14 @@ wait_state panel false
 ipc notifications toggle
 wait_state panel true
 settle
-# The close button of the top one, and only that one goes.
-move 1363 113
+# Folded under its heading, the newest shows. Opened, the close button of the top
+# one, and only that one goes.
+is shown 1
+move 1200 106
+click
+wait_state shown 4
+settle
+move 1363 143
 click
 wait_state history 3
 settle
@@ -538,6 +544,13 @@ wait_state history 12
 ipc notifications toggle
 wait_state panel true
 settle
+# One app's fold up under its heading: a click opens them.
+is shown 1
+move 1200 106
+click
+wait_state shown 12
+move 300 600
+settle
 shot panel-long
 # The stand's wheel comes in a burst that Flickable drops, so by the keys.
 key Down
@@ -566,8 +579,8 @@ key space
 wait_state history 12
 settle
 shot panel-newest-closed
-# All but the ring on the next one.
-alike panel-long panel-newest-closed 300x700+1028+92
+# The cards, all but the ring on the next one.
+alike panel-long panel-newest-closed 300x670+1028+122
 # The keys went on to the next one, and the list goes where they go, past what
 # showed: Message 4 of what's left.
 for _ in $(seq 8); do
@@ -1218,3 +1231,59 @@ sleep 1.5
 restart
 wait_state history 0
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+
+step "The same again"
+config=$XDG_CONFIG_HOME/okaeri/settings.json
+ipc notifications clear
+wait_state history 0
+send -a Kitty "Waiting" "For your input."
+wait_state history 1
+send -a Kitty "Waiting" "For your input."
+send -a Kitty "Waiting" "For your input."
+sleep 0.5
+is history 1
+is toasts 1
+[ "$(state 'repeats[0]')" = 3 ] || {
+	echo "notifications: it stands for $(state repeats)" >&2
+	return 1
+}
+[ "$(state 'when[0]')" = now ] || {
+	echo "notifications: it came $(state when)" >&2
+	return 1
+}
+# Another text isn't the same, and folds under the app.
+send -a Kitty "Waiting" "For something else."
+wait_state history 2
+is shown 1
+# Kept over a restart, with when it came.
+sleep 1
+restart
+wait_state history 2
+[ "$(state 'repeats | join(" ")')" = "1 3" ] || {
+	echo "notifications: after a restart $(state repeats)" >&2
+	return 1
+}
+[ "$(state 'when[1]')" = now ] || {
+	echo "notifications: after a restart it came $(state when)" >&2
+	return 1
+}
+ipc notifications clear
+wait_state history 0
+printf '{ "notifications": { "stack": false } }\n' >"$config"
+sleep 0.5
+send -a Kitty "Waiting" "Twice."
+send -a Kitty "Waiting" "Twice."
+wait_state history 2
+printf '{}\n' >"$config"
+sleep 0.5
+ipc notifications clear
+wait_state history 0
+# Too old goes at a start.
+sleep 1
+printf '[{ "id": 7, "appName": "Old", "desktopEntry": "", "summary": "Old", "body": "", "image": "", "appIcon": "", "urgency": 1, "unread": false, "time": 1000, "repeats": 1 }]' >"$kept"
+printf '{ "notifications": { "maxAge": 7 } }\n' >"$config"
+sleep 0.5
+restart
+wait_state history 0
+printf '{}\n' >"$config"
+sleep 0.5
