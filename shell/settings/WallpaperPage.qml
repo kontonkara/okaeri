@@ -48,7 +48,7 @@ Column {
 		id: grid
 
 		width: parent.width
-		height: parent.height - y
+		height: parent.height - y - page.spacing - others.height
 		cellWidth: Math.floor(width / 3)
 		cellHeight: Math.round(cellWidth * 9 / 16)
 		model: pictures
@@ -138,6 +138,28 @@ Column {
 			color: Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
+		}
+	}
+
+	Column {
+		id: others
+
+		width: parent.width
+		spacing: Math.round(Theme.u(10))
+
+		Setting {
+			text: "Blurred behind the overview"
+			checked: Settings.wallpaper.backdrop
+			onToggled: wanted => Settings.set("wallpaper", "backdrop", wanted)
+		}
+
+		Choice {
+			text: "A new one fades in over"
+			values: [0, 300, 500, 1000, 1500, 2000, 3000]
+			value: Settings.wallpaper.fade
+			none: "No fade"
+			unit: " ms"
+			onChosen: value => Settings.set("wallpaper", "fade", value)
 		}
 	}
 }

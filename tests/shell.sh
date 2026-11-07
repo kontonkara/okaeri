@@ -475,6 +475,19 @@ glimpse launcher glass-middle
 edge 1
 glimpse launcher glass-white
 [ "$(bright glass-white 400 450)" -lt 120 ] || fail "a light line around a panel: $(bright glass-white 400 450)"
+# The bar: the same, and on its own, over the wallpaper's edge.
+theme '{}'
+edge 700
+sleep 0.5
+shot bar-opaque
+[ "$(bright bar-opaque 760 34)" = 0 ] || fail "the wallpaper shows through the bar without blur"
+theme '{"barBlur":true}'
+shot bar-glass
+[ "$(bright bar-glass 690 34)" -gt 8 ] || fail "no blur behind the bar"
+[ "$(bright bar-glass 760 34)" -gt "$(bright bar-glass 690 34)" ] || fail "no wallpaper through the bar"
+glimpse control bar-glass-panel
+[ "$(bright bar-glass-panel 1036 50)" = 0 ] || fail "the panels went for the bar's blur"
+theme '{}'
 printf '{}' >"$config"
 
 step "A reload with a panel up"

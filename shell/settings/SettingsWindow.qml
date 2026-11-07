@@ -17,7 +17,9 @@ FloatingWindow {
 		{ text: "Bar", icon: "bar", page: barPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
 		{ text: "Launcher", icon: "search", page: launcherPage },
+		{ text: "Notifications", icon: "bell", page: notificationsPage },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
+		{ text: "Look", icon: "sliders", page: lookPage },
 		{ text: "Session", icon: "lock", page: sessionPage }
 	]
 	property int page: 0
@@ -88,6 +90,18 @@ FloatingWindow {
 	}
 
 	Component {
+		id: notificationsPage
+
+		NotificationsPage {}
+	}
+
+	Component {
+		id: lookPage
+
+		LookPage {}
+	}
+
+	Component {
 		id: wallpaperPage
 
 		WallpaperPage {}
@@ -137,12 +151,15 @@ FloatingWindow {
 			Button {
 				anchors.bottom: parent.bottom
 				width: menu.width
-				enabled: Object.keys(Settings.own).length > 0
+				enabled: Object.keys(Settings.own).length + Object.keys(Theme.own).length > 0
 				atStart: true
 				pad: Theme.u(10)
 				flat: true
 				text: "Back to the config"
-				onClicked: Settings.reset()
+				onClicked: {
+					Settings.reset();
+					Theme.reset();
+				}
 			}
 
 			Loader {

@@ -41,6 +41,18 @@ PanelWindow {
 	implicitHeight: Theme.barHeight
 	color: "transparent"
 	WlrLayershell.namespace: "okaeri-bar"
+	BackgroundEffect.blurRegion: Theme.barBlur ? glass : null
+
+	// A pixel in from the edge: its corners come in steps, and stay under the fill's.
+	Region {
+		id: glass
+
+		x: 1
+		y: 1
+		width: bar.width - 2
+		height: bar.height - 2
+		radius: Theme.cardRadius
+	}
 
 	component Lane: Row {
 		id: lane
@@ -155,7 +167,15 @@ PanelWindow {
 
 		anchors.fill: parent
 		radius: Theme.cardRadius
-		color: Theme.colors.background
+		color: Theme.barFill
+	}
+
+	// Over the fill, as on a panel: under the glass a border of its own would show
+	// as a light line.
+	Rectangle {
+		anchors.fill: parent
+		radius: Theme.cardRadius
+		color: "transparent"
 		border.width: 1
 		border.color: Theme.border
 	}

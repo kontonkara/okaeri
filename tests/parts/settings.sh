@@ -19,8 +19,10 @@ menu_x=420
 bar_y=216
 tray_y=254
 launcher_y=292
-wallpaper_y=330
-session_y=368
+notifications_y=330
+wallpaper_y=368
+look_y=406
+session_y=444
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -36,7 +38,7 @@ lower_x=948
 higher_x=1040
 lock_y=255
 screens_y=295
-wait_y=395
+wait_y=435
 
 value() {
 	jq -c "$1" "$own"
@@ -181,7 +183,7 @@ move 300 800
 sleep 0.3
 shot nothing
 same "where a picture was" "$(pixel nothing 606 "$picture_y")" 000000
-[ "$(magick "$out/nothing.png" -crop 200x30+690+469 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
+[ "$(magick "$out/nothing.png" -crop 200x30+690+429 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
 
 step "When things happen by themselves"
 # The arrow at $1 on the line at $2.
@@ -212,7 +214,7 @@ same "the session menu's wait" "$(value .session.countdown)" 5
 shot session
 
 step "The battery's line"
-battery_y=495
+battery_y=535
 arrow "$lower_x" "$battery_y"
 same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
@@ -246,6 +248,30 @@ move "$switch_x" 463
 click
 sleep 0.3
 same "the hidden" "$(value .launcher.hidden)" '[]'
+
+step "The notifications' page"
+printf '{ "tray": { "drawer": true }, "notifications": { "rules": [{ "app": "Spam", "toast": false }] } }\n' >"$config.new"
+mv "$config.new" "$config"
+sleep 0.5
+page "$notifications_y"
+shot notifications-page
+arrow "$higher_x" 260
+same "how long" "$(value .notifications.timeout)" 8
+arrow "$lower_x" 305
+same "how many" "$(value .notifications.cap)" 3
+# Spam's history off too, then both on, which leaves no rule.
+move 1018 425
+click
+sleep 0.3
+same "two things held back" "$(value .notifications.rules)" '[{"app":"Spam","toast":false,"history":false}]'
+move 1018 425
+click
+sleep 0.3
+same "one again" "$(value '.notifications.rules[0].history')" true
+move 946 425
+click
+sleep 0.3
+same "nothing held back" "$(value .notifications.rules)" '[]'
 
 printf '{ "tray": { "drawer": true } }\n' >"$config.new"
 mv "$config.new" "$config"
@@ -303,11 +329,39 @@ wait_up 1
 sleep 0.4
 page "$tray_y"
 
+step "How it looks"
+page "$look_y"
+shot look
+theme_own=$XDG_STATE_HOME/okaeri/theme.json
+move "$switch_x" 260
+click
+sleep 0.3
+same "blur behind panels" "$(jq -c .blur "$theme_own")" true
+move "$switch_x" 310
+click
+sleep 0.3
+same "blur behind the bar" "$(jq -c .barBlur "$theme_own")" true
+arrow "$higher_x" 355
+same "how solid" "$(jq -c .opacity "$theme_own")" 80
+move "$switch_x" 455
+click
+sleep 0.3
+same "animations" "$(jq -c .animations "$theme_own")" false
+shot look-before
+arrow "$higher_x" 555
+same "the bar's height" "$(jq -c .barHeight "$theme_own")" 36
+sleep 0.3
+shot look-changed
+# The bar went by it: its lower edge is further down.
+[ "$(pixel look-changed 700 38)" != "$(pixel look-before 700 38)" ] || fail "the bar's height didn't change"
+page "$tray_y"
+
 step "Back to the config"
 move "$menu_x" "$back_y"
 click
 sleep 0.3
 same "the shell's file" "$(value .)" '{}'
+same "the look's file" "$(jq -c . "$theme_own")" '{}'
 shot back
 same "the drawer's switch" "$(knob back "$drawer_y")" "$on"
 key Escape

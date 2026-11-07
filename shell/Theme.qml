@@ -5,8 +5,9 @@ import Quickshell
 import Quickshell.Io
 
 // What everything on screen is drawn with: themes/dark.json (it has every
-// key), the built-in theme the user's okaeri/theme.json extends, and that
-// file itself, which takes effect as it's saved. Colors merge key by key.
+// key), the built-in theme the user's okaeri/theme.json extends, that file
+// itself, which takes effect as it's saved, and over those what the settings
+// window changed, in a file of the shell's own. Colors merge key by key.
 Singleton {
 	id: theme
 
@@ -45,11 +46,33 @@ Singleton {
 		onLoadFailed: theme.user = {}
 	}
 
+	FileView {
+		id: ownFile
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/theme.json`
+		blockLoading: true
+		printErrors: false
+		onLoaded: theme.own = theme.parse(text(), path)
+		onLoadFailed: theme.own = {}
+	}
+
 	readonly property var builtIn: ({
 		dark: parse(darkFile.text(), darkFile.path),
 		light: parse(lightFile.text(), lightFile.path)
 	})
 	property var user: ({})
+	property var own: ({})
+
+	function set(key, value) {
+		own = Object.assign({}, own, { [key]: value });
+		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
+	}
+
+	// Back to what the files say.
+	function reset() {
+		own = {};
+		ownFile.setText("{}\n");
+	}
 
 	onUserChanged: {
 		if (user.extends && !(user.extends in builtIn))
@@ -57,7 +80,7 @@ Singleton {
 	}
 
 	readonly property var parent: builtIn[user.extends] || {}
-	readonly property var values: Object.assign({}, builtIn.dark, parent, user, {
+	readonly property var values: Object.assign({}, builtIn.dark, parent, user, own, {
 		colors: Object.assign({}, builtIn.dark.colors, parent.colors, user.colors)
 	})
 
@@ -69,6 +92,11 @@ Singleton {
 	// Panels let what's under them through, blurred, where the compositor has that.
 	// In niri that's the wallpaper, unless a rule for okaeri-panel says xray false.
 	readonly property bool blur: !!values.blur
+	// The bar has only the wallpaper under it, so what niri does by itself is all it
+	// takes, and that's blurred once and not with each frame.
+	readonly property bool barBlur: !!values.barBlur
+	// How much of a surface that lets things through is its own color.
+	readonly property real opacity: values.opacity / 100
 	readonly property real barHeight: u(values.barHeight)
 	readonly property real barMargin: u(values.barMargin)
 	readonly property real barIcon: u(values.barIcon)
@@ -87,8 +115,9 @@ Singleton {
 	readonly property real radius: typeof values.radius === "number" ? u(values.radius) : -1
 
 	// What a panel is filled with, and what's on it.
-	readonly property color panel: Qt.alpha(colors.background, blur ? 0.72 : 1)
-	readonly property color surface: Qt.alpha(colors.surface, blur ? 0.6 : 1)
+	readonly property color panel: Qt.alpha(colors.background, blur ? opacity : 1)
+	readonly property color surface: Qt.alpha(colors.surface, blur ? opacity * 0.83 : 1)
+	readonly property color barFill: Qt.alpha(colors.background, barBlur ? opacity : 1)
 	// Under the pointer, pressed, and the edge of a card.
 	readonly property color hover: Qt.alpha(colors.text, 0.08)
 	readonly property color pressed: Qt.alpha(colors.text, 0.16)
