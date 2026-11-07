@@ -28,46 +28,51 @@ Item {
 			Clipboard.discard(file);
 	}
 
-	Process {
-		running: row.picture
-		command: ["sh", "-c", 'mkdir -p "${3%/*}" && cliphist -db-path "$1" decode "$2" >"$3"', "sh", Clipboard.database, row.modelData.id, row.file]
-		onExited: code => {
-			if (code === 0)
-				image.source = `file://${row.file}`;
-		}
-	}
-
-	ClippingRectangle {
+	// Only on a row with a picture: most have none, and rows are made as the list
+	// moves.
+	Loader {
 		id: preview
 
 		x: Theme.u(4)
 		anchors.verticalCenter: parent.verticalCenter
 		width: Theme.u(64)
 		height: Theme.u(44)
-		visible: row.picture
-		radius: Math.max(0, Theme.cardRadius - Theme.u(8))
-		color: Theme.surface
+		active: row.picture
 
-		Image {
-			id: image
+		sourceComponent: ClippingRectangle {
+			radius: Math.max(0, Theme.cardRadius - Theme.u(8))
+			color: Theme.surface
 
-			anchors.fill: parent
-			asynchronous: true
-			cache: false
-			fillMode: Image.PreserveAspectCrop
-			// Not by the theme's scale: a new size would read the file again.
-			sourceSize: Qt.size(256, 256)
-			onStatusChanged: {
-				if (status === Image.Ready || status === Image.Error)
-					Quickshell.execDetached(["rm", "-f", "--", row.file]);
+			Process {
+				running: true
+				command: ["sh", "-c", 'mkdir -p "${3%/*}" && cliphist -db-path "$1" decode "$2" >"$3"', "sh", Clipboard.database, row.modelData.id, row.file]
+				onExited: code => {
+					if (code === 0)
+						image.source = `file://${row.file}`;
+				}
 			}
-		}
 
-		Icon {
-			anchors.centerIn: parent
-			visible: image.status === Image.Error
-			name: "clipboard"
-			color: Theme.colors.subtext
+			Image {
+				id: image
+
+				anchors.fill: parent
+				asynchronous: true
+				cache: false
+				fillMode: Image.PreserveAspectCrop
+				// Not by the theme's scale: a new size would read the file again.
+				sourceSize: Qt.size(256, 256)
+				onStatusChanged: {
+					if (status === Image.Ready || status === Image.Error)
+						Quickshell.execDetached(["rm", "-f", "--", row.file]);
+				}
+			}
+
+			Icon {
+				anchors.centerIn: parent
+				visible: image.status === Image.Error
+				name: "clipboard"
+				color: Theme.colors.subtext
+			}
 		}
 	}
 
