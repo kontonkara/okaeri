@@ -195,7 +195,7 @@ PanelWindow {
 			wheel -= steps * 120;
 			const does = Settings.bar.wheel;
 			if (does === "workspaces")
-				Niri.turn(Niri.on(bar.screen.name), steps);
+				Niri.turn(Settings.workspaces.empty ? Niri.on(bar.screen.name) : Niri.busyOn(bar.screen.name), Settings.workspaces.reverse ? -steps : steps);
 			else if (does === "brightness" || (does === "split" && event.x < width / 2))
 				Brightness.change(steps * 0.05);
 			else if (does === "volume" || does === "split")

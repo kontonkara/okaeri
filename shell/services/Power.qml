@@ -22,6 +22,9 @@ Singleton {
 	readonly property int charge: Math.round(UPower.displayDevice.percentage * 100)
 	readonly property bool draining: UPower.onBattery && UPower.displayDevice.isLaptopBattery
 	readonly property bool low: draining && charge <= Settings.battery.warning
+	readonly property bool present: UPower.displayDevice.isLaptopBattery && UPower.displayDevice.isPresent
+	// Until it's empty, or full while it charges, in seconds, 0 if that isn't known.
+	readonly property real timeLeft: draining ? UPower.displayDevice.timeToEmpty : UPower.displayDevice.timeToFull
 
 	function set(choice) {
 		Env.act(`power profile ${PowerProfile.toString(choice)}`, () => PowerProfiles.profile = choice);
@@ -32,6 +35,12 @@ Singleton {
 		const minutes = Math.round(seconds / 60);
 		const hours = Math.floor(minutes / 60);
 		return hours > 0 ? `${hours} h ${minutes % 60} min` : `${minutes} min`;
+	}
+
+	// `seconds` as hours and minutes, for little room: 2:05.
+	function clock(seconds) {
+		const minutes = Math.round(seconds / 60);
+		return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`;
 	}
 
 	// What's going on, how fast, and how worn it is, each if it's known.

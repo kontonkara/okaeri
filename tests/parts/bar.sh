@@ -142,6 +142,13 @@ Scope {
 			Niri.act({ FocusWorkspaceDown: {} });
 			Niri.act({ FocusWorkspaceDown: {} });
 		}
+
+		// As if from the machine's battery.
+		function battery(charge: int, draining: bool, left: int): void {
+			Power.charge = charge;
+			Power.draining = draining;
+			Power.timeLeft = left;
+		}
 	}
 }
 QML
@@ -876,3 +883,119 @@ same "the wheel on the bar, down" "$(focused)" 2
 same "levels from the wheel on the workspaces" "$(levels)" "$at_levels"
 niri msg action focus-workspace 1
 settings '{}'
+
+step "What the clock says"
+# Until the clock says what fits $2, or fails as $1.
+says() {
+	for _ in $(seq 30); do
+		clock | grep -qE "$2" && return 0
+		sleep 0.1
+	done
+	fail "$1: the clock says \"$(clock)\""
+}
+says "at first" '^[^ ]+ [0-9]{1,2} [^ ]+  [0-9]{2}:[0-9]{2}$'
+settings '{ "clock": { "date": "none" } }'
+says "with no date" '^[0-9]{2}:[0-9]{2}$'
+settings '{ "clock": { "date": "after", "dateFormat": "yyyy" } }'
+says "with the year after it" '^[0-9]{2}:[0-9]{2}  [0-9]{4}$'
+settings '{ "clock": { "date": "none", "hours12": true, "seconds": true } }'
+says "in twelve hours, with seconds" '^[0-9]{1,2}:[0-9]{2}:[0-9]{2} [^ ]+$'
+settings '{}'
+says "back" '^[^ ]+ [0-9]{1,2} [^ ]+  [0-9]{2}:[0-9]{2}$'
+
+step "The workspaces as they're set"
+niri msg action focus-workspace 1
+move 300 600
+sleep 0.4
+shot pills-plain
+settings '{ "workspaces": { "labels": "number" } }'
+shot pills-numbers
+settings '{ "workspaces": { "labels": "name" } }'
+shot pills-names
+looks_apart() {
+	[ "$(magick "$out/$1.png" "$out/$2.png" -compose difference -composite \
+		-crop 200x30+6+6 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "$3"
+}
+looks_apart pills-plain pills-numbers "the pills say no numbers"
+looks_apart pills-numbers pills-names "the pills say no names"
+settings '{}'
+# A window on the first, and the second in focus: the first stands out from the
+# empty ones, unless that's off.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sleep 30 &
+holding=$!
+sleep 1.5
+niri msg action focus-workspace 2
+move 300 600
+sleep 0.5
+shot pills-busy
+settings '{ "workspaces": { "occupied": false } }'
+shot pills-alike
+[ "$(color pills-busy)" != "$(color pills-alike)" ] || fail "one with a window looks like an empty one"
+# Without the empty ones: the first with its window, and the second, in focus.
+settings '{ "workspaces": { "empty": false } }'
+same "the pills without the empty ones" "$(shot pills-busy-only; pills pills-busy-only)" "12 28"
+# The other way: up goes to the next one.
+settings '{ "workspaces": { "reverse": true } }'
+niri msg action focus-workspace 1
+sleep 0.4
+move 20 16
+wheel 1
+sleep 0.4
+same "the wheel up, the other way" "$(focused)" 2
+settings '{}'
+kill "$holding"
+wait "$holding" 2>/dev/null || true
+niri msg action focus-workspace 1
+sleep 0.4
+
+step "The battery as it's set"
+move 300 600
+ipc probe battery 50 false 0
+sleep 0.3
+shot battery-on
+with=$(lane battery-on | wc -l)
+settings '{ "battery": { "show": "battery" } }'
+shot battery-charger
+same "what's on the bar on the charger" "$(lane battery-charger | wc -l)" "$((with - 1))"
+ipc probe battery 50 true 7500
+sleep 0.3
+shot battery-draining
+same "what's on the bar on battery" "$(lane battery-draining | wc -l)" "$with"
+settings '{ "battery": { "show": "low" } }'
+shot battery-not-low
+same "what's on the bar while it isn't low" "$(lane battery-not-low | wc -l)" "$((with - 1))"
+ipc probe battery 15 true 7500
+sleep 0.3
+shot battery-low
+same "what's on the bar while it's low" "$(lane battery-low | wc -l)" "$with"
+settings '{ "battery": { "label": "time" } }'
+ipc probe battery 50 true 7500
+sleep 0.3
+shot battery-time
+settings '{ "battery": { "label": "none" } }'
+shot battery-bare
+right_end() {
+	magick "$out/$1.png" -crop 300x20+1000+12 +repage -format '%#' info:
+}
+[ "$(right_end battery-on)" != "$(right_end battery-time)" ] || fail "the time left looks like the percent"
+[ "$(right_end battery-time)" != "$(right_end battery-bare)" ] || fail "nothing beside it looks like the time"
+settings '{}'
+ipc probe battery 100 false 0
+
+step "An icon kept out of the drawer"
+settings "{ \"tray\": { \"drawer\": true, \"pinned\": [\"$id\"] } }"
+move 300 600
+sleep 0.3
+shot pinned
+same "what's on the bar with the one icon kept out" "$(lane pinned | wc -l)" "$(lane wheel-bar | wc -l)"
+# It's the app's own by now: what's done reaches it.
+activated=$(log | grep -c 'okaeri-probe: activated' || true)
+move "$(lane pinned | head -n 1)" 16
+click
+for _ in $(seq 20); do
+	[ "$(log | grep -c 'okaeri-probe: activated')" -gt "$activated" ] && break
+	sleep 0.1
+done
+[ "$(log | grep -c 'okaeri-probe: activated')" -gt "$activated" ] || fail "the icon kept out didn't reach the app"
+settings '{}'
+wait_tray

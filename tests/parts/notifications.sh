@@ -1420,3 +1420,22 @@ click right
 wait_state dnd true
 click right
 wait_state dnd false
+# With one unread it says so, unless that's off.
+ipc notifications clear
+wait_state history 0
+send -a Mail "Unread" "Not looked at."
+wait_state history 1
+move 300 600
+settle
+shot bell-count
+printf '{ "notifications": { "bellCount": false } }\n' >"$config"
+sleep 0.5
+shot bell-no-count
+[ "$(lane bell-count)" != "$(lane bell-no-count)" ] || {
+	echo "notifications: the bell says how many with that off" >&2
+	return 1
+}
+printf '{}\n' >"$config"
+sleep 0.5
+ipc notifications clear
+wait_state history 0
