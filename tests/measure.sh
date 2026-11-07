@@ -1,17 +1,17 @@
 #!/bin/sh
 # Runs the whole shell on a headless sway pinned to the iGPU, with niri's real
 # event stream, and prints its start time, memory and idle CPU, on one and
-# two screens. It only reads the desktop: its
-# bus is a private one, and with OKAERI_GUEST and OKAERI_DRY the notification
-# server and the polkit agent stay off and nothing changes. Leaves a shot in
-# <out>. In the repo:
+# two screens. It only reads the desktop: its bus is a private one, and with
+# OKAERI_GUEST and OKAERI_DRY the notification server and the polkit agent stay
+# off and nothing changes. Leaves a shot in <out>. In the repo:
 #
 #   tests/tools.sh tests/measure.sh <out>
 set -eu
 
+# A bus that starts no services, as tests/part.sh has.
 if [ -z "${OKAERI_MEASURE_INNER:-}" ]; then
 	export OKAERI_MEASURE_INNER=1
-	exec setsid --wait dbus-run-session -- "$0" "$@"
+	exec setsid --wait dbus-run-session --config-file="$(dirname "$0")/bus.conf" -- "$0" "$@"
 fi
 
 repo=$PWD

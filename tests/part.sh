@@ -28,10 +28,11 @@
 #   tests/tools.sh tests/part.sh <part dir> <root type> <out> <script>
 set -eu
 
-# A session bus of its own, and a process group to stop in one go.
+# A session bus of its own, which starts no services, and a process group to stop
+# in one go.
 if [ -z "${OKAERI_PART_INNER:-}" ]; then
 	export OKAERI_PART_INNER=1
-	exec setsid --wait dbus-run-session -- "$0" "$@"
+	exec setsid --wait dbus-run-session --config-file="$(dirname "$0")/bus.conf" -- "$0" "$@"
 fi
 
 [ "$#" -eq 4 ] || {
