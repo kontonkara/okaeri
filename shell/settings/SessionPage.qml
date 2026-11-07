@@ -28,6 +28,14 @@ Column {
 			value: Settings.idle.screenOff
 			onChosen: value => Settings.set("idle", "screenOff", value)
 		}
+
+		Choice {
+			text: "Fade out before that"
+			values: [0, 3, 5, 10, 15, 30]
+			value: Settings.idle.fade
+			none: "Don't"
+			onChosen: value => Settings.set("idle", "fade", value)
+		}
 	}
 
 	Card {

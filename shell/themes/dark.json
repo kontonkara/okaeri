@@ -15,6 +15,8 @@
   "scale": 1,
   "animations": true,
   "blur": false,
+  "barBlur": false,
+  "opacity": 72,
   "barHeight": 34,
   "barMargin": 4,
   "barIcon": 16

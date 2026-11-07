@@ -27,6 +27,8 @@
 		"hidden": []
 	},
 	"notifications": {
+		"timeout": 6,
+		"cap": 4,
 		"rules": []
 	},
 	"bar": {

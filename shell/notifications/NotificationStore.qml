@@ -23,8 +23,8 @@ Singleton {
 
 	// How many toasts show, how long one stays when its app doesn't say, and
 	// how many the history holds: past that the oldest go.
-	readonly property int cap: 4
-	readonly property int defaultTimeout: 6000
+	readonly property int cap: Settings.notifications.cap
+	readonly property int defaultTimeout: Settings.notifications.timeout * 1000
 	readonly property int historyCap: 100
 
 	// While clear() works: all of this goes over the list once, not once for
