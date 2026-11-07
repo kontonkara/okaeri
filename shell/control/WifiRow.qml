@@ -4,7 +4,7 @@ import qs
 import qs.ui
 
 // A network: its signal, how it stands, and a way to disconnect from the one
-// connected. While `asking`, a field for its password.
+// connected and to forget a saved one. While `asking`, a field for its password.
 Entry {
 	id: row
 
@@ -39,8 +39,14 @@ Entry {
 	failed: failure !== "" && !network.stateChanging
 	pickable: joinable && !network.connected && !network.stateChanging
 	opacity: joinable ? 1 : 0.5
-	action: network.connected ? "Disconnect" : ""
-	onActed: Wifi.disconnect(network)
+	action: network.connected ? "Disconnect" : network.known ? "Forget" : ""
+	risky: !network.connected
+	onActed: {
+		if (network.connected)
+			Wifi.disconnect(network);
+		else
+			Wifi.forget(network);
+	}
 	onAskingChanged: {
 		key.text = "";
 		if (asking) {

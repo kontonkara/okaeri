@@ -74,6 +74,10 @@ Singleton {
 		Env.act("wifi disconnect", () => network.disconnect());
 	}
 
+	function forget(network) {
+		Env.act("wifi forget", () => network.forget());
+	}
+
 	onScanningChanged: scan()
 
 	// This starts with the first opening, already scanning if the device is

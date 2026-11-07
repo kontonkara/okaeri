@@ -5,11 +5,13 @@ import qs.ui
 // A card that folds, unless `folds` is off: `icon`, `title` and `summary`, a
 // switch that says toggled(wanted), unless `switches` is off, and under them
 // what's put in it. One section of the panel is unfolded at a time, the one
-// Control.unfolded names, and only while on.
+// Control.unfolded names, and only while on. It shows while `wanted`, unless the
+// settings leave it out.
 Card {
 	id: section
 
 	required property string name
+	property bool wanted: true
 	property string icon
 	property string title
 	property string summary
@@ -28,6 +30,7 @@ Card {
 
 	width: parent.width
 	padding: Theme.u(6)
+	visible: wanted && !Settings.control.hidden.includes(name)
 
 	Column {
 		width: parent.width

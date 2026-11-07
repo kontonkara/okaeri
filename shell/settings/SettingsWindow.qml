@@ -16,12 +16,13 @@ FloatingWindow {
 	readonly property var pages: [
 		{ text: "Bar", icon: "bar", page: barPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
+		{ text: "Control center", icon: "sliders", page: controlPage },
 		{ text: "Launcher", icon: "search", page: launcherPage },
 		{ text: "Clipboard", icon: "clipboard", page: clipboardPage },
 		{ text: "Notifications", icon: "bell", page: notificationsPage },
 		{ text: "Sounds", icon: "volume", page: soundsPage },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
-		{ text: "Look", icon: "sliders", page: lookPage },
+		{ text: "Look", icon: "eye", page: lookPage },
 		{ text: "Session", icon: "lock", page: sessionPage }
 	]
 	property int page: 0
@@ -129,6 +130,12 @@ FloatingWindow {
 		id: trayPage
 
 		TrayPage {}
+	}
+
+	Component {
+		id: controlPage
+
+		ControlPage {}
 	}
 
 	Component {

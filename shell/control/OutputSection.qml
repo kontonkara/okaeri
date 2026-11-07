@@ -10,12 +10,14 @@ Section {
 	property real room: 0
 
 	name: "output"
-	visible: Audio.outputs.length > 1
+	wanted: Audio.outputs.length > 1
 	icon: "volume"
 	title: "Output"
 	summary: Audio.sink?.description ?? ""
 	checked: true
 	switches: false
+	// A screen may have come since the last time.
+	Component.onCompleted: Audio.checkScreens()
 
 	Rows {
 		values: Audio.outputs

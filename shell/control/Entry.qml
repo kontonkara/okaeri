@@ -4,7 +4,8 @@ import qs.ui
 
 // A row of Rows, in the look of List's: what's put in it in front, `text` and
 // `subtext`, in the error color when `failed`, a button when there's an
-// `action`, and `below` under all that.
+// `action`, which when `risky` takes a second click soon after the first, and
+// `below` under all that.
 Item {
 	id: entry
 
@@ -17,6 +18,8 @@ Item {
 	property bool failed: false
 	property bool pickable: true
 	property string action
+	property bool risky: false
+	property bool armed: false
 	property alias below: under.data
 	default property alias front: front.data
 
@@ -103,8 +106,23 @@ Item {
 			height: Theme.u(28)
 			visible: entry.action !== ""
 			flat: true
-			text: entry.action
-			onClicked: entry.acted()
+			text: entry.armed ? "Sure?" : entry.action
+			onClicked: {
+				if (entry.risky && !entry.armed) {
+					entry.armed = true;
+					disarm.restart();
+				} else {
+					entry.armed = false;
+					entry.acted();
+				}
+			}
+		}
+
+		Timer {
+			id: disarm
+
+			interval: 3000
+			onTriggered: entry.armed = false
 		}
 	}
 

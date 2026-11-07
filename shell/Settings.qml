@@ -50,6 +50,7 @@ Singleton {
 	readonly property var session: Object.assign({}, defaults.session, user.session, own.session)
 	readonly property var idle: Object.assign({}, defaults.idle, user.idle, own.idle)
 	readonly property var battery: Object.assign({}, defaults.battery, user.battery, own.battery)
+	readonly property var control: Object.assign({}, defaults.control, user.control, own.control)
 	readonly property var launcher: Object.assign({}, defaults.launcher, user.launcher, own.launcher)
 	readonly property var clipboard: Object.assign({}, defaults.clipboard, user.clipboard, own.clipboard)
 	readonly property var sounds: Object.assign({}, defaults.sounds, user.sounds, own.sounds)

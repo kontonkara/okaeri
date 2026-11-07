@@ -10,7 +10,7 @@ Section {
 	property real room: 0
 
 	name: "bluetooth"
-	visible: !!Bt.adapter
+	wanted: !!Bt.adapter
 	icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
 	title: "Bluetooth"
 	summary: {
