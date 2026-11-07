@@ -98,7 +98,7 @@ Card {
 
 	// So that it can leave with its text on when it's gone already.
 	RetainableLock {
-		object: card.notification
+		object: card.notification.isPast ? null : card.notification
 		locked: true
 	}
 

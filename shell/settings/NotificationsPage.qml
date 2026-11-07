@@ -62,8 +62,28 @@ Flickable {
 				text: "At most at once"
 				values: [1, 2, 3, 4, 5, 6, 8]
 				value: Settings.notifications.cap
-				unit: " up"
+				unit: " "
 				onChosen: value => Settings.set("notifications", "cap", value)
+			}
+		}
+
+		Card {
+			width: parent.width
+			title: "History"
+
+			Setting {
+				text: "Keep it over a restart"
+				subtext: "In a file only you can read, without the pictures that came as data"
+				checked: Settings.notifications.keep
+				onToggled: wanted => Settings.set("notifications", "keep", wanted)
+			}
+
+			Choice {
+				text: "How much of it"
+				values: [20, 50, 100, 200, 500]
+				value: Settings.notifications.history
+				unit: " "
+				onChosen: value => Settings.set("notifications", "history", value)
 			}
 		}
 

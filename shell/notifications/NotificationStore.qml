@@ -2,13 +2,15 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import qs
 import qs.services
 
 // What the server holds and what's shown of it: the history, the toasts, how
 // many are unread and Do Not Disturb. NotificationCenter gives it `server` and
-// `panel`; next to another shell there's no server and it all stays empty.
+// `panel`; next to another shell there's no server and it all stays empty. The
+// history is kept over a restart, in a directory only the user can read.
 // Settings.notifications.rules hold back an app's: { app, toast, history }, app
 // being its name or desktop entry, in any case, and the others false to not show.
 Singleton {
@@ -25,14 +27,22 @@ Singleton {
 	// how many the history holds: past that the oldest go.
 	readonly property int cap: Settings.notifications.cap
 	readonly property int defaultTimeout: Settings.notifications.timeout * 1000
-	readonly property int historyCap: 100
+	readonly property int historyCap: Settings.notifications.history
 
 	// While clear() works: all of this goes over the list once, not once for
 	// each that's closed.
 	property bool clearing: false
 
+	// What the file had, once it's read: { id, appName, ... }, and those of it that
+	// weren't still with the server, as PastNotification, newest first.
+	property var fromFile: null
+	property var past: []
+	property bool restored: false
+
+	readonly property string folder: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/notifications`
+
 	// Newest first.
-	readonly property var all: server && !clearing ? server.trackedNotifications.values.slice().reverse() : []
+	readonly property var all: server && !clearing ? server.trackedNotifications.values.slice().reverse().concat(past) : []
 	// What's for the moment isn't for later.
 	readonly property var history: all.filter(n => !fleeting(n))
 
@@ -54,15 +64,20 @@ Singleton {
 
 	// Ids only grow: what's past this one wasn't looked at yet.
 	property alias seenId: kept.seenId
-	readonly property int unread: panelShown ? 0 : history.filter(n => n.id > seenId).length
+	readonly property int unread: panelShown ? 0 : history.filter(n => isUnread(n)).length
 
 	onUpChanged: Qt.callLater(trim)
+	onHistoryChanged: saving.restart()
+	onUnreadChanged: saving.restart()
+	onServerChanged: restore()
 
 	onPanelShownChanged: {
-		if (panelShown)
+		if (panelShown) {
 			takeDown(n => !critical(n));
-		else if (all.length)
+			past.forEach(n => n.unread = false);
+		} else if (all.length) {
 			seenId = all[0].id;
+		}
 	}
 
 	onDndChanged: {
@@ -74,6 +89,10 @@ Singleton {
 	function rule(notification) {
 		const names = [notification.appName, notification.desktopEntry].map(name => (name || "").toLowerCase());
 		return Settings.notifications.rules.find(rule => names.includes(rule.app.toLowerCase())) ?? {};
+	}
+
+	function isUnread(notification) {
+		return notification.isPast ? notification.unread : notification.id > seenId;
 	}
 
 	// For the moment, not for later.
@@ -106,7 +125,10 @@ Singleton {
 		// only change the hints. From the same process nothing changes at all,
 		// so that one can't show again.
 		const changes = [notification.summaryChanged, notification.bodyChanged, notification.urgencyChanged, notification.hintsChanged];
-		changes.forEach(changed => changed.connect(() => show(notification)));
+		changes.forEach(changed => changed.connect(() => {
+			show(notification);
+			saving.restart();
+		}));
 		// From before a reload it had its toast, and only a critical one still has.
 		const shows = !quiet(notification) && (!notification.lastGeneration || critical(notification));
 		// Only in the server's list after this returns. A transient one that
@@ -177,6 +199,40 @@ Singleton {
 		all.find(n => n.id === id)?.dismiss();
 	}
 
+	// A past one, closed. It stays as an object: a card may be leaving with it.
+	function forget(notification) {
+		past = past.filter(other => other !== notification);
+		notification.closed();
+	}
+
+	// The file's, once there's both that and a server to tell what a reload left of it.
+	function restore() {
+		if (!server || !fromFile || restored)
+			return;
+		restored = true;
+		if (!Settings.notifications.keep)
+			return;
+		const live = server.trackedNotifications.values;
+		past = fromFile.filter(saved => !live.some(n => n.id === saved.id && n.summary === saved.summary)).slice(0, historyCap).map((saved, index) => pastKind.createObject(store, Object.assign({}, saved, { id: -index - 1 })));
+	}
+
+	// A picture that came as data has no name to go by afterwards.
+	function save() {
+		if (!restored)
+			return;
+		keptFile.setText(JSON.stringify(!Settings.notifications.keep ? [] : history.map(n => ({
+			id: n.id,
+			appName: n.appName,
+			desktopEntry: n.desktopEntry,
+			summary: n.summary,
+			body: n.body,
+			image: n.image.startsWith("image://qs") ? "" : n.image,
+			appIcon: n.appIcon,
+			urgency: n.urgency,
+			unread: isUnread(n)
+		}))));
+	}
+
 	function toggleApp(app) {
 		opened = opened.includes(app) ? opened.filter(other => other !== app) : opened.concat([app]);
 	}
@@ -212,6 +268,50 @@ Singleton {
 	function togglePanel() {
 		if (panel)
 			panel.toggle();
+	}
+
+	Component {
+		id: pastKind
+
+		PastNotification {}
+	}
+
+	// Not with each one of a burst.
+	Timer {
+		id: saving
+
+		interval: 500
+		onTriggered: store.save()
+	}
+
+	// Turned off, what's there goes.
+	Connections {
+		target: Settings
+
+		function onNotificationsChanged() {
+			saving.restart();
+		}
+	}
+
+	// What people wrote: only the user gets to read it.
+	Process {
+		running: !Env.guest
+		command: ["mkdir", "-p", "-m", "700", store.folder]
+		onExited: keptFile.path = `${store.folder}/history.json`
+	}
+
+	FileView {
+		id: keptFile
+
+		printErrors: false
+		onLoaded: {
+			store.fromFile = Theme.parse(text() || "[]", path);
+			store.restore();
+		}
+		onLoadFailed: {
+			store.fromFile = [];
+			store.restore();
+		}
 	}
 
 	Expiry {
