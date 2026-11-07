@@ -4,16 +4,19 @@ import qs.clipboard
 import qs.ui
 
 // The clipboard's history. The list has the keys: Enter or a click puts an
-// entry back and closes, Delete removes it, and typing goes to the filter,
+// entry back and closes, with Shift pastes it too, or the other way round by the
+// settings, Ctrl+P pins it, Delete removes it, and typing goes to the filter,
 // where Delete is the text's again until Down.
 Panel {
 	id: panel
 
 	// The newest rows shown; the rest of the history can be filtered for.
-	readonly property int cap: 100
+	readonly property int cap: Settings.clipboard.rows
+	// Only "text" or only "picture", "" for both.
+	property string kind: ""
 	readonly property var matches: {
 		const wanted = filter.text.toLowerCase();
-		return Clipboard.entries.filter(entry => `${entry.text} ${entry.subtext || ""}`.toLowerCase().includes(wanted));
+		return Clipboard.shown.filter(entry => (!kind || !!entry.picture === (kind === "picture")) && `${entry.text} ${entry.subtext || ""}`.toLowerCase().includes(wanted));
 	}
 	readonly property var rows: matches.slice(0, cap)
 	readonly property string summary: matches.length > cap ? `Newest ${cap} of ${matches.length}`
@@ -21,6 +24,21 @@ Panel {
 	// What the panel has for the list: all but the filter, the row under the list
 	// and the gaps between them.
 	readonly property real listRoom: room - filter.height - clear.height - Theme.u(20)
+
+	function pick(entry, shifted) {
+		Clipboard.restore(entry);
+		if (shifted !== Settings.clipboard.paste)
+			Clipboard.paste();
+		panel.hide();
+	}
+
+	// On the row that has the keys, from the filter too.
+	function pinKey(event) {
+		if (event.key === Qt.Key_P && event.modifiers & Qt.ControlModifier) {
+			list.togglePin(list.currentIndex);
+			event.accepted = true;
+		}
+	}
 
 	align: Settings.corner("clipboard")
 
@@ -30,6 +48,7 @@ Panel {
 	// At the newest row, wherever it was left, and with no idea of the pointer.
 	onPanelOpened: {
 		filter.text = "";
+		kind = "";
 		list.pointer = null;
 		list.currentIndex = list.count ? 0 : -1;
 		list.positionViewAtBeginning();
@@ -45,16 +64,43 @@ Panel {
 		}
 	}
 
-	TextField {
-		id: filter
+	component Kind: Button {
+		required property string shows
 
+		height: filter.height
+		flat: panel.kind !== shows
+		activeFocusOnTab: false
+		onClicked: panel.kind = panel.kind === shows ? "" : shows
+	}
+
+	Row {
 		width: parent.width
-		icon: "search"
-		placeholder: "Filter"
-		onAccepted: list.activate(list.currentIndex)
-		Keys.onDownPressed: {
-			list.forceActiveFocus();
-			list.move(1);
+		spacing: Theme.u(6)
+
+		TextField {
+			id: filter
+
+			width: parent.width - (height + parent.spacing) * 2
+			icon: "search"
+			placeholder: "Filter"
+			shifted: true
+			onAccepted: list.activate(list.currentIndex)
+			onShiftAccepted: panel.pick(list.entry(list.currentIndex), true)
+			Keys.onDownPressed: {
+				list.forceActiveFocus();
+				list.move(1);
+			}
+			Keys.onPressed: event => panel.pinKey(event)
+		}
+
+		Kind {
+			icon: "text"
+			shows: "text"
+		}
+
+		Kind {
+			icon: "image"
+			shows: "picture"
 		}
 	}
 
@@ -63,6 +109,9 @@ Panel {
 		height: list.count ? list.height : Theme.u(72)
 
 		Keys.onPressed: event => {
+			panel.pinKey(event);
+			if (event.accepted)
+				return;
 			if (event.key === Qt.Key_Backspace)
 				filter.text = filter.text.slice(0, -1);
 			else if (event.text >= " " && event.text !== "\x7f")
@@ -80,6 +129,15 @@ Panel {
 			// contentHeight, which follows the height.
 			function heightOf(entry) {
 				return entry.picture ? Theme.u(52) : rowHeight;
+			}
+
+			function togglePin(index) {
+				if (!usable(index))
+					return;
+				if (model[index].pinned)
+					Clipboard.unpin(model[index]);
+				else
+					Clipboard.pin(model[index]);
 			}
 
 			// By the key and by the trash. A new model starts the list over at the
@@ -106,10 +164,7 @@ Panel {
 			cacheBuffer: Theme.u(3000)
 			model: panel.rows
 			delegate: ClipboardRow {}
-			onActivated: (index, entry) => {
-				Clipboard.restore(entry);
-				panel.hide();
-			}
+			onActivated: (index, entry) => panel.pick(entry, shiftHeld)
 			Keys.onUpPressed: {
 				if (currentIndex > 0)
 					move(-1);

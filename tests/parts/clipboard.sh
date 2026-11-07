@@ -117,7 +117,7 @@ for _ in $(seq 50); do
 	sleep 0.1
 done
 for type in text image; do
-	watchers | grep -qF " --type $type --watch cliphist -db-path $db -max-dedupe-search 750 store " ||
+	watchers | grep -qF " --type $type --watch cliphist -db-path $db -max-items 750 -max-dedupe-search 750 store " ||
 		fail "the $type watcher isn't what it should be: $(watchers)"
 done
 sleep 0.5
@@ -560,6 +560,110 @@ shot large-open
 close_panel
 printf '{"extends":"dark"}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.5
+
+# Pinned: first in the list, and it stays when the history goes.
+pinned=$XDG_STATE_HOME/okaeri/clipboard/pins/pins.json
+pin_key() {
+	wtype -M ctrl -k p -m ctrl
+	sleep 0.5
+}
+copy 'a pin for later' 'a pin for later'
+open_panel
+pin_key
+[ "$(jq length "$pinned")" = 1 ] || fail "not pinned: $(cat "$pinned" 2>/dev/null)"
+key Escape
+wait_closed
+copy 'newer than the pin' 'newer than the pin'
+open_panel
+shot pinned
+key Return
+wait_closed
+sleep 0.3
+[ "$(wl-paste -n)" = 'a pin for later' ] || fail "the pin isn't first: $(wl-paste -n)"
+ipc clipboard clear
+sleep 0.5
+count_is 0
+open_panel
+key Return
+wait_closed
+sleep 0.3
+[ "$(wl-paste -n)" = 'a pin for later' ] || fail "the pin went with the history: $(wl-paste -n)"
+# A picture, to the byte, and its file is the row's to keep.
+magick -size 64x48 xc:'#336699' "$files/pinned.png"
+wl-copy --type image/png <"$files/pinned.png"
+sleep 0.5
+wait_entry 'binary data'
+open_panel
+key Down
+pin_key
+[ "$(jq length "$pinned")" = 2 ] || fail "the picture isn't pinned: $(cat "$pinned")"
+key Escape
+wait_closed
+ipc clipboard clear
+sleep 0.5
+open_panel
+sleep 0.5
+shot pinned-picture
+key Return
+wait_closed
+sleep 0.5
+wl-paste --type image/png >"$files/pasted.png"
+cmp "$files/pinned.png" "$files/pasted.png" || fail "the pinned picture came back changed"
+
+# Only text or only pictures, by the two buttons beside the filter.
+copy 'some more text' 'some more text'
+mark
+open_panel
+move 1321 73
+click
+wait_new "2 entries"
+move 1365 73
+click
+wait_new "1 entry"
+shot only-pictures
+close_panel
+
+# Unpinned by the key: gone with its file.
+open_panel
+pin_key
+key Escape
+wait_closed
+[ "$(jq length "$pinned")" = 1 ] || fail "not unpinned: $(cat "$pinned")"
+[ "$(find "$(dirname "$pinned")" -type f | wc -l)" = 2 ] || fail "a pin's file stayed: $(ls "$(dirname "$pinned")")"
+
+# Pasted into the window in focus, a terminal here: Shift+Enter, and Enter with the
+# setting on. Enter alone only copies.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sh -c "cat >$files/typed" &
+terminal=$!
+sleep 1.5
+copy 'pasted by shift' 'pasted by shift'
+open_panel
+type 'pasted by shift'
+wtype -M shift -k Return -m shift
+wait_closed
+sleep 0.6
+key Return
+copy 'only copied' 'only copied'
+open_panel
+type 'only copied'
+key Return
+wait_closed
+sleep 0.6
+key Return
+printf '{ "clipboard": { "paste": true } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+copy 'pasted by enter' 'pasted by enter'
+open_panel
+type 'pasted by enter'
+key Return
+wait_closed
+sleep 0.6
+key Return
+sleep 0.3
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+kill "$terminal"
+wait "$terminal" 2>/dev/null || true
+[ "$(cat "$files/typed")" = "$(printf 'pasted by shift\n\npasted by enter')" ] || fail "in the window: $(cat "$files/typed")"
 
 # Nothing that was copied is in the log, and no picture stayed.
 for text in hunter2 zebra 'He said' 'filler number' 'after the restart'; do

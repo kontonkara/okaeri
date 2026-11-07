@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
 import qs.services
 
 // The clipboard's history, kept by cliphist. What's copied goes into it
@@ -10,6 +11,7 @@ import qs.services
 // commands as arguments of their own: what was copied stays out of shell
 // strings and of the log. None of this goes through Env.act: it's the
 // session's clipboard and okaeri's own file, and a test has its own of both.
+// What's pinned is kept apart from the history, and outlasts it.
 Singleton {
 	id: clipboard
 
@@ -22,6 +24,14 @@ Singleton {
 
 	// { id, text, subtext, picture }, newest first.
 	property var entries: []
+	// Those pinned, as that and { pinned, file }: the file has what was copied.
+	readonly property string pinFolder: database.replace(/[^/]*$/, "pins")
+	property var pins: []
+	// All there is to show: what's pinned first, and only there.
+	readonly property var shown: pins.concat(entries.filter(entry => !pins.some(pin => pin.text === entry.text && pin.subtext === entry.subtext)))
+	// How long the history gets, which goes to the watchers.
+	readonly property int keep: Settings.clipboard.keep
+	property bool started: false
 	// Commands waiting for their turn.
 	property var chores: []
 	// Pictures of rows that went, for the sweeper.
@@ -43,8 +53,10 @@ Singleton {
 		return { id, text };
 	}
 
-	// A filter sees this much of an entry.
+	// A filter sees this much of an entry. The apps are read as they're first asked
+	// for: paste() has them by then.
 	function load() {
+		DesktopEntries.applications.values;
 		lister.exec(["cliphist", "-db-path", database, "-preview-width", "300", "list"]);
 	}
 
@@ -63,10 +75,49 @@ Singleton {
 	// decodes goes there: an id is gone once the same thing was copied again.
 	// What it is, wl-copy tells from the bytes; the list's preview can be wrong.
 	function restore(entry) {
-		run(["sh", "-c", 'if cliphist -db-path "$1" decode "$2" >/dev/null; then cliphist -db-path "$1" decode "$2" | wl-copy; fi', "sh", database, entry.id]);
+		if (entry.pinned)
+			run(["sh", "-c", 'wl-copy <"$1"', "sh", entry.file]);
+		else
+			run(["sh", "-c", 'if cliphist -db-path "$1" decode "$2" >/dev/null; then cliphist -db-path "$1" decode "$2" | wl-copy; fi', "sh", database, entry.id]);
+	}
+
+	// Into the window in focus, as the panel has let go of the keys. What's on the
+	// clipboard by then was put there first: these go one at a time.
+	function paste() {
+		const app = Niri.lastWindow?.app_id;
+		if (!app)
+			return;
+		const terminal = DesktopEntries.heuristicLookup(app)?.categories.includes("TerminalEmulator");
+		const keys = terminal ? ["-M", "ctrl", "-M", "shift", "-k", "v", "-m", "shift", "-m", "ctrl"] : ["-M", "ctrl", "-k", "v", "-m", "ctrl"];
+		run(["sh", "-c", 'sleep 0.2; exec wtype "$@"', "sh", ...keys]);
+	}
+
+	// A row only comes up with its file there, for the preview to read.
+	function pin(entry) {
+		if (pinner.running)
+			return;
+		const name = String(Date.now());
+		pinner.entry = { id: `pin-${name}`, text: entry.text, subtext: entry.subtext, picture: entry.picture, pinned: true, file: `${pinFolder}/${name}` };
+		pinner.exec(["sh", "-c", 'mkdir -p "${3%/*}" && cliphist -db-path "$1" decode "$2" >"$3"', "sh", database, entry.id, pinner.entry.file]);
+	}
+
+	function savePins() {
+		pinsFile.setText(JSON.stringify(pins));
+	}
+
+	function unpin(entry) {
+		const id = entry.id;
+		const file = entry.file;
+		pins = pins.filter(other => other.id !== id);
+		savePins();
+		Quickshell.execDetached(["rm", "-f", "--", file]);
 	}
 
 	function remove(entry) {
+		if (entry.pinned) {
+			unpin(entry);
+			return;
+		}
 		// `entry` can be a view into the list's model, which changes below.
 		const id = entry.id;
 		entries = entries.filter(other => other.id !== id);
@@ -75,7 +126,8 @@ Singleton {
 
 	// The clipboard too: a watcher starts by storing what's on it, which would
 	// bring that back. Removing one row leaves the clipboard alone, on purpose:
-	// that's something to paste yet, so a new watcher can store it again.
+	// that's something to paste yet, so a new watcher can store it again. What's
+	// pinned stays.
 	function clear() {
 		entries = [];
 		run(["cliphist", "-db-path", database, "wipe"]);
@@ -89,8 +141,40 @@ Singleton {
 		sweeper.restart();
 	}
 
+	// The watchers have it from their start on, and that's before this is set.
+	onKeepChanged: {
+		if (started) {
+			textWatch.running = false;
+			imageWatch.running = false;
+		}
+	}
+
 	// What a shell that died left.
-	Component.onCompleted: Quickshell.execDetached(["rm", "-rf", "--", pictures])
+	Component.onCompleted: {
+		started = true;
+		Quickshell.execDetached(["rm", "-rf", "--", pictures]);
+	}
+
+	Process {
+		id: pinner
+
+		property var entry
+
+		onExited: code => {
+			if (code === 0) {
+				clipboard.pins = [entry].concat(clipboard.pins);
+				clipboard.savePins();
+			}
+		}
+	}
+
+	FileView {
+		id: pinsFile
+
+		path: `${clipboard.pinFolder}/pins.json`
+		printErrors: false
+		onLoaded: clipboard.pins = Theme.parse(text() || "[]", path)
+	}
 
 	Process {
 		id: lister
@@ -138,7 +222,7 @@ Singleton {
 		id: textWatch
 
 		running: true
-		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "text", "--watch", "cliphist", "-db-path", clipboard.database, "-max-dedupe-search", "750", "store"]
+		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "text", "--watch", "cliphist", "-db-path", clipboard.database, "-max-items", String(clipboard.keep), "-max-dedupe-search", "750", "store"]
 		onExited: revive.restart()
 	}
 
@@ -146,7 +230,7 @@ Singleton {
 		id: imageWatch
 
 		running: true
-		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "image", "--watch", "cliphist", "-db-path", clipboard.database, "-max-dedupe-search", "750", "store"]
+		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "image", "--watch", "cliphist", "-db-path", clipboard.database, "-max-items", String(clipboard.keep), "-max-dedupe-search", "750", "store"]
 		onExited: revive.restart()
 	}
 

@@ -17,6 +17,7 @@ FloatingWindow {
 		{ text: "Bar", icon: "bar", page: barPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
 		{ text: "Launcher", icon: "search", page: launcherPage },
+		{ text: "Clipboard", icon: "clipboard", page: clipboardPage },
 		{ text: "Notifications", icon: "bell", page: notificationsPage },
 		{ text: "Sounds", icon: "volume", page: soundsPage },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
@@ -134,6 +135,12 @@ FloatingWindow {
 		id: launcherPage
 
 		LauncherPage {}
+	}
+
+	Component {
+		id: clipboardPage
+
+		ClipboardPage {}
 	}
 
 	Component {

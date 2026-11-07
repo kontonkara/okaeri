@@ -13,6 +13,9 @@ Singleton {
 	property var workspaces: []
 	property var windows: []
 	readonly property var focusedWindow: windows.find(w => w.is_focused) ?? null
+	// The one that gets the focus back: a panel takes it from any.
+	property int lastFocused: -1
+	readonly property var lastWindow: windows.find(w => w.id === lastFocused) ?? null
 	// What's showing the screen or a window, as niri has it.
 	property var casts: []
 	// The keyboard layouts by name, and which is on.
@@ -65,6 +68,11 @@ window-rule {
 	}
 }
 ` : ""}`
+
+	onFocusedWindowChanged: {
+		if (focusedWindow)
+			lastFocused = focusedWindow.id;
+	}
 
 	onRulesChanged: writeRules()
 	Component.onCompleted: writeRules()
