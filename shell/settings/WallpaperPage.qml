@@ -10,7 +10,6 @@ import qs.ui
 Column {
 	id: page
 
-	readonly property string folder: Settings.wallpaper.folder || Settings.wallpaper.path.replace(/\/[^/]*$/, "") || `${Quickshell.env("HOME")}/Pictures`
 	readonly property real gap: Math.round(Theme.u(8))
 
 	function pick(path) {
@@ -22,7 +21,7 @@ Column {
 	FolderListModel {
 		id: pictures
 
-		folder: Settings.url(page.folder)
+		folder: Settings.url(Settings.pictures)
 		nameFilters: ["*.bmp", "*.gif", "*.jpeg", "*.jpg", "*.png", "*.webp"]
 		caseSensitive: false
 		sortCaseSensitive: false
@@ -41,7 +40,7 @@ Column {
 		width: parent.width
 		icon: "image"
 		placeholder: "Folder"
-		text: page.folder
+		text: Settings.pictures
 		onAccepted: Settings.set("wallpaper", "folder", text.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
 	}
 

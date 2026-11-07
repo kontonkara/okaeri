@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
 import qs.services
 
 // The apps there are, what a search finds of them, and how often each was
@@ -54,16 +55,23 @@ Singleton {
 	}
 
 	// The best fit of all an app's texts; of two alike, the one that counts more.
+	// All of a text is out of reach of what weight() adds to the others.
 	function score(query, app) {
 		let best = 0;
 		app.texts.forEach((texts, rank) => {
 			for (const text of texts) {
 				const level = fit(query, text);
 				if (level)
-					best = Math.max(best, level * 4 - rank);
+					best = Math.max(best, (level === 4 ? 24 : level * 4) - rank);
 			}
 		});
 		return best;
+	}
+
+	// What launches add to a fit: nothing for the first few, then enough to pass a
+	// better one.
+	function weight(times) {
+		return Math.max(0, Math.min(Math.log2(1 + times) - 1, 6));
 	}
 
 	// An icon of the theme or a file, "" for one that isn't there.
@@ -80,16 +88,20 @@ Singleton {
 	}
 
 	// Rows for List, the best first, the most launched of equals before the
-	// rest. Without a query that's all the apps.
+	// rest. Without a query that's all the apps but the hidden, the pinned first.
 	function search(query) {
 		const wanted = query.trim().toLowerCase();
+		const { pinned, hidden, usage } = Settings.launcher;
 		const found = [];
 		for (const app of known) {
-			const points = wanted ? score(wanted, app) : 1;
-			if (points)
-				found.push({ entry: app.entry, points, times: launches[app.entry.id] || 0 });
+			const points = hidden.includes(app.entry.id) ? 0 : wanted ? score(wanted, app) : 1;
+			if (points) {
+				const times = usage ? launches[app.entry.id] || 0 : 0;
+				const pin = wanted ? -1 : pinned.indexOf(app.entry.id);
+				found.push({ entry: app.entry, points: points + weight(times), times, pin: pin < 0 ? pinned.length : pin });
+			}
 		}
-		found.sort((a, b) => b.points - a.points || b.times - a.times || a.entry.name.localeCompare(b.entry.name));
+		found.sort((a, b) => a.pin - b.pin || b.points - a.points || b.times - a.times || a.entry.name.localeCompare(b.entry.name));
 		return found.slice(0, limit).map(({ entry }) => {
 			const source = image(entry.icon);
 			return {
@@ -97,9 +109,25 @@ Singleton {
 				text: entry.name,
 				subtext: entry.genericName || entry.comment,
 				image: source,
-				icon: "apps"
+				icon: "apps",
+				mark: pinned.includes(entry.id) ? "pin" : ""
 			};
 		});
+	}
+
+	// The app with this id, if it's still there.
+	function find(id) {
+		return known.find(app => app.entry.id === id)?.entry ?? null;
+	}
+
+	function pin(id, wanted) {
+		const others = Settings.launcher.pinned.filter(other => other !== id);
+		Settings.set("launcher", "pinned", wanted ? others.concat([id]) : others);
+	}
+
+	function hide(id, wanted) {
+		const others = Settings.launcher.hidden.filter(other => other !== id);
+		Settings.set("launcher", "hidden", wanted ? others.concat([id]) : others);
 	}
 
 	// The picture of the app with this id in a window, "" if there's none.
@@ -115,10 +143,12 @@ Singleton {
 		return own ? [own] : app ? app.entry.command : ["xdg-terminal-exec"];
 	}
 
-	function launch(entry) {
-		Env.act(`launch ${entry.id}`, () => {
+	// The app, or `action`, one of its own, for what else it can do.
+	function launch(entry, action) {
+		Env.act(action ? `launch ${entry.id} ${action.id}` : `launch ${entry.id}`, () => {
 			// execute() would have it in the shell's scope, and doesn't look at this.
-			const command = entry.runInTerminal ? [...terminal(), "-e", ...entry.command] : entry.command;
+			const line = (action ?? entry).command;
+			const command = entry.runInTerminal ? [...terminal(), "-e", ...line] : line;
 			const directory = entry.workingDirectory;
 			Niri.spawn(directory ? ["sh", "-c", 'cd "$0" && exec "$@"', directory, ...command] : command);
 		});

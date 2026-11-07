@@ -16,6 +16,7 @@ FloatingWindow {
 	readonly property var pages: [
 		{ text: "Bar", icon: "bar", page: barPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
+		{ text: "Launcher", icon: "search", page: launcherPage },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
 		{ text: "Session", icon: "lock", page: sessionPage }
 	]
@@ -78,6 +79,12 @@ FloatingWindow {
 		id: trayPage
 
 		TrayPage {}
+	}
+
+	Component {
+		id: launcherPage
+
+		LauncherPage {}
 	}
 
 	Component {

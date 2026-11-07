@@ -3,10 +3,12 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
 import qs.services
 
 // What's typed in the launcher, worked out by qalc, with its units and
 // currencies. `result` is "" for what's no sum, and `expression` what it's of.
+// The last ones copied are kept in okaeri/sums.json of the state directory.
 Singleton {
 	id: calculator
 
@@ -15,6 +17,9 @@ Singleton {
 	property string asked: ""
 	property string expression: ""
 	property string result: ""
+	// { expression, result }, newest first.
+	property var recent: []
+	readonly property int kept: 20
 
 	// With /calc in front anything is a sum. Else it starts as one and has
 	// something to work out: 7zip and 2048 are apps' names, and qalc takes `kitty`
@@ -46,9 +51,23 @@ Singleton {
 		limit.restart();
 	}
 
-	function copy() {
-		const value = result;
+	function copy(value) {
 		Env.act(`copy ${value}`, () => Quickshell.execDetached(["wl-copy", "--", value]));
+	}
+
+	// The sum there is now: its answer, and it's one of the last ones from here on.
+	function take() {
+		const sum = { expression, result };
+		copy(sum.result);
+		if (Settings.launcher.sums) {
+			recent = [sum].concat(recent.filter(other => other.expression !== sum.expression)).slice(0, kept);
+			file.setText(JSON.stringify(recent));
+		}
+	}
+
+	function forget() {
+		recent = [];
+		file.setText("[]");
 	}
 
 	Process {
@@ -95,5 +114,19 @@ Singleton {
 
 		interval: 1000
 		onTriggered: worker.signal(9)
+	}
+
+	FileView {
+		id: file
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/sums.json`
+		printErrors: false
+		onLoaded: {
+			try {
+				calculator.recent = Array.from(JSON.parse(text()));
+			} catch (error) {
+				console.warn(`okaeri: can't read ${path}: ${error.message}`);
+			}
+		}
 	}
 }
