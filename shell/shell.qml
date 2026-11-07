@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import qs
 import qs.bar
 import qs.clipboard
 import qs.control
@@ -15,7 +16,7 @@ import qs.wallpaper
 
 ShellRoot {
 	Variants {
-		model: Quickshell.screens
+		model: Quickshell.screens.filter(screen => Settings.barOn(screen))
 
 		Bar {
 			required property var modelData

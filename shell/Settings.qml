@@ -72,6 +72,16 @@ Singleton {
 		return bar.left.includes(part) ? "top-left" : bar.center.includes(part) ? "top" : "top-right";
 	}
 
+	// Whether `screen` has a bar: Settings.bar.hideOn names those that don't.
+	function barOn(screen) {
+		return !screen || !bar.hideOn.includes(screen.name);
+	}
+
+	// Where what opens on `screen` starts: under its bar, or at the edge.
+	function top(screen) {
+		return barOn(screen) ? Theme.below : Theme.edge;
+	}
+
 	// `path` as a URL, with what would mean something else in one kept as a name.
 	function url(path) {
 		return path ? `file://${encodeURI(path).replace(/[?#]/g, encodeURIComponent)}` : "";

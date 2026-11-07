@@ -6,7 +6,7 @@ import qs.services
 import qs.ui
 
 // The toasts: on the screen in focus, at Settings.notifications.position, under
-// the bar when that's up there, the newest nearest the edge, and beside a panel that
+// the bar when that's up there and the screen has one, the newest nearest the edge, and beside a panel that
 // opens in that corner. They take no keys, and outside them the pointer goes through.
 // The window is a strip as wide as they are: a compositor
 // blurs all of a surface that asks for it, however little of it shows.
@@ -109,7 +109,7 @@ PanelWindow {
 		id: list
 
 		x: window.atLeft ? Theme.edge : 0
-		y: window.atBottom ? 0 : Theme.below
+		y: window.atBottom ? 0 : Settings.top(window.screen)
 		width: Math.round(Theme.u(380))
 		height: parent.height - y - (window.atBottom ? Theme.edge : 0)
 		verticalLayoutDirection: window.atBottom ? ListView.BottomToTop : ListView.TopToBottom

@@ -31,6 +31,25 @@ Singleton {
 		return (own.length ? own : workspaces.slice()).sort((a, b) => a.idx - b.idx);
 	}
 
+	// Those on the output with a window, and the active one.
+	function busyOn(output) {
+		return on(output).filter(w => w.is_active || holds(w));
+	}
+
+	// Whether a window is on `workspace`.
+	function holds(workspace) {
+		return windows.some(w => w.workspace_id === workspace.id);
+	}
+
+	// `steps` along `workspaces` from the active one, up being the one before. It
+	// stops at the ends.
+	function turn(workspaces, steps) {
+		const at = workspaces.findIndex(w => w.is_active);
+		const to = Math.max(0, Math.min(workspaces.length - 1, at - steps));
+		if (to !== at)
+			focus(workspaces[to].id);
+	}
+
 	// The screen with the focused workspace, the first one if niri has none of
 	// them (a test's).
 	readonly property var focusedScreen: {

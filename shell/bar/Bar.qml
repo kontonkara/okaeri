@@ -8,8 +8,9 @@ import qs.notifications
 import qs.services
 
 // The bar of a screen: what Settings.bar names on its left, in its middle and
-// on its right, out of `parts`. The wheel on what doesn't use it changes the
-// brightness on its left half and the volume on its right.
+// on its right, out of `parts`. The wheel on what doesn't use it does what
+// Settings.bar.wheel says: "split" changes the brightness on its left half and the
+// volume on its right, or it's "volume", "brightness", "workspaces" or "none".
 PanelWindow {
 	id: bar
 
@@ -192,9 +193,12 @@ PanelWindow {
 			if (steps === 0)
 				return;
 			wheel -= steps * 120;
-			if (event.x < width / 2)
+			const does = Settings.bar.wheel;
+			if (does === "workspaces")
+				Niri.turn(Niri.on(bar.screen.name), steps);
+			else if (does === "brightness" || (does === "split" && event.x < width / 2))
 				Brightness.change(steps * 0.05);
-			else
+			else if (does === "volume" || does === "split")
 				Audio.change(steps * 0.05);
 		}
 	}
