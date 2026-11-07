@@ -427,7 +427,8 @@ Singleton {
 		target: "entries"
 
 		function add(id: string, name: string, icon: string): void {
-			const entry = { id, name, icon, genericName: "", comment: "", keywords: [] };
+			const actions = [{ id: "second", name: "Second Thing", icon: "nosuchicon", command: ["second"] }];
+			const entry = { id, name, icon, actions, genericName: "", comment: "", keywords: [] };
 			entries.applications = { values: [...entries.applications.values, entry] };
 		}
 
@@ -437,6 +438,9 @@ Singleton {
 	}
 }
 QML
+# A lot of launches, for further down.
+often=$(jq -c '. + { "zz.frequent": 40 }' "$state")
+printf '%s\n' "$often" >"$state"
 stood_in=$(sed -e 's/DesktopEntries/Entries/g' -e 's/limit: 3/limit: 50/' "$work/shell/launcher/Apps.qml")
 printf '%s\n' "$stood_in" >"$work/shell/launcher/Apps.qml"
 for _ in $(seq 100); do
@@ -528,3 +532,168 @@ wait "$first"
 sleep 0.5
 niri msg --json layers | jq -e 'all(.[]; .namespace != "okaeri-panel")' >/dev/null ||
 	fail "two calls at once left the panel up"
+
+# A lot of launches pass a better fit, but never all of a name.
+ipc entries add zz.frequent "Zz Often" nosuchicon
+ipc entries add never.launched "Oftener" nosuchicon
+ipc entries add whole.name "Often" nosuchicon
+pick oft zz.frequent
+pick often whole.name
+
+# What else an app can do, by the pointer: its own first.
+own=$XDG_STATE_HOME/okaeri/settings.json
+shifted_enter() {
+	wtype -M shift -k Return -m shift
+	sleep 0.3
+}
+open
+type "icon file"
+glide 700 "$(row 0)"
+click right
+sleep 0.3
+shot app-menu
+key Down
+key Return
+launched "icon.file second"
+is_closed "an action"
+
+# By the keys, and Escape comes back from it to where it was: the second row,
+# with Icon Hash ahead of it for its launches.
+open
+type icon
+key Down
+shifted_enter
+shot app-menu-keys
+key Escape
+sleep 0.3
+key Return
+launched icon.file
+# Back by its row, and typing goes back to searching.
+open
+type "icon file"
+shifted_enter
+key Return
+sleep 0.3
+key Return
+launched icon.file
+open
+type "icon file"
+shifted_enter
+press BackSpace 1
+type e
+key Return
+launched icon.file
+# Enter in a field that doesn't tell Shift apart is still Enter: only here it's a menu.
+open
+type qqzz
+shifted_enter
+key Escape
+is_closed "Shift+Enter with no row"
+
+# Pinned: first without a query, in the order they came, and marked.
+pin() {
+	open
+	type "$1"
+	shifted_enter
+	press Down 2
+	key Return
+	sleep 0.3
+	key Escape
+	is_closed "pinning $1"
+}
+pin "icon none"
+pin "icon file"
+[ "$(jq -c .launcher.pinned "$own")" = '["icon.none","icon.file"]' ] || fail "pinned: $(jq -c .launcher.pinned "$own")"
+open
+sleep 0.3
+shot pinned
+key Return
+launched icon.none
+open
+key Down
+key Return
+launched icon.file
+# A search goes by the fit all the same.
+pick stripes dotted.Thing
+pin "icon none"
+[ "$(jq -c .launcher.pinned "$own")" = '["icon.file"]' ] || fail "unpinned: $(jq -c .launcher.pinned "$own")"
+
+# Hidden: not searched for any more.
+open
+type "icon hash"
+shifted_enter
+press Down 3
+key Return
+sleep 0.3
+shot hidden
+[ "$(jq -c .launcher.hidden "$own")" = '["icon.hash"]' ] || fail "hidden: $(jq -c .launcher.hidden "$own")"
+key Return
+nothing_launched
+key Escape
+is_closed "after hiding"
+
+# A / says what it can ask for, Enter takes it, and it narrows down as it's typed.
+open
+type /
+shot modes
+key Return
+sleep 0.3
+# The last sums, for their answers.
+shot sums
+key Return
+copied 2
+is_closed "a last sum"
+[ "$(jq -r '.[0].expression' "$XDG_STATE_HOME/okaeri/sums.json")" = "1+1" ] ||
+	fail "the last sum isn't kept: $(cat "$XDG_STATE_HOME/okaeri/sums.json")"
+open
+type /wi
+key Return
+sleep 0.2
+key Escape
+is_closed "/win"
+sum "/calc 3*3" 9
+open
+type "/calc "
+sleep 0.2
+key Return
+copied 9
+is_closed "the newest sum"
+
+# Only what it asks for: /win has no apps.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --title icon-window --config NONE -o confirm_os_window_close=0 sleep 30 &
+icon_window=$!
+sleep 1.5
+niri msg action focus-column-left 2>/dev/null || true
+open
+type "/win icon"
+sleep 0.2
+shot window-mode
+key Return
+sleep 0.4
+[ "$(title)" = icon-window ] || fail "/win didn't go to the window: $(title)"
+nothing_launched
+kill "$icon_window"
+wait "$icon_window" 2>/dev/null || true
+sleep 0.4
+open
+type "/nope icon"
+sleep 0.2
+key Return
+nothing_launched
+key Escape
+is_closed "what can't be asked for"
+
+# Wallpapers by name, from where the settings say.
+mkdir "$work/walls"
+magick -size 64x36 xc:blue "$work/walls/blue sky.png"
+magick -size 64x36 xc:green "$work/walls/green field.png"
+printf '{ "wallpaper": { "folder": "%s/walls" } }\n' "$work" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+open
+type "/wall green"
+sleep 0.4
+shot wall-mode
+key Return
+sleep 0.3
+[ "$(jq -r .wallpaper.path "$own")" = "$work/walls/green field.png" ] || fail "the wallpaper: $(jq -r .wallpaper.path "$own")"
+is_closed "a wallpaper"

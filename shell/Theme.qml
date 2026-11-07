@@ -137,6 +137,7 @@ Singleton {
 		next: "M6 5l10 7-10 7z M18 5v14",
 		numLock: "M5 9h14 M5 15h14 M10 4L8 20 M16 4l-2 16",
 		pause: "M8 5v14 M16 5v14",
+		pin: "M9 4h6l-1 7 3 3H7l3-3z M12 14v7",
 		play: "M7 5l12 7-12 7z",
 		power: "M12 3v8 M17.66 6.34A8 8 0 1 1 6.34 6.34",
 		previous: "M18 5L8 12l10 7z M6 5v14",

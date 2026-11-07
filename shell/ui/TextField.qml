@@ -2,7 +2,8 @@ import QtQuick
 import qs
 
 // A line of text. `icon` goes in front of it; `secret` hides what's typed,
-// with an eye to show it. Enter is accepted().
+// with an eye to show it. Enter is accepted(), and with `shifted` Shift+Enter
+// is shiftAccepted().
 Rectangle {
 	id: field
 
@@ -11,8 +12,10 @@ Rectangle {
 	property string icon
 	property bool secret: false
 	property bool revealed: false
+	property bool shifted: false
 
 	signal accepted
+	signal shiftAccepted
 
 	// `focus: true` on the field means the text.
 	onActiveFocusChanged: {
@@ -64,6 +67,13 @@ Rectangle {
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize
 		onAccepted: field.accepted()
+
+		Keys.onPressed: event => {
+			if (field.shifted && event.modifiers & Qt.ShiftModifier && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+				field.shiftAccepted();
+				event.accepted = true;
+			}
+		}
 
 		Text {
 			anchors.fill: parent

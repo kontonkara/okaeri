@@ -4,9 +4,10 @@ import qs
 
 // A list to pick from, by the pointer or by the keys. `model` is an array, or
 // a ScriptModel of one, of { text, subtext, icon (of Theme.icons), image (a
-// source, with `icon` for one that won't load), check, more, enabled,
-// separator }, all but `text` left out as needed; it can hold anything else
-// for whoever gets activated(index, entry). Text in it is never markup.
+// source, with `icon` for one that won't load), check, more, mark (an icon at
+// its end), enabled, separator }, all but `text` left out as needed; it can hold
+// anything else for whoever gets activated(index, entry). A right click says
+// menuAsked(index, entry). Text in it is never markup.
 ListView {
 	id: list
 
@@ -18,6 +19,7 @@ ListView {
 	property var pointer: null
 
 	signal activated(int index, var entry)
+	signal menuAsked(int index, var entry)
 
 	// Row `index`. An array has a `values` too, a function.
 	function entry(index) {
@@ -123,6 +125,7 @@ ListView {
 				anchors.verticalCenter: parent.verticalCenter
 				visible: !!row.modelData.image && status !== Image.Error
 				source: row.modelData.image || ""
+				asynchronous: true
 				implicitSize: list.iconSize
 			}
 
@@ -156,8 +159,8 @@ ListView {
 			anchors.right: parent.right
 			anchors.rightMargin: Theme.u(10)
 			anchors.verticalCenter: parent.verticalCenter
-			visible: !!row.modelData.check || !!row.modelData.more
-			name: row.modelData.check ? "check" : "chevron"
+			visible: !!row.modelData.check || !!row.modelData.more || !!row.modelData.mark
+			name: row.modelData.check ? "check" : row.modelData.mark || "chevron"
 			size: Theme.u(16)
 			color: row.modelData.check ? Theme.colors.accent : Theme.colors.subtext
 		}
@@ -165,10 +168,16 @@ ListView {
 		MouseArea {
 			anchors.fill: parent
 			enabled: row.usable
+			acceptedButtons: Qt.LeftButton | Qt.RightButton
 			hoverEnabled: true
 			cursorShape: Qt.PointingHandCursor
 			onPositionChanged: event => list.follow(row.index, mapToItem(null, event.x, event.y))
-			onClicked: list.activate(row.index)
+			onClicked: event => {
+				if (event.button === Qt.RightButton)
+					list.menuAsked(row.index, row.modelData);
+				else
+					list.activate(row.index);
+			}
 		}
 	}
 }

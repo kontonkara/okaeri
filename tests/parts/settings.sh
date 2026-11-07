@@ -18,8 +18,9 @@ config=$XDG_CONFIG_HOME/okaeri/settings.json
 menu_x=420
 bar_y=216
 tray_y=254
-wallpaper_y=292
-session_y=330
+launcher_y=292
+wallpaper_y=330
+session_y=368
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -217,6 +218,39 @@ same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
 arrow "$higher_x" "$battery_y"
 same "the warning, two up" "$(value .battery.warning)" 25
+
+step "The launcher's page"
+printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"
+chmod 644 "$config"
+mv "$config.new" "$config"
+sleep 0.5
+page "$launcher_y"
+shot launcher-page
+# The first switch, then the second, and those of the two lists.
+move "$switch_x" 234
+click
+sleep 0.3
+same "frequent first" "$(value .launcher.usage)" false
+move "$switch_x" 284
+click
+sleep 0.3
+same "the last sums" "$(value .launcher.sums)" false
+same "the sums are gone" "$(cat "$XDG_STATE_HOME/okaeri/sums.json")" '[]'
+move "$switch_x" 372
+click
+sleep 0.3
+same "the pinned" "$(value .launcher.pinned)" '[]'
+# With the list empty a line says how, about as tall as the row was.
+shot launcher-page-unpinned
+move "$switch_x" 463
+click
+sleep 0.3
+same "the hidden" "$(value .launcher.hidden)" '[]'
+
+printf '{ "tray": { "drawer": true } }\n' >"$config.new"
+mv "$config.new" "$config"
+chmod 444 "$config"
+sleep 0.5
 
 step "It stays"
 key Escape
