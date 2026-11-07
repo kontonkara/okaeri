@@ -99,6 +99,10 @@ Panel {
 			values: NotificationStore.shown
 		}
 
+		Glide {
+			view: list
+		}
+
 		// With one app it would only say what the cards do.
 		section.property: NotificationStore.apps.length > 1 ? "modelData.appName" : ""
 		section.delegate: Item {

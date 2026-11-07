@@ -21,6 +21,10 @@ Flickable {
 		image: entry ? Apps.image(entry.icon) : ""
 	}
 
+	Glide {
+		view: page
+	}
+
 	Column {
 		id: column
 

@@ -78,6 +78,10 @@ ListView {
 		event.accepted = true;
 	}
 
+	Glide {
+		view: list
+	}
+
 	// What Enter goes by: Theme.hover is faint on black.
 	highlight: Rectangle {
 		radius: Math.max(0, Theme.cardRadius - Theme.u(4))

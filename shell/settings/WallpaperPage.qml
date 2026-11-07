@@ -56,6 +56,11 @@ Column {
 		boundsBehavior: Flickable.StopAtBounds
 		activeFocusOnTab: true
 
+		Glide {
+			view: grid
+			notch: grid.cellHeight
+		}
+
 		Keys.onPressed: event => {
 			if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
 				if (currentItem)

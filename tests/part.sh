@@ -13,6 +13,9 @@
 #   click [BUTTON]    left, right or middle, at the pointer
 #   hold, let_go      the left button down and up, for a drag
 #   wheel STEPS       the wheel, up for a positive number
+#   notch NOTCHES     a mouse's wheel, which is what a list scrolls by, down for a
+#                     positive number
+#   swipe PIXELS      two fingers on a touchpad, down the page for a positive number
 #   type TEXT         keys, and key NAME for one (Escape, Return, Tab)
 #   wait_log TEXT     until the shell's log has TEXT, or fails after 5 s
 #   log               the shell's log so far
@@ -233,6 +236,12 @@ let_go() {
 wheel() {
 	wlrctl pointer scroll "$((-15 * $1))" 0
 	sleep 0.2
+}
+notch() {
+	python3 "$repo/tests/hold.py" notch "$1"
+}
+swipe() {
+	python3 "$repo/tests/hold.py" swipe "$1"
 }
 type() {
 	wtype -- "$1"
