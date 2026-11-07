@@ -101,6 +101,9 @@ Panel {
 			// The half row says there's more.
 			height: Math.min(panel.rows.reduce((sum, entry) => sum + heightOf(entry), 0), rowHeight * 11.5, panel.listRoom)
 			focus: true
+			// Rows stay a good way out of sight: one that came back with a picture
+			// would decode it all over again.
+			cacheBuffer: Theme.u(3000)
 			model: panel.rows
 			delegate: ClipboardRow {}
 			onActivated: (index, entry) => {
