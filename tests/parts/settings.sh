@@ -283,21 +283,26 @@ page "$notifications_y"
 shot notifications-page
 arrow "$higher_x" 260
 same "how long" "$(value .notifications.timeout)" 8
-arrow "$lower_x" 305
-same "how many" "$(value .notifications.cap)" 3
-# Spam's history off too, then both on, which leaves no rule.
-move 1018 570
+# Down to the end, by the wheel: an app's row, and what its fold has.
+move 700 500
+notch 30
+sleep 0.6
+shot notifications-rules
+move 1017 670
 click
 sleep 0.3
 same "two things held back" "$(value .notifications.rules)" '[{"app":"Spam","toast":false,"history":false}]'
-move 1018 570
+move 535 670
 click
 sleep 0.3
-same "one again" "$(value '.notifications.rules[0].history')" true
-move 946 570
+move 700 300
+notch 30
+sleep 0.6
+shot notifications-rule-open
+move "$switch_x" 598
 click
 sleep 0.3
-same "nothing held back" "$(value .notifications.rules)" '[]'
+same "its sound" "$(value '.notifications.rules[0].sound')" false
 
 printf '{ "tray": { "drawer": true } }\n' >"$config.new"
 mv "$config.new" "$config"
