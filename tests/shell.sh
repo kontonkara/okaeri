@@ -271,10 +271,11 @@ wait_up panel 1 "the control center"
 settle
 shot control-open
 # It's as tall as what the machine has: the button is at the end of what it covers.
+# The border gives what's looked for a background, whatever is at the corners.
 box=$(magick "$out/no-control.png" "$out/control-open.png" -compose difference -composite \
-	-crop 1x800+1206+60 +repage -threshold 3% -format '%@' info:)
+	-crop 1x800+1206+60 +repage -threshold 3% -bordercolor black -border 1 -format '%@' info:)
 height=${box#*x}
-move 1206 $((60 + ${box##*+} + ${height%%+*} - 28))
+move 1206 $((60 + ${box##*+} - 1 + ${height%%+*} - 28))
 click
 sleep 0.6
 wait_up panel 0 "the control center, gone for the settings"
