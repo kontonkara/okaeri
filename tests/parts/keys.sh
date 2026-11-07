@@ -11,8 +11,9 @@ fail() {
 	exit 1
 }
 
+# What was done: a sound goes with it, and has a check of its own.
 lines() {
-	log | sed -n 's/.*okaeri: dry: //p'
+	log | sed -n 's/.*okaeri: dry: //p' | grep -v 'sound ' || true
 }
 # The next dry line starts with $1, and it's the only one.
 seen=0
@@ -54,6 +55,7 @@ said "volume "
 down=$got
 [ "${up#volume }" != "${down#volume }" ] || fail "up and down are both $up"
 awk -v u="${up#volume }" -v d="${down#volume }" 'BEGIN { exit !(u > d) }' || fail "$up isn't over $down"
+wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED || log | grep -q 'dry: sound audio-volume-change' || fail "a change of the volume has no sound"
 ipc volume mute
 said "mute "
 

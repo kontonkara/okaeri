@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
+import qs
 
 // The default output's volume, 0 to 1, and the default microphone's.
 Singleton {
@@ -19,9 +20,10 @@ Singleton {
 	readonly property bool micMuted: micReady && source.audio.muted
 
 	// What apps are playing, each with a volume of its own: to Quickshell a stream
-	// that plays is a sink too. What has no app is the sound server's own, a filter's.
+	// that plays is a sink too. What has no app is the sound server's own, a filter's,
+	// and what plays as a notification is over as soon as it shows.
 	readonly property var streams: Pipewire.nodes.values.filter(node => node.isStream)
-	readonly property var nodes: streams.filter(node => node.isSink && !!node.audio && !!node.properties["application.name"])
+	readonly property var nodes: streams.filter(node => node.isSink && !!node.audio && !!node.properties["application.name"] && node.properties["media.role"] !== "Notification")
 
 	// Where sound can go: the sinks of devices, not the filters on the way to them.
 	// They go by their names, as properties would take tracking each, and that's
@@ -32,6 +34,8 @@ Singleton {
 		if (ready) {
 			const level = Math.max(0, Math.min(1, volume + by));
 			Env.act(`volume ${level}`, () => sink.audio.volume = level);
+			if (Settings.sounds.volumeChange && !muted && level !== volume)
+				Sounds.play("audio-volume-change");
 		}
 	}
 

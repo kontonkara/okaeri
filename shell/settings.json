@@ -16,6 +16,13 @@
 		"usage": true,
 		"sums": true
 	},
+	"sounds": {
+		"volume": 25,
+		"notifications": true,
+		"volumeChange": true,
+		"power": true,
+		"screenshots": true
+	},
 	"wallpaper": {
 		"path": "",
 		"folder": "",
