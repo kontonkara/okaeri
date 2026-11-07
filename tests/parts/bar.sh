@@ -827,3 +827,52 @@ case $shown in
 *date*time*nothing) ;;
 *) fail "the clock went through$shown" ;;
 esac
+
+step "The screens with a bar"
+bars() {
+	niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-bar")] | length'
+}
+same "bars at first" "$(bars)" 1
+settings "{ \"bar\": { \"hideOn\": [\"$screen\"] } }"
+sleep 0.4
+same "bars with none here" "$(bars)" 0
+shot no-bar
+same "where the bar was" "$(pixel no-bar 700 20)" "$(pixel no-bar 700 300)"
+# What opens starts at the top, with no bar to go under.
+ipc control toggle
+wait_up 1
+sleep 0.5
+shot no-bar-panel
+[ "$(pixel no-bar-panel 1300 12)" != "$(pixel no-bar 1300 12)" ] || fail "the panel doesn't start at the top"
+key Escape
+wait_up 0
+settings '{ "bar": { "hideOn": ["nowhere"] } }'
+sleep 0.4
+same "bars with another screen left out" "$(bars)" 1
+settings '{}'
+wait_tray
+
+step "What the wheel does"
+for does in volume brightness; do
+	settings "{ \"bar\": { \"wheel\": \"$does\" } }"
+	turns 300 16 "$does"
+	turns 1000 16 "$does"
+done
+settings '{ "bar": { "wheel": "none" } }'
+at_levels=$(levels)
+move 300 16
+wheel 1
+move 1000 16
+wheel -1
+sleep 0.2
+same "levels from the wheel with it doing nothing" "$(levels)" "$at_levels"
+settings '{ "bar": { "wheel": "workspaces" } }'
+niri msg action focus-workspace 1
+sleep 0.4
+move 300 16
+wheel -1
+sleep 0.4
+same "the wheel on the bar, down" "$(focused)" 2
+same "levels from the wheel on the workspaces" "$(levels)" "$at_levels"
+niri msg action focus-workspace 1
+settings '{}'

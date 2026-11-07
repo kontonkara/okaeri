@@ -103,12 +103,13 @@ sed -i -e 's/^\treadonly property int charge: .*/\tproperty int charge: 100/' \
 [ -z "$part" ] || cat >"$work/shell/shell.qml" <<QML
 import QtQuick
 import Quickshell
+import qs
 import qs.bar
 import qs.$part
 
 ShellRoot {
 	Variants {
-		model: Quickshell.screens
+		model: Quickshell.screens.filter(screen => Settings.barOn(screen))
 
 		Bar {
 			required property var modelData

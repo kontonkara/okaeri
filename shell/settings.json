@@ -61,6 +61,8 @@
 	"bar": {
 		"left": ["workspaces", "media"],
 		"center": ["clock"],
-		"right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"]
+		"right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
+		"hideOn": [],
+		"wheel": "split"
 	}
 }

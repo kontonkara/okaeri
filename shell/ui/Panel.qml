@@ -28,7 +28,7 @@ PanelWindow {
 	property bool shown: false
 	// How tall what's put in it can get: the screen, without the bar and the
 	// card's own edges.
-	readonly property real room: height - Theme.below - Theme.edge - padding * 2
+	readonly property real room: height - Settings.top(screen) - Theme.edge - padding * 2
 	// The screen's width: the window's own isn't known yet as it first opens.
 	readonly property real across: screen ? screen.width : width
 	default property alias content: body.data
@@ -153,7 +153,7 @@ PanelWindow {
 			readonly property real originX: panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
 			readonly property real originY: panel.align === "center" ? height / 2 : 0
 
-			y: panel.align === "center" ? Math.round((parent.height - height) / 2) : Theme.below
+			y: panel.align === "center" ? Math.round((parent.height - height) / 2) : Settings.top(panel.screen)
 			width: parent.width
 			height: card.height
 			focus: true
