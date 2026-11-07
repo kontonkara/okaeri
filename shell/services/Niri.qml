@@ -3,9 +3,10 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
 
 // niri's workspaces, windows and keyboard layouts, kept up to date from its event
-// stream.
+// stream, and the rules the shell needs of it.
 Singleton {
 	id: niri
 
@@ -32,6 +33,55 @@ Singleton {
 	readonly property var focusedScreen: {
 		const output = (workspaces.find(w => w.is_focused) || {}).output;
 		return Quickshell.screens.find(s => s.name === output) || Quickshell.screens[0];
+	}
+
+	// What the shell needs of niri's config, in a file of its own, for that to take
+	// with `include optional=true "~/.local/state/okaeri/niri.kdl"`: niri reads it
+	// again as it changes. Without it the shell runs all the same: blur only has the
+	// wallpaper, the overview no backdrop, and screencasts show the toasts.
+	readonly property string rules: `// Written by okaeri: it won't stay if it's changed here.
+layer-rule {
+	match namespace="^okaeri-backdrop$"
+	place-within-backdrop true
+}
+
+layer-rule {
+	match namespace="^okaeri-toasts$"
+	block-out-from "screencast"
+}
+${Theme.realBlur ? `
+layer-rule {
+	match namespace="^okaeri-panel$"
+	match namespace="^okaeri-toasts$"
+	background-effect {
+		xray false
+	}
+}
+
+window-rule {
+	match app-id="^org[.]quickshell$" title="^Settings$"
+	background-effect {
+		xray false
+	}
+}
+` : ""}`
+
+	onRulesChanged: writeRules()
+	Component.onCompleted: writeRules()
+
+	// Not before the theme is read, and only what's new: each write has niri read its
+	// whole config again. ./try has a niri of its own, and this is the real one's.
+	function writeRules() {
+		if (Theme.ready && !Env.guest && rulesFile.text() !== rules)
+			rulesFile.setText(rules);
+	}
+
+	Connections {
+		target: Theme
+
+		function onReadyChanged() {
+			niri.writeRules();
+		}
 	}
 
 	function act(action) {
@@ -154,5 +204,15 @@ Singleton {
 		parser: SplitParser {
 			onRead: requests.connected = false
 		}
+	}
+
+	FileView {
+		id: rulesFile
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/niri.kdl`
+		blockLoading: true
+		// Two writes in a row come out in order.
+		blockWrites: true
+		printErrors: false
 	}
 }

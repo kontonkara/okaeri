@@ -7,7 +7,8 @@ import qs.ui
 
 // The toasts: top right on the screen in focus, under the bar, the newest on
 // top, and beside a panel that opens there. They take no keys, and outside them
-// the pointer goes through.
+// the pointer goes through. The window is a strip as wide as they are: a compositor
+// blurs all of a surface that asks for it, however little of it shows.
 PanelWindow {
 	id: window
 
@@ -20,8 +21,7 @@ PanelWindow {
 		return widths.length ? Math.round(Math.max(...widths) + Theme.u(8)) : 0;
 	}
 
-	// The same, on its way there. Not the list's x: that follows the window's width
-	// too, and at a first show it would slide in from the far side.
+	// The same, on its way there.
 	property real shift: aside
 
 	Behavior on shift {
@@ -41,18 +41,27 @@ PanelWindow {
 
 	anchors {
 		top: true
-		left: true
 		right: true
 		bottom: true
 	}
+	// A narrow screen keeps them on it.
+	margins.right: Math.max(0, Math.min(Math.round(shift), (screen?.width ?? Infinity) - implicitWidth - Theme.edge))
+	implicitWidth: list.width + Theme.edge
 	visible: false
 	color: "transparent"
 	exclusionMode: ExclusionMode.Ignore
 	WlrLayershell.layer: WlrLayer.Overlay
 	WlrLayershell.namespace: "okaeri-toasts"
 	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+	BackgroundEffect.blurRegion: Theme.toastBlur ? glass : null
 	mask: Region {
 		regions: shapes.instances
+	}
+
+	Region {
+		id: glass
+
+		regions: panes.instances
 	}
 
 	Variants {
@@ -63,18 +72,34 @@ PanelWindow {
 		Region {
 			required property var modelData
 
-			// Not `item`, which wouldn't see the list move aside.
-			x: list.x + modelData.x
+			x: modelData.x
 			y: list.y + modelData.y - list.contentY
 			width: modelData.width
 			height: modelData.height
 		}
 	}
 
+	// A pixel in from the edges: their corners come in steps, and stay under the
+	// card's smooth ones.
+	Variants {
+		id: panes
+
+		model: window.cards
+
+		Region {
+			required property var modelData
+
+			x: modelData.x + 1
+			y: list.y + modelData.y - list.contentY + 1
+			width: modelData.width - 2
+			height: modelData.height - 2
+			radius: Theme.cardRadius
+		}
+	}
+
 	ListView {
 		id: list
 
-		x: Math.max(Theme.edge, parent.width - width - Theme.edge - window.shift)
 		y: Theme.below
 		width: Math.round(Theme.u(380))
 		height: parent.height - y
@@ -172,7 +197,7 @@ PanelWindow {
 				width: parent.width
 				notification: toast.modelData
 				closable: false
-				color: Theme.colors.background
+				color: Theme.toastFill
 			}
 
 			// It waits while the pointer is on it.

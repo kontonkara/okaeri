@@ -6,7 +6,7 @@
 #                         toggle`, `okaeri volume up 10`
 set -eu
 
-shell=${OKAERI_SHELL_DIR:?}
+shell=${OKAERI_SHELL_DIR:-$(dirname "$(readlink -f "$0")")/../shell}
 
 [ "$#" -eq 0 ] || exec quickshell ipc -p "$shell" call -- "$@"
 

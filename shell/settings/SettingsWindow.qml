@@ -29,7 +29,10 @@ FloatingWindow {
 	// Opened anew, so one left on another workspace comes here, with the focus.
 	function show() {
 		visible = false;
+		fade.stop();
+		veil.opacity = Theme.blur && Theme.realBlur ? 1 : 0;
 		visible = true;
+		opening.restart();
 	}
 
 	function toggle() {
@@ -45,8 +48,11 @@ FloatingWindow {
 	implicitHeight: fixed.height
 	minimumSize: fixed
 	maximumSize: fixed
-	color: Theme.panel
-	BackgroundEffect.blurRegion: Theme.blur ? glass : null
+	// The fill is on an item: a window that was solid when it first showed stays so.
+	color: "transparent"
+	// Asked for as it shows: asked for while it's hidden, it's lost once it has shown
+	// without.
+	BackgroundEffect.blurRegion: Theme.blur && visible ? glass : null
 
 	Region {
 		id: glass
@@ -69,6 +75,46 @@ FloatingWindow {
 		function toggle(): void {
 			window.toggle();
 		}
+
+		// For tests: how much of the veil is there.
+		function veiled(): real {
+			return veil.opacity;
+		}
+	}
+
+	Rectangle {
+		anchors.fill: parent
+		color: Theme.panel
+	}
+
+	// niri can't blur what's under a window while it opens, only the wallpaper: as
+	// that ended the blur would come in at once. Until then it's solid, and then
+	// it goes clear.
+	Rectangle {
+		id: veil
+
+		anchors.fill: parent
+		visible: opacity > 0
+		color: Theme.colors.background
+		opacity: 0
+	}
+
+	// A little longer than niri takes by default, or with the animation changed.
+	Timer {
+		id: opening
+
+		interval: 300
+		onTriggered: fade.restart()
+	}
+
+	NumberAnimation {
+		id: fade
+
+		target: veil
+		property: "opacity"
+		to: 0
+		duration: Theme.animate ? 200 : 0
+		easing.type: Easing.OutCubic
 	}
 
 	Component {
