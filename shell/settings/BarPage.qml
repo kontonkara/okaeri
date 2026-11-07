@@ -16,7 +16,9 @@ Item {
 		clock: "Clock",
 		control: "Control center",
 		keyboard: "Keyboard layout",
+		media: "Media",
 		notifications: "Notifications",
+		title: "Window title",
 		tray: "Tray",
 		units: "Failed units",
 		workspaces: "Workspaces"
@@ -157,7 +159,7 @@ Item {
 
 		Text {
 			width: parent.width
-			text: "Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+			text: "Media, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
 			wrapMode: Text.WordWrap
 			color: Theme.colors.subtext
 			font.family: Theme.font

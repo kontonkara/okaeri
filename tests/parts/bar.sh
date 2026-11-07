@@ -580,6 +580,74 @@ sleep 0.3
 shot units-gone
 same "what's on the bar after the failed units" "$(lane units-gone | wc -l)" "$none"
 
+step "What's playing"
+# Whether there's anything right of the workspaces in shot $1.
+left_of_clock() {
+	magick "$out/$1.png" -crop 400x20+150+10 +repage -format '%[fx:maxima]' info:
+}
+move 300 600
+sleep 0.2
+shot media-none
+same "beside the workspaces with no player" "$(left_of_clock media-none)" 0
+mpv --no-config --no-terminal --ao=null --vo=null --loop-playlist=inf --pause --force-media-title="A song with a title long enough to be cut off well before it ends" \
+	--script="$OKAERI_MPV_MPRIS" av://lavfi:sine av://lavfi:sine >/dev/null 2>&1 &
+player=$!
+for _ in $(seq 50); do
+	shot media-up
+	[ "$(left_of_clock media-up)" != 0 ] && break
+	sleep 0.1
+done
+[ "$(left_of_clock media-up)" != 0 ] || fail "nothing on the bar for a player"
+[ "$(magick "$out/media-up.png" -crop 200x20+350+10 +repage -format '%[fx:maxima]' info:)" = 0 ] || fail "a long title wasn't cut off"
+move 220 16
+click
+wait_up 1
+sleep 0.4
+shot media-card
+key Escape
+wait_up 0
+click middle
+wait_log "okaeri: dry: media toggle"
+wheel 1
+wait_log "okaeri: dry: media previous"
+wheel -1
+wait_log "okaeri: dry: media next"
+# With the player gone it goes, and the card with it.
+click
+wait_up 1
+kill "$player"
+wait "$player" || true
+wait_up 0
+move 300 600
+sleep 0.3
+shot media-gone
+same "beside the workspaces after the player" "$(left_of_clock media-gone)" 0
+
+step "The window in focus"
+# What's right of the workspaces in shot $1, for telling two shots apart.
+titled() {
+	magick "$out/$1.png" -crop 400x20+150+10 +repage -format '%#' info:
+}
+settings '{ "bar": { "left": ["workspaces", "title"] } }'
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 -T "The first window" sleep 30 &
+first=$!
+sleep 1
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 -T "Another" sleep 30 &
+second=$!
+sleep 1
+shot title-second
+[ "$(left_of_clock title-second)" != 0 ] || fail "no title on the bar"
+niri msg action focus-column-left
+sleep 0.4
+shot title-first
+[ "$(titled title-first)" != "$(titled title-second)" ] || fail "the title didn't follow the focus"
+kill "$first" "$second"
+wait "$first" "$second" || true
+sleep 0.5
+shot title-gone
+same "beside the workspaces with no window" "$(left_of_clock title-gone)" 0
+settings '{}'
+
 step "The wheel on the bar"
 levels() {
 	log | grep -cE "okaeri: dry: (volume|brightness) " || true

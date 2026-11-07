@@ -15,6 +15,8 @@ Rectangle {
 	// Beside what's on it, with text.
 	property real pad: Theme.u(14)
 	property real iconSize: Theme.u(18)
+	// As wide as its text gets, past which it's cut, 0 for as wide as it is.
+	property real longest: 0
 	// What's on it starts at its left, for one in a list, not in its middle.
 	property bool atStart: false
 	// With this the wheel on it says scrolled(steps), and goes no further.
@@ -76,8 +78,10 @@ Rectangle {
 		Text {
 			anchors.verticalCenter: parent.verticalCenter
 			visible: button.text !== ""
+			width: button.longest > 0 ? Math.min(implicitWidth, button.longest) : implicitWidth
 			text: button.text
 			textFormat: Text.PlainText
+			elide: Text.ElideRight
 			color: button.ink
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
