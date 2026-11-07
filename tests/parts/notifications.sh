@@ -1339,3 +1339,30 @@ wait_state panel false
 stop_sender
 ipc notifications clear
 wait_state history 0
+
+step "Rules with more to them"
+printf '{ "notifications": { "rules": [{ "text": "secret", "toast": false }, { "app": "Pager", "bypass": true }, { "app": "Mute", "sound": false }, { "app": "Short", "timeout": 1 }] } }\n' >"$config"
+sleep 0.5
+send -a Mail "A SECRET word" "Quietly."
+wait_state history 1
+is toasts 0
+ipc notifications dnd true
+wait_state dnd true
+send -a Pager "Paged" "Through Do Not Disturb."
+wait_state toasts 1
+ipc notifications dnd false
+wait_state dnd false
+sleep 0.3
+muted=$(sounds message-new-instant)
+send -a Mute "Silent" "No sound for this one."
+sleep 0.4
+same_count message-new-instant "$muted"
+ipc notifications clear
+wait_state toasts 0
+send -a Short -t 60000 "Short" "Its rule says a second."
+wait_state toasts 1
+wait_state toasts 0 25
+printf '{}\n' >"$config"
+sleep 0.5
+ipc notifications clear
+wait_state history 0
