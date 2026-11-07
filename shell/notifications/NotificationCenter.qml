@@ -68,7 +68,9 @@ Scope {
 				dnd: NotificationStore.dnd,
 				panel: NotificationStore.panelShown,
 				order: NotificationStore.grouped.map(n => n.appName),
-				shown: NotificationStore.shown.length
+				shown: NotificationStore.shown.length,
+				repeats: NotificationStore.history.map(n => NotificationStore.repeatsOf(n)),
+				when: NotificationStore.history.map(n => NotificationStore.when(n))
 			});
 		}
 	}

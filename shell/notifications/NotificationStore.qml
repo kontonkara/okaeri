@@ -49,12 +49,14 @@ Singleton {
 	// The history by app, the one heard from last first, for the panel.
 	readonly property var apps: [...new Set(history.map(n => n.appName))]
 	readonly property var grouped: apps.reduce((all, app) => all.concat(history.filter(n => n.appName === app)), [])
-	// With several apps each shows its newest, but for those opened here.
+	// Each app shows its newest, but for those opened here.
 	property var opened: []
-	readonly property var shown: apps.length < 2 ? grouped : apps.reduce((all, app) => {
+	readonly property var shown: apps.reduce((all, app) => {
 		const own = history.filter(n => n.appName === app);
 		return all.concat(opened.includes(app) ? own : own.slice(0, 1));
 	}, [])
+	// With one alone a heading would only say what its card does.
+	readonly property bool headed: history.length > 1
 
 	property var toastIds: []
 	readonly property var up: all.filter(n => toastIds.includes(n.id))
@@ -64,6 +66,10 @@ Singleton {
 
 	// Ids only grow: what's past this one wasn't looked at yet.
 	property alias seenId: kept.seenId
+	// When each came in, and how many alike it stands for, by id. A reload loses
+	// these: objects don't go through it, and only a test ever reloads.
+	property var times: ({})
+	property var repeats: ({})
 	readonly property int unread: panelShown ? 0 : history.filter(n => isUnread(n)).length
 
 	onUpChanged: Qt.callLater(trim)
@@ -91,6 +97,41 @@ Singleton {
 		return Settings.notifications.rules.find(rule => names.includes(rule.app.toLowerCase())) ?? {};
 	}
 
+	// When it came in, in ms, 0 if that isn't known.
+	function timeOf(notification) {
+		return notification.isPast ? notification.time : times[notification.id] ?? 0;
+	}
+
+	function repeatsOf(notification) {
+		return notification.isPast ? notification.repeats : repeats[notification.id] ?? 1;
+	}
+
+	// How long ago, or when, for a card: it goes on as the clock does.
+	function when(notification) {
+		const time = timeOf(notification);
+		if (!time)
+			return "";
+		const minutes = Math.floor((clock.date.getTime() - time) / 60000);
+		if (minutes < 1)
+			return "now";
+		if (minutes < 60)
+			return `${minutes} min ago`;
+		const date = new Date(time);
+		return Qt.formatDateTime(date, date.toDateString() === clock.date.toDateString() ? "HH:mm" : "d MMM HH:mm");
+	}
+
+	// One alike in the history, for this one to take the place of.
+	function twinOf(notification) {
+		if (!Settings.notifications.stack)
+			return null;
+		return history.find(n => n.appName === notification.appName && n.summary === notification.summary && n.body === notification.body) ?? null;
+	}
+
+	function tooOld(time) {
+		const days = Settings.notifications.maxAge;
+		return days > 0 && time > 0 && Date.now() - time > days * 86400000;
+	}
+
 	function isUnread(notification) {
 		return notification.isPast ? notification.unread : notification.id > seenId;
 	}
@@ -111,7 +152,7 @@ Singleton {
 		const room = Math.max(0, cap - (up.length - others.length));
 		if (others.length > room)
 			takeDown(n => others.indexOf(n) >= room);
-		history.slice(historyCap).filter(n => !up.includes(n)).forEach(n => n.expire());
+		history.filter((n, index) => (index >= historyCap || tooOld(timeOf(n))) && !up.includes(n)).forEach(n => n.expire());
 	}
 
 	// Toasts keep quiet, for now.
@@ -129,6 +170,15 @@ Singleton {
 			show(notification);
 			saving.restart();
 		}));
+		if (!notification.lastGeneration) {
+			times = Object.assign({}, times, { [notification.id]: Date.now() });
+			// The same again takes the place of what's there, and counts it.
+			const twin = twinOf(notification);
+			if (twin) {
+				repeats = Object.assign({}, repeats, { [notification.id]: repeatsOf(twin) + 1 });
+				twin.dismiss();
+			}
+		}
 		// From before a reload it had its toast, and only a critical one still has.
 		const shows = !quiet(notification) && (!notification.lastGeneration || critical(notification));
 		// Only in the server's list after this returns. A transient one that
@@ -226,7 +276,7 @@ Singleton {
 		if (!Settings.notifications.keep)
 			return;
 		const live = server.trackedNotifications.values;
-		past = fromFile.filter(saved => !live.some(n => n.id === saved.id && n.summary === saved.summary)).slice(0, historyCap).map((saved, index) => pastKind.createObject(store, Object.assign({}, saved, { id: -index - 1 })));
+		past = fromFile.filter(saved => !tooOld(saved.time ?? 0) && !live.some(n => n.id === saved.id && n.summary === saved.summary)).slice(0, historyCap).map((saved, index) => pastKind.createObject(store, Object.assign({}, saved, { id: -index - 1 })));
 	}
 
 	// A picture that came as data has no name to go by afterwards.
@@ -242,7 +292,9 @@ Singleton {
 			image: n.image.startsWith("image://qs") ? "" : n.image,
 			appIcon: n.appIcon,
 			urgency: n.urgency,
-			unread: isUnread(n)
+			unread: isUnread(n),
+			time: timeOf(n),
+			repeats: repeatsOf(n)
 		}))));
 	}
 
@@ -281,6 +333,13 @@ Singleton {
 	function togglePanel() {
 		if (panel)
 			panel.toggle();
+	}
+
+	SystemClock {
+		id: clock
+
+		precision: SystemClock.Minutes
+		onDateChanged: Qt.callLater(store.trim)
 	}
 
 	Component {

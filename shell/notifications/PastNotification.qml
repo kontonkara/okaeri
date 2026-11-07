@@ -14,6 +14,8 @@ QtObject {
 	property string appIcon
 	property int urgency: 1
 	property bool unread: false
+	property double time: 0
+	property int repeats: 1
 
 	readonly property bool isPast: true
 	readonly property var actions: []
