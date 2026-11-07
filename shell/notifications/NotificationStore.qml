@@ -134,8 +134,21 @@ Singleton {
 		// Only in the server's list after this returns. A transient one that
 		// won't show has no reason to get there.
 		notification.tracked = shows || !fleeting(notification);
-		if (shows)
+		if (shows) {
 			show(notification);
+			if (!notification.lastGeneration)
+				ring(notification);
+		}
+	}
+
+	// niri only says something for a screenshot.
+	function ring(notification) {
+		if (notification.appName === "niri") {
+			if (Settings.sounds.screenshots)
+				Sounds.play("screen-capture");
+		} else if (Settings.sounds.notifications && notification.urgency !== NotificationUrgency.Low) {
+			Sounds.play(critical(notification) ? "dialog-warning" : "message-new-instant");
+		}
 	}
 
 	function show(notification) {

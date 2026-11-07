@@ -47,6 +47,8 @@ Scope {
 
 		function onDrainingChanged() {
 			warning.update();
+			if (warning.ready && Settings.sounds.power)
+				Sounds.play(Power.draining ? "power-unplug" : "power-plug");
 		}
 	}
 

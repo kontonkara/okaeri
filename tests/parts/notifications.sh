@@ -1089,6 +1089,64 @@ is history 0
 ipc battery set 100 false
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 
+step "Sounds"
+sounds() {
+	log | grep -c "okaeri: dry: sound $1" || true
+}
+# Sounds close together make one: the last one here was the charger.
+sleep 0.3
+before=$(sounds message-new-instant)
+warned=$(sounds dialog-warning)
+send -a Chat "A word"
+wait_state toasts 1
+settle
+same_count() {
+	[ "$(sounds "$1")" = "$2" ] || {
+		echo "notifications: $(sounds "$1") of sound $1, not $2" >&2
+		return 1
+	}
+}
+same_count message-new-instant $((before + 1))
+sleep 0.2
+ipc notifications dnd true
+send -a Chat "Quiet"
+settle
+same_count message-new-instant $((before + 1))
+ipc notifications dnd false
+sleep 0.2
+send -u low -a Chat "Low"
+settle
+same_count message-new-instant $((before + 1))
+sleep 0.2
+send -u critical -a Chat "Loud"
+settle
+same_count dialog-warning $((warned + 1))
+ipc notifications clear
+wait_state history 0
+# The charger, both ways, and nothing for a warning's level going up.
+plug=$(sounds power-plug)
+unplug=$(sounds power-unplug)
+ipc battery set 80 true
+settle
+same_count power-unplug $((unplug + 1))
+ipc battery set 80 false
+settle
+same_count power-plug $((plug + 1))
+# Off is off.
+printf '{ "sounds": { "volume": 0 } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+send -a Chat "Silent"
+settle
+same_count message-new-instant $((before + 1))
+printf '{ "sounds": { "notifications": false } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+send -a Chat "Silent too"
+settle
+same_count message-new-instant $((before + 1))
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+ipc notifications clear
+wait_state history 0
+
 step "Over a restart"
 restart() {
 	kill "$qs_pid"

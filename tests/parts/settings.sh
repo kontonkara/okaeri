@@ -20,9 +20,10 @@ bar_y=216
 tray_y=254
 launcher_y=292
 notifications_y=330
-wallpaper_y=368
-look_y=406
-session_y=444
+sounds_y=368
+wallpaper_y=406
+look_y=444
+session_y=482
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -328,6 +329,16 @@ ipc settings toggle
 wait_up 1
 sleep 0.4
 page "$tray_y"
+
+step "How it sounds"
+page "$sounds_y"
+shot sounds-page
+arrow "$lower_x" 234
+same "the sounds' volume" "$(value .sounds.volume)" 20
+move "$switch_x" 326
+click
+sleep 0.3
+same "notifications' sound" "$(value .sounds.notifications)" false
 
 step "How it looks"
 page "$look_y"

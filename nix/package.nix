@@ -7,6 +7,8 @@
   cliphist,
   libqalculate,
   libnotify,
+  pipewire,
+  sound-theme-freedesktop,
   coreutils,
   systemd,
   util-linux,
@@ -42,12 +44,14 @@ stdenvNoCC.mkDerivation {
           cliphist
           libqalculate
           libnotify
+          pipewire
           coreutils
           systemd
           util-linux
           wl-clipboard
         ]
-      }
+      } \
+      --suffix XDG_DATA_DIRS : ${sound-theme-freedesktop}/share
 
     runHook postInstall
   '';
