@@ -18,6 +18,7 @@ Button {
 	activeFocusOnTab: false
 	icon: "alert"
 	text: `${Units.failed.length}`
+	tip: Units.failed.length === 1 ? "A unit failed" : `${Units.failed.length} units failed`
 	ink: Theme.colors.error
 	onClicked: {
 		Units.check();

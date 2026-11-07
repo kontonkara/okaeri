@@ -1,9 +1,10 @@
 import QtQuick
 import Quickshell
 import qs
+import qs.ui
 
 // The time, and the date beside it, as Settings.clock has them, in `room` pixels:
-// with less the date goes, and then the time.
+// with less the date goes, and then the time. The pointer on it says the whole date.
 Text {
 	id: time
 
@@ -33,5 +34,9 @@ Text {
 
 		font: time.font
 		text: time.formats.map(format => Qt.formatDateTime(clock.date, format)).join("  ")
+	}
+
+	Tip {
+		text: Qt.formatDateTime(clock.date, "dddd, d MMMM yyyy")
 	}
 }

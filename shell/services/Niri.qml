@@ -41,6 +41,11 @@ Singleton {
 		return windows.some(w => w.workspace_id === workspace.id);
 	}
 
+	// The title of the window `workspace` shows, or "".
+	function titleOn(workspace) {
+		return windows.find(w => w.id === workspace.active_window_id)?.title ?? "";
+	}
+
 	// `steps` along `workspaces` from the active one, up being the one before. It
 	// stops at the ends.
 	function turn(workspaces, steps) {
@@ -177,6 +182,10 @@ window-rule {
 			casts = casts.filter(c => c.stream_id !== cast.stream_id).concat([cast]);
 		} else if (event.CastStopped) {
 			casts = casts.filter(c => c.stream_id !== event.CastStopped.stream_id);
+		}
+		if (event.WorkspaceActiveWindowChanged) {
+			const change = event.WorkspaceActiveWindowChanged;
+			workspaces = workspaces.map(w => w.id === change.workspace_id ? Object.assign({}, w, { active_window_id: change.active_window_id }) : w);
 		}
 		if (event.WorkspaceUrgencyChanged) {
 			const change = event.WorkspaceUrgencyChanged;

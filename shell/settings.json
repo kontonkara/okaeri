@@ -80,6 +80,7 @@
 		"center": ["clock"],
 		"right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
 		"hideOn": [],
-		"wheel": "split"
+		"wheel": "split",
+		"tips": true
 	}
 }

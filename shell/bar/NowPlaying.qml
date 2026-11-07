@@ -21,6 +21,7 @@ Button {
 	activeFocusOnTab: false
 	icon: "music"
 	text: Media.player?.trackTitle || Media.player?.identity || ""
+	tip: [Media.player?.trackArtist ?? "", Media.player?.trackTitle ?? ""].filter(part => part !== "").join(" — ")
 	ink: Media.player?.isPlaying ? Theme.colors.text : Theme.colors.subtext
 	onClicked: {
 		card.middle = Panels.middleOf(button);

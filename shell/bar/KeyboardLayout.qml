@@ -14,5 +14,6 @@ Button {
 	pad: Theme.u(6)
 	activeFocusOnTab: false
 	text: Niri.layoutLabel
+	tip: Niri.layouts[Niri.layout] ?? ""
 	onClicked: Env.act("layout next", () => Niri.nextLayout())
 }

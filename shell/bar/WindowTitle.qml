@@ -1,9 +1,13 @@
 import QtQuick
 import qs
 import qs.services
+import qs.ui
 
-// The title of the window in focus, while there's one, cut off if it's long.
+// The title of the window in focus, while there's one, cut off if it's long, and
+// then whole under the pointer.
 Text {
+	id: line
+
 	readonly property string title: Niri.focusedWindow?.title ?? ""
 	readonly property bool wanted: title !== ""
 
@@ -15,4 +19,8 @@ Text {
 	elide: Text.ElideRight
 	font.family: Theme.font
 	font.pixelSize: Theme.fontSize
+
+	Tip {
+		text: line.truncated ? line.title : ""
+	}
 }

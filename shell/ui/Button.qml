@@ -21,6 +21,8 @@ Rectangle {
 	property bool atStart: false
 	// With this the wheel on it says scrolled(steps), and goes no further.
 	property bool takesWheel: false
+	// What Tip says of it.
+	property string tip
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
 	default property alias content: row.data
 
@@ -129,5 +131,18 @@ Rectangle {
 		anchors.fill: parent
 		visible: button.activeFocus
 		cornerRadius: button.radius
+	}
+
+	// Only where there's one: a list's rows are buttons too.
+	Loader {
+		anchors.fill: parent
+		active: button.tip !== ""
+
+		sourceComponent: Tip {
+			text: button.tip
+			listens: false
+			hovered: pointer.containsMouse
+			pressed: pointer.pressed
+		}
 	}
 }

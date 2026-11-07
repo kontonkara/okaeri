@@ -2,11 +2,12 @@ import QtQuick
 import Quickshell
 import qs
 import qs.services
+import qs.ui
 
 // niri's workspaces on `output`: a click goes to one, the wheel to the next, and
 // one with a window wanting attention stands out. As Settings.workspaces has it,
 // those with windows look apart from the empty ones, which can be left out, and a
-// pill says its number or name.
+// pill says its number or name. The pointer on one says what it shows.
 Row {
 	id: workspaces
 
@@ -84,9 +85,17 @@ Row {
 				anchors.rightMargin: -Theme.u(3)
 				anchors.topMargin: -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
 				anchors.bottomMargin: -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
+				hoverEnabled: true
 				cursorShape: Qt.PointingHandCursor
 				onClicked: Niri.focus(parent.modelData.id)
 				onWheel: event => workspaces.turn(event.angleDelta.y)
+
+				Tip {
+					listens: false
+					hovered: parent.containsMouse
+					pressed: parent.pressed
+					text: [pill.name, Niri.titleOn(pill.modelData)].filter(part => part !== "").join(" · ")
+				}
 			}
 		}
 	}
