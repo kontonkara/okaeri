@@ -340,15 +340,41 @@ same "blur behind panels" "$(jq -c .blur "$theme_own")" true
 move "$switch_x" 310
 click
 sleep 0.3
+same "blur behind notifications" "$(jq -c .toastBlur "$theme_own")" true
+move "$switch_x" 360
+click
+sleep 0.3
 same "blur behind the bar" "$(jq -c .barBlur "$theme_own")" true
-arrow "$higher_x" 355
+# The rules for niri: the same file, with what's under the blur or without.
+rules=$XDG_STATE_HOME/okaeri/niri.kdl
+niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules"
+grep -q 'okaeri-backdrop' "$rules" || fail "no rule for the backdrop"
+! grep -q 'xray' "$rules" || fail "windows in the blur before they were asked for"
+written=$(stat -c %Y.%y "$rules")
+move "$switch_x" 410
+click
+sleep 0.3
+same "windows in the blur" "$(jq -c .realBlur "$theme_own")" true
+niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules with the blur"
+[ "$(grep -c 'xray false' "$rules")" = 2 ] || fail "the rules: $(cat "$rules")"
+[ "$(stat -c %Y.%y "$rules")" != "$written" ] || fail "the rules weren't written"
+arrow "$higher_x" 455
 same "how solid" "$(jq -c .opacity "$theme_own")" 80
-move "$switch_x" 455
+move "$switch_x" 555
 click
 sleep 0.3
 same "animations" "$(jq -c .animations "$theme_own")" false
+# Solid as it opens, for niri's blur doesn't run then, and clear after that.
+key Escape
+wait_up 0
+ipc settings toggle
+same "the veil as it opens" "$(ipc settings veiled)" 1
+sleep 1
+same "the veil after that" "$(ipc settings veiled)" 0
+wait_up 1
+page "$look_y"
 shot look-before
-arrow "$higher_x" 555
+arrow "$higher_x" 655
 same "the bar's height" "$(jq -c .barHeight "$theme_own")" 36
 sleep 0.3
 shot look-changed
@@ -362,7 +388,29 @@ click
 sleep 0.3
 same "the shell's file" "$(value .)" '{}'
 same "the look's file" "$(jq -c . "$theme_own")" '{}'
+! grep -q 'xray' "$rules" || fail "the rules kept the blur"
 shot back
 same "the drawer's switch" "$(knob back "$drawer_y")" "$on"
 key Escape
 wait_up 0
+
+step "The rules at a start"
+# With the theme saying so before the shell starts, as on a real desktop: a test
+# that changes it later goes another way.
+printf '{"realBlur":true}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+sleep 1
+kill "$qs_pid"
+wait "$qs_pid" 2>/dev/null || true
+rm "$rules"
+quickshell -p "$work/shell" >>"$out/qs.log" 2>&1 &
+qs_pid=$!
+sleep 3
+[ "$(grep -c 'xray false' "$rules")" = 2 ] || fail "a start lost the theme's blur: $(cat "$rules")"
+written=$(stat -c %y "$rules")
+kill "$qs_pid"
+wait "$qs_pid" 2>/dev/null || true
+quickshell -p "$work/shell" >>"$out/qs.log" 2>&1 &
+qs_pid=$!
+sleep 3
+[ "$(grep -c 'xray false' "$rules")" = 2 ] || fail "the next start lost the theme's blur: $(cat "$rules")"
+same "the rules after a start with nothing new" "$(stat -c %y "$rules")" "$written"

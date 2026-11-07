@@ -87,8 +87,7 @@ Card {
 		font.pixelSize: Theme.fontSize
 	}
 
-	border.width: Math.max(1, Theme.u(critical ? 2 : 1))
-	border.color: critical ? Theme.colors.error : Theme.border
+	border.width: 0
 
 	Keys.onPressed: event => {
 		if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
@@ -119,6 +118,17 @@ Card {
 				card.keysLost();
 			card.enabled = false;
 		}
+	}
+
+	// Over the fill: a border of its own would have a fill to see through stop short
+	// of it, and show as a light line.
+	Rectangle {
+		parent: card
+		anchors.fill: parent
+		radius: card.radius
+		color: "transparent"
+		border.width: Math.max(1, Theme.u(card.critical ? 2 : 1))
+		border.color: card.critical ? Theme.colors.error : Theme.border
 	}
 
 	// On its edge, not around it: the list would cut that off.

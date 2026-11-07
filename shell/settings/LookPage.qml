@@ -33,10 +33,24 @@ Flickable {
 			}
 
 			Setting {
+				text: "Blur behind notifications"
+				subtext: "The ones that pop up"
+				checked: Theme.toastBlur
+				onToggled: wanted => Theme.set("toastBlur", wanted)
+			}
+
+			Setting {
 				text: "Blur behind the bar"
 				subtext: "The wallpaper's, which costs next to nothing"
 				checked: Theme.barBlur
 				onToggled: wanted => Theme.set("barBlur", wanted)
+			}
+
+			Setting {
+				text: "Windows in the blur too"
+				subtext: "Not only the wallpaper: costs more, and takes a line in niri's config"
+				checked: Theme.realBlur
+				onToggled: wanted => Theme.set("realBlur", wanted)
 			}
 
 			Choice {

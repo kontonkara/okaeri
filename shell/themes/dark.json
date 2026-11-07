@@ -16,6 +16,8 @@
   "animations": true,
   "blur": false,
   "barBlur": false,
+  "toastBlur": false,
+  "realBlur": false,
   "opacity": 72,
   "barHeight": 34,
   "barMargin": 4,

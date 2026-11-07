@@ -42,8 +42,14 @@ Singleton {
 		watchChanges: true
 		printErrors: false
 		onFileChanged: reload()
-		onLoaded: theme.user = theme.parse(text(), path)
-		onLoadFailed: theme.user = {}
+		onLoaded: {
+			theme.user = theme.parse(text(), path);
+			theme.userRead = true;
+		}
+		onLoadFailed: {
+			theme.user = {};
+			theme.userRead = true;
+		}
 	}
 
 	FileView {
@@ -52,8 +58,14 @@ Singleton {
 		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/theme.json`
 		blockLoading: true
 		printErrors: false
-		onLoaded: theme.own = theme.parse(text(), path)
-		onLoadFailed: theme.own = {}
+		onLoaded: {
+			theme.own = theme.parse(text(), path);
+			theme.ownRead = true;
+		}
+		onLoadFailed: {
+			theme.own = {};
+			theme.ownRead = true;
+		}
 	}
 
 	readonly property var builtIn: ({
@@ -62,6 +74,10 @@ Singleton {
 	})
 	property var user: ({})
 	property var own: ({})
+	property bool userRead: false
+	property bool ownRead: false
+	// Those come a moment after the start: until then this is the built-in theme.
+	readonly property bool ready: userRead && ownRead
 
 	function set(key, value) {
 		own = Object.assign({}, own, { [key]: value });
@@ -89,9 +105,12 @@ Singleton {
 	readonly property real fontSize: u(values.fontSize)
 	readonly property int fontWeight: values.fontWeight
 	readonly property bool animate: !!values.animations
-	// Panels let what's under them through, blurred, where the compositor has that.
-	// In niri that's the wallpaper, unless a rule for okaeri-panel says xray false.
+	// Panels let what's under them through, blurred, where the compositor has that,
+	// and so do toasts. In niri that's the wallpaper, and with realBlur the windows
+	// too, which takes a rule of Niri.rules.
 	readonly property bool blur: !!values.blur
+	readonly property bool toastBlur: !!values.toastBlur
+	readonly property bool realBlur: !!values.realBlur
 	// The bar has only the wallpaper under it, so what niri does by itself is all it
 	// takes, and that's blurred once and not with each frame.
 	readonly property bool barBlur: !!values.barBlur
@@ -118,6 +137,7 @@ Singleton {
 	readonly property color panel: Qt.alpha(colors.background, blur ? opacity : 1)
 	readonly property color surface: Qt.alpha(colors.surface, blur ? opacity * 0.83 : 1)
 	readonly property color barFill: Qt.alpha(colors.background, barBlur ? opacity : 1)
+	readonly property color toastFill: Qt.alpha(colors.background, toastBlur ? opacity : 1)
 	// Under the pointer, pressed, and the edge of a card.
 	readonly property color hover: Qt.alpha(colors.text, 0.08)
 	readonly property color pressed: Qt.alpha(colors.text, 0.16)

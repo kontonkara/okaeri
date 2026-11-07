@@ -487,6 +487,47 @@ shot bar-glass
 [ "$(bright bar-glass 760 34)" -gt "$(bright bar-glass 690 34)" ] || fail "no wallpaper through the bar"
 glimpse control bar-glass-panel
 [ "$(bright bar-glass-panel 1036 50)" = 0 ] || fail "the panels went for the bar's blur"
+if [ "${OKAERI_GUEST:-}" != 1 ]; then
+	# A toast, at its left end as a panel.
+	theme '{"toastBlur":true}'
+	edge 1030
+	notify-send Glass "over the wallpaper"
+	settle
+	shot toast-glass
+	[ "$(bright toast-glass 1024 50)" -gt 8 ] || fail "no blur at the left end of a toast"
+	[ "$(bright toast-glass 1036 50)" -gt "$(bright toast-glass 1024 50)" ] || fail "no wallpaper through a toast"
+	ipc notifications clear
+	settle
+	# The windows under it, which only the rules niri reads from the shell let in.
+	edge 1399
+	DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --title under-glass --config NONE -o background=#ffffff -o confirm_os_window_close=0 sleep 30 &
+	under=$!
+	sleep 1.5
+	niri msg action maximize-column
+	theme '{"blur":true}'
+	sleep 1.5
+	# The settings window for shot $1, with its veil gone.
+	settings_glimpse() {
+		ipc settings toggle
+		sleep 1.2
+		shot "$1"
+		ipc settings toggle
+		sleep 0.5
+	}
+	glimpse control wallpaper-glass
+	[ "$(bright wallpaper-glass 1036 50)" = 0 ] || fail "a window in the blur with no rule for it"
+	settings_glimpse wallpaper-settings
+	[ "$(bright wallpaper-settings 420 600)" = 0 ] || fail "a window in the settings' blur with no rule for it"
+	theme '{"blur":true,"realBlur":true}'
+	sleep 1.5
+	glimpse control window-glass
+	[ "$(bright window-glass 1036 50)" -gt 8 ] || fail "no window in the blur: niri didn't take the rules"
+	settings_glimpse window-settings
+	[ "$(bright window-settings 420 600)" -gt 8 ] || fail "no window in the settings' blur"
+	kill "$under"
+	wait "$under" 2>/dev/null || true
+	sleep 0.4
+fi
 theme '{}'
 printf '{}' >"$config"
 
