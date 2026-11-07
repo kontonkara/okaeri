@@ -5,10 +5,12 @@ import Quickshell.Widgets
 import qs
 import qs.ui
 
-// One notification: its picture, where it's from, when, what it says, its actions
-// and a way to close it. A click on it goes to where it came from, and a right
-// click closes it; with the keys on it Enter or Space is its default action.
-// niri's word of a screenshot shows the picture whole, and a click opens it.
+// One notification: its picture, where it's from, when, what it says, how far
+// along, its actions and a way to close it. A click on it goes to where it came
+// from, and a right click closes it; with the keys on it Enter or Space is its
+// default action. A long text opens up, and in the history it can be copied and,
+// where the app takes that, answered. niri's word of a screenshot shows the picture
+// whole, and a click opens it.
 Card {
 	id: card
 
@@ -17,6 +19,7 @@ Card {
 	property bool closable: true
 	// What only the history has room for, or use.
 	readonly property bool inHistory: closable
+	property bool expanded: false
 	// With its app's name: under a heading that says it, there's no need.
 	property bool showsApp: true
 
@@ -25,7 +28,9 @@ Card {
 	readonly property bool critical: NotificationStore.critical(notification)
 	readonly property real side: Theme.u(40)
 	// What the top line leaves for the close button.
-	readonly property real beside: closable ? close.width + Theme.u(4) : 0
+	readonly property real beside: closable ? close.width + copy.width + Theme.u(4) : 0
+	// How far along, 0 to 100, if it's that kind.
+	readonly property int progress: notification.hints?.value ?? -1
 
 	// It closed with the keys on it.
 	signal keysLost
@@ -215,11 +220,65 @@ Card {
 			}
 
 			Line {
+				id: body
+
 				width: parent.width - (app.visible || summary.visible ? 0 : card.beside)
 				text: card.notification.body
-				maximumLineCount: 5
+				maximumLineCount: card.expanded ? 200 : 5
 				color: Theme.colors.subtext
 				font.pixelSize: Theme.fontSize - Theme.u(1)
+			}
+
+			Button {
+				height: Theme.u(24)
+				visible: body.truncated || card.expanded
+				flat: true
+				pad: Theme.u(6)
+				activeFocusOnTab: false
+				text: card.expanded ? "Less" : "More"
+				ink: Theme.colors.subtext
+				onClicked: card.expanded = !card.expanded
+			}
+
+			Item {
+				width: parent.width
+				height: Theme.u(10)
+				visible: card.progress >= 0
+
+				Rectangle {
+					anchors.verticalCenter: parent.verticalCenter
+					width: parent.width
+					height: Theme.u(4)
+					radius: Theme.round(height)
+					color: Theme.hover
+
+					Rectangle {
+						width: parent.width * Math.min(100, card.progress) / 100
+						height: parent.height
+						radius: parent.radius
+						color: Theme.colors.accent
+					}
+				}
+			}
+
+			TextField {
+				id: answer
+
+				width: parent.width
+				implicitHeight: Theme.u(30)
+				visible: card.inHistory && !!card.notification.hasInlineReply
+				placeholder: card.notification.inlineReplyPlaceholder || "Reply"
+				onAccepted: {
+					if (text !== "") {
+						NotificationStore.reply(card.notification, text);
+						text = "";
+					}
+				}
+				// A field lets Enter through, and it'd do what the card does for it.
+				Keys.onPressed: event => {
+					if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+						event.accepted = true;
+				}
 			}
 
 			Flow {
@@ -283,6 +342,22 @@ Card {
 					}
 				}
 			}
+		}
+
+		Button {
+			id: copy
+
+			visible: card.inHistory
+			anchors.top: parent.top
+			anchors.right: close.left
+			anchors.topMargin: -Theme.u(6)
+			height: Theme.u(26)
+			flat: true
+			activeFocusOnTab: false
+			icon: "copy"
+			iconSize: Theme.u(16)
+			ink: Theme.colors.subtext
+			onClicked: NotificationStore.copy(card.notification)
 		}
 
 		Button {

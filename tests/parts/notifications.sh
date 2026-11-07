@@ -1287,3 +1287,55 @@ restart
 wait_state history 0
 printf '{}\n' >"$config"
 sleep 0.5
+
+step "What's on a card"
+long=$(printf 'A long line of text that goes on and on, and wraps over the width of the card. %.0s' 1 2 3 4 5 6)
+send -a Mail -h int:value:40 "Long" "$long"
+wait_state history 1
+wait_state toasts 1
+move 300 600
+ipc notifications toggle
+wait_state panel true
+settle
+shot card-folded
+# How far along: the bar's filled part is the accent's.
+looks card-folded 1100 258 ffffff
+move 1117 238
+click
+settle
+shot card-open
+[ "$(area card-folded 356x300+1028+92)" != "$(area card-open 356x300+1028+92)" ]
+log_copies=$(log | grep -c 'dry: notification copy' || true)
+move 1337 112
+click
+sleep 0.3
+[ "$(log | grep -c 'dry: notification copy')" = "$((log_copies + 1))" ] || {
+	echo "notifications: nothing copied" >&2
+	return 1
+}
+key Escape
+wait_state panel false
+ipc notifications clear
+wait_state history 0
+# An answer goes to the app, by the field the card has for it.
+timeout 20 notify-send -a Chat -A inline-reply=Reply "Friend" "Can you answer?" >/dev/null &
+sender=$!
+wait_state history 1
+wait_state toasts 1
+ipc notifications toggle
+wait_state panel true
+settle
+move 1230 177
+click
+type 'on my way'
+key Return
+wait_log 'dry: notification reply'
+log | grep -q 'on my way' && {
+	echo "notifications: what was typed is in the log" >&2
+	return 1
+}
+key Escape
+wait_state panel false
+stop_sender
+ipc notifications clear
+wait_state history 0
