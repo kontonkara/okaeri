@@ -2,8 +2,8 @@ import QtQuick
 import qs
 import qs.ui
 
-// When the session locks and the screens go off by themselves, and the time left
-// to change your mind in the session menu.
+// When the session locks and the screens go off by themselves, the time left
+// to change your mind in the session menu, and when the battery is said to be low.
 Column {
 	id: page
 
@@ -41,6 +41,20 @@ Column {
 			value: Settings.session.countdown
 			none: "Don't"
 			onChosen: value => Settings.set("session", "countdown", value)
+		}
+	}
+
+	Card {
+		width: parent.width
+		title: "Battery"
+
+		Choice {
+			text: "Warn when it's down to"
+			subtext: "And again at 5%, to stay on screen"
+			values: [0, 5, 10, 15, 20, 25, 30, 40, 50]
+			value: Settings.battery.warning
+			unit: "%"
+			onChosen: value => Settings.set("battery", "warning", value)
 		}
 	}
 }

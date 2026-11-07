@@ -1025,3 +1025,63 @@ wait_state panel false
 settle
 niri msg --json layers | jq -e '[.[] | select(.namespace == "okaeri-panel")] | length == 0' >/dev/null
 
+
+step "The battery"
+# On a stand-in told by calls: part.sh made its numbers plain ones.
+sed -e 's/^import qs$/import qs\nimport Quickshell.Io/' -e '$d' "$work/shell/services/Power.qml" >"$work/Power.qml"
+cat >>"$work/Power.qml" <<'QML'
+
+	IpcHandler {
+		target: "battery"
+
+		function set(charge: int, draining: bool): void {
+			power.charge = charge;
+			power.draining = draining;
+		}
+	}
+}
+QML
+mv "$work/Power.qml" "$work/shell/services/Power.qml"
+printf '\n' >>"$work/shell/shell.qml"
+sleep 3.5
+ipc notifications clear
+wait_state history 0
+ipc battery set 50 true
+ipc battery set 21 true
+settle
+is history 0
+# Down to the line: one, and only one, however it goes up and down from there.
+ipc battery set 20 true
+wait_state toasts 1
+is history 1
+shot battery-low
+ipc battery set 19 true
+ipc battery set 21 true
+ipc battery set 20 true
+settle
+is history 1
+# The last call takes its place and stays.
+ipc battery set 5 true
+settle
+is history 1
+is toasts 1
+shot battery-empty
+sleep 7
+is toasts 1
+# The charger takes it back, and it can be said again.
+ipc battery set 5 false
+wait_state history 0
+wait_state toasts 0
+ipc battery set 3 true
+wait_state toasts 1
+is history 1
+ipc battery set 100 false
+wait_state history 0
+# A start on a low battery says it, and with the warning off nothing does.
+printf '{ "battery": { "warning": 0 } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc battery set 3 true
+settle
+is history 0
+ipc battery set 100 false
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"

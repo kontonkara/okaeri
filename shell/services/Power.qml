@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
+import qs
 
 // The power profile, power-profiles-daemon's, and how the laptop's battery is doing.
 Singleton {
@@ -16,6 +17,11 @@ Singleton {
 
 	readonly property var battery: UPower.devices.values.find(device => device.isLaptopBattery) ?? null
 	readonly property string batteryLine: battery ? describe(battery.state, battery.state === UPowerDeviceState.Charging ? battery.timeToFull : battery.timeToEmpty, battery.changeRate, battery.healthSupported ? battery.healthPercentage : 0) : ""
+	// What's left of it in percent, whether the machine runs on it, and whether that's
+	// getting too little.
+	readonly property int charge: Math.round(UPower.displayDevice.percentage * 100)
+	readonly property bool draining: UPower.onBattery && UPower.displayDevice.isLaptopBattery
+	readonly property bool low: draining && charge <= Settings.battery.warning
 
 	function set(choice) {
 		Env.act(`power profile ${PowerProfile.toString(choice)}`, () => PowerProfiles.profile = choice);
