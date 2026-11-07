@@ -1366,3 +1366,57 @@ printf '{}\n' >"$config"
 sleep 0.5
 ipc notifications clear
 wait_state history 0
+
+step "Where they go"
+printf '{ "notifications": { "position": "bottom-left" } }\n' >"$config"
+sleep 0.5
+send -a Mail "Down here" "In the corner."
+wait_state toasts 1
+settle
+shot toast-bottom-left
+[ "$(area toast-bottom-left 380x90+6+800)" != "$(area toast-normal 380x90+6+800)" ] || {
+	echo "notifications: nothing in the bottom left corner" >&2
+	return 1
+}
+ipc notifications clear
+wait_state toasts 0
+printf '{ "notifications": { "position": "top" } }\n' >"$config"
+sleep 0.5
+send -a Mail "In the middle" "Under the bar."
+wait_state toasts 1
+settle
+shot toast-top
+looks toast-top 700 70 000000
+ipc notifications clear
+wait_state toasts 0
+printf '{ "notifications": { "actions": false } }\n' >"$config"
+sleep 0.5
+send -a Mail -A open=Open "No buttons" "Only in the history." >/dev/null &
+sender=$!
+wait_state toasts 1
+settle
+shot toast-no-actions
+stop_sender
+printf '{}\n' >"$config"
+sleep 0.5
+ipc notifications clear
+wait_state toasts 0
+
+step "The bell's own"
+settle
+shot bell-all
+printf '{ "notifications": { "bellAlways": false } }\n' >"$config"
+sleep 0.5
+shot bell-none
+[ "$(lane bell-none | wc -l)" -lt "$(lane bell-all | wc -l)" ] || {
+	echo "notifications: the bell stays with nothing new" >&2
+	return 1
+}
+printf '{}\n' >"$config"
+sleep 0.5
+bell=$(lane bell-all | head -n 1)
+move "$bell" 16
+click right
+wait_state dnd true
+click right
+wait_state dnd false

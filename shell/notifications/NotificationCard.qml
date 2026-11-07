@@ -284,7 +284,7 @@ Card {
 			Flow {
 				width: parent.width
 				topPadding: Theme.u(6)
-				visible: card.buttons.length > 0
+				visible: card.buttons.length > 0 && (card.inHistory || Settings.notifications.actions)
 				spacing: Theme.u(6)
 
 				Repeater {

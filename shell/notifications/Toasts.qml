@@ -5,9 +5,10 @@ import qs
 import qs.services
 import qs.ui
 
-// The toasts: top right on the screen in focus, under the bar, the newest on
-// top, and beside a panel that opens there. They take no keys, and outside them
-// the pointer goes through. The window is a strip as wide as they are: a compositor
+// The toasts: on the screen in focus, at Settings.notifications.position, under
+// the bar when that's up there, the newest nearest the edge, and beside a panel that
+// opens in that corner. They take no keys, and outside them the pointer goes through.
+// The window is a strip as wide as they are: a compositor
 // blurs all of a surface that asks for it, however little of it shows.
 PanelWindow {
 	id: window
@@ -15,9 +16,13 @@ PanelWindow {
 	// What's on screen, with those on their way out.
 	property var cards: []
 	readonly property bool wanted: NotificationStore.toasts.length > 0 || cards.length > 0
-	// How far left they go for what's open in their corner.
+	readonly property string place: Settings.notifications.position
+	readonly property bool atBottom: place.startsWith("bottom")
+	readonly property bool atLeft: place.endsWith("left")
+	readonly property bool inMiddle: place === "top"
+	// How far they go for what's open in their corner.
 	readonly property real aside: {
-		const widths = Panels.open.filter(panel => panel.align === "top-right" && panel.screen === window.screen).map(panel => panel.panelWidth);
+		const widths = Panels.open.filter(panel => panel.align === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
 		return widths.length ? Math.round(Math.max(...widths) + Theme.u(8)) : 0;
 	}
 
@@ -41,16 +46,19 @@ PanelWindow {
 
 	anchors {
 		top: true
-		right: true
+		left: atLeft || inMiddle
+		right: !atLeft && !inMiddle
 		bottom: true
 	}
 	// A narrow screen keeps them on it.
-	margins.right: Math.max(0, Math.min(Math.round(shift), (screen?.width ?? Infinity) - implicitWidth - Theme.edge))
-	implicitWidth: list.width + Theme.edge
+	readonly property real offset: Math.max(0, Math.min(Math.round(shift), (screen?.width ?? Infinity) - implicitWidth - Theme.edge))
+	margins.left: inMiddle ? Math.round(((screen?.width ?? 0) - implicitWidth) / 2) : atLeft ? offset : 0
+	margins.right: atLeft || inMiddle ? 0 : offset
+	implicitWidth: list.width + (inMiddle ? 0 : Theme.edge)
 	visible: false
 	color: "transparent"
 	exclusionMode: ExclusionMode.Ignore
-	WlrLayershell.layer: WlrLayer.Overlay
+	WlrLayershell.layer: Settings.notifications.overFullscreen ? WlrLayer.Overlay : WlrLayer.Top
 	WlrLayershell.namespace: "okaeri-toasts"
 	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 	BackgroundEffect.blurRegion: Theme.toastBlur ? glass : null
@@ -72,7 +80,7 @@ PanelWindow {
 		Region {
 			required property var modelData
 
-			x: modelData.x
+			x: list.x + modelData.x
 			y: list.y + modelData.y - list.contentY
 			width: modelData.width
 			height: modelData.height
@@ -89,7 +97,7 @@ PanelWindow {
 		Region {
 			required property var modelData
 
-			x: modelData.x + 1
+			x: list.x + modelData.x + 1
 			y: list.y + modelData.y - list.contentY + 1
 			width: modelData.width - 2
 			height: modelData.height - 2
@@ -100,9 +108,11 @@ PanelWindow {
 	ListView {
 		id: list
 
-		y: Theme.below
+		x: window.atLeft ? Theme.edge : 0
+		y: window.atBottom ? 0 : Theme.below
 		width: Math.round(Theme.u(380))
-		height: parent.height - y
+		height: parent.height - y - (window.atBottom ? Theme.edge : 0)
+		verticalLayoutDirection: window.atBottom ? ListView.BottomToTop : ListView.TopToBottom
 		interactive: false
 		spacing: Math.round(Theme.u(8))
 		model: ScriptModel {
