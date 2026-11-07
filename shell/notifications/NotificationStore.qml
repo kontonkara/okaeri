@@ -246,6 +246,11 @@ Singleton {
 		Env.act("notification reply", () => notification.sendInlineReply(text));
 	}
 
+	// The newest toast, for a key.
+	function dismissLast() {
+		toasts[0]?.dismiss();
+	}
+
 	function invoke(notification, action) {
 		Env.act(`notification action ${action.identifier}`, () => action.invoke());
 		if (panel)

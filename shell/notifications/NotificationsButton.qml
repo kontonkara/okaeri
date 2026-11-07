@@ -2,8 +2,11 @@ import QtQuick
 import qs
 import qs.ui
 
-// The bell on the bar, with how many are unread. A click opens the history.
+// The bell on the bar, with how many are unread. A click opens the history, a
+// right click turns Do Not Disturb on or off.
 Button {
+	readonly property bool wanted: Settings.notifications.bellAlways || NotificationStore.unread > 0 || NotificationStore.dnd
+
 	height: Theme.u(28)
 	flat: true
 	iconSize: Theme.barIcon
@@ -13,4 +16,5 @@ Button {
 	text: NotificationStore.unread > 0 ? `${NotificationStore.unread}` : ""
 	ink: NotificationStore.dnd ? Theme.colors.subtext : Theme.colors.text
 	onClicked: NotificationStore.togglePanel()
+	onRightClicked: NotificationStore.setDnd(!NotificationStore.dnd, 0)
 }

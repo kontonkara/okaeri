@@ -52,6 +52,11 @@ Scope {
 			NotificationStore.clear();
 		}
 
+		// The newest toast, for a key.
+		function dismiss(): void {
+			NotificationStore.dismissLast();
+		}
+
 		function dndFor(seconds: int): void {
 			NotificationStore.dndFor(seconds);
 		}
