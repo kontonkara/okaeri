@@ -7,6 +7,9 @@ Item {
 	id: level
 
 	property alias value: slider.value
+	// What the full slider is, for the percentage: past 1 for a volume that goes
+	// further.
+	property real full: 1
 	// Over the slider, for one that needs saying what it is.
 	property string label: ""
 	default property alias front: front.data
@@ -57,7 +60,7 @@ Item {
 		anchors.verticalCenter: parent.verticalCenter
 		width: Theme.u(36)
 		horizontalAlignment: Text.AlignRight
-		text: `${Math.round(slider.value * 100)}%`
+		text: `${Math.round(slider.value * level.full * 100)}%`
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize

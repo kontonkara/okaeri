@@ -14,8 +14,10 @@ Card {
 
 		Level {
 			enabled: Audio.ready
-			value: Audio.volume
-			onMoved: wanted => Audio.change(wanted - Audio.volume)
+			// Full at the limit.
+			value: Audio.volume / Audio.limit
+			full: Audio.limit
+			onMoved: wanted => Audio.change(wanted * Audio.limit - Audio.volume)
 
 			Button {
 				anchors.centerIn: parent
