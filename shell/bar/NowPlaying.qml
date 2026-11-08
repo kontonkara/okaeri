@@ -38,7 +38,7 @@ Button {
 		id: card
 
 		align: "top"
-		panelWidth: Theme.u(340)
+		panelWidth: Theme.u(360)
 
 		Loader {
 			width: parent.width

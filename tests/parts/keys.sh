@@ -127,6 +127,17 @@ ipc media previous
 said "media previous $second_name"
 ipc media stop
 said "media stop $second_name"
+ipc media forward 10
+said "media seek $second_name by 10"
+ipc media back 10
+said "media seek $second_name by -10"
+# The next player along holds while the other plays, and then it's back.
+ipc media cycle
+ipc media toggle
+said "media toggle $first_name"
+ipc media cycle
+ipc media toggle
+said "media toggle $second_name"
 
 # The last that played, though it's not the first there is, and none plays.
 dbus-send --session --dest="$second_name" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause

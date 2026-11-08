@@ -61,5 +61,18 @@ Scope {
 		function next(): void {
 			Media.next();
 		}
+
+		function forward(seconds: int): void {
+			Media.seek(seconds);
+		}
+
+		function back(seconds: int): void {
+			Media.seek(-seconds);
+		}
+
+		// The keys and the bar go to the next player there is.
+		function cycle(): void {
+			Media.cycle();
+		}
 	}
 }

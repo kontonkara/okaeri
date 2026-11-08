@@ -9,8 +9,12 @@ Item {
 	property real value: 0
 	property bool interactive: true
 	property real step: 0.05
+	// Held by the pointer, until released: for what only takes the level it's let
+	// go at.
+	readonly property bool pressed: pointer.pressed
 
 	signal moved(real wanted)
+	signal released
 
 	function want(level) {
 		moved(Math.max(0, Math.min(1, level)));
@@ -52,12 +56,15 @@ Item {
 	}
 
 	MouseArea {
+		id: pointer
+
 		property int wheel: 0
 
 		anchors.fill: parent
 		enabled: slider.interactive && slider.enabled
 		cursorShape: Qt.PointingHandCursor
 		onPressed: event => slider.want(event.x / width)
+		onReleased: slider.released()
 		onPositionChanged: event => {
 			if (pressed)
 				slider.want(event.x / width);
