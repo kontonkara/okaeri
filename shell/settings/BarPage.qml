@@ -14,12 +14,14 @@ Flickable {
 
 	readonly property var names: ({
 		battery: "Battery",
+		bluetooth: "Bluetooth",
 		cast: "Screen sharing",
 		clipboard: "Clipboard",
 		clock: "Clock",
 		control: "Control center",
 		keyboard: "Keyboard layout",
 		media: "Media",
+		network: "Network",
 		notifications: "Notifications",
 		title: "Window title",
 		tray: "Tray",
@@ -252,7 +254,7 @@ Flickable {
 				}
 
 				Note {
-					text: "A click on a part shows its settings. Media, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+					text: "A click on a part shows its settings. Media, Bluetooth, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
 				}
 			}
 
@@ -326,7 +328,9 @@ Flickable {
 						clock: clockSettings,
 						workspaces: workspaceSettings,
 						battery: batterySettings,
-						media: mediaSettings
+						media: mediaSettings,
+						network: networkSettings,
+						bluetooth: bluetoothSettings
 					})[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
 			}
 		}
@@ -588,6 +592,48 @@ Flickable {
 					checked: !Settings.media.ignored.includes(modelData.name)
 					onToggled: wanted => page.ignore(modelData.name, !wanted)
 				}
+			}
+		}
+	}
+
+	Component {
+		id: networkSettings
+
+		Pick {
+			text: "Beside it"
+			options: [
+				{ value: "none", text: "Nothing" },
+				{ value: "name", text: "The network" }
+			]
+			value: Settings.network.label
+			onChosen: value => Settings.set("network", "label", value)
+		}
+	}
+
+	Component {
+		id: bluetoothSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Pick {
+				text: "It shows"
+				options: [
+					{ value: "connected", text: "With a device" },
+					{ value: "on", text: "While it's on" }
+				]
+				value: Settings.bluetooth.show
+				onChosen: value => Settings.set("bluetooth", "show", value)
+			}
+
+			Pick {
+				text: "Beside it"
+				options: [
+					{ value: "none", text: "Nothing" },
+					{ value: "name", text: "The device" }
+				]
+				value: Settings.bluetooth.label
+				onChosen: value => Settings.set("bluetooth", "label", value)
 			}
 		}
 	}

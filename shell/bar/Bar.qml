@@ -16,12 +16,14 @@ PanelWindow {
 
 	readonly property var parts: ({
 		battery,
+		bluetooth,
 		cast,
 		clipboard,
 		clock,
 		control,
 		keyboard,
 		media,
+		network,
 		notifications,
 		title,
 		tray,
@@ -96,6 +98,12 @@ PanelWindow {
 	}
 
 	Component {
+		id: bluetooth
+
+		BluetoothButton {}
+	}
+
+	Component {
 		id: cast
 
 		Cast {}
@@ -131,6 +139,12 @@ PanelWindow {
 		id: media
 
 		NowPlaying {}
+	}
+
+	Component {
+		id: network
+
+		NetworkButton {}
 	}
 
 	Component {
