@@ -63,6 +63,12 @@ said "mute "
 ipc mic mute
 if wpctl inspect @DEFAULT_AUDIO_SOURCE@ >/dev/null 2>&1; then
 	said "mic mute "
+	ipc mic up 10
+	said "mic volume "
+	up=$got
+	ipc mic down 10
+	said "mic volume "
+	awk -v u="${up#mic volume }" -v d="${got#mic volume }" 'BEGIN { exit !(u > d) }' || fail "$up isn't over $got"
 else
 	silent "a microphone out of nowhere"
 fi

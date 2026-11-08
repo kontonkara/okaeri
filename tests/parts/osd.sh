@@ -166,6 +166,10 @@ ShellRoot {
 			Audio.micMuted = muted;
 		}
 
+		function micVolume(volume: real): void {
+			Audio.micVolume = volume;
+		}
+
 		function limit(limit: real): void {
 			Audio.limit = limit;
 		}
@@ -463,6 +467,31 @@ shot num-on
 leaves "$(now)" >/dev/null
 cards_differ caps-on num-on || fail "CapsLock and NumLock look the same"
 
+# Its settings, as the settings window leaves them.
+settings() {
+	printf '%s\n' "$1" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+	sleep 0.5
+}
+
+# The microphone's volume has one too.
+ipc poke micVolume 0.3
+comes_up "no card for the microphone's volume"
+sleep 0.4
+shot mic-volume
+between "the microphone's volume" "$(filled mic-volume ffffff)" 57 63
+leaves "$(now)" >/dev/null
+
+# What the settings turn off has no card, but a call still does.
+settings '{ "osd": { "hidden": ["volume", "mic"] } }'
+ipc poke audio true 0.5 false
+stays_off 1300 "a card for the volume, with that off"
+ipc poke micVolume 0.6
+stays_off 1300 "a card for the microphone, with that off"
+show volume 0.4
+comes_up "no card on a call, with the volume off"
+leaves "$(now)" >/dev/null
+settings '{}'
+
 # A volume that goes past 100% fills the slider at its limit.
 ipc poke limit 1.5
 show volume 0.75
@@ -471,3 +500,39 @@ shot past-full
 between "half of the way to 150%" "$(filled past-full ffffff)" 97 103
 leaves "$(now)" >/dev/null
 ipc poke limit 1
+
+# As long as it's set to stay.
+settings '{ "osd": { "duration": 3 } }'
+show volume 0.4
+since=$(now)
+between "left after, set to 3 s" "$(leaves "$since")" 2950 3800
+
+# The level in numbers: a wider card.
+settings '{ "osd": { "percent": true } }'
+show volume 0.4
+sleep 0.4
+shot numbers
+[ "$(edges numbers $middle)" != "$(edges volume-dark $middle)" ] || fail "no numbers beside the slider"
+leaves "$(now)" >/dev/null
+
+# At the top, under the bar, and in the middle: nothing where it was.
+shot bare
+# Whether shot $1 differs from the bare one in the rows from $2, $3 of them.
+shows_at() {
+	[ "$(magick "$out/$1.png" "$out/bare.png" -compose difference -composite -crop "400x$3+500+$2" +repage -format "%[fx:maxima]" info:)" != 0 ]
+}
+settings '{ "osd": { "position": "top" } }'
+show volume 0.4
+sleep 0.4
+shot at-top
+shows_at at-top 45 120 || fail "no card at the top"
+shows_at at-top 760 120 && fail "a card at the bottom, set to the top"
+leaves "$(now)" >/dev/null
+settings '{ "osd": { "position": "middle" } }'
+show volume 0.4
+sleep 0.4
+shot in-middle
+shows_at in-middle 400 100 || fail "no card in the middle"
+shows_at in-middle 760 120 && fail "a card at the bottom, set to the middle"
+leaves "$(now)" >/dev/null
+settings '{}'

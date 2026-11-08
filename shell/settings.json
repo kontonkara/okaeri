@@ -29,6 +29,12 @@
 	"audio": {
 		"max": 100
 	},
+	"osd": {
+		"position": "bottom",
+		"duration": 1.5,
+		"percent": false,
+		"hidden": []
+	},
 	"sounds": {
 		"volume": 25,
 		"notifications": true,

@@ -7,8 +7,10 @@ import qs.services
 import qs.ui
 
 // What the volume, the microphone, the brightness, the keyboard layout or a lock
-// key just became, for a moment, at the bottom of the screen in focus. Clicks and
-// keys go to what's under it.
+// key just became, for a moment, on the screen in focus: at its bottom, its top
+// or in its middle, as Settings.osd says, which also says for how long, whether
+// the level is in numbers too and what has no card. Clicks and keys go to what's
+// under it.
 PanelWindow {
 	id: osd
 
@@ -22,11 +24,24 @@ PanelWindow {
 		caps: "capsLock",
 		num: "numLock"
 	})
+	// The kinds by what the settings turn off.
+	readonly property var groups: ({
+		volume: "volume",
+		mute: "volume",
+		brightness: "brightness",
+		mic: "mic",
+		micMute: "mic",
+		layout: "layout",
+		caps: "locks",
+		num: "locks"
+	})
 	readonly property real rise: Theme.u(8)
+	readonly property string position: Settings.osd.position
+	readonly property bool fromTop: position === "top"
 	property string kind: "volume"
 	property real level: 0
 	// What the slider shows: a volume is full at its limit.
-	readonly property real filled: kind === "volume" || kind === "mute" ? level / Audio.limit : level
+	readonly property real filled: groups[kind] === "volume" ? level / Audio.limit : level
 	readonly property bool lock: kind === "caps" || kind === "num"
 	readonly property bool off: kind === "mute" || kind === "micMute" || (lock && level === 0)
 	// What it says in words, if that's what it shows and not a level.
@@ -48,6 +63,11 @@ PanelWindow {
 		hold.restart();
 	}
 
+	// Whether a change of `group` gets a card: a call by IPC always does.
+	function wants(group) {
+		return !Settings.osd.hidden.includes(group);
+	}
+
 	function showMic() {
 		show(Audio.micMuted ? "micMute" : "mic", Audio.micVolume);
 	}
@@ -60,8 +80,10 @@ PanelWindow {
 		show(Audio.muted ? "mute" : "volume", Audio.volume);
 	}
 
-	anchors.bottom: true
+	anchors.bottom: position === "bottom"
+	anchors.top: fromTop
 	margins.bottom: Theme.u(48) - rise
+	margins.top: Settings.top(screen) + Theme.u(16) - rise
 	implicitWidth: card.width
 	implicitHeight: Math.ceil(card.height + rise)
 	visible: false
@@ -86,65 +108,73 @@ PanelWindow {
 		value: Audio.volume
 		ready: Audio.ready
 		device: Audio.sink
-		onMoved: osd.showVolume()
+		onMoved: osd.wants("volume") && osd.showVolume()
 	}
 
 	Watch {
 		value: Audio.muted
 		ready: Audio.ready
 		device: Audio.sink
-		onMoved: osd.showVolume()
+		onMoved: osd.wants("volume") && osd.showVolume()
 	}
 
 	Watch {
 		value: Brightness.level
 		ready: Brightness.available
 		device: Brightness.device
-		onMoved: osd.show("brightness", Brightness.level)
+		onMoved: osd.wants("brightness") && osd.show("brightness", Brightness.level)
+	}
+
+	Watch {
+		value: Audio.micVolume
+		ready: Audio.micReady
+		device: Audio.source
+		onMoved: osd.wants("mic") && osd.showMic()
 	}
 
 	Watch {
 		value: Audio.micMuted
 		ready: Audio.micReady
 		device: Audio.source
-		onMoved: osd.showMic()
+		onMoved: osd.wants("mic") && osd.showMic()
 	}
 
 	Watch {
 		value: Niri.layout
 		ready: Niri.layouts.length > 1
 		device: Niri.layouts.join()
-		onMoved: osd.showLayout()
+		onMoved: osd.wants("layout") && osd.showLayout()
 	}
 
 	Watch {
 		value: Locks.caps
 		ready: Locks.ready
 		device: Locks.device
-		onMoved: osd.show("caps", Locks.caps ? 1 : 0)
+		onMoved: osd.wants("locks") && osd.show("caps", Locks.caps ? 1 : 0)
 	}
 
 	Watch {
 		value: Locks.num
 		ready: Locks.ready
 		device: Locks.device
-		onMoved: osd.show("num", Locks.num ? 1 : 0)
+		onMoved: osd.wants("locks") && osd.show("num", Locks.num ? 1 : 0)
 	}
 
 	Timer {
 		id: hold
 
-		interval: 1500
+		interval: Settings.osd.duration * 1000
 		onTriggered: osd.shown = false
 	}
 
 	Card {
 		id: card
 
+		y: osd.fromTop ? osd.rise : 0
 		color: Theme.colors.background
 		opacity: osd.shown ? 1 : 0
 		transform: Translate {
-			y: osd.shown ? 0 : osd.rise
+			y: osd.shown ? 0 : osd.fromTop ? -osd.rise : osd.rise
 
 			Behavior on y {
 				enabled: Theme.animate
@@ -203,6 +233,21 @@ PanelWindow {
 						duration: 120
 						easing.type: Easing.OutCubic
 					}
+				}
+			}
+
+			Text {
+				anchors.verticalCenter: parent.verticalCenter
+				visible: Settings.osd.percent && osd.label === ""
+				// As wide as it gets, so that the card keeps its size.
+				width: Theme.u(40)
+				horizontalAlignment: Text.AlignRight
+				text: `${Math.round(osd.level * 100)}%`
+				color: osd.off ? Theme.colors.subtext : Theme.colors.text
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+				font.features: {
+					"tnum": 1
 				}
 			}
 		}

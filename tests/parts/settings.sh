@@ -23,9 +23,10 @@ launcher_y=330
 clipboard_y=368
 notifications_y=406
 sounds_y=444
-wallpaper_y=482
-look_y=520
-session_y=558
+osd_y=482
+wallpaper_y=520
+look_y=558
+session_y=596
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -479,6 +480,24 @@ move "$switch_x" 410
 click
 sleep 0.3
 same "notifications' sound" "$(value .sounds.notifications)" false
+
+step "The on-screen display"
+page "$osd_y"
+shot osd-page
+arrow "$higher_x" 232
+sleep 0.3
+same "where it shows" "$(value .osd.position)" '"middle"'
+arrow "$higher_x" 282
+sleep 0.3
+same "for how long" "$(value .osd.duration)" 2
+move "$switch_x" 332
+click
+sleep 0.3
+same "in numbers" "$(value .osd.percent)" true
+move "$switch_x" 622
+click
+sleep 0.3
+same "what has none" "$(value .osd.hidden)" '["locks"]'
 
 step "How it looks"
 page "$look_y"
