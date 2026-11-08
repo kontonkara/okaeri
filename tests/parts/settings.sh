@@ -42,8 +42,9 @@ lower_x=948
 higher_x=1040
 lock_y=255
 screens_y=295
-wait_y=435
-logout_y=619
+wait_y=485
+sleep_y=379
+logout_y=669
 
 value() {
 	jq -c "$1" "$own"
@@ -317,6 +318,12 @@ move "$switch_x" "$logout_y"
 click
 sleep 0.3
 same "what the session menu leaves out" "$(value .session.hidden)" '["logout"]'
+arrow "$higher_x" "$sleep_y"
+same "sleep" "$(value .idle.suspend)" 60
+# When, only with sleep on.
+sleep 0.3
+arrow "$higher_x" $((sleep_y + 50))
+same "when it sleeps" "$(value .idle.suspendOn)" '"battery"'
 shot session
 
 step "The battery's line"

@@ -6,7 +6,9 @@
 	"idle": {
 		"lock": 600,
 		"screenOff": 660,
-		"fade": 5
+		"fade": 5,
+		"suspend": 0,
+		"suspendOn": "always"
 	},
 	"battery": {
 		"warning": 20,
