@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs
+import qs.services
 import qs.ui
 
 // The bar laid out: what's on its left, in its middle, on its right and what's
@@ -65,6 +66,18 @@ Flickable {
 		return there.concat(gone);
 	}
 	readonly property int bars: Quickshell.screens.filter(screen => Settings.barOn(screen)).length
+	// The media players open now, by name, and those left out that aren't.
+	readonly property var players: {
+		const there = [];
+		Media.everyone.forEach(player => {
+			if (!there.some(other => other.name === player.identity)) {
+				const entry = DesktopEntries.heuristicLookup(player.desktopEntry || player.identity);
+				there.push({ name: player.identity, icon: entry?.icon ? Quickshell.iconPath(entry.icon, true) : "", there: true });
+			}
+		});
+		const gone = Settings.media.ignored.filter(name => !there.some(player => player.name === name)).map(name => ({ name, icon: "", there: false }));
+		return there.concat(gone);
+	}
 
 	// For a page of the settings window, by its name.
 	signal opens(string name)
@@ -109,6 +122,11 @@ Flickable {
 	function showOn(name, wanted) {
 		const others = Settings.bar.hideOn.filter(other => other !== name);
 		Settings.set("bar", "hideOn", wanted ? others : others.concat([name]));
+	}
+
+	function ignore(name, wanted) {
+		const others = Settings.media.ignored.filter(other => other !== name);
+		Settings.set("media", "ignored", wanted ? others.concat([name]) : others);
 	}
 
 	contentHeight: stack.height
@@ -307,7 +325,8 @@ Flickable {
 				sourceComponent: ({
 						clock: clockSettings,
 						workspaces: workspaceSettings,
-						battery: batterySettings
+						battery: batterySettings,
+						media: mediaSettings
 					})[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
 			}
 		}
@@ -504,6 +523,71 @@ Flickable {
 				]
 				value: Settings.battery.label
 				onChosen: value => Settings.set("battery", "label", value)
+			}
+		}
+	}
+
+	Component {
+		id: mediaSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Pick {
+				text: "It shows"
+				options: [
+					{ value: "player", text: "With a player" },
+					{ value: "playing", text: "While it plays" }
+				]
+				value: Settings.media.show
+				onChosen: value => Settings.set("media", "show", value)
+			}
+
+			Pick {
+				text: "On it"
+				options: [
+					{ value: "title", text: "The title" },
+					{ value: "both", text: "Artist, title" },
+					{ value: "none", text: "Only the icon" }
+				]
+				value: Settings.media.label
+				onChosen: value => Settings.set("media", "label", value)
+			}
+
+			Choice {
+				text: "Widest"
+				subtext: "Past that the title is cut"
+				visible: Settings.media.label !== "none"
+				values: [120, 160, 200, 280, 360]
+				value: Settings.media.width
+				unit: " px"
+				onChosen: value => Settings.set("media", "width", value)
+			}
+
+			Setting {
+				text: "What's cut slides by"
+				subtext: "Under the pointer, to its end and back"
+				visible: Settings.media.label !== "none"
+				checked: Settings.media.scroll
+				onToggled: wanted => Settings.set("media", "scroll", wanted)
+			}
+
+			Note {
+				text: page.players.length > 0 ? "Players: one turned off is left out of the bar, its card and the media keys." : "Players show here as they open."
+			}
+
+			Repeater {
+				model: page.players
+
+				Setting {
+					required property var modelData
+
+					text: modelData.name
+					subtext: modelData.there ? "" : "Not open now"
+					image: modelData.icon
+					checked: !Settings.media.ignored.includes(modelData.name)
+					onToggled: wanted => page.ignore(modelData.name, !wanted)
+				}
 			}
 		}
 	}

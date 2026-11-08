@@ -729,6 +729,52 @@ move 300 600
 kill "$second"
 wait "$second" 2>/dev/null || true
 sleep 0.5
+# Only while one plays: with the first paused, none does.
+settings '{ "media": { "show": "playing" } }'
+shot while-playing
+[ "$(left_of_clock while-playing)" != 0 ] || fail "nothing on the bar while one plays"
+dbus-send --session --print-reply --dest="$first_name" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Pause >/dev/null
+sleep 0.5
+shot none-playing
+same "beside the workspaces with none playing" "$(left_of_clock none-playing)" 0
+dbus-send --session --print-reply --dest="$first_name" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Play >/dev/null
+# Both mpv: left out, there's no player at all.
+settings '{ "media": { "ignored": ["mpv"] } }'
+shot left-out
+same "beside the workspaces with the players left out" "$(left_of_clock left-out)" 0
+settings '{ "media": { "ignored": ["somebody else"] } }'
+shot not-left-out
+[ "$(left_of_clock not-left-out)" != 0 ] || fail "a player left out that wasn't named"
+# How far right what's beside the workspaces reaches in shot $1.
+reach() {
+	magick "$out/$1.png" -crop 400x20+100+10 +repage -trim -format '%[fx:page.x + w]' info:
+}
+settings '{ "media": { "label": "none" } }'
+shot only-icon
+settings '{ "media": { "width": 120 } }'
+shot narrow
+settings '{}'
+shot as-set
+[ "$(reach only-icon)" -lt "$(reach narrow)" ] || fail "only the icon is as wide as a title"
+[ "$(reach narrow)" -lt "$(reach as-set)" ] || fail "the title isn't narrower when it's set so"
+# Under the pointer what's cut slides by, unless that's off.
+move 230 16
+sleep 1.5
+shot sliding-1
+sleep 1
+shot sliding-2
+[ "$(titled sliding-1)" != "$(titled sliding-2)" ] || fail "the title doesn't slide"
+settings '{ "media": { "scroll": false } }'
+move 300 600
+sleep 0.3
+move 230 16
+sleep 1.5
+shot still-1
+sleep 1
+shot still-2
+same "the title with sliding off" "$(titled still-1)" "$(titled still-2)"
+settings '{}'
+move 300 600
 kill "$first"
 wait "$first" 2>/dev/null || true
 sleep 0.5

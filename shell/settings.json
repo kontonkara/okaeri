@@ -75,6 +75,13 @@
 		"empty": true,
 		"reverse": false
 	},
+	"media": {
+		"show": "player",
+		"label": "title",
+		"width": 200,
+		"scroll": true,
+		"ignored": []
+	},
 	"bar": {
 		"left": ["workspaces", "media"],
 		"center": ["clock"],
