@@ -1,6 +1,7 @@
 {
 	"session": {
-		"countdown": 10
+		"countdown": 10,
+		"hidden": []
 	},
 	"idle": {
 		"lock": 600,

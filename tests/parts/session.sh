@@ -57,6 +57,7 @@ can() {
 }
 rows=lock
 ! can CanSuspend || rows="$rows suspend"
+! can CanHibernate || rows="$rows hibernate"
 rows="$rows logout reboot"
 ! can CanRebootToFirmwareSetup || rows="$rows firmware"
 rows="$rows poweroff"
@@ -123,5 +124,14 @@ open
 key Return
 said "session lock"
 wait_gone "no countdown left it open"
+
+# What the settings leave out isn't there: the first row is the next one.
+printf '{ "session": { "countdown": 0, "hidden": ["lock"] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.3
+open
+shot without-lock
+key Return
+said "session $(echo "$rows" | cut -d' ' -f2)"
+wait_gone "the second row left it open"
 
 echo "session: all good" >&2
