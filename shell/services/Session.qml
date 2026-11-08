@@ -3,30 +3,36 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs
 
-// Locking, leaving and the machine's power: logind and systemd do it, and logind
-// says what this machine can do.
+// Locking, leaving and the machine's power: logind and systemd do it, logind
+// says what this machine can do, and Settings.session.hidden what's left out.
 Singleton {
 	id: session
 
 	readonly property var commands: ({
 		lock: ["loginctl", "lock-session"],
 		suspend: ["systemctl", "suspend"],
+		hibernate: ["systemctl", "hibernate"],
 		reboot: ["systemctl", "reboot"],
 		firmware: ["systemctl", "reboot", "--firmware-setup"],
 		poweroff: ["systemctl", "poweroff"]
 	})
 	property bool canSuspend: false
+	property bool canHibernate: false
 	property bool canFirmware: false
+	// Each there is, and whether this machine can do it.
+	readonly property var known: [
+		{ action: "lock", text: "Lock", icon: "lock", doing: "Locking", can: true },
+		{ action: "suspend", text: "Suspend", icon: "moon", doing: "Suspending", can: canSuspend },
+		{ action: "hibernate", text: "Hibernate", icon: "hibernate", doing: "Hibernating", can: canHibernate },
+		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out", can: true },
+		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting", can: true },
+		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", can: canFirmware },
+		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down", can: true }
+	]
 	// What can be asked for, in the menu and the launcher alike.
-	readonly property var actions: [
-		{ action: "lock", text: "Lock", icon: "lock", doing: "Locking" },
-		{ action: "suspend", text: "Suspend", icon: "moon", doing: "Suspending", shows: canSuspend },
-		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out" },
-		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting" },
-		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", shows: canFirmware },
-		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down" }
-	].filter(row => row.shows !== false)
+	readonly property var actions: known.filter(row => row.can && !Settings.session.hidden.includes(row.action))
 
 	// One of `actions` from elsewhere: the menu counts it down.
 	signal asked(var row)
@@ -34,6 +40,7 @@ Singleton {
 	// It can change, with what's holding the machine awake.
 	function check() {
 		suspendCheck.running = true;
+		hibernateCheck.running = true;
 		firmwareCheck.running = true;
 	}
 
@@ -67,6 +74,13 @@ Singleton {
 
 		method: "CanSuspend"
 		onAnswered: can => session.canSuspend = can
+	}
+
+	Check {
+		id: hibernateCheck
+
+		method: "CanHibernate"
+		onAnswered: can => session.canHibernate = can
 	}
 
 	Check {

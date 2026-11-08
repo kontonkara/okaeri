@@ -43,6 +43,7 @@ higher_x=1040
 lock_y=255
 screens_y=295
 wait_y=435
+logout_y=619
 
 value() {
 	jq -c "$1" "$own"
@@ -310,21 +311,20 @@ same "the lock, two down" "$(value .idle.lock)" 300
 # Eleven minutes isn't one of them: the next up is the next that is.
 arrow "$higher_x" "$screens_y"
 same "the screens, from what's not on the list" "$(value .idle.screenOff)" 900
-move 700 "$lock_y"
-wheel 1
-same "the lock by the wheel" "$(value .idle.lock)" 600
-wheel -2
-same "the lock, two notches down" "$(value .idle.lock)" 180
-wheel -9
-same "the lock at the end of the list" "$(value .idle.lock)" 0
-arrow "$lower_x" "$lock_y"
-same "the lock past that" "$(value .idle.lock)" 0
 arrow "$lower_x" "$wait_y"
 same "the session menu's wait" "$(value .session.countdown)" 5
+move "$switch_x" "$logout_y"
+click
+sleep 0.3
+same "what the session menu leaves out" "$(value .session.hidden)" '["logout"]'
 shot session
 
 step "The battery's line"
-battery_y=535
+# At the foot of the page.
+move 700 446
+notch 30
+sleep 0.6
+battery_y=703
 arrow "$lower_x" "$battery_y"
 same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
@@ -490,6 +490,16 @@ same "where it shows" "$(value .osd.position)" '"middle"'
 arrow "$higher_x" 282
 sleep 0.3
 same "for how long" "$(value .osd.duration)" 2
+# The wheel on a line goes along the list, and stops at its end.
+move 700 282
+wheel 1
+same "for how long, by the wheel" "$(value .osd.duration)" 3
+wheel -2
+same "for how long, two notches down" "$(value .osd.duration)" 1.5
+wheel -9
+same "for how long, at the end of the list" "$(value .osd.duration)" 1
+arrow "$lower_x" 282
+same "for how long, past that" "$(value .osd.duration)" 1
 move "$switch_x" 332
 click
 sleep 0.3
