@@ -333,7 +333,7 @@ same "the warning, two up" "$(value .battery.warning)" 25
 step "The control center's page"
 page "$control_y"
 shot control-page
-move "$switch_x" 354
+move "$switch_x" 404
 click
 sleep 0.3
 same "what's left out" "$(value .control.hidden)" '["wifi"]'

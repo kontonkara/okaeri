@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell.Io
 import qs
 import qs.ui
-// The volume, the brightness, the output, what's playing, Wi-Fi, Bluetooth, the
+// The volume, the brightness, the output, the input, what's playing, Wi-Fi, Bluetooth, the
 // power profile and keeping awake. What's in it is there only while it shows, so what's typed in it goes
 // with it.
 Panel {
@@ -37,7 +37,7 @@ Panel {
 		sourceComponent: Column {
 			// What's left of the screen for a list, under the bar and with
 			// everything else around it.
-			readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, playback, wifi, bluetooth, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
+			readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, input, playback, wifi, bluetooth, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
 
 			spacing: Math.round(Theme.u(10))
 
@@ -47,6 +47,12 @@ Panel {
 
 			OutputSection {
 				id: output
+
+				room: parent.room
+			}
+
+			InputSection {
+				id: input
 
 				room: parent.room
 			}
