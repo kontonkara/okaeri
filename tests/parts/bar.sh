@@ -1174,3 +1174,48 @@ done
 [ "$(log | grep -c 'okaeri-probe: activated')" -gt "$activated" ] || fail "the icon kept out didn't reach the app"
 settings '{}'
 wait_tray
+
+step "The network and Bluetooth"
+# On what's really here, only read: a machine with Wi-Fi or a wire has the one,
+# and with its adapter on the other.
+move 300 600
+sleep 0.2
+shot online-none
+none=$(lane online-none | wc -l)
+settings '{ "bar": { "right": ["network", "bluetooth", "control"] } }'
+sleep 0.6
+shot online-bare
+settings '{ "bar": { "right": ["network", "bluetooth", "control"] }, "bluetooth": { "show": "on" } }'
+sleep 0.6
+shot online-on
+# The network and the control center, and Bluetooth while its adapter is on; with
+# a device only, no more than that.
+powered=0
+[ "$(busctl get-property org.bluez /org/bluez/hci0 org.bluez.Adapter1 Powered 2>/dev/null)" = "b true" ] && powered=1
+same "what's on the right with Bluetooth while it's on" "$(lane online-on | wc -l)" "$((2 + powered))"
+[ "$(lane online-bare | wc -l)" -le "$(lane online-on | wc -l)" ] || fail "more with a device only than while it's on"
+# The network's name beside it, when it has one: the right half reaches further.
+settings '{ "bar": { "right": ["network", "control"] } }'
+sleep 0.6
+shot network-bare
+settings '{ "bar": { "right": ["network", "control"] }, "network": { "label": "name" } }'
+sleep 0.6
+shot network-named
+if nmcli -t -f STATE general 2>/dev/null | grep -q '^connected'; then
+	[ "$(lane network-named | head -n 1)" -lt "$(lane network-bare | head -n 1)" ] || fail "no name beside the network"
+fi
+move "$(lane network-bare | head -n 1)" 16
+sleep 1.2
+shot network-tip
+[ "$(magick "$out/network-tip.png" "$out/network-bare.png" -compose difference -composite \
+	-crop "300x40+1100+44" +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip under the network"
+# A click opens the control center.
+click
+wait_up 1
+key Escape
+wait_up 0
+move 300 600
+settings '{}'
+wait_tray
+shot online-after
+same "what's on the bar after" "$(lane online-after | wc -l)" "$none"

@@ -87,6 +87,13 @@
 		"empty": true,
 		"reverse": false
 	},
+	"network": {
+		"label": "none"
+	},
+	"bluetooth": {
+		"show": "connected",
+		"label": "none"
+	},
 	"media": {
 		"show": "player",
 		"label": "title",

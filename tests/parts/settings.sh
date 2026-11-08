@@ -141,7 +141,7 @@ drag 795 "$right_y" 800 "$off_gap_y"
 same "the right" "$(value .bar.right)" '["cast","units","tray","notifications","clipboard","control"]'
 
 step "Back on it"
-drag 660 "$off_y" 800 "$right2_y"
+drag 768 "$off_y" 800 "$right2_y"
 same "the right" "$(value .bar.right)" '["cast","units","tray","notifications","clipboard","control","keyboard"]'
 
 step "What has to stay"
@@ -226,6 +226,22 @@ sleep 0.3
 same "the players left out" "$(value .media.ignored)" '["mpv"]'
 kill "$player"
 wait "$player" 2>/dev/null || true
+choose 645 "$off_y"
+shot part-bluetooth
+move "$higher_x" 669
+click
+sleep 0.3
+same "when Bluetooth shows" "$(value .bluetooth.show)" '"on"'
+move "$higher_x" 709
+click
+sleep 0.3
+same "what's beside Bluetooth" "$(value .bluetooth.label)" '"name"'
+choose 737 "$off_y"
+shot part-network
+move "$higher_x" 709
+click
+sleep 0.3
+same "what's beside the network" "$(value .network.label)" '"name"'
 # One with a page of its own: a way there.
 choose 785 "$right_y"
 shot part-tray
