@@ -8,6 +8,7 @@ Column {
 
 	readonly property var sections: [
 		{ name: "output", text: "Output", subtext: "With more than one place for the sound to go" },
+		{ name: "input", text: "Input", subtext: "With more than one microphone, or none chosen" },
 		{ name: "playback", text: "Playback", subtext: "While something plays" },
 		{ name: "wifi", text: "Wi-Fi" },
 		{ name: "bluetooth", text: "Bluetooth" },

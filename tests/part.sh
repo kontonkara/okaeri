@@ -93,8 +93,9 @@ mkdir -p "$work/leds/input9::capslock" "$work/leds/input9::numlock"
 echo 0 >"$work/leds/input9::capslock/brightness"
 echo 0 >"$work/leds/input9::numlock/brightness"
 sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml"
-# So do the machine's outputs: a test that wants some puts its own.
-sed -i 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' "$work/shell/services/Audio.qml"
+# So do the machine's outputs and inputs: a test that wants some puts its own.
+sed -i -e 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' \
+	-e 's/^\treadonly property var inputs: .*/\tproperty var inputs: []/' "$work/shell/services/Audio.qml"
 # The machine's battery could run low under a test: here it's what a test says.
 sed -i -e 's/^\treadonly property int charge: .*/\tproperty int charge: 100/' \
 	-e 's/^\treadonly property bool draining: .*/\tproperty bool draining: false/' \

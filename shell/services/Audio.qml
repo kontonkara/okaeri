@@ -30,6 +30,8 @@ Singleton {
 	// They go by their names, as properties would take tracking each, and that's
 	// not for what sits on a GPU that sleeps.
 	readonly property var outputs: Pipewire.nodes.values.filter(node => node.isSink && !node.isStream && /^(alsa|bluez)_output/.test(node.name) && reaches(node))
+	// Where sound can come from, the same way: devices' microphones.
+	readonly property var inputs: Pipewire.nodes.values.filter(node => !node.isSink && !node.isStream && /^(alsa|bluez)_input/.test(node.name))
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
 
@@ -59,6 +61,11 @@ Singleton {
 			Env.act("output", () => Pipewire.preferredDefaultAudioSink = node);
 	}
 
+	function useInput(node) {
+		if (node !== source)
+			Env.act("input", () => Pipewire.preferredDefaultAudioSource = node);
+	}
+
 	function toggleMute() {
 		if (ready)
 			Env.act(`mute ${!muted}`, () => sink.audio.muted = !muted);
@@ -66,6 +73,11 @@ Singleton {
 
 	function changeStream(node, level) {
 		Env.act(`app volume ${level}`, () => node.audio.volume = level);
+	}
+
+	function toggleStream(node) {
+		const muted = !!node.audio.muted;
+		Env.act(`app mute ${!muted}`, () => node.audio.muted = !muted);
 	}
 
 	// Its app's name, without what a wrapper makes of it.
