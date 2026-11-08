@@ -630,11 +630,110 @@ sleep 0.3
 shot media-gone
 same "beside the workspaces after the player" "$(left_of_clock media-gone)" 0
 
-step "The window in focus"
+step "The card's other buttons, and another player"
 # What's right of the workspaces in shot $1, for telling two shots apart.
 titled() {
 	magick "$out/$1.png" -crop 400x20+150+10 +repage -format '%#' info:
 }
+# Until the log has more lines like $2 than $3, or fails as $1.
+logged() {
+	for _ in $(seq 50); do
+		[ "$(log | grep -cE "$2" || true)" -gt "$3" ] && return 0
+		sleep 0.1
+	done
+	fail "$1: no \"$2\" in the log"
+}
+lines() {
+	log | grep -cE "$1" || true
+}
+# The name of an mpv on the bus that isn't $1, until there is one.
+new_mpv() {
+	for _ in $(seq 50); do
+		found=$(dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+			org.freedesktop.DBus.ListNames | sed -n 's/.*"\(org\.mpris\.MediaPlayer2\.mpv[^"]*\)"/\1/p' | grep -v -xF "$1" || true)
+		[ -n "$found" ] && break
+		sleep 0.1
+	done
+	[ -n "$found" ] || fail "no new player on the bus"
+	echo "$found"
+}
+# Two hundred seconds of quiet: a track whose length is known from the start.
+python3 -I -c 'import sys, wave
+w = wave.open(sys.argv[1], "wb")
+w.setnchannels(1)
+w.setsampwidth(1)
+w.setframerate(8000)
+w.writeframes(b"\x80" * 8000 * 200)
+w.close()' "$work/quiet.wav"
+mpv --no-config --no-terminal --ao=null --vo=null --force-media-title="Quiet, with a title long enough to be cut off well before it ends" \
+	--script="$OKAERI_MPV_MPRIS" "$work/quiet.wav" >/dev/null 2>&1 &
+first=$!
+first_name=$(new_mpv nothing)
+move 300 600
+for _ in $(seq 50); do
+	shot quiet-up
+	[ "$(left_of_clock quiet-up)" != 0 ] && break
+	sleep 0.1
+done
+[ "$(left_of_clock quiet-up)" != 0 ] || fail "nothing on the bar for the player"
+move 220 16
+click
+wait_up 1
+sleep 0.5
+shot card-timed
+# A click halfway along the slider: halfway into the track.
+at=$(lines 'media seek ')
+move 221 136
+click
+logged "the slider" "media seek $first_name (9[0-9]|10[0-9])$" "$at"
+at=$(lines 'media shuffle ')
+move 73 136
+click
+logged "shuffle" "media shuffle $first_name true" "$at"
+at=$(lines 'media loop ')
+move 368 136
+click
+logged "repeat" "media loop $first_name Playlist" "$at"
+key Escape
+wait_up 0
+# A paused one beside it, picked from the card's list: the bar goes to it, and
+# the card's buttons.
+mpv --no-config --no-terminal --ao=null --vo=null --pause --force-media-title="Another" \
+	--script="$OKAERI_MPV_MPRIS" "$work/quiet.wav" >/dev/null 2>&1 &
+second=$!
+second_name=$(new_mpv "$first_name")
+sleep 0.5
+move 300 600
+sleep 0.2
+shot two-players
+move 220 16
+click
+wait_up 1
+sleep 0.5
+shot card-two
+move 200 207
+click
+sleep 0.3
+key Escape
+wait_up 0
+move 300 600
+sleep 0.2
+shot picked
+[ "$(titled picked)" != "$(titled two-players)" ] || fail "the bar didn't follow the player picked"
+# Its title is short.
+move 140 16
+middle_clicked=$(lines "media toggle $second_name")
+click middle
+logged "the middle button, after a pick" "media toggle $second_name" "$middle_clicked"
+move 300 600
+kill "$second"
+wait "$second" 2>/dev/null || true
+sleep 0.5
+kill "$first"
+wait "$first" 2>/dev/null || true
+sleep 0.5
+
+step "The window in focus"
 settings '{ "bar": { "left": ["workspaces", "title"] } }'
 DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 -T "The first window" sleep 30 &
 first=$!
