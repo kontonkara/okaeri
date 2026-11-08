@@ -59,6 +59,7 @@ Singleton {
 	readonly property var bar: Object.assign({}, defaults.bar, user.bar, own.bar)
 	readonly property var clock: Object.assign({}, defaults.clock, user.clock, own.clock)
 	readonly property var workspaces: Object.assign({}, defaults.workspaces, user.workspaces, own.workspaces)
+	readonly property var media: Object.assign({}, defaults.media, user.media, own.media)
 	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications, own.notifications)
 	// Where the wallpapers are to pick from: the folder set, or where the wallpaper is.
 	readonly property string pictures: wallpaper.folder || wallpaper.path.replace(/\/[^/]*$/, "") || `${Quickshell.env("HOME")}/Pictures`

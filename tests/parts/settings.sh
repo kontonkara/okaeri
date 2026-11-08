@@ -195,6 +195,34 @@ move "$higher_x" 655
 click
 sleep 0.3
 same "when the battery shows" "$(value .battery.show)" '"battery"'
+# With a player open, to leave out.
+mpv --no-config --no-terminal --ao=null --vo=null --pause --script="$OKAERI_MPV_MPRIS" av://lavfi:sine >/dev/null 2>&1 &
+player=$!
+sleep 2
+choose 660 "$left_y"
+shot part-media
+move "$higher_x" 504
+click
+sleep 0.3
+same "when the media shows" "$(value .media.show)" '"playing"'
+move "$higher_x" 544
+click
+sleep 0.3
+same "what the media says" "$(value .media.label)" '"both"'
+move "$higher_x" 589
+click
+sleep 0.3
+same "how wide the media gets" "$(value .media.width)" 280
+move "$switch_x" 640
+click
+sleep 0.3
+same "sliding" "$(value .media.scroll)" false
+move "$switch_x" 710
+click
+sleep 0.3
+same "the players left out" "$(value .media.ignored)" '["mpv"]'
+kill "$player"
+wait "$player" 2>/dev/null || true
 # One with a page of its own: a way there.
 choose 785 "$right_y"
 shot part-tray

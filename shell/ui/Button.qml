@@ -17,6 +17,8 @@ Rectangle {
 	property real iconSize: Theme.u(18)
 	// As wide as its text gets, past which it's cut, 0 for as wide as it is.
 	property real longest: 0
+	// What's cut off slides into view under the pointer.
+	property bool scrolls: false
 	// What's on it starts at its left, for one in a list, not in its middle.
 	property bool atStart: false
 	// With this the wheel on it says scrolled(steps), and goes no further.
@@ -77,19 +79,67 @@ Rectangle {
 			color: button.ink
 		}
 
-		Text {
+		Item {
+			id: label
+
+			// How much of it is cut off, and whether that slides into view now.
+			readonly property real over: words.implicitWidth - width
+			readonly property bool sliding: button.scrolls && over > 0 && pointer.containsMouse && Theme.animate
+
 			anchors.verticalCenter: parent.verticalCenter
 			visible: button.text !== ""
-			width: button.longest > 0 ? Math.min(implicitWidth, button.longest) : implicitWidth
-			text: button.text
-			textFormat: Text.PlainText
-			elide: Text.ElideRight
-			color: button.ink
-			font.family: Theme.font
-			font.pixelSize: Theme.fontSize
-			font.weight: Theme.fontWeight
-			font.features: {
-				"tnum": 1
+			width: button.longest > 0 ? Math.min(words.implicitWidth, button.longest) : words.implicitWidth
+			height: words.implicitHeight
+			clip: true
+
+			Text {
+				id: words
+
+				width: label.sliding ? implicitWidth : label.width
+				text: button.text
+				textFormat: Text.PlainText
+				elide: label.sliding ? Text.ElideNone : Text.ElideRight
+				color: button.ink
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+				font.weight: Theme.fontWeight
+				font.features: {
+					"tnum": 1
+				}
+			}
+
+			// Along to its end at a reading pace, a rest, and back.
+			SequentialAnimation {
+				running: label.sliding
+				loops: Animation.Infinite
+				onRunningChanged: {
+					if (!running)
+						words.x = 0;
+				}
+
+				PauseAnimation {
+					duration: 600
+				}
+
+				NumberAnimation {
+					target: words
+					property: "x"
+					to: -label.over
+					duration: Math.max(0, label.over * 25)
+					easing.type: Easing.InOutSine
+				}
+
+				PauseAnimation {
+					duration: 1200
+				}
+
+				NumberAnimation {
+					target: words
+					property: "x"
+					to: 0
+					duration: 300
+					easing.type: Easing.OutCubic
+				}
 			}
 		}
 	}

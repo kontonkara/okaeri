@@ -3,14 +3,17 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
+import qs
 
 // The player the media keys, the bar and its card are for: the one picked,
 // until another starts playing, else the one playing, else the last that
-// played, else the first there is.
+// played, else the first there is. Those Settings.media.ignored names are left
+// out of it all.
 Singleton {
 	id: media
 
-	readonly property var players: Mpris.players.values
+	readonly property var everyone: Mpris.players.values
+	readonly property var players: everyone.filter(player => !Settings.media.ignored.includes(player.identity))
 	readonly property var playing: players.find(player => player.isPlaying) ?? null
 	property var last: null
 	property var picked: null
