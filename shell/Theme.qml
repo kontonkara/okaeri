@@ -186,6 +186,7 @@ Singleton {
 		music: "M9 18V5l11-2v13 M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M17 13a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
 		next: "M6 5l10 7-10 7z M18 5v14",
 		numLock: "M5 9h14 M5 15h14 M10 4L8 20 M16 4l-2 16",
+		osd: "M3 14h18v6H3z M7 17h6 M12 4v6 M9 7l3 3 3-3",
 		pause: "M8 5v14 M16 5v14",
 		pin: "M9 4h6l-1 7 3 3H7l3-3z M12 14v7",
 		play: "M7 5l12 7-12 7z",

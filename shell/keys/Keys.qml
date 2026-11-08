@@ -26,6 +26,14 @@ Scope {
 	IpcHandler {
 		target: "mic"
 
+		function up(percent: int): void {
+			Audio.changeMic(percent / 100);
+		}
+
+		function down(percent: int): void {
+			Audio.changeMic(-percent / 100);
+		}
+
 		function mute(): void {
 			Audio.toggleMicMute();
 		}

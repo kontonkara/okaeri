@@ -54,6 +54,7 @@ Singleton {
 	readonly property var launcher: Object.assign({}, defaults.launcher, user.launcher, own.launcher)
 	readonly property var clipboard: Object.assign({}, defaults.clipboard, user.clipboard, own.clipboard)
 	readonly property var audio: Object.assign({}, defaults.audio, user.audio, own.audio)
+	readonly property var osd: Object.assign({}, defaults.osd, user.osd, own.osd)
 	readonly property var sounds: Object.assign({}, defaults.sounds, user.sounds, own.sounds)
 	readonly property var wallpaper: Object.assign({}, defaults.wallpaper, user.wallpaper, own.wallpaper)
 	readonly property var tray: Object.assign({}, defaults.tray, user.tray, own.tray)
