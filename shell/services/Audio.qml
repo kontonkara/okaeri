@@ -6,10 +6,13 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs
 
-// The default output's volume, 0 to 1, and the default microphone's.
+// The default output's volume, 0 to 1 or up to Settings.audio.max past it, and
+// the default microphone's.
 Singleton {
 	id: audio
 
+	// How far the volume goes: past 1 the sound server amplifies.
+	readonly property real limit: Math.max(1, Settings.audio.max / 100)
 	readonly property var sink: Pipewire.defaultAudioSink
 	readonly property bool ready: !!sink && sink.ready && !!sink.audio
 	readonly property real volume: ready ? sink.audio.volume : 0
@@ -47,9 +50,10 @@ Singleton {
 		screenCheck.running = true;
 	}
 
+	// Up to the limit, or where something else put it past that.
 	function change(by) {
 		if (ready) {
-			const level = Math.max(0, Math.min(1, volume + by));
+			const level = Math.max(0, Math.min(Math.max(limit, volume), volume + by));
 			Env.act(`volume ${level}`, () => sink.audio.volume = level);
 			if (Settings.sounds.volumeChange && !muted && level !== volume)
 				Sounds.play("audio-volume-change");

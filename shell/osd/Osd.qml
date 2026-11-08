@@ -25,6 +25,8 @@ PanelWindow {
 	readonly property real rise: Theme.u(8)
 	property string kind: "volume"
 	property real level: 0
+	// What the slider shows: a volume is full at its limit.
+	readonly property real filled: kind === "volume" || kind === "mute" ? level / Audio.limit : level
 	readonly property bool lock: kind === "caps" || kind === "num"
 	readonly property bool off: kind === "mute" || kind === "micMute" || (lock && level === 0)
 	// What it says in words, if that's what it shows and not a level.
@@ -189,7 +191,7 @@ PanelWindow {
 
 			Slider {
 				anchors.verticalCenter: parent.verticalCenter
-				value: osd.level
+				value: osd.filled
 				interactive: false
 				visible: osd.label === ""
 				enabled: !osd.off

@@ -2,9 +2,22 @@ import QtQuick
 import qs
 import qs.ui
 
-// How loud the shell's sounds are, and what has one.
+// How loud the volume can go, how loud the shell's sounds are, and what has one.
 Column {
 	spacing: Math.round(Theme.u(10))
+
+	Card {
+		width: parent.width
+
+		Choice {
+			text: "The volume goes up to"
+			subtext: "Past 100% the sound is made louder, and can crackle"
+			values: [100, 125, 150]
+			value: Settings.audio.max
+			unit: "%"
+			onChosen: value => Settings.set("audio", "max", value)
+		}
+	}
 
 	Card {
 		width: parent.width

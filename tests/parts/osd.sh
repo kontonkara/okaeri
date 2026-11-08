@@ -96,6 +96,7 @@ import QtQuick
 import Quickshell
 
 Singleton {
+	property real limit: 1
 	property var sink: "first"
 	property bool ready: false
 	property real volume: 0
@@ -163,6 +164,10 @@ ShellRoot {
 
 		function mic(muted: bool): void {
 			Audio.micMuted = muted;
+		}
+
+		function limit(limit: real): void {
+			Audio.limit = limit;
 		}
 
 		function brightness(level: real): void {
@@ -457,3 +462,12 @@ sleep 0.4
 shot num-on
 leaves "$(now)" >/dev/null
 cards_differ caps-on num-on || fail "CapsLock and NumLock look the same"
+
+# A volume that goes past 100% fills the slider at its limit.
+ipc poke limit 1.5
+show volume 0.75
+sleep 0.4
+shot past-full
+between "half of the way to 150%" "$(filled past-full ffffff)" 97 103
+leaves "$(now)" >/dev/null
+ipc poke limit 1

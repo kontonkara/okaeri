@@ -469,9 +469,13 @@ page "$tray_y"
 step "How it sounds"
 page "$sounds_y"
 shot sounds-page
-arrow "$lower_x" 234
+arrow "$higher_x" 232
+sleep 0.3
+same "how loud the volume goes" "$(value .audio.max)" 125
+arrow "$lower_x" 310
+sleep 0.3
 same "the sounds' volume" "$(value .sounds.volume)" 20
-move "$switch_x" 326
+move "$switch_x" 410
 click
 sleep 0.3
 same "notifications' sound" "$(value .sounds.notifications)" false

@@ -26,6 +26,9 @@
 		"rows": 100,
 		"keep": 750
 	},
+	"audio": {
+		"max": 100
+	},
 	"sounds": {
 		"volume": 25,
 		"notifications": true,
