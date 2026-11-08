@@ -5,17 +5,25 @@ import qs
 import qs.services
 
 // With no input for a while the session locks, and later the screens go off,
-// each after a slow fade to warn of it. Apps that keep the machine awake hold
-// all of it off, and so does Awake.
+// each after a slow fade to warn of it, and the machine can be put to sleep, on
+// battery or always, as Settings.idle.suspendOn says. Apps that keep the machine
+// awake hold all of it off, and so does Awake.
 Scope {
 	id: idle
 
 	// Seconds, 0 for never.
 	readonly property real lockAfter: Settings.idle.lock
 	readonly property real offAfter: Settings.idle.screenOff
+	readonly property real sleepAfter: Settings.idle.suspend
 	// Without animations it'd be a dark screen, not a fade.
 	readonly property real fade: Theme.animate ? Settings.idle.fade : 0
 	readonly property bool fading: (lockSoon.isIdle && !lock.isIdle) || (offSoon.isIdle && !off.isIdle)
+	readonly property bool sleeping: sleep.isIdle && (Settings.idle.suspendOn !== "battery" || Power.draining)
+
+	onSleepingChanged: {
+		if (sleeping)
+			Session.run("suspend");
+	}
 
 	component Stage: IdleMonitor {
 		id: stage
@@ -62,6 +70,14 @@ Scope {
 			if (isIdle)
 				Env.act("screens off", () => Niri.act({ PowerOffMonitors: {} }));
 		}
+	}
+
+	// The screens are off or locked by then, as it's set out: no fade. The charger
+	// coming out while it idles counts too.
+	Stage {
+		id: sleep
+
+		after: idle.sleepAfter
 	}
 
 	Variants {

@@ -3,9 +3,9 @@ import qs
 import qs.services
 import qs.ui
 
-// When the session locks and the screens go off by themselves, what's in the
-// session menu and the time left there to change your mind, and when the battery
-// is said to be low.
+// When the session locks, the screens go off and the machine sleeps by
+// themselves, what's in the session menu and the time left there to change your
+// mind, and when the battery is said to be low.
 Flickable {
 	id: page
 
@@ -56,6 +56,25 @@ Flickable {
 				value: Settings.idle.fade
 				none: "Don't"
 				onChosen: value => Settings.set("idle", "fade", value)
+			}
+
+			Choice {
+				text: "Put the machine to sleep"
+				subtext: Session.canSuspend ? "Suspend, from when nothing went on" : "Suspend, which logind says this machine can't now"
+				values: page.waits
+				value: Settings.idle.suspend
+				onChosen: value => Settings.set("idle", "suspend", value)
+			}
+
+			Pick {
+				text: "Sleep when"
+				visible: Settings.idle.suspend > 0
+				options: [
+					{ value: "always", text: "Always" },
+					{ value: "battery", text: "On battery" }
+				]
+				value: Settings.idle.suspendOn
+				onChosen: value => Settings.set("idle", "suspendOn", value)
 			}
 		}
 

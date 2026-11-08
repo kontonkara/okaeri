@@ -102,4 +102,44 @@ sleep 1.5
 [ "$(fades)" = 0 ] || fail "a fade without one"
 said "session lock" 20
 
+
+# Sleep, after the rest; only on battery, it waits for the charger to come out,
+# which a probe says here.
+settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 2, "suspendOn": "battery" } }'
+wake
+cat >"$work/Probe.qml" <<'QML'
+import QtQuick
+import Quickshell.Io
+import qs.services
+
+IpcHandler {
+	target: "probe"
+
+	function draining(on: bool): void {
+		Power.draining = on;
+	}
+}
+QML
+sed 's/^\tIdle {}$/\tIdle {}\n\n\tProbe {}/' "$work/shell/shell.qml" >"$work/shell.qml"
+grep -q 'Probe {}' "$work/shell.qml" || fail "no probe in the shell"
+mv "$work/Probe.qml" "$work/shell/Probe.qml"
+# In place: a file put over it isn't always seen.
+cat "$work/shell.qml" >"$work/shell/shell.qml"
+# Until it answers.
+for _ in $(seq 50); do
+	[ -z "$(ipc probe draining false 2>&1)" ] && break
+	sleep 0.2
+done
+sleep 0.5
+sleep 3
+silent "sleep on battery, on the charger"
+ipc probe draining true
+said "session suspend" 10
+ipc probe draining false
+wake
+settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 2 } }'
+wake
+sleep 1.5
+said "session suspend" 20
+
 echo "idle: all good" >&2
