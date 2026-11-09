@@ -25,6 +25,7 @@ PanelWindow {
 		media,
 		network,
 		notifications,
+		system,
 		title,
 		tray,
 		units,
@@ -145,6 +146,12 @@ PanelWindow {
 		id: network
 
 		NetworkButton {}
+	}
+
+	Component {
+		id: system
+
+		SystemLoad {}
 	}
 
 	Component {

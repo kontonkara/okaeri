@@ -1261,3 +1261,24 @@ settings '{}'
 wait_tray
 shot online-after
 same "what's on the bar after" "$(lane online-after | wc -l)" "$none"
+
+step "System load"
+# On what's really here, only read. Where what's right of the clock starts.
+right_start() {
+	magick "$out/$1.png" -crop 500x20+900+10 +repage -trim -format '%[fx:page.x + 900]' info:
+}
+move 300 600
+settings '{ "bar": { "right": ["system", "control"] } }'
+sleep 2.5
+shot load
+[ "$(lane load | wc -l)" -gt 1 ] || fail "nothing beside the control center for the load"
+settings '{ "bar": { "right": ["system", "control"] }, "system": { "temperature": false } }'
+sleep 0.5
+shot load-cooler
+[ "$(right_start load-cooler)" -gt "$(right_start load)" ] || fail "no narrower without the temperature"
+settings '{ "bar": { "right": ["system", "control"] }, "system": { "cpu": false, "memory": false, "temperature": false } }'
+sleep 0.5
+shot load-nothing
+same "what's on the right with nothing to say" "$(lane load-nothing | wc -l)" 1
+settings '{}'
+wait_tray
