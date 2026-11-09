@@ -89,6 +89,12 @@
 		"empty": true,
 		"reverse": false
 	},
+	"system": {
+		"cpu": true,
+		"memory": true,
+		"temperature": true,
+		"interval": 2
+	},
 	"network": {
 		"label": "none"
 	},

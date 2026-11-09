@@ -23,6 +23,7 @@ Flickable {
 		media: "Media",
 		network: "Network",
 		notifications: "Notifications",
+		system: "System load",
 		title: "Window title",
 		tray: "Tray",
 		units: "Failed units",
@@ -330,6 +331,7 @@ Flickable {
 						battery: batterySettings,
 						media: mediaSettings,
 						network: networkSettings,
+						system: systemSettings,
 						bluetooth: bluetoothSettings
 					})[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
 			}
@@ -610,6 +612,42 @@ Flickable {
 					checked: !Settings.media.ignored.includes(modelData.name)
 					onToggled: wanted => page.ignore(modelData.name, !wanted)
 				}
+			}
+		}
+	}
+
+	Component {
+		id: systemSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Setting {
+				text: "The processor"
+				subtext: "How busy it is"
+				checked: Settings.system.cpu
+				onToggled: wanted => Settings.set("system", "cpu", wanted)
+			}
+
+			Setting {
+				text: "Memory"
+				subtext: "How much is in use"
+				checked: Settings.system.memory
+				onToggled: wanted => Settings.set("system", "memory", wanted)
+			}
+
+			Setting {
+				text: "Temperature"
+				subtext: "The processor's, where it has a sensor"
+				checked: Settings.system.temperature
+				onToggled: wanted => Settings.set("system", "temperature", wanted)
+			}
+
+			Choice {
+				text: "Read every"
+				values: [1, 2, 5, 10]
+				value: Settings.system.interval
+				onChosen: value => Settings.set("system", "interval", value)
 			}
 		}
 	}
