@@ -14,6 +14,7 @@
   util-linux,
   wl-clipboard,
   wtype,
+  wlsunset,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -51,6 +52,7 @@ stdenvNoCC.mkDerivation {
           util-linux
           wl-clipboard
           wtype
+          wlsunset
         ]
       } \
       --suffix XDG_DATA_DIRS : ${sound-theme-freedesktop}/share

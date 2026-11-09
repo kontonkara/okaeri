@@ -135,11 +135,17 @@ sleep 0.4
 when 'dry: power profile PowerSaver' at 1089 299
 when 'dry: power profile Balanced' at 1206 299
 when 'dry: power profile Performance' at 1322 299
-# Under them keeping awake: the wheel gives it half an hour, and takes it back.
+# Under them the night light: on, wlsunset as set; the wheel on it makes it warmer.
+when 'dry: night light -t 4000 -T 4001' ipc night toggle
+move $fold_x 385
+when 'dry: night light -t 3750 -T 3751' wheel 1
+shot night
+ipc night toggle
+# Under it keeping awake: the wheel gives it half an hour, and takes it back.
 awake() {
 	ipc awake state | jq -r .on
 }
-move $fold_x 385
+move $fold_x 451
 wheel 1
 sleep 0.3
 [ "$(awake)" = true ] || fail_awake "the wheel didn't turn it on"
@@ -786,7 +792,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

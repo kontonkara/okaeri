@@ -13,6 +13,7 @@ Column {
 		{ name: "wifi", text: "Wi-Fi" },
 		{ name: "bluetooth", text: "Bluetooth" },
 		{ name: "power", text: "Power profile and the battery" },
+		{ name: "night", text: "Night light" },
 		{ name: "awake", text: "Keep awake" }
 	]
 

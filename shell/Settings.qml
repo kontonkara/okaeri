@@ -61,6 +61,7 @@ Singleton {
 	readonly property var bar: Object.assign({}, defaults.bar, user.bar, own.bar)
 	readonly property var clock: Object.assign({}, defaults.clock, user.clock, own.clock)
 	readonly property var workspaces: Object.assign({}, defaults.workspaces, user.workspaces, own.workspaces)
+	readonly property var nightLight: Object.assign({}, defaults.nightLight, user.nightLight, own.nightLight)
 	readonly property var system: Object.assign({}, defaults.system, user.system, own.system)
 	readonly property var network: Object.assign({}, defaults.network, user.network, own.network)
 	readonly property var bluetooth: Object.assign({}, defaults.bluetooth, user.bluetooth, own.bluetooth)
