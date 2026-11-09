@@ -191,8 +191,9 @@ no_sum "99999999!" 1.4
 sum "1+1" 2
 pick fire firefox
 pick kpxc org.keepassxc.KeePassXC
-# Telegram, launched by now, only has "ra" inside a word.
-pick ra blackmagicraw-player
+# Telegram, launched by now, has "ra" inside a word, and other apps at a word's
+# start; this one alone has "raw".
+pick raw blackmagicraw-player
 # An id goes in full too, or the start of it.
 pick org.telegram.desktop org.telegram.desktop
 pick dev.lizardbyte dev.lizardbyte.app.Sunshine
