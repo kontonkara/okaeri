@@ -143,6 +143,11 @@ Scope {
 			Niri.act({ FocusWorkspaceDown: {} });
 		}
 
+		// A place for the weather, by its name.
+		function locate(name: string): void {
+			Weather.locate(name);
+		}
+
 		// As if apps listened and watched.
 		function privacy(microphone: string, camera: string): void {
 			Privacy.microphone = microphone ? microphone.split(",") : [];
@@ -1315,3 +1320,59 @@ ipc probe privacy "" ""
 sleep 0.3
 shot privacy-gone
 same "where they were" "$(right_start privacy-gone)" "$(right_start privacy-none)"
+
+step "The weather"
+# A server of its own answers for open-meteo, which isn't asked.
+mkdir -p "$work/weather/v1"
+cat >"$work/weather/v1/forecast" <<'JSON'
+{"current":{"temperature_2m":12.4,"weather_code":3,"is_day":1},"daily":{"time":["2026-11-09","2026-11-10","2026-11-11","2026-11-12"],"weather_code":[3,61,71,0],"temperature_2m_max":[14.1,11.2,3.9,8.0],"temperature_2m_min":[6.2,5.0,-1.3,2.4]}}
+JSON
+cat >"$work/weather/v1/search" <<'JSON'
+{"results":[{"name":"Testville","admin1":"Somewhere","country":"Nowhere","latitude":1.5,"longitude":2.5}]}
+JSON
+port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+python3 -m http.server "$port" --bind 127.0.0.1 --directory "$work/weather" >"$out/weather-server.log" 2>&1 &
+server=$!
+sed -e "s|Quickshell.env(\"OKAERI_WEATHER_URL\") \|\| \"https://api.open-meteo.com\"|\"http://127.0.0.1:$port\"|" \
+	-e "s|Quickshell.env(\"OKAERI_PLACES_URL\") \|\| \"https://geocoding-api.open-meteo.com\"|\"http://127.0.0.1:$port\"|" \
+	"$work/shell/services/Weather.qml" | rewrite "$work/shell/services/Weather.qml"
+grep -q "127.0.0.1:$port" "$work/shell/services/Weather.qml" || fail "the stand's weather asks open-meteo"
+wait_tray
+# A place by its name, as the settings look for one.
+ipc probe locate Testville
+for _ in $(seq 30); do
+	[ "$(jq -r '.weather.place // empty' "$XDG_STATE_HOME/okaeri/settings.json" 2>/dev/null)" = "Testville, Somewhere, Nowhere" ] && break
+	sleep 0.1
+done
+same "the place found" "$(jq -r '.weather.place' "$XDG_STATE_HOME/okaeri/settings.json")" "Testville, Somewhere, Nowhere"
+same "where it is" "$(jq -c '[.weather.latitude, .weather.longitude]' "$XDG_STATE_HOME/okaeri/settings.json")" "[1.5,2.5]"
+move 300 600
+settings '{ "weather": { "on": true } }'
+sleep 1
+shot weather-off-bar
+settings '{ "weather": { "on": true, "bar": true } }'
+sleep 0.5
+shot weather-on-bar
+[ "$(magick "$out/weather-off-bar.png" "$out/weather-on-bar.png" -compose difference -composite \
+	-crop 400x20+500+10 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no weather beside the time"
+move 700 16
+click
+wait_up 1
+sleep 0.5
+shot weather-month
+key Escape
+wait_up 0
+settings '{ "weather": { "on": false } }'
+move 700 16
+click
+wait_up 1
+sleep 0.5
+shot month-no-weather
+key Escape
+wait_up 0
+[ "$(magick "$out/weather-month.png" "$out/month-no-weather.png" -compose difference -composite \
+	-crop 320x120+540+50 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no weather over the month"
+kill "$server"
+wait "$server" 2>/dev/null || true
+settings '{}'
+move 300 600

@@ -1,11 +1,13 @@
 import QtQuick
 import Quickshell
 import qs
+import qs.services
 import qs.ui
 
 // The time, and the date beside it, as Settings.clock has them, in `room` pixels:
-// with less the date goes, and then the time. The pointer on it says the whole date,
-// and a click shows the month.
+// with less the date goes, and then the time, and the weather after it if
+// Settings.weather.bar says so. The pointer on it says the whole date, and a click
+// shows the month, under the weather if that's on.
 Text {
 	id: time
 
@@ -13,9 +15,10 @@ Text {
 	readonly property var own: Settings.clock
 	readonly property string timeFormat: (own.hours12 ? "h:mm" : "HH:mm") + (own.seconds ? ":ss" : "") + (own.hours12 ? " AP" : "")
 	readonly property var formats: own.date === "none" || !own.dateFormat ? [timeFormat] : own.date === "after" ? [timeFormat, own.dateFormat] : [own.dateFormat, timeFormat]
+	readonly property string outside: Weather.on && Settings.weather.bar && Weather.current ? `  ${Weather.current.temperature}°` : ""
 
 	visible: width <= room
-	text: dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)
+	text: (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside
 	color: Theme.colors.text
 	font.family: Theme.font
 	font.pixelSize: Theme.fontSize
@@ -66,9 +69,19 @@ Text {
 			width: parent.width
 			active: month.visible
 
-			sourceComponent: Calendar {
+			sourceComponent: Column {
 				width: parent ? parent.width : 0
-				today: clock.date
+				spacing: Theme.u(10)
+
+				WeatherNow {
+					width: parent.width
+					visible: Weather.on
+				}
+
+				Calendar {
+					width: parent.width
+					today: clock.date
+				}
 			}
 		}
 	}
