@@ -96,6 +96,7 @@ Flickable {
 
 			Choice {
 				text: "Gap around the bar"
+				subtext: "With none it's against the screen's top, square there"
 				values: [0, 2, 4, 6, 8, 10, 12]
 				value: Theme.values.barMargin
 				none: "None"

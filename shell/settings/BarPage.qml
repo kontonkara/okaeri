@@ -362,6 +362,13 @@ Flickable {
 				checked: Settings.bar.tips
 				onToggled: wanted => Settings.set("bar", "tips", wanted)
 			}
+
+			Setting {
+				text: "Windows keep out from under it"
+				subtext: "Off, they take the whole screen, and the bar is over them"
+				checked: Settings.bar.reserve
+				onToggled: wanted => Settings.set("bar", "reserve", wanted)
+			}
 		}
 
 		Card {

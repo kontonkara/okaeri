@@ -135,6 +135,7 @@
 		"right": ["privacy", "cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
 		"hideOn": [],
 		"wheel": "split",
-		"tips": true
+		"tips": true,
+		"reserve": true
 	}
 }
