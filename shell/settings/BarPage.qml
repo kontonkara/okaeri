@@ -477,6 +477,100 @@ Flickable {
 				checked: Settings.clock.weekNumbers
 				onToggled: wanted => Settings.set("clock", "weekNumbers", wanted)
 			}
+
+			Setting {
+				text: "The weather"
+				subtext: "Over the month, from open-meteo.com"
+				checked: Settings.weather.on
+				onToggled: wanted => Settings.set("weather", "on", wanted)
+			}
+
+			Item {
+				id: place
+
+				// What came of the last name typed, and whether it's still being looked for.
+				property string said: ""
+				property bool looking: false
+
+				width: parent.width
+				height: Theme.u(40)
+				visible: Settings.weather.on
+
+				Connections {
+					target: Weather
+
+					function onLocated(name) {
+						place.looking = false;
+						place.said = "";
+					}
+
+					function onNotFound(why) {
+						place.looking = false;
+						place.said = why;
+					}
+				}
+
+				Column {
+					anchors.left: parent.left
+					anchors.right: where.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+
+					Text {
+						width: parent.width
+						text: "Where"
+						color: Theme.colors.text
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize
+					}
+
+					Text {
+						width: parent.width
+						text: place.looking ? "Looking for it" : place.said || Settings.weather.place || "A town's name, Enter to look for it"
+						textFormat: Text.PlainText
+						color: place.said ? Theme.colors.error : Theme.colors.subtext
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize - Theme.u(2)
+					}
+				}
+
+				TextField {
+					id: where
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					implicitWidth: Theme.u(170)
+					implicitHeight: Theme.u(32)
+					placeholder: "Berlin"
+					onAccepted: {
+						if (text.trim() !== "") {
+							place.looking = true;
+							Weather.locate(text.trim());
+						}
+					}
+				}
+			}
+
+			Pick {
+				text: "In"
+				visible: Settings.weather.on
+				options: [
+					{ value: "celsius", text: "°C" },
+					{ value: "fahrenheit", text: "°F" }
+				]
+				value: Settings.weather.units
+				onChosen: value => Settings.set("weather", "units", value)
+			}
+
+			Setting {
+				text: "Beside the time"
+				subtext: "How warm it is"
+				visible: Settings.weather.on
+				checked: Settings.weather.bar
+				onToggled: wanted => Settings.set("weather", "bar", wanted)
+			}
 		}
 	}
 

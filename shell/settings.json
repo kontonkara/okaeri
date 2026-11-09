@@ -89,6 +89,14 @@
 		"empty": true,
 		"reverse": false
 	},
+	"weather": {
+		"on": false,
+		"place": "",
+		"latitude": 0,
+		"longitude": 0,
+		"units": "celsius",
+		"bar": false
+	},
 	"nightLight": {
 		"on": false,
 		"mode": "always",
