@@ -456,6 +456,24 @@ Flickable {
 				checked: Settings.clock.seconds
 				onToggled: wanted => Settings.set("clock", "seconds", wanted)
 			}
+
+			Pick {
+				text: "Weeks start on"
+				subtext: "In the month a click on it shows"
+				options: [
+					{ value: "locale", text: "As here" },
+					{ value: "monday", text: "Monday" },
+					{ value: "sunday", text: "Sunday" }
+				]
+				value: Settings.clock.weekStart
+				onChosen: value => Settings.set("clock", "weekStart", value)
+			}
+
+			Setting {
+				text: "Week numbers"
+				checked: Settings.clock.weekNumbers
+				onToggled: wanted => Settings.set("clock", "weekNumbers", wanted)
+			}
 		}
 	}
 
