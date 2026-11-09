@@ -171,21 +171,29 @@ choose() {
 }
 choose 745 "$left_y"
 shot part-clock
-move "$switch_x" 712
+move "$switch_x" 620
 click
 sleep 0.3
 same "seconds" "$(value .clock.seconds)" true
-move "$higher_x" 566
+move "$higher_x" 474
 click
 sleep 0.3
 same "the date" "$(value .clock.date)" '"after"'
-move 968 616
+move 968 524
 click
 wtype -M ctrl a -m ctrl
 type 'yyyy'
 key Return
 sleep 0.3
 same "how the date's written" "$(value .clock.dateFormat)" '"yyyy"'
+move "$higher_x" 664
+click
+sleep 0.3
+same "the first day of a week" "$(value .clock.weekStart)" '"monday"'
+move "$switch_x" 709
+click
+sleep 0.3
+same "week numbers" "$(value .clock.weekNumbers)" true
 choose 577 "$left_y"
 shot part-workspaces
 move "$switch_x" 655

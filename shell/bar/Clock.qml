@@ -4,7 +4,8 @@ import qs
 import qs.ui
 
 // The time, and the date beside it, as Settings.clock has them, in `room` pixels:
-// with less the date goes, and then the time. The pointer on it says the whole date.
+// with less the date goes, and then the time. The pointer on it says the whole date,
+// and a click shows the month.
 Text {
 	id: time
 
@@ -36,7 +37,39 @@ Text {
 		text: time.formats.map(format => Qt.formatDateTime(clock.date, format)).join("  ")
 	}
 
+	MouseArea {
+		id: pointer
+
+		anchors.fill: parent
+		hoverEnabled: true
+		cursorShape: Qt.PointingHandCursor
+		onClicked: {
+			month.middle = Panels.middleOf(time);
+			month.toggle();
+		}
+	}
+
 	Tip {
+		listens: false
+		hovered: pointer.containsMouse
+		pressed: pointer.pressed
 		text: Qt.formatDateTime(clock.date, "dddd, d MMMM yyyy")
+	}
+
+	Panel {
+		id: month
+
+		align: "top"
+		panelWidth: Theme.u(320)
+
+		Loader {
+			width: parent.width
+			active: month.visible
+
+			sourceComponent: Calendar {
+				width: parent ? parent.width : 0
+				today: clock.date
+			}
+		}
 	}
 }

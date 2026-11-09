@@ -1078,6 +1078,48 @@ says "in twelve hours, with seconds" '^[0-9]{1,2}:[0-9]{2}:[0-9]{2} [^ ]+$'
 settings '{}'
 says "back" '^[^ ]+ [0-9]{1,2} [^ ]+  [0-9]{2}:[0-9]{2}$'
 
+step "The month"
+# Whether the days under the clock look other in shots $1 and $2.
+months_apart() {
+	[ "$(magick "$out/$1.png" "$out/$2.png" -compose difference -composite \
+		-crop 320x270+540+95 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ]
+}
+move 700 16
+click
+wait_up 1
+sleep 0.5
+shot month
+move 567 71
+click
+sleep 0.3
+shot month-before
+months_apart month month-before || fail "the arrow didn't go to another month"
+# Its name goes back to this one.
+move 700 71
+click
+sleep 0.3
+shot month-back
+months_apart month month-back && fail "the month's name didn't go back to this one"
+move 700 220
+wheel 1
+sleep 0.3
+move 700 500
+shot month-wheel
+months_apart month-wheel month-before && fail "the wheel up didn't go back a month"
+move 700 71
+click
+settings '{ "clock": { "weekStart": "sunday" } }'
+shot month-sunday
+settings '{ "clock": { "weekStart": "monday" } }'
+shot month-monday
+months_apart month-sunday month-monday || fail "the weeks start on the same day either way"
+settings '{ "clock": { "weekNumbers": true } }'
+shot month-numbered
+months_apart month-monday month-numbered || fail "no numbers beside the weeks"
+settings '{}'
+key Escape
+wait_up 0
+
 step "The workspaces as they're set"
 niri msg action focus-workspace 1
 move 300 600

@@ -79,7 +79,9 @@
 		"date": "before",
 		"dateFormat": "ddd d MMM",
 		"hours12": false,
-		"seconds": false
+		"seconds": false,
+		"weekStart": "locale",
+		"weekNumbers": false
 	},
 	"workspaces": {
 		"labels": "none",
