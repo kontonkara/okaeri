@@ -143,6 +143,12 @@ Scope {
 			Niri.act({ FocusWorkspaceDown: {} });
 		}
 
+		// As if apps listened and watched.
+		function privacy(microphone: string, camera: string): void {
+			Privacy.microphone = microphone ? microphone.split(",") : [];
+			Privacy.camera = camera ? camera.split(",") : [];
+		}
+
 		// As if from the machine's battery.
 		function battery(charge: int, draining: bool, left: int): void {
 			Power.charge = charge;
@@ -157,6 +163,10 @@ sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted:
 	"$work/shell/bar/Workspaces.qml" | swap "$work/shell/bar/Workspaces.qml"
 sed 's/^\tid: time$/&\n\n\treadonly property string shows: visible ? text : "nothing"\n\n\tonShowsChanged: console.info("okaeri: clock:", shows)\n\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
 	"$work/shell/bar/Clock.qml" | swap "$work/shell/bar/Clock.qml"
+# What listens and watches, as the probe says: not the machine's own.
+sed -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' -e 's/^\treadonly property var camera: .*/\tproperty var camera: []/' \
+	"$work/shell/services/Privacy.qml" | swap "$work/shell/services/Privacy.qml"
+grep -q '^	property var microphone: \[\]$' "$work/shell/services/Privacy.qml" || fail "the stand's Privacy is the machine's"
 # And the control center, for a panel to open over a menu.
 sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \
 	"$work/shell/shell.qml" | swap "$work/shell/shell.qml"
@@ -1282,3 +1292,26 @@ shot load-nothing
 same "what's on the right with nothing to say" "$(lane load-nothing | wc -l)" 1
 settings '{}'
 wait_tray
+
+step "Microphone and camera"
+move 300 600
+sleep 0.2
+shot privacy-none
+ipc probe privacy "Recorder" ""
+sleep 0.3
+shot privacy-mic
+[ "$(right_start privacy-mic)" -lt "$(right_start privacy-none)" ] || fail "nothing for an app on the microphone"
+ipc probe privacy "Recorder" "Meeting"
+sleep 0.3
+shot privacy-both
+[ "$(right_start privacy-both)" -lt "$(right_start privacy-mic)" ] || fail "no camera beside the microphone"
+move "$(($(right_start privacy-both) + 12))" 16
+sleep 1.2
+shot privacy-tip
+[ "$(magick "$out/privacy-tip.png" "$out/privacy-both.png" -compose difference -composite \
+	-crop "400x40+$(($(right_start privacy-both) - 150))+44" +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip for who's listening"
+move 300 600
+ipc probe privacy "" ""
+sleep 0.3
+shot privacy-gone
+same "where they were" "$(right_start privacy-gone)" "$(right_start privacy-none)"

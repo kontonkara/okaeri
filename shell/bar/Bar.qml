@@ -25,6 +25,7 @@ PanelWindow {
 		media,
 		network,
 		notifications,
+		privacy,
 		system,
 		title,
 		tray,
@@ -146,6 +147,12 @@ PanelWindow {
 		id: network
 
 		NetworkButton {}
+	}
+
+	Component {
+		id: privacy
+
+		PrivacyIndicator {}
 	}
 
 	Component {
