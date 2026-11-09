@@ -1376,3 +1376,29 @@ kill "$server"
 wait "$server" 2>/dev/null || true
 settings '{}'
 move 300 600
+
+step "Space for windows, and no gap"
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 -T "Under the bar" sleep 30 &
+under=$!
+sleep 1.5
+tile() {
+	niri msg --json windows | jq -r '[.[] | select(.title == "Under the bar") | .layout.tile_size[1]][0]'
+}
+kept=$(tile)
+settings '{ "bar": { "reserve": false } }'
+sleep 0.6
+[ "$(tile | cut -d. -f1)" -gt "$(echo "$kept" | cut -d. -f1)" ] || fail "the window doesn't go under the bar: $kept, then $(tile)"
+settings '{}'
+sleep 0.6
+same "the window with the space kept again" "$(tile)" "$kept"
+kill "$under"
+wait "$under" 2>/dev/null || true
+move 300 600
+sleep 0.4
+shot gap
+theme '{ "barMargin": 0 }'
+sleep 0.4
+shot no-gap
+[ "$(pixel no-gap 1 1)" != "$(pixel gap 1 1)" ] || fail "the corner is as it was with no gap"
+same "the corner against the screen's edge" "$(pixel no-gap 1 1)" "$(pixel no-gap 20 1)"
+theme '{}'

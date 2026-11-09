@@ -283,14 +283,28 @@ move 700 400
 notch 30
 sleep 0.6
 shot bar-all
-move "$higher_x" 550
+move "$higher_x" 500
 click
 sleep 0.3
 same "the wheel" "$(value .bar.wheel)" '"volume"'
-move "$switch_x" 600
+move "$switch_x" 550
 click
 sleep 0.3
 same "tips" "$(value .bar.tips)" false
+# The window's top: with the space given up it sits higher.
+window_top() {
+	niri msg --json windows | jq '[.[] | select(.title == "Settings") | .layout.tile_pos_in_workspace_view[1]][0] | floor'
+}
+top_before=$(window_top)
+move "$switch_x" 600
+click
+sleep 0.5
+same "space for windows" "$(value .bar.reserve)" false
+# Back on, where the switch is now.
+move "$switch_x" $((600 + $(window_top) - top_before))
+click
+sleep 0.5
+same "space for windows, again" "$(value .bar.reserve)" true
 # The only screen keeps its bar.
 move "$switch_x" 705
 click

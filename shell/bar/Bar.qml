@@ -34,6 +34,8 @@ PanelWindow {
 	})
 	// Under all of it, for Tip.
 	readonly property real tipsFrom: Theme.barHeight + Theme.u(6)
+	// With no gap around it, it's against the screen's edges: square there.
+	readonly property real corners: Theme.edge > 0 ? Theme.cardRadius : 0
 
 	anchors {
 		top: true
@@ -46,6 +48,8 @@ PanelWindow {
 		right: Theme.edge
 	}
 	implicitHeight: Theme.barHeight
+	// Windows keep out from under it, unless Settings.bar.reserve says otherwise.
+	exclusionMode: Settings.bar.reserve ? ExclusionMode.Auto : ExclusionMode.Ignore
 	color: "transparent"
 	WlrLayershell.namespace: "okaeri-bar"
 	BackgroundEffect.blurRegion: Theme.barBlur ? glass : null
@@ -58,7 +62,7 @@ PanelWindow {
 		y: 1
 		width: bar.width - 2
 		height: bar.height - 2
-		radius: Theme.cardRadius
+		radius: bar.corners
 	}
 
 	component Lane: Row {
@@ -197,7 +201,7 @@ PanelWindow {
 		id: background
 
 		anchors.fill: parent
-		radius: Theme.cardRadius
+		radius: bar.corners
 		color: Theme.barFill
 	}
 
@@ -205,7 +209,7 @@ PanelWindow {
 	// as a light line.
 	Rectangle {
 		anchors.fill: parent
-		radius: Theme.cardRadius
+		radius: bar.corners
 		color: "transparent"
 		border.width: 1
 		border.color: Theme.border
