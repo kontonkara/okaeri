@@ -1,6 +1,6 @@
 #!/bin/sh
 # Every test, one after another: each part with the bar, the whole shell, and
-# those two with OKAERI_GUEST=1, the whole shell as ./try has it. It goes on
+# those two with OKAERI_GUEST=1, the whole shell as ./try has it, and install.sh. It goes on
 # past a failure, and says which at the end. Each one's output is in
 # <out>/<name>.log, and what it left in <out>/<name>. In the repo:
 #
@@ -49,6 +49,7 @@ done
 run notifications-guest env OKAERI_GUEST=1 tests/part.sh notifications NotificationCenter "$out/notifications-guest" tests/parts/notifications.sh
 run shell tests/part.sh "" "" "$out/shell" tests/shell.sh
 run shell-guest env OKAERI_GUEST=1 OKAERI_GALLERY=1 tests/part.sh "" "" "$out/shell-guest" tests/shell.sh
+run install tests/install.sh "$out/install"
 
 [ -z "$failed" ] || {
 	echo "failed:$failed"
