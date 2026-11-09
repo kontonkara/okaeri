@@ -4,7 +4,8 @@ import qs
 
 // A list to pick from, by the pointer or by the keys. `model` is an array, or
 // a ScriptModel of one, of { text, subtext, icon (of Theme.icons), image (a
-// source, with `icon` for one that won't load), check, more, mark (an icon at
+// source, with `icon` for one that won't load), glyph (a character in the icon's
+// place, as big), check, more, mark (an icon at
 // its end), enabled, separator }, all but `text` left out as needed; it can hold
 // anything else for whoever gets activated(index, entry). A right click says
 // menuAsked(index, entry). Text in it is never markup.
@@ -119,9 +120,20 @@ ListView {
 			visible: !row.modelData.separator
 			spacing: Theme.u(10)
 
+			Text {
+				anchors.verticalCenter: parent.verticalCenter
+				visible: !!row.modelData.glyph
+				width: list.iconSize
+				horizontalAlignment: Text.AlignHCenter
+				text: row.modelData.glyph || ""
+				textFormat: Text.PlainText
+				color: Theme.colors.text
+				font.pixelSize: list.iconSize * 0.85
+			}
+
 			Icon {
 				anchors.verticalCenter: parent.verticalCenter
-				visible: !!row.modelData.icon && !picture.visible
+				visible: !!row.modelData.icon && !picture.visible && !row.modelData.glyph
 				name: row.modelData.icon || ""
 				size: list.iconSize
 				color: Theme.colors.subtext

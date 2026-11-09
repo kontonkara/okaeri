@@ -699,6 +699,22 @@ sleep 0.3
 [ "$(jq -r .wallpaper.path "$own")" = "$work/walls/green field.png" ] || fail "the wallpaper: $(jq -r .wallpaper.path "$own")"
 is_closed "a wallpaper"
 
+# Emoji and symbols by their names: Enter types and copies one, and the panel goes.
+open
+type "/emoji grinning"
+sleep 0.3
+shot emoji-mode
+key Return
+wait_log "okaeri: dry: emoji"
+is_closed "an emoji"
+open
+type "/emoji euro"
+sleep 0.3
+shot symbol-mode
+[ "$(magick "$out/symbol-mode.png" "$out/emoji-mode.png" -compose difference -composite -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "the same for a symbol as for an emoji"
+key Escape
+is_closed "the symbols"
+
 # Weight in the wheel and the touchpad, over a list long enough for them.
 for number in $(seq 20); do
 	ipc entries add "long.$number" "Longlist $number" nosuchicon

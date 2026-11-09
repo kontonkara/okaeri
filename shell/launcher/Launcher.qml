@@ -8,8 +8,8 @@ import qs.ui
 
 // The app launcher: what's typed picks from the apps and Enter launches the
 // selected one, copies the answer to a sum, or goes to an open window or to the
-// session menu. A / in front asks for one kind of thing alone, and alone it says
-// which there are. A right click or Shift+Enter on an app shows what else it can
+// session menu. A / in front asks for one kind of thing alone, emoji among them,
+// and alone it says which there are. A right click or Shift+Enter on an app shows what else it can
 // do, in the list's place. The field keeps the keys, Up and Down reach the list
 // from it.
 Panel {
@@ -20,6 +20,7 @@ Panel {
 		{ mode: "calc", text: "Sums", subtext: "/calc and the sum, or the last ones", icon: "calculator" },
 		{ mode: "win", text: "Open windows", subtext: "/win", icon: "apps" },
 		{ mode: "wall", text: "Wallpapers", subtext: "/wall", icon: "image" },
+		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it, and copies it", icon: "text" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
 	// The app whose menu is in the list's place, if one is.
@@ -63,6 +64,15 @@ Panel {
 		return found;
 	}
 
+	function emoji(wanted) {
+		return Emoji.search(wanted, Apps.limit).map(([character, name]) => ({
+			emoji: character,
+			glyph: character,
+			text: name.replace(/ \(symbol\)$/, ""),
+			subtext: name.endsWith("(symbol)") ? "Symbol" : "Emoji"
+		}));
+	}
+
 	// What else `entry` can do.
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
@@ -95,6 +105,8 @@ Panel {
 			return windows(query);
 		case "wall":
 			return wallpapers(query);
+		case "emoji":
+			return emoji(query);
 		case "session":
 			return session(query);
 		}
@@ -295,6 +307,8 @@ Panel {
 					Calculator.copy(row.copy);
 				else if (row.wallpaper)
 					Settings.set("wallpaper", "path", row.wallpaper);
+				else if (row.emoji)
+					Emoji.put(row.emoji);
 				else
 					Apps.launch(row.entry);
 				launcher.hide();
