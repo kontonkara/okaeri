@@ -95,6 +95,18 @@ mkdir -p "$work/leds/input9::capslock" "$work/leds/input9::numlock"
 echo 0 >"$work/leds/input9::capslock/brightness"
 echo 0 >"$work/leds/input9::numlock/brightness"
 sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml"
+# External monitors are a test's own too, and so is what asks them.
+mkdir -p "$work/drm"
+cat >"$work/ddcutil" <<'SH'
+#!/bin/sh
+echo "$*" >>"${0%/*}/ddcutil.log"
+case "$*" in
+*getvcp*) echo "VCP 10 C 40 100" ;;
+esac
+SH
+chmod +x "$work/ddcutil"
+sed -i -e "s|^\treadonly property string drm: .*|\treadonly property string drm: \"$work/drm\"|" \
+	-e "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/ddcutil\"|" "$work/shell/services/Ddc.qml"
 # So do the machine's outputs and inputs: a test that wants some puts its own.
 sed -i -e 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' \
 	-e 's/^\treadonly property var inputs: .*/\tproperty var inputs: []/' "$work/shell/services/Audio.qml"

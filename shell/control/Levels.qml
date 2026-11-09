@@ -3,8 +3,8 @@ import qs
 import qs.services
 import qs.ui
 
-// The volume and the microphone, with a way to mute them, and the brightness when
-// there's one.
+// The volume and the microphone, with a way to mute them, the brightness when
+// there's one, and that of external monitors when Ddc has them.
 Card {
 	width: parent.width
 	padding: Theme.u(6)
@@ -37,6 +37,23 @@ Card {
 			Icon {
 				anchors.centerIn: parent
 				name: "sun"
+			}
+		}
+
+		Repeater {
+			model: Ddc.displays.filter(display => display.level >= 0)
+
+			Level {
+				required property var modelData
+
+				label: modelData.name
+				value: modelData.level / modelData.max
+				onMoved: wanted => Ddc.change(modelData, wanted)
+
+				Icon {
+					anchors.centerIn: parent
+					name: "sun"
+				}
 			}
 		}
 

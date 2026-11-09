@@ -36,7 +36,8 @@ the settings, and the media keys.
 
 It takes niri 26.04 or newer, Quickshell 0.3 or newer, and `cliphist`, `qalc`,
 `wl-clipboard`, `wtype`, `notify-send` and `pw-play` in `PATH`, `wlsunset` for the
-night light, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a clone of this repository, on
+night light, `ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours,
+and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a clone of this repository, on
 any distribution: `nix/` is a package and a Home Manager module for those who want
 them. In niri's config:
 

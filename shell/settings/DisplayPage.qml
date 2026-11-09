@@ -3,8 +3,8 @@ import qs
 import qs.services
 import qs.ui
 
-// How the night light warms the screens and when: it's turned on and off in the
-// control center.
+// How the night light warms the screens and when, which is turned on and off in
+// the control center, and whether external monitors' brightness is there too.
 Column {
 	id: page
 
@@ -144,4 +144,16 @@ Column {
 		}
 	}
 
+	Card {
+		width: parent.width
+		title: "External monitors"
+
+		Setting {
+			text: "Their brightness"
+			subtext: Ddc.available ? "In the control center, by DDC/CI: it needs /dev/i2c-* to be yours" : "It needs ddcutil, which isn't here"
+			enabled: Ddc.available
+			checked: Settings.display.ddc
+			onToggled: wanted => Settings.set("display", "ddc", wanted)
+		}
+	}
 }
