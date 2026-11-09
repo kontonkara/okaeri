@@ -34,65 +34,80 @@ Panel {
 		width: parent.width
 		active: controlCenter.visible
 
-		sourceComponent: Column {
-			// What's left of the screen for a list, under the bar and with
-			// everything else around it.
-			readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, input, playback, wifi, bluetooth, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
+		// Scrolled, where it's more than the screen has room for: a list in it has
+		// taken all it can by then.
+		sourceComponent: Flickable {
+			id: view
 
-			spacing: Math.round(Theme.u(10))
+			height: Math.min(column.height, controlCenter.room)
+			contentHeight: column.height
+			interactive: contentHeight > height
+			clip: interactive
+			boundsBehavior: Flickable.StopAtBounds
 
-			Levels {
-				id: levels
-			}
+			Column {
+				id: column
 
-			OutputSection {
-				id: output
+				// What's left of the screen for a list, under the bar and with
+				// everything else around it.
+				readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, input, playback, wifi, bluetooth, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
 
-				room: parent.room
-			}
+				width: view.width
+				spacing: Math.round(Theme.u(10))
 
-			InputSection {
-				id: input
+				Levels {
+					id: levels
+				}
 
-				room: parent.room
-			}
+				OutputSection {
+					id: output
 
-			PlaybackSection {
-				id: playback
-			}
+					room: parent.room
+				}
 
-			WifiSection {
-				id: wifi
+				InputSection {
+					id: input
 
-				room: parent.room
-			}
+					room: parent.room
+				}
 
-			BluetoothSection {
-				id: bluetooth
+				PlaybackSection {
+					id: playback
+				}
 
-				room: parent.room
-			}
+				WifiSection {
+					id: wifi
 
-			PowerSection {
-				id: power
+					room: parent.room
+				}
 
-				visible: !Settings.control.hidden.includes("power")
-			}
+				BluetoothSection {
+					id: bluetooth
 
-			AwakeSection {
-				id: awake
-			}
+					room: parent.room
+				}
 
-			Button {
-				id: more
+				PowerSection {
+					id: power
 
-				width: parent.width
-				flat: true
-				icon: "gear"
-				text: "Settings"
-				onClicked: {
-					controlCenter.hide();
-					Settings.asked();
+					visible: !Settings.control.hidden.includes("power")
+				}
+
+				AwakeSection {
+					id: awake
+				}
+
+				Button {
+					id: more
+
+					width: parent.width
+					flat: true
+					icon: "gear"
+					text: "Settings"
+					onClicked: {
+						controlCenter.hide();
+						Settings.asked();
+					}
 				}
 			}
 		}
