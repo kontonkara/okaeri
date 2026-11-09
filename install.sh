@@ -109,6 +109,7 @@ package() {
 		*) echo pipewire ;;
 		esac
 		;;
+	wlsunset) echo wlsunset ;;
 	sounds) echo sound-theme-freedesktop ;;
 	esac
 }
@@ -137,7 +138,7 @@ sounds_there() {
 	return 1
 }
 missing() {
-	for command in quickshell niri cliphist qalc wl-copy wtype notify-send pw-play; do
+	for command in quickshell niri cliphist qalc wl-copy wtype notify-send pw-play wlsunset; do
 		has "$command" || echo "$command"
 	done
 	sounds_there || echo sounds

@@ -24,9 +24,10 @@ clipboard_y=368
 notifications_y=406
 sounds_y=444
 osd_y=482
-wallpaper_y=520
-look_y=558
-session_y=596
+display_y=520
+wallpaper_y=558
+look_y=596
+session_y=634
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -544,6 +545,40 @@ move "$switch_x" 622
 click
 sleep 0.3
 same "what has none" "$(value .osd.hidden)" '["locks"]'
+
+step "The display's page"
+page "$display_y"
+shot display-page
+arrow "$higher_x" 259
+sleep 0.3
+same "when the night light is" "$(value .nightLight.mode)" '"schedule"'
+arrow "$higher_x" 309
+sleep 0.3
+same "how warm" "$(value .nightLight.temperature)" 4500
+# A time that isn't one stays out.
+move 994 359
+click
+wtype -M ctrl a -m ctrl
+type '25:00'
+key Return
+sleep 0.3
+same "a time that isn't" "$(value .nightLight.from)" null
+wtype -M ctrl a -m ctrl
+type '21:30'
+key Return
+sleep 0.3
+same "from when" "$(value .nightLight.from)" '"21:30"'
+arrow "$higher_x" 259
+sleep 0.3
+same "by the sun" "$(value .nightLight.mode)" '"sun"'
+move 994 359
+click
+wtype -M ctrl a -m ctrl
+type '52.5'
+key Return
+sleep 0.3
+same "the latitude" "$(value .nightLight.latitude)" 52.5
+shot display-sun
 
 step "How it looks"
 page "$look_y"

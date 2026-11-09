@@ -129,12 +129,12 @@ for tool in sh awk sed grep cp mv rm mkdir ln cat readlink dirname find tar gzip
 done
 printf 'ID=cachyos\nID_LIKE=arch\n' >"$home/os-release"
 PATH=$tools XDG_DATA_DIRS=$home/nothing OKAERI_OS_RELEASE=$home/os-release run arch "$tools/sh" "$repo/install.sh"
-grep -qxF 'Later, with: sudo pacman -S --needed niri cliphist libqalculate wl-clipboard wtype libnotify pipewire sound-theme-freedesktop' "$out/arch.log" ||
+grep -qxF 'Later, with: sudo pacman -S --needed niri cliphist libqalculate wl-clipboard wtype libnotify pipewire wlsunset sound-theme-freedesktop' "$out/arch.log" ||
 	fail "not the packages to get: $(grep -i 'with:' "$out/arch.log")"
 printf 'ID=fedora\n' >"$home/os-release"
 PATH=$tools XDG_DATA_DIRS=$home/nothing OKAERI_OS_RELEASE=$home/os-release run fedora "$tools/sh" "$repo/install.sh" uninstall
 PATH=$tools XDG_DATA_DIRS=$home/nothing OKAERI_OS_RELEASE=$home/os-release run fedora "$tools/sh" "$repo/install.sh"
-grep -qxF 'Later, with: sudo dnf install niri cliphist qalculate wl-clipboard wtype libnotify pipewire-utils sound-theme-freedesktop' "$out/fedora.log" ||
+grep -qxF 'Later, with: sudo dnf install niri cliphist qalculate wl-clipboard wtype libnotify pipewire-utils wlsunset sound-theme-freedesktop' "$out/fedora.log" ||
 	fail "not Fedora's packages: $(grep -i 'with:' "$out/fedora.log")"
 PATH=$tools run last "$tools/sh" "$repo/install.sh" uninstall
 

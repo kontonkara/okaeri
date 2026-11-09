@@ -22,6 +22,7 @@ FloatingWindow {
 		{ text: "Notifications", icon: "bell", page: notificationsPage },
 		{ text: "Sounds", icon: "volume", page: soundsPage },
 		{ text: "On-screen display", icon: "osd", page: osdPage },
+		{ text: "Display", icon: "sunset", page: displayPage },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
 		{ text: "Look", icon: "eye", page: lookPage },
 		{ text: "Session", icon: "lock", page: sessionPage }
@@ -163,6 +164,12 @@ FloatingWindow {
 		id: soundsPage
 
 		SoundsPage {}
+	}
+
+	Component {
+		id: displayPage
+
+		DisplayPage {}
 	}
 
 	Component {

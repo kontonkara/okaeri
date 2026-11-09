@@ -89,6 +89,15 @@
 		"empty": true,
 		"reverse": false
 	},
+	"nightLight": {
+		"on": false,
+		"mode": "always",
+		"temperature": 4000,
+		"from": "20:00",
+		"until": "07:00",
+		"latitude": 0,
+		"longitude": 0
+	},
 	"system": {
 		"cpu": true,
 		"memory": true,
