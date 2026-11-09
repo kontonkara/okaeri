@@ -10,11 +10,33 @@ Work in progress, and in daily use: the bar, the launcher, the control center,
 notifications, the clipboard's history, the on-screen display, the polkit dialog,
 the session menu, idling, the wallpaper and a settings window for all of that.
 
-## Running it
+## Installing it
 
-It takes niri 26.04 or newer, Quickshell, and `cliphist`, `qalc`, `wl-clipboard`,
-`wtype`, `notify-send` and `pw-play` in `PATH`, and the freedesktop sound theme for sounds.
-`bin/okaeri` runs it from a clone of this repository, on
+On any distribution, in one go:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kontonkara/okaeri/main/install.sh | sh
+```
+
+and away again, settings too if you say so:
+
+```sh
+~/.local/share/okaeri/install.sh uninstall
+```
+
+It puts okaeri in `~/.local/share/okaeri`, offers to get what it needs from your
+package manager, and puts two includes at the top of niri's config, between
+`okaeri` marks: its start and its keys, which yours override, and what the shell
+needs of niri. Another bar that niri starts it offers to turn off, till okaeri goes.
+Running it again updates it. The keys are Mod+Space for the launcher, Mod+Alt+V
+for the clipboard, Mod+Shift+Escape for the session menu and Mod+Shift+Comma for
+the settings, and the media keys.
+
+## Running it by hand
+
+It takes niri 26.04 or newer, Quickshell 0.3 or newer, and `cliphist`, `qalc`,
+`wl-clipboard`, `wtype`, `notify-send` and `pw-play` in `PATH`, and the freedesktop
+sound theme for sounds. `bin/okaeri` runs it from a clone of this repository, on
 any distribution: `nix/` is a package and a Home Manager module for those who want
 them. In niri's config:
 

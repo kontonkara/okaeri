@@ -32,4 +32,5 @@ fi
 export mesa_glthread=false GALLIUM_THREAD=0
 
 export QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl
-exec quickshell -p "$shell"
+# One at a time: started again, as niri and an install may both do, it leaves it.
+exec quickshell -n -p "$shell"
