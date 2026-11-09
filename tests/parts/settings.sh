@@ -35,7 +35,7 @@ middle_y=374
 right_y=497
 right2_y=533
 off_y=620
-off_gap_y=659
+off_gap_y=660
 field_y=217
 picture_y=299
 lower_x=948
@@ -112,6 +112,11 @@ shot drawer-off
 [ "$(knob drawer-off "$drawer_y")" != "$on" ] || fail "the switch didn't follow"
 
 step "A part held"
+# The bar as it was laid out when these were written, whatever the defaults are now.
+printf '{ "tray": { "drawer": true }, "bar": { "left": ["workspaces", "media"], "center": ["clock"], "right": ["cast", "units", "tray", "notifications", "clipboard", "battery", "control"] } }\n' >"$config.new"
+chmod 644 "$config"
+mv "$config.new" "$config"
+sleep 0.5
 page "$bar_y"
 move 554 "$middle_y"
 hold

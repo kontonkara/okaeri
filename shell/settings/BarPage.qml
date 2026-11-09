@@ -23,6 +23,7 @@ Flickable {
 		media: "Media",
 		network: "Network",
 		notifications: "Notifications",
+		privacy: "Microphone and camera",
 		system: "System load",
 		title: "Window title",
 		tray: "Tray",
@@ -255,7 +256,7 @@ Flickable {
 				}
 
 				Note {
-					text: "A click on a part shows its settings. Media, Bluetooth, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+					text: "A click on a part shows its settings. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
 				}
 			}
 
