@@ -555,6 +555,10 @@ same "what has none" "$(value .osd.hidden)" '["locks"]'
 step "The display's page"
 page "$display_y"
 shot display-page
+move "$switch_x" 410
+click
+sleep 0.3
+same "external monitors' brightness" "$(value .display.ddc)" true
 arrow "$higher_x" 259
 sleep 0.3
 same "when the night light is" "$(value .nightLight.mode)" '"schedule"'

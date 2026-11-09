@@ -791,8 +791,32 @@ sleep 0.7
 key Escape
 sleep 0.4
 
+# External monitors: one on a GPU that's awake, which gets a slider, and one on a
+# GPU that sleeps, which isn't asked, as asking would wake it.
+for card in 1 2; do
+	mkdir -p "$work/drm/card$card/device/power" "$work/drm/card$card-DP-$card"
+	echo connected >"$work/drm/card$card-DP-$card/status"
+	ln -s "../../i2c-$((card + 6))" "$work/drm/card$card-DP-$card/ddc"
+done
+echo active >"$work/drm/card1/device/power/runtime_status"
+echo suspended >"$work/drm/card2/device/power/runtime_status"
+printf '{ "display": { "ddc": true } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 30); do
+	grep -q 'getvcp' "$work/ddcutil.log" 2>/dev/null && break
+	sleep 0.1
+done
+grep -qF -- '--bus 7 --brief getvcp 10' "$work/ddcutil.log" || fail "the monitor wasn't asked: $(cat "$work/ddcutil.log" 2>/dev/null)"
+! grep -qF -- '--bus 8' "$work/ddcutil.log" || fail "a monitor on a sleeping GPU was asked"
+toggle
+sleep 0.4
+shot ddc
+# Its slider: what it's moved to goes out once it rests.
+when 'dry: ddc DP-1' at 1200 158
+key Escape
+sleep 0.4
+
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

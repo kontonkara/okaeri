@@ -97,6 +97,9 @@
 		"units": "celsius",
 		"bar": false
 	},
+	"display": {
+		"ddc": false
+	},
 	"nightLight": {
 		"on": false,
 		"mode": "always",
