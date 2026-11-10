@@ -247,6 +247,7 @@ Scope {
 		property bool enabled: true
 		property int state: BluetoothAdapterState.Enabled
 		property bool discovering: false
+		property bool pairable: false
 		readonly property QtObject devices: QtObject {
 			property var values: [tag, speaker, watch, keyboard, buds]
 		}
@@ -360,6 +361,11 @@ Scope {
 
 		function pairing(name: string, on: bool): void {
 			probe.device(name).pairing = on;
+		}
+
+		// How many didn't pair the last time.
+		function failedPairs(): int {
+			return Bt.failed.length;
 		}
 
 		function paired(name: string, on: bool): void {
@@ -597,15 +603,18 @@ sleep 0.2
 when 'dry: bluetooth forget' at $forget_x "$(bt_row 1)"
 
 # Two pairings at once each end in connecting, with `paired` coming before the
-# end of the pairing or after it.
-when 'dry: bluetooth pair' at $row_x "$(bt_row 2)"
+# end of the pairing or after it. Meanwhile the adapter is pairable, with an
+# agent, and then it's as it was.
+when 'dry: bluetooth pairable true' at $row_x "$(bt_row 2)"
+wait_log 'dry: bluetooth agent'
 when 'dry: bluetooth pair' at $row_x "$(bt_row 3)"
 ipc probe pairing Speaker true
 ipc probe pairing Watch true
 when 'dry: bluetooth trust and connect' ipc probe paired Speaker true
 ipc probe pairing Speaker false
 ipc probe pairing Watch false
-when 'dry: bluetooth trust and connect' ipc probe paired Watch true
+when 'dry: bluetooth pairable false' ipc probe paired Watch true
+[ "$(seen 'dry: bluetooth trust and connect')" = 2 ] || fail "not both connected after pairing"
 
 # One that failed is over: if something else pairs it later, that's not ours.
 ipc probe paired Watch false
@@ -614,7 +623,17 @@ when 'dry: bluetooth pair' at $row_x "$(bt_row 3)"
 ipc probe pairing Watch true
 ipc probe pairing Watch false
 sleep 3.2
+[ "$(ipc probe failedPairs)" = 1 ] || fail "a pairing that failed isn't said: $(ipc probe failedPairs)"
+shot bt-failed
 never 'dry: bluetooth trust and connect' ipc probe paired Watch true
+# Tried again, it's not one that failed any more.
+ipc probe paired Watch false
+sleep 0.2
+when 'dry: bluetooth pair' at $row_x "$(bt_row 3)"
+[ "$(ipc probe failedPairs)" = 0 ] || fail "a new try still says it failed"
+ipc probe pairing Watch true
+ipc probe pairing Watch false
+sleep 3.2
 
 # Off, one and then the other: folded, and no scan or discovery while off.
 when 'dry: wifi scan false' ipc probe wifi false
@@ -816,7 +835,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
