@@ -16,6 +16,8 @@
 		"label": "percent"
 	},
 	"control": {
+		"tiles": ["wifi", "bluetooth", "night", "awake", "power"],
+		"wide": [],
 		"hidden": []
 	},
 	"launcher": {

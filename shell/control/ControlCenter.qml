@@ -176,101 +176,126 @@ Panel {
 					visible: !column.paging
 				}
 
-				// Two to a row, and one left over takes the whole of its row.
+				// The tiles in their order, two to a row but for a wide one and one left
+				// alone in its row.
 				Flow {
 					id: tiles
 
-					readonly property var shown: [wifiTile, bluetoothTile, nightTile, awakeTile, powerTile].filter(tile => tile.visible)
+					// Those that apply here, and aren't left out.
+					readonly property var shown: Control.order.filter(name => !Settings.control.hidden.includes(name) && wanted(name))
+					readonly property var whole: Control.whole(shown)
 
-					function widthOf(tile) {
-						return shown.length % 2 === 1 && shown[shown.length - 1] === tile ? width : (width - spacing) / 2;
+					function wanted(name) {
+						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
 					visible: !column.paging
 					spacing: Theme.u(8)
 
-					Tile {
+					Repeater {
+						model: tiles.shown
+
+						Loader {
+							required property string modelData
+
+							width: tiles.whole[modelData] ? tiles.width : (tiles.width - tiles.spacing) / 2
+							sourceComponent: ({
+									wifi: wifiTile,
+									bluetooth: bluetoothTile,
+									night: nightTile,
+									awake: awakeTile,
+									power: powerTile
+								})[modelData]
+						}
+					}
+
+					Component {
 						id: wifiTile
 
-						width: tiles.widthOf(wifiTile)
-						name: "wifi"
-						wanted: !!Wifi.device
-						icon: Wifi.enabled ? "wifi" : "wifiOff"
-						title: "Wi-Fi"
-						summary: wifi.summary
-						checked: Wifi.enabled
-						canSwitch: !Wifi.blocked
-						opens: "wifi"
-						onToggled: wanted => Wifi.setEnabled(wanted)
+						Tile {
+							name: "wifi"
+							wanted: !!Wifi.device
+							icon: Wifi.enabled ? "wifi" : "wifiOff"
+							title: "Wi-Fi"
+							summary: wifi.summary
+							checked: Wifi.enabled
+							canSwitch: !Wifi.blocked
+							opens: "wifi"
+							onToggled: wanted => Wifi.setEnabled(wanted)
+						}
 					}
 
-					Tile {
+					Component {
 						id: bluetoothTile
 
-						width: tiles.widthOf(bluetoothTile)
-						name: "bluetooth"
-						wanted: !!Bt.adapter
-						icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
-						title: "Bluetooth"
-						summary: bluetooth.summary
-						checked: Bt.enabled
-						canSwitch: !Bt.blocked
-						opens: "bluetooth"
-						onToggled: wanted => Bt.setEnabled(wanted)
+						Tile {
+							name: "bluetooth"
+							wanted: !!Bt.adapter
+							icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
+							title: "Bluetooth"
+							summary: bluetooth.summary
+							checked: Bt.enabled
+							canSwitch: !Bt.blocked
+							opens: "bluetooth"
+							onToggled: wanted => Bt.setEnabled(wanted)
+						}
 					}
 
-					Tile {
+					Component {
 						id: nightTile
 
-						width: tiles.widthOf(nightTile)
-						name: "night"
-						icon: "sunset"
-						title: "Night light"
-						summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : "Off"
-						checked: NightLight.on && NightLight.available
-						canSwitch: NightLight.available
-						takesWheel: true
-						onToggled: wanted => NightLight.set(wanted)
-						onScrolled: steps => NightLight.step(-steps)
+						Tile {
+							name: "night"
+							icon: "sunset"
+							title: "Night light"
+							summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : "Off"
+							checked: NightLight.on && NightLight.available
+							canSwitch: NightLight.available
+							takesWheel: true
+							onToggled: wanted => NightLight.set(wanted)
+							onScrolled: steps => NightLight.step(-steps)
+						}
 					}
 
-					Tile {
+					Component {
 						id: awakeTile
 
-						width: tiles.widthOf(awakeTile)
-						name: "awake"
-						icon: "coffee"
-						title: "Keep awake"
-						summary: !Awake.on ? "Off" : Awake.label || "It won't lock or dim"
-						checked: Awake.on
-						takesWheel: true
-						onToggled: wanted => Awake.set(wanted, 0)
-						onScrolled: steps => Awake.step(steps)
+						Tile {
+							name: "awake"
+							icon: "coffee"
+							title: "Keep awake"
+							summary: !Awake.on ? "Off" : Awake.label || "It won't lock or dim"
+							checked: Awake.on
+							takesWheel: true
+							onToggled: wanted => Awake.set(wanted, 0)
+							onScrolled: steps => Awake.step(steps)
+						}
 					}
 
-					Tile {
+					Component {
 						id: powerTile
 
-						readonly property int at: Power.choices.findIndex(choice => choice.profile === Power.profile)
+						Tile {
+							readonly property int at: Power.choices.findIndex(choice => choice.profile === Power.profile)
 
-						// Along the profiles, round to the first again.
-						function turn(steps) {
-							const count = Power.choices.length;
-							Power.set(Power.choices[((at + steps) % count + count) % count].profile);
+							// Along the profiles, round to the first again.
+							function turn(steps) {
+								const count = Power.choices.length;
+								Power.set(Power.choices[((at + steps) % count + count) % count].profile);
+							}
+
+							name: "power"
+							wanted: Power.choices.length > 1
+							icon: "bolt"
+							title: "Power"
+							summary: Power.choices[at]?.text ?? ""
+							checked: Power.profile !== PowerProfile.Balanced
+							switches: false
+							takesWheel: true
+							onClicked: turn(1)
+							onScrolled: steps => turn(-steps)
 						}
-
-						width: tiles.widthOf(powerTile)
-						name: "power"
-						wanted: Power.choices.length > 1
-						icon: "bolt"
-						title: "Power"
-						summary: Power.choices[at]?.text ?? ""
-						checked: Power.profile !== PowerProfile.Balanced
-						switches: false
-						takesWheel: true
-						onClicked: turn(1)
-						onScrolled: steps => turn(-steps)
 					}
 				}
 
