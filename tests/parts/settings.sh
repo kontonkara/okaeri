@@ -397,13 +397,20 @@ same "the warning, two up" "$(value .battery.warning)" 25
 step "The control center's page"
 page "$control_y"
 shot control-page
-move "$switch_x" 254
-click
-sleep 0.3
+# Wi-Fi, the first tile, to Hidden; the rest move up a place.
+drag 656 254 600 430
 same "what's left out" "$(value .control.hidden)" '["wifi"]'
+same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","wifi"]'
+# Bluetooth, now first, to a whole row, which takes Hidden a row down.
+move 656 254
 click
 sleep 0.3
+arrow "$higher_x" 533
+same "a whole row" "$(value .control.wide)" '["bluetooth"]'
+shot control-wide
+drag 594 437 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
+same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power"]'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"
@@ -549,8 +556,8 @@ search() {
 	type "$1"
 	sleep 0.5
 }
-search night
-shot search-night
+search awake
+shot search-awake
 key Return
 sleep 0.8
 same "the page found" "$(ipc settings shown)" "Control center"
