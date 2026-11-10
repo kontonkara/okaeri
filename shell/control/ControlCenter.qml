@@ -62,8 +62,19 @@ Panel {
 			height: Math.min(column.height, controlCenter.room)
 			contentHeight: column.height
 			interactive: contentHeight > height
-			clip: interactive
+			// While a page comes in sideways, nothing of it shows past the panel.
+			clip: true
 			boundsBehavior: Flickable.StopAtBounds
+
+			// The panel grows and shrinks to what's in it, not at once.
+			Behavior on height {
+				enabled: Theme.animate
+
+				NumberAnimation {
+					duration: 200
+					easing.type: Easing.OutCubic
+				}
+			}
 
 			Column {
 				id: column
@@ -73,6 +84,44 @@ Panel {
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
+				transform: Translate {
+					id: sliding
+				}
+
+				// A page comes in from the side the panel is on, and the tiles from
+				// the other as it goes.
+				Connections {
+					target: Control
+
+					function onUnfoldedChanged() {
+						if (!Theme.animate || !controlCenter.shown)
+							return;
+						const side = controlCenter.align === "top-left" ? -1 : 1;
+						sliding.x = (Control.unfolded !== "" ? side : -side) * Theme.u(32);
+						column.opacity = 0;
+						arriving.restart();
+					}
+				}
+
+				ParallelAnimation {
+					id: arriving
+
+					NumberAnimation {
+						target: sliding
+						property: "x"
+						to: 0
+						duration: 220
+						easing.type: Easing.OutCubic
+					}
+
+					NumberAnimation {
+						target: column
+						property: "opacity"
+						to: 1
+						duration: 180
+						easing.type: Easing.OutCubic
+					}
+				}
 
 				Item {
 					width: parent.width
@@ -127,19 +176,24 @@ Panel {
 					visible: !column.paging
 				}
 
-				Grid {
+				// Two to a row, and one left over takes the whole of its row.
+				Flow {
 					id: tiles
 
-					readonly property real tileWidth: (width - columnSpacing) / 2
+					readonly property var shown: [wifiTile, bluetoothTile, nightTile, awakeTile, powerTile].filter(tile => tile.visible)
+
+					function widthOf(tile) {
+						return shown.length % 2 === 1 && shown[shown.length - 1] === tile ? width : (width - spacing) / 2;
+					}
 
 					width: parent.width
 					visible: !column.paging
-					columns: 2
-					columnSpacing: Theme.u(8)
-					rowSpacing: Theme.u(8)
+					spacing: Theme.u(8)
 
 					Tile {
-						width: tiles.tileWidth
+						id: wifiTile
+
+						width: tiles.widthOf(wifiTile)
 						name: "wifi"
 						wanted: !!Wifi.device
 						icon: Wifi.enabled ? "wifi" : "wifiOff"
@@ -152,7 +206,9 @@ Panel {
 					}
 
 					Tile {
-						width: tiles.tileWidth
+						id: bluetoothTile
+
+						width: tiles.widthOf(bluetoothTile)
 						name: "bluetooth"
 						wanted: !!Bt.adapter
 						icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
@@ -165,7 +221,9 @@ Panel {
 					}
 
 					Tile {
-						width: tiles.tileWidth
+						id: nightTile
+
+						width: tiles.widthOf(nightTile)
 						name: "night"
 						icon: "sunset"
 						title: "Night light"
@@ -178,7 +236,9 @@ Panel {
 					}
 
 					Tile {
-						width: tiles.tileWidth
+						id: awakeTile
+
+						width: tiles.widthOf(awakeTile)
 						name: "awake"
 						icon: "coffee"
 						title: "Keep awake"
@@ -190,6 +250,8 @@ Panel {
 					}
 
 					Tile {
+						id: powerTile
+
 						readonly property int at: Power.choices.findIndex(choice => choice.profile === Power.profile)
 
 						// Along the profiles, round to the first again.
@@ -198,7 +260,7 @@ Panel {
 							Power.set(Power.choices[((at + steps) % count + count) % count].profile);
 						}
 
-						width: tiles.tileWidth
+						width: tiles.widthOf(powerTile)
 						name: "power"
 						wanted: Power.choices.length > 1
 						icon: "bolt"

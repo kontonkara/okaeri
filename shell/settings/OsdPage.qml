@@ -3,7 +3,7 @@ import qs
 import qs.ui
 
 // Where the on-screen display comes up, for how long, and what it's for.
-Column {
+Flickable {
 	id: page
 
 	readonly property var kinds: [
@@ -19,53 +19,66 @@ Column {
 		Settings.set("osd", "hidden", wanted ? others : others.concat([name]));
 	}
 
-	spacing: Math.round(Theme.u(10))
+	contentHeight: column.height
+	clip: true
+	boundsBehavior: Flickable.StopAtBounds
 
-	Card {
-		width: parent.width
-
-		Pick {
-			text: "Where"
-			subtext: "On the screen in focus"
-			options: [
-				{ value: "bottom", text: "At the bottom" },
-				{ value: "middle", text: "In the middle" },
-				{ value: "top", text: "At the top" }
-			]
-			value: Settings.osd.position
-			onChosen: value => Settings.set("osd", "position", value)
-		}
-
-		Choice {
-			text: "For how long"
-			subtext: "From the last change"
-			values: [1, 1.5, 2, 3, 5]
-			value: Settings.osd.duration
-			onChosen: value => Settings.set("osd", "duration", value)
-		}
-
-		Setting {
-			text: "The level in numbers"
-			subtext: "Beside the slider"
-			checked: Settings.osd.percent
-			onToggled: wanted => Settings.set("osd", "percent", wanted)
-		}
+	Glide {
+		view: page
 	}
 
-	Card {
-		width: parent.width
-		title: "What has one"
+	Column {
+		id: column
 
-		Repeater {
-			model: page.kinds
+		width: parent.width
+		spacing: Math.round(Theme.u(10))
+
+		Card {
+			width: parent.width
+
+			Pick {
+				text: "Where"
+				subtext: "On the screen in focus"
+				options: [
+					{ value: "bottom", text: "At the bottom" },
+					{ value: "middle", text: "In the middle" },
+					{ value: "top", text: "At the top" }
+				]
+				value: Settings.osd.position
+				onChosen: value => Settings.set("osd", "position", value)
+			}
+
+			Choice {
+				text: "For how long"
+				subtext: "From the last change"
+				values: [1, 1.5, 2, 3, 5]
+				value: Settings.osd.duration
+				onChosen: value => Settings.set("osd", "duration", value)
+			}
 
 			Setting {
-				required property var modelData
+				text: "The level in numbers"
+				subtext: "Beside the slider"
+				checked: Settings.osd.percent
+				onToggled: wanted => Settings.set("osd", "percent", wanted)
+			}
+		}
 
-				text: modelData.text
-				subtext: modelData.subtext ?? ""
-				checked: !Settings.osd.hidden.includes(modelData.name)
-				onToggled: wanted => page.show(modelData.name, wanted)
+		Card {
+			width: parent.width
+			title: "What has one"
+
+			Repeater {
+				model: page.kinds
+
+				Setting {
+					required property var modelData
+
+					text: modelData.text
+					subtext: modelData.subtext ?? ""
+					checked: !Settings.osd.hidden.includes(modelData.name)
+					onToggled: wanted => page.show(modelData.name, wanted)
+				}
 			}
 		}
 	}

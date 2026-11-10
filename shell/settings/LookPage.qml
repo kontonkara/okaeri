@@ -27,7 +27,7 @@ Flickable {
 
 			Setting {
 				text: "Blur behind panels"
-				subtext: "And behind this window"
+				subtext: "And behind this window and the on-screen display"
 				checked: Theme.blur
 				onToggled: wanted => Theme.set("blur", wanted)
 			}

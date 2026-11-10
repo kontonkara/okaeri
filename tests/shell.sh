@@ -287,7 +287,7 @@ shot settings-open
 [ "$(magick "$out/no-control.png" "$out/settings-open.png" -compose difference -composite \
 	-crop 1x700+700+100 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no settings in the middle"
 [ "$(magick "$out/no-control.png" "$out/settings-open.png" -compose difference -composite \
-	-crop 300x100+1060+60 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 0 ] || fail "the control center stayed"
+	-crop 160x100+1220+60 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 0 ] || fail "the control center stayed"
 key Escape
 sleep 0.3
 [ "$(settings_up)" = 0 ] || fail "the settings after Escape"
@@ -525,13 +525,14 @@ if [ "${OKAERI_GUEST:-}" != 1 ]; then
 	glimpse control wallpaper-glass
 	[ "$(bright wallpaper-glass 1036 50)" = 0 ] || fail "a window in the blur with no rule for it"
 	settings_glimpse wallpaper-settings
-	[ "$(bright wallpaper-settings 420 600)" = 0 ] || fail "a window in the settings' blur with no rule for it"
+	# Under its pages, where the window has nothing on it.
+	[ "$(bright wallpaper-settings 300 700)" = 0 ] || fail "a window in the settings' blur with no rule for it"
 	theme '{"blur":true,"realBlur":true}'
 	sleep 1.5
 	glimpse control window-glass
 	[ "$(bright window-glass 1036 50)" -gt 8 ] || fail "no window in the blur: niri didn't take the rules"
 	settings_glimpse window-settings
-	[ "$(bright window-settings 420 600)" -gt 8 ] || fail "no window in the settings' blur"
+	[ "$(bright window-settings 300 700)" -gt 8 ] || fail "no window in the settings' blur"
 	kill "$under"
 	wait "$under" 2>/dev/null || true
 	sleep 0.4
