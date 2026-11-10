@@ -92,6 +92,7 @@ PanelWindow {
 	mask: Region {}
 	WlrLayershell.layer: WlrLayer.Overlay
 	WlrLayershell.namespace: "okaeri-osd"
+	BackgroundEffect.blurRegion: Theme.blur && shown ? glass : null
 	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
 	// quickshell ipc call -- osd show volume 0.5, the kind one of `icons`.
@@ -167,13 +168,27 @@ PanelWindow {
 		onTriggered: osd.shown = false
 	}
 
+	// What the card covers, a pixel in from its edge, for the blur behind it.
+	Region {
+		id: glass
+
+		x: 1
+		y: Math.round(card.y + slide.y) + 1
+		width: card.width - 2
+		height: card.height - 2
+		radius: card.radius
+	}
+
 	Card {
 		id: card
 
 		y: osd.fromTop ? osd.rise : 0
-		color: Theme.colors.background
+		// As a panel is: see-through and blurred, where the theme has that.
+		color: Theme.panel
 		opacity: osd.shown ? 1 : 0
 		transform: Translate {
+			id: slide
+
 			y: osd.shown ? 0 : osd.fromTop ? -osd.rise : osd.rise
 
 			Behavior on y {

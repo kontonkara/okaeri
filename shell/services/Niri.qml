@@ -76,10 +76,16 @@ layer-rule {
 	match namespace="^okaeri-toasts$"
 	block-out-from "screencast"
 }
+
+window-rule {
+	match app-id="^org[.]quickshell$" title="^Settings$"
+	open-floating true
+}
 ${Theme.realBlur ? `
 layer-rule {
 	match namespace="^okaeri-panel$"
 	match namespace="^okaeri-toasts$"
+	match namespace="^okaeri-osd$"
 	background-effect {
 		xray false
 	}

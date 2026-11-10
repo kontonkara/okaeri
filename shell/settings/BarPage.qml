@@ -57,8 +57,17 @@ Flickable {
 	property string held
 	property var moved: null
 	readonly property var shown: moved ?? settled
-	// The part whose settings show.
+	// The part whose settings show, and the settings of those that have any here.
 	property string chosen
+	readonly property var partSettings: ({
+			clock: clockSettings,
+			workspaces: workspaceSettings,
+			battery: batterySettings,
+			media: mediaSettings,
+			network: networkSettings,
+			system: systemSettings,
+			bluetooth: bluetoothSettings
+		})
 	// The screens there are, and those left without a bar that aren't there now.
 	readonly property var screens: {
 		const there = Quickshell.screens.map(screen => ({
@@ -326,15 +335,7 @@ Flickable {
 
 			Loader {
 				width: parent.width
-				sourceComponent: ({
-						clock: clockSettings,
-						workspaces: workspaceSettings,
-						battery: batterySettings,
-						media: mediaSettings,
-						network: networkSettings,
-						system: systemSettings,
-						bluetooth: bluetoothSettings
-					})[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
+				sourceComponent: page.partSettings[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
 			}
 		}
 

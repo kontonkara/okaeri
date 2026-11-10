@@ -14,20 +14,22 @@ same() {
 
 own=$XDG_STATE_HOME/okaeri/settings.json
 config=$XDG_CONFIG_HOME/okaeri/settings.json
-# 1400x900: the pages, the drawer's switch, the rows of the lanes and the pictures.
+# 1400x900: the search, the pages under it, the drawer's switch, the rows of the
+# lanes and the pictures.
 menu_x=420
-bar_y=216
-tray_y=254
-control_y=292
-launcher_y=330
-clipboard_y=368
-notifications_y=406
-sounds_y=444
-osd_y=482
-display_y=520
-wallpaper_y=558
-look_y=596
-session_y=634
+search_y=216
+bar_y=257
+tray_y=295
+control_y=333
+launcher_y=371
+clipboard_y=409
+notifications_y=447
+sounds_y=485
+osd_y=523
+display_y=561
+wallpaper_y=599
+look_y=637
+session_y=675
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -90,6 +92,10 @@ folder() {
 	key Return
 	sleep 0.5
 }
+
+# The window at the size these were written for, as if it was made that once.
+mkdir -p "$XDG_STATE_HOME/okaeri"
+printf '{"width":760,"height":564}\n' >"$XDG_STATE_HOME/okaeri/settings-window.json"
 
 step "A config that can't be written"
 printf '{ "tray": { "drawer": true } }\n' >"$config"
@@ -436,6 +442,16 @@ sleep 0.3
 same "Enter pastes" "$(value .clipboard.paste)" true
 arrow "$higher_x" 284
 same "the rows" "$(value .clipboard.rows)" 200
+# The wheel on a line goes along the list, and stops at its end.
+move 700 284
+wheel 1
+same "the rows, by the wheel" "$(value .clipboard.rows)" 500
+wheel -2
+same "the rows, two notches down" "$(value .clipboard.rows)" 100
+wheel -9
+same "the rows at the end of the list" "$(value .clipboard.rows)" 50
+arrow "$lower_x" 284
+same "the rows past that" "$(value .clipboard.rows)" 50
 arrow "$lower_x" 334
 same "the history" "$(value .clipboard.keep)" 500
 
@@ -524,6 +540,67 @@ wait_up 1
 sleep 0.4
 page "$tray_y"
 
+step "A search"
+# Every page's lines and cards, and the bar's parts' too: Enter goes to the
+# first found, on its page, its part chosen for it.
+search() {
+	move "$menu_x" "$search_y"
+	click
+	type "$1"
+	sleep 0.5
+}
+search night
+shot search-night
+key Return
+sleep 0.8
+same "the page found" "$(ipc settings shown)" "Control center"
+shot search-found
+search seconds
+key Return
+sleep 1.2
+same "the page of a part's line" "$(ipc settings shown)" Bar
+shot search-part
+# Escape empties the field first, and leaves the window there.
+search nothing-of-the-kind
+shot search-nothing
+key Escape
+sleep 0.3
+same "the window, after Escape in the search" "$(up)" 1
+shot search-emptied
+[ "$(magick "$out/search-nothing.png" "$out/search-emptied.png" -compose difference -composite -crop 180x400+330+200 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "Escape left what was looked for"
+page "$tray_y"
+
+step "Its size"
+window_size() {
+	niri msg --json windows | jq -r '[.[] | select(.title == "Settings")][0].layout.window_size | join("x")'
+}
+same "floating" "$(niri msg --json windows | jq '[.[] | select(.title == "Settings")][0].is_floating')" true
+same "its size" "$(window_size)" 760x564
+# Made another size, it keeps that, and has it again the next time.
+niri msg action set-window-width 900
+niri msg action set-window-height 600
+sleep 1
+same "the size kept" "$(jq -c . "$XDG_STATE_HOME/okaeri/settings-window.json")" '{"width":900,"height":600}'
+ipc settings toggle
+wait_up 0
+ipc settings toggle
+wait_up 1
+sleep 0.4
+same "its size the next time" "$(window_size)" 900x600
+# Never smaller than it can be used at.
+niri msg action set-window-width 300
+sleep 0.6
+[ "$(window_size | cut -dx -f1)" -ge 640 ] || fail "made $(window_size)"
+# Back to the size the rest is written for.
+ipc settings toggle
+wait_up 0
+printf '{"width":760,"height":564}\n' >"$XDG_STATE_HOME/okaeri/settings-window.json"
+sleep 0.3
+ipc settings toggle
+wait_up 1
+sleep 0.4
+same "its size, back" "$(window_size)" 760x564
+
 step "How it sounds"
 page "$sounds_y"
 shot sounds-page
@@ -547,16 +624,6 @@ same "where it shows" "$(value .osd.position)" '"middle"'
 arrow "$higher_x" 282
 sleep 0.3
 same "for how long" "$(value .osd.duration)" 2
-# The wheel on a line goes along the list, and stops at its end.
-move 700 282
-wheel 1
-same "for how long, by the wheel" "$(value .osd.duration)" 3
-wheel -2
-same "for how long, two notches down" "$(value .osd.duration)" 1.5
-wheel -9
-same "for how long, at the end of the list" "$(value .osd.duration)" 1
-arrow "$lower_x" 282
-same "for how long, past that" "$(value .osd.duration)" 1
 move "$switch_x" 332
 click
 sleep 0.3

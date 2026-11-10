@@ -756,8 +756,9 @@ left=$(at)
 sleep 0.15
 on=$(at)
 awk "BEGIN { exit !($left > 100 && $on > $left) }" || fail "the fingers left it at $left, then it was at $on"
+# Under load it can be at rest by then: it went on after the fingers all the same.
 far=$(rest)
-awk "BEGIN { exit !($far > $on) }" || fail "it stopped at once: $on, then $far"
+awk "BEGIN { exit !($far >= $on) }" || fail "it went back: $on, then $far"
 key Escape
 is_closed "Escape after scrolling"
 

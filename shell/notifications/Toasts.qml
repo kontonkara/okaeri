@@ -20,6 +20,9 @@ PanelWindow {
 	readonly property bool atBottom: place.startsWith("bottom")
 	readonly property bool atLeft: place.endsWith("left")
 	readonly property bool inMiddle: place === "top"
+	// The side a toast comes in from and goes out to: in the middle it grows
+	// where it is instead.
+	readonly property int side: inMiddle ? 0 : atLeft ? -1 : 1
 	// How far they go for what's open in their corner.
 	readonly property real aside: {
 		const widths = Panels.open.filter(panel => panel.align === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
@@ -133,8 +136,16 @@ PanelWindow {
 
 			NumberAnimation {
 				property: "x"
-				from: Theme.u(24)
+				from: Theme.u(24) * window.side
 				to: 0
+				duration: 160
+				easing.type: Easing.OutCubic
+			}
+
+			NumberAnimation {
+				property: "scale"
+				from: window.side === 0 ? 0.95 : 1
+				to: 1
 				duration: 160
 				easing.type: Easing.OutCubic
 			}
@@ -152,7 +163,14 @@ PanelWindow {
 
 			NumberAnimation {
 				property: "x"
-				to: Theme.u(24)
+				to: Theme.u(24) * window.side
+				duration: 160
+				easing.type: Easing.OutCubic
+			}
+
+			NumberAnimation {
+				property: "scale"
+				to: window.side === 0 ? 0.95 : 1
 				duration: 160
 				easing.type: Easing.OutCubic
 			}
@@ -177,6 +195,12 @@ PanelWindow {
 			NumberAnimation {
 				property: "x"
 				to: 0
+				duration: 160
+			}
+
+			NumberAnimation {
+				property: "scale"
+				to: 1
 				duration: 160
 			}
 		}

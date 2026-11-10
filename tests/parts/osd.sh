@@ -536,3 +536,12 @@ shows_at in-middle 400 100 || fail "no card in the middle"
 shows_at in-middle 760 120 && fail "a card at the bottom, set to the middle"
 leaves "$(now)" >/dev/null
 settings '{}'
+
+# With blur on, as the panels have it: what's under the card shows through.
+theme '{"blur":true}'
+show volume 0.4
+sleep 0.4
+shot glass
+[ "$(pixel glass $((left + 6)) $((top + 6)))" != 000000 ] || fail "the card isn't see-through with blur on"
+leaves "$(now)" >/dev/null
+theme '{}'
