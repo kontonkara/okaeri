@@ -3,24 +3,21 @@ import qs
 import qs.services
 import qs.ui
 
-// Where the sound comes from, with more than one microphone, or with one and none
-// chosen. A click takes it from there.
+// Where the sound comes from: the microphones there are, a click taking it
+// from there.
 Section {
 	id: section
 
-	property real room: 0
-
-	name: "input"
-	wanted: Audio.inputs.length > 1 || (Audio.inputs.length > 0 && !Audio.source)
+	name: "mic"
 	icon: "mic"
-	title: "Input"
-	summary: Audio.source?.description ?? ""
-	checked: true
+	title: "Microphone"
+	summary: Audio.source?.description ?? "None chosen"
 	switches: false
 
 	Rows {
 		values: Audio.inputs
-		room: section.room
+		room: section.roomInside
+		empty: "No microphones"
 		onActivated: (index, node) => Audio.useInput(node)
 
 		delegate: Entry {

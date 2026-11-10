@@ -36,6 +36,8 @@ Singleton {
 
 	// One of `actions` from elsewhere: the menu counts it down.
 	signal asked(var row)
+	// The menu, from elsewhere.
+	signal menuWanted
 
 	// It can change, with what's holding the machine awake.
 	function check() {

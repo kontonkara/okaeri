@@ -7,7 +7,6 @@ import qs.ui
 Section {
 	id: section
 
-	property real room: 0
 
 	name: "bluetooth"
 	wanted: !!Bt.adapter
@@ -28,7 +27,7 @@ Section {
 
 	Rows {
 		values: Bt.devices
-		room: section.room
+		room: section.roomInside
 		empty: "Looking for devices..."
 		onActivated: (index, device) => Bt.connect(device)
 

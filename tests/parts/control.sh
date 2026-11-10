@@ -48,23 +48,39 @@ toggle() {
 	ipc control toggle
 	sleep 0.4
 }
+# Opens it at page $1, or goes there.
+page() {
+	ipc control page "$1"
+	sleep 0.4
+}
+panels() {
+	niri msg --json layers | jq '[.[] | select(.namespace == "okaeri-panel")] | length'
+}
 
-# Where things are with both sliders there. The panel's right edge is 10 px in
-# from the screen's, its top under the bar.
-volume_y=76
-brightness_y=110
+# Where things are on the tiles' side, with both sliders there and no
+# microphone. The panel's right edge is 10 px in from the screen's, its top under
+# the bar.
+volume_y=120
+brightness_y=154
 mute_x=1051
 slider_left=1074
-slider_width=250
-wifi_y=172
+slider_width=225
+sound_x=1363
+# The tiles: Wi-Fi and Bluetooth on the first row, with their arrows, the night
+# light and keeping awake on the second, the power profile on the third.
+left_tile_x=1096
+right_tile_x=1289
+wifi_arrow_x=1181
+bt_arrow_x=1364
+tiles_y=217
+tiles_y2=283
+tiles_y3=349
+# A page: its header, with the way back and the switch, and its rows.
+page_y=83
+back_x=1051
 switch_x=1350
-fold_x=1156
-# Wi-Fi's rows, under its header, and Bluetooth's header when Wi-Fi is folded,
-# and under the six made-up networks.
-row_y=213
+row_y=126
 row_step=38
-bt_y=238
-bt_low_y=466
 
 row() {
 	echo $((row_y + $1 * row_step))
@@ -84,6 +100,11 @@ strip() {
 differ() {
 	magick "$out/$1.png" "$out/$2.png" -crop "$3" +repage -fuzz 5% -metric AE -compare -format '%[distortion]' info:
 }
+# Whether two shots show the same panel in part $3, give or take how a shape is
+# drawn again: under a hundredth of it.
+alike() {
+	awk -v d="$(differ "$1" "$2" "$3")" 'BEGIN { exit !(d < 0.01) }'
+}
 whole_row() {
 	echo "250x34+1066+$(($(row "$1") - 17))"
 }
@@ -91,11 +112,11 @@ lower_line() {
 	echo "250x12+1066+$(($(row "$1") + 5))"
 }
 
-# Whether Wi-Fi's card has a color in it, red far from green. The themes are
+# Whether Wi-Fi's page has a color in it, red far from green. The themes are
 # black and white and the edges of letters reach 0.3: more than that is the
 # error color, or a color that came from somewhere else.
 color_in_wifi() {
-	magick "$out/$1.png" -crop 370x300+1021+150 +repage -channel RG -separate +channel \
+	magick "$out/$1.png" -crop 370x300+1021+60 +repage -channel RG -separate +channel \
 		-compose difference -composite -format '%[fx:maxima]' info: |
 		awk '{ print ($1 > 0.4 ? "yes" : "no") }'
 }
@@ -104,9 +125,6 @@ color_in_wifi() {
 # of it, up to the end. The reload is the only one so far.
 sed -e 's/^\treadonly property var nodes: .*/\tproperty var nodes: []/' -e 's/^\treadonly property bool micReady: .*/\tproperty bool micReady: false/' \
 	"$work/shell/services/Audio.qml" >"$work/Audio.qml"
-# And Wi-Fi unfolded, as what's here goes by its rows.
-sed 's/^\tproperty string unfolded: ""$/\tproperty string unfolded: "wifi"/' "$work/shell/control/Control.qml" >"$work/Control.qml"
-mv "$work/Control.qml" "$work/shell/control/Control.qml"
 mv "$work/Audio.qml" "$work/shell/services/Audio.qml"
 # Those go unseen. A line more elsewhere reloads it all: a reload that finds
 # Audio.qml cut off while it's written doesn't take it for a singleton.
@@ -129,23 +147,20 @@ fail_awake() {
 	echo "control: $1" >&2
 	exit 1
 }
-# With Wi-Fi folded the power profile's buttons are under Bluetooth.
-at $fold_x $wifi_y
-sleep 0.4
-when 'dry: power profile PowerSaver' at 1089 299
-when 'dry: power profile Balanced' at 1206 299
-when 'dry: power profile Performance' at 1322 299
-# Under them the night light: on, wlsunset as set; the wheel on it makes it warmer.
+# The power profile's tile goes on to the next one, and so does the wheel on it.
+when 'dry: power profile' at $left_tile_x $tiles_y3
+when 'dry: power profile' wheel 1
+# The night light: on, wlsunset as set; the wheel on its tile makes it warmer.
 when 'dry: night light -t 4000 -T 4001' ipc night toggle
-move $fold_x 385
+move $left_tile_x $tiles_y2
 when 'dry: night light -t 3750 -T 3751' wheel 1
 shot night
 ipc night toggle
-# Under it keeping awake: the wheel gives it half an hour, and takes it back.
+# Keeping awake: the wheel gives it half an hour, and takes it back.
 awake() {
 	ipc awake state | jq -r .on
 }
-move $fold_x 451
+move $right_tile_x $tiles_y2
 wheel 1
 sleep 0.3
 [ "$(awake)" = true ] || fail_awake "the wheel didn't turn it on"
@@ -153,21 +168,51 @@ shot awake-wheel
 wheel -1
 sleep 0.3
 [ "$(awake)" = false ] || fail_awake "the wheel didn't turn it off"
-at $fold_x $wifi_y
-sleep 0.4
 
 when 'dry: mute' at $mute_x $volume_y
 when 'dry: brightness' at $((slider_left + slider_width / 4)) $brightness_y
 
-when 'dry: wifi false' at $switch_x $wifi_y
-# Folded, and Bluetooth's switch comes up to where the test expects it.
-at $fold_x $wifi_y
+# A click on a tile switches it.
+when 'dry: wifi false' at $left_tile_x $tiles_y
+when 'dry: bluetooth false' at $right_tile_x $tiles_y
+move $outside_x $outside_y
+sleep 0.2
+shot real-tiles
+# Its arrow opens its page in the panel's place; Escape goes back to the tiles,
+# and so does the way back.
+at $wifi_arrow_x $tiles_y
 sleep 0.4
-shot real-folded
-when 'dry: bluetooth false' at $switch_x $bt_y
-at $fold_x $bt_y
+move $outside_x $outside_y
+sleep 0.2
+shot real-wifi
+[ "$(differ real-tiles real-wifi 380x300+1016+60)" != 0 ] || fail "the arrow opened no page"
+key Escape
 sleep 0.4
+[ "$(panels)" = 1 ] || fail "Escape on a page closed the panel"
+move $outside_x $outside_y
+sleep 0.2
+shot real-back
+alike real-tiles real-back 380x260+1016+100 || fail "Escape didn't go back to the tiles"
+at $bt_arrow_x $tiles_y
+sleep 0.4
+move $outside_x $outside_y
+sleep 0.2
 shot real-bluetooth
+at $back_x $page_y
+sleep 0.4
+move $outside_x $outside_y
+sleep 0.2
+shot real-back-again
+alike real-tiles real-back-again 380x260+1016+100 || fail "the way back didn't go back"
+# Closed on a page, it opens on the tiles again.
+at $wifi_arrow_x $tiles_y
+sleep 0.3
+toggle
+toggle
+move $outside_x $outside_y
+sleep 0.6
+shot real-reopened
+alike real-tiles real-reopened 380x260+1016+100 || fail "it opened on the page it was closed on"
 
 # Closing takes back what opening started: a key, then a click elsewhere.
 when 'dry: wifi scan false' key Escape
@@ -430,7 +475,7 @@ sleep 0.4
 # takes more than a password, 5 secured with a long name.
 action_x=1321
 row_x=1156
-toggle
+page wifi
 when 'dry: wifi disconnect' at $action_x "$(row 0)"
 never 'dry: wifi connect' at $row_x "$(row 0)"
 when 'dry: wifi connect' at $row_x "$(row 1)"
@@ -502,16 +547,17 @@ when 'dry: wifi connect with a key' key Return
 ipc probe tried Office
 sleep 0.3
 
-# Escape gets out of the field first, and then closes.
+# Escape gets out of the field first, then back to the tiles, and then closes.
 never 'dry: wifi connect' at $row_x "$(row 2)"
 never 'dry: wifi scan false' key Escape
 sleep 0.3
 shot dark-field-dropped
+never 'dry: wifi scan false' key Escape
 when 'dry: wifi scan false' key Escape
 sleep 0.3
 
 # How a failure and a connection in progress show.
-toggle
+page wifi
 ipc probe fail Office 1
 ipc probe fail Cafe 5
 ipc probe connecting Neighbour
@@ -522,6 +568,7 @@ ipc probe settled Neighbour
 # The wrong password opened a field, with nothing else going on, for another
 # try: Escape gets out of that first.
 never 'dry: wifi scan false' key Escape
+never 'dry: wifi scan false' key Escape
 when 'dry: wifi scan false' key Escape
 sleep 0.4
 ipc probe tried Office
@@ -530,15 +577,15 @@ ipc probe tried Cafe
 # A try that ends with the panel closed shows when it's back, and until the
 # next try.
 move $outside_x $outside_y
-toggle
+page wifi
 sleep 0.3
 shot dark-before-try
 when 'dry: wifi connect' at $row_x "$(row 1)"
 move $outside_x $outside_y
-key Escape
+toggle
 sleep 0.4
 ipc probe fail Office 1
-toggle
+page wifi
 sleep 0.3
 shot dark-failed-closed
 [ "$(color_in_wifi dark-failed-closed)" = yes ]
@@ -553,13 +600,13 @@ sleep 0.3
 shot dark-odd-names
 [ "$(color_in_wifi dark-odd-names)" = no ]
 [ "$(differ dark-before-try dark-odd-names "$(lower_line 2)")" = 0 ]
-wifi_title=100x16+1074+157
+wifi_title=60x14+1101+70
 [ "$(differ dark-before-try dark-odd-names $wifi_title)" = 0 ]
 ipc probe names
-key Escape
-sleep 0.4
+toggle
 
-# By the keys: to the list past mute, the sliders, the fold and the switch.
+# By the keys: Tab to the Wi-Fi tile, the right arrow to its page, where they
+# are on its way back, Tab past the switch to the list, and a row's Enter.
 toggle
 key Tab
 sleep 0.2
@@ -569,32 +616,36 @@ key Tab
 key Tab
 key Tab
 key Tab
+key Tab
+key Right
+sleep 0.4
+shot dark-keys-page
+key Tab
+key Tab
 key Down
 when 'dry: wifi connect' key Return
 shot dark-keys
-key Escape
-sleep 0.4
-
-# Bluetooth unfolds, Wi-Fi folds. 0 is connected, 1 paired, 2 and 3 nearby; the
-# one with only an address isn't there.
-bt_row() {
-	echo $((bt_y + 41 + $1 * row_step))
-}
 toggle
-at $fold_x $bt_low_y
-sleep 0.4
+
+# Bluetooth's page. 0 is connected, 1 paired, 2 and 3 nearby; the one with only
+# an address isn't there.
+bt_row() {
+	row "$1"
+}
+page bluetooth
 shot dark-bluetooth
 
-# A wrong password opens no field in a folded section, where it would take
-# what's typed out of sight, and the first Escape.
+# A wrong password opens no field on a page that isn't there, where it would
+# take what's typed out of sight, and the first Escape.
 ipc probe fail Office 1
 sleep 0.3
 type 'hunter2'
 never 'dry: wifi connect with a key' key Return
+never 'dry: wifi scan false' key Escape
 when 'dry: wifi scan false' key Escape
 sleep 0.4
 ipc probe tried Office
-toggle
+page bluetooth
 
 when 'dry: bluetooth disconnect' at $action_x "$(bt_row 0)"
 when 'dry: bluetooth connect' at $row_x "$(bt_row 1)"
@@ -635,14 +686,16 @@ ipc probe pairing Watch true
 ipc probe pairing Watch false
 sleep 3.2
 
-# Off, one and then the other: folded, and no scan or discovery while off.
+# Off, one and then the other: no scan or discovery while off, and the tiles
+# say so.
+at $back_x $page_y
 when 'dry: wifi scan false' ipc probe wifi false
 when 'dry: bluetooth discovery false' ipc probe bluetooth false
 sleep 0.4
 shot dark-off
 when 'dry: wifi scan true' ipc probe wifi true
 when 'dry: bluetooth discovery true' ipc probe bluetooth true
-at $fold_x $wifi_y
+at $wifi_arrow_x $tiles_y
 sleep 0.4
 
 # A list longer than the screen scrolls in its place, and the panel stays on
@@ -651,24 +704,17 @@ ipc probe crowd
 sleep 0.5
 shot dark-crowd
 [ "$(strip "$out/dark-crowd.png")" = 1 ]
+move 1200 "$(row 4)"
+notch 6
+sleep 0.6
 move $outside_x $outside_y
-key Tab
-key Tab
-key Tab
-key Tab
-key Tab
-key Tab
-for _ in $(seq 12); do
-	wtype -k Down
-	sleep 0.05
-done
-sleep 0.4
+sleep 0.2
 shot dark-scrolled
 ipc probe strength 'Network 39' 0.99
 sleep 0.4
 shot dark-scrolled-after
-top=$(magick "$out/dark-crowd.png" -crop 300x100+1066+195 +repage -format '%#' info:)
-kept=$(magick "$out/dark-scrolled-after.png" -crop 300x100+1066+195 +repage -format '%#' info:)
+top=$(magick "$out/dark-crowd.png" -crop 300x100+1066+110 +repage -format '%#' info:)
+kept=$(magick "$out/dark-scrolled-after.png" -crop 300x100+1066+110 +repage -format '%#' info:)
 [ "$top" != "$kept" ]
 
 # The same at a big size: twice would ask more of this 900 px screen than the
@@ -684,15 +730,12 @@ sleep 0.6
 shot light-crowd
 
 # The row at the bottom is cut; the list makes room for its field.
-never 'dry: wifi connect' at $row_x 512
+never 'dry: wifi connect' at $row_x $(($(row 8) - 5))
 sleep 0.3
 shot light-crowd-field
-key Escape
-sleep 0.2
-key Escape
-sleep 0.4
-ipc probe reset
 toggle
+ipc probe reset
+page wifi
 sleep 0.3
 shot light-wifi
 at $row_x "$(row 2)"
@@ -700,32 +743,28 @@ ipc probe fail Office 5
 sleep 0.4
 shot light-password
 key Escape
-at $fold_x $bt_low_y
-sleep 0.4
+page bluetooth
 shot light-bluetooth
-key Escape
-sleep 0.4
+toggle
 
 # Nothing around yet.
 ipc probe nothing
-toggle
-sleep 0.3
+page bluetooth
 shot light-empty-bluetooth
-at $fold_x $wifi_y
-sleep 0.4
+page wifi
 shot light-empty-wifi
-key Escape
-sleep 0.4
+toggle
 ipc probe reset
 
 # Square corners, and no animations at all.
 printf '{"radius":0,"animations":false}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 sleep 0.6
-when 'dry: wifi scan true' ipc control toggle
+when 'dry: wifi scan true' ipc control page wifi
 sleep 0.2
 at $row_x "$(row 2)"
 sleep 0.2
 shot dark-square
+key Escape
 key Escape
 when 'dry: wifi scan false' key Escape
 sleep 0.2
@@ -763,32 +802,27 @@ sleep 1
 toggle
 sleep 0.4
 shot app-volume
-when 'dry: mic volume' at $((slider_left + slider_width / 2)) 144
-when 'dry: mic mute' at $mute_x 144
-# Two outputs: a section for them, and a click on one moves the sound there.
-at 1200 206
+# The microphone's level under the brightness, with its mute.
+mic_y=189
+when 'dry: mic volume' at $((slider_left + slider_width / 2)) $mic_y
+when 'dry: mic mute' at $mute_x $mic_y
+# The sound's page: two outputs, a click on one moves the sound there, and what
+# plays, muted from there.
+at $sound_x $volume_y
 sleep 0.4
 shot outputs
-when 'dry: output' at 1200 285
-at 1200 206
+when 'dry: output' at 1200 183
+when 'dry: app volume' at 1218 263
+when 'dry: app mute true' at $mute_x 263
+shot playback
+at $back_x $page_y
 sleep 0.3
-# Two microphones, the same way.
-at 1200 272
+# The microphone's page: two microphones, the same way.
+at $sound_x $mic_y
 sleep 0.4
 shot inputs
-when 'dry: input' at 1200 351
-at 1200 272
-sleep 0.3
-# What plays, folded under a section of its own, and muted from there.
-at 1200 338
-sleep 0.4
-shot playback
-when 'dry: app volume' at $((slider_left + slider_width / 2)) 390
-when 'dry: app mute true' at $mute_x 390
-at 1200 338
-sleep 0.3
-key Escape
-sleep 0.4
+when 'dry: input' at 1200 157
+toggle
 
 # A GPU's output goes by whether that GPU has a screen, and others aren't asked.
 hdmi=alsa_output.pci-0000_01_00.1.hdmi-stereo
@@ -829,8 +863,8 @@ grep -qF -- '--bus 7 --brief getvcp 10' "$work/ddcutil.log" || fail "the monitor
 toggle
 sleep 0.4
 shot ddc
-# Its slider: what it's moved to goes out once it rests.
-when 'dry: ddc DP-1' at 1200 158
+# Its slider, under the brightness: what it's moved to goes out once it rests.
+when 'dry: ddc DP-1' at 1200 202
 key Escape
 sleep 0.4
 

@@ -25,6 +25,8 @@ PanelWindow {
 	property real panelWidth: Theme.u(380)
 	property real padding: Theme.u(12)
 	property bool modal: false
+	// What Escape does before it closes the panel: true if that was all of it.
+	property var escapes: () => false
 	property bool shown: false
 	// How tall what's put in it can get: the screen, without the bar and the
 	// card's own edges.
@@ -65,6 +67,11 @@ PanelWindow {
 	function dismiss() {
 		if (!modal)
 			hide();
+	}
+
+	function leave() {
+		if (!escapes())
+			dismiss();
 	}
 
 	anchors {
@@ -165,7 +172,7 @@ PanelWindow {
 				: panel.align === "top" ? Item.Top
 				: Item.Center
 
-			Keys.onEscapePressed: panel.dismiss()
+			Keys.onEscapePressed: panel.leave()
 
 			states: State {
 				name: "shown"

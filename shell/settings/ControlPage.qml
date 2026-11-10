@@ -2,19 +2,17 @@ import QtQuick
 import qs
 import qs.ui
 
-// What's in the control center: what doesn't apply here doesn't show either way.
+// Which tiles the control center has: what doesn't apply here doesn't show
+// either way.
 Column {
 	id: page
 
 	readonly property var sections: [
-		{ name: "output", text: "Output", subtext: "With more than one place for the sound to go" },
-		{ name: "input", text: "Input", subtext: "With more than one microphone, or none chosen" },
-		{ name: "playback", text: "Playback", subtext: "While something plays" },
-		{ name: "wifi", text: "Wi-Fi" },
-		{ name: "bluetooth", text: "Bluetooth" },
-		{ name: "power", text: "Power profile and the battery" },
+		{ name: "wifi", text: "Wi-Fi", subtext: "And its networks behind the arrow" },
+		{ name: "bluetooth", text: "Bluetooth", subtext: "And its devices behind the arrow" },
 		{ name: "night", text: "Night light" },
-		{ name: "awake", text: "Keep awake" }
+		{ name: "awake", text: "Keep awake" },
+		{ name: "power", text: "Power profile", subtext: "A click goes to the next one" }
 	]
 
 	function show(name, wanted) {
@@ -24,7 +22,7 @@ Column {
 
 	Card {
 		width: parent.width
-		title: "In the control center"
+		title: "Tiles"
 
 		Repeater {
 			model: page.sections

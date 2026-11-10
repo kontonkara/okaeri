@@ -1,15 +1,29 @@
 import QtQuick
 import Quickshell.Io
+import Quickshell.Services.UPower
 import qs
+import qs.services
 import qs.ui
-// The volume, the brightness, the output, the input, what's playing, Wi-Fi, Bluetooth, the
-// power profile, the night light and keeping awake. What's in it is there only while it shows, so what's typed in it goes
-// with it.
+
+// The battery, with the way to the settings and the session menu; the volume,
+// the brightness and the microphone; and tiles for Wi-Fi, Bluetooth, the night
+// light, keeping awake and the power profile. An arrow on a tile or a level
+// opens its page in the panel's place: the networks, the devices, where the
+// sound goes and what plays, the microphones. Escape there goes back, and a
+// closing panel too. What's in it is there only while it shows, so what's typed
+// in it goes with it.
 Panel {
 	id: controlCenter
 
 	align: Settings.corner("control")
+	escapes: () => {
+		if (Control.unfolded === "")
+			return false;
+		Control.unfolded = "";
+		return true;
+	}
 	onShownChanged: Control.open = shown
+	onPanelClosed: Control.unfolded = ""
 	// A reload takes it away without closing it, and what's scanning would go
 	// on with nobody left to stop it.
 	Component.onDestruction: Control.open = false
@@ -28,14 +42,20 @@ Panel {
 		function toggle(): void {
 			controlCenter.toggle();
 		}
+
+		// Open at a page: wifi, bluetooth, sound or mic.
+		function page(name: string): void {
+			Control.unfolded = name;
+			if (!controlCenter.shown)
+				controlCenter.show();
+		}
 	}
 
 	Loader {
 		width: parent.width
 		active: controlCenter.visible
 
-		// Scrolled, where it's more than the screen has room for: a list in it has
-		// taken all it can by then.
+		// Scrolled, where it's more than the screen has room for.
 		sourceComponent: Flickable {
 			id: view
 
@@ -48,70 +68,172 @@ Panel {
 			Column {
 				id: column
 
-				// What's left of the screen for a list, under the bar and with
-				// everything else around it.
-				readonly property real room: controlCenter.room - levels.height - more.height - spacing - (power.visible ? power.height + spacing : 0) - [output, input, playback, wifi, bluetooth, night, awake].reduce((all, section) => all + (section.visible ? section.foldedHeight + spacing : 0), 0)
+				// A page in the place of the rest.
+				readonly property bool paging: [wifi, bluetooth, sound, mic].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
 
+				Item {
+					width: parent.width
+					height: Theme.u(34)
+					visible: !column.paging
+
+					Text {
+						anchors.left: parent.left
+						anchors.leftMargin: Theme.u(6)
+						anchors.right: buttons.left
+						anchors.rightMargin: Theme.u(8)
+						anchors.verticalCenter: parent.verticalCenter
+						text: Power.present ? [`${Power.charge}%`, Power.batteryLine].filter(part => part !== "").join(" · ") : ""
+						color: Theme.colors.subtext
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize - Theme.u(1)
+					}
+
+					Row {
+						id: buttons
+
+						anchors.right: parent.right
+						anchors.verticalCenter: parent.verticalCenter
+						spacing: Theme.u(4)
+
+						Button {
+							height: Theme.u(32)
+							flat: true
+							icon: "gear"
+							tip: "Settings"
+							onClicked: {
+								controlCenter.hide();
+								Settings.asked();
+							}
+						}
+
+						Button {
+							height: Theme.u(32)
+							flat: true
+							icon: "power"
+							tip: "Session"
+							onClicked: {
+								controlCenter.hide();
+								Session.menuWanted();
+							}
+						}
+					}
+				}
+
 				Levels {
-					id: levels
+					visible: !column.paging
 				}
 
-				OutputSection {
-					id: output
+				Grid {
+					id: tiles
 
-					room: parent.room
-				}
+					readonly property real tileWidth: (width - columnSpacing) / 2
 
-				InputSection {
-					id: input
+					width: parent.width
+					visible: !column.paging
+					columns: 2
+					columnSpacing: Theme.u(8)
+					rowSpacing: Theme.u(8)
 
-					room: parent.room
-				}
+					Tile {
+						width: tiles.tileWidth
+						name: "wifi"
+						wanted: !!Wifi.device
+						icon: Wifi.enabled ? "wifi" : "wifiOff"
+						title: "Wi-Fi"
+						summary: wifi.summary
+						checked: Wifi.enabled
+						canSwitch: !Wifi.blocked
+						opens: "wifi"
+						onToggled: wanted => Wifi.setEnabled(wanted)
+					}
 
-				PlaybackSection {
-					id: playback
+					Tile {
+						width: tiles.tileWidth
+						name: "bluetooth"
+						wanted: !!Bt.adapter
+						icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
+						title: "Bluetooth"
+						summary: bluetooth.summary
+						checked: Bt.enabled
+						canSwitch: !Bt.blocked
+						opens: "bluetooth"
+						onToggled: wanted => Bt.setEnabled(wanted)
+					}
+
+					Tile {
+						width: tiles.tileWidth
+						name: "night"
+						icon: "sunset"
+						title: "Night light"
+						summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : "Off"
+						checked: NightLight.on && NightLight.available
+						canSwitch: NightLight.available
+						takesWheel: true
+						onToggled: wanted => NightLight.set(wanted)
+						onScrolled: steps => NightLight.step(-steps)
+					}
+
+					Tile {
+						width: tiles.tileWidth
+						name: "awake"
+						icon: "coffee"
+						title: "Keep awake"
+						summary: !Awake.on ? "Off" : Awake.label || "It won't lock or dim"
+						checked: Awake.on
+						takesWheel: true
+						onToggled: wanted => Awake.set(wanted, 0)
+						onScrolled: steps => Awake.step(steps)
+					}
+
+					Tile {
+						readonly property int at: Power.choices.findIndex(choice => choice.profile === Power.profile)
+
+						// Along the profiles, round to the first again.
+						function turn(steps) {
+							const count = Power.choices.length;
+							Power.set(Power.choices[((at + steps) % count + count) % count].profile);
+						}
+
+						width: tiles.tileWidth
+						name: "power"
+						wanted: Power.choices.length > 1
+						icon: "bolt"
+						title: "Power"
+						summary: Power.choices[at]?.text ?? ""
+						checked: Power.profile !== PowerProfile.Balanced
+						switches: false
+						takesWheel: true
+						onClicked: turn(1)
+						onScrolled: steps => turn(-steps)
+					}
 				}
 
 				WifiSection {
 					id: wifi
 
-					room: parent.room
+					room: controlCenter.room
 				}
 
 				BluetoothSection {
 					id: bluetooth
 
-					room: parent.room
+					room: controlCenter.room
 				}
 
-				PowerSection {
-					id: power
+				SoundSection {
+					id: sound
 
-					visible: !Settings.control.hidden.includes("power")
+					room: controlCenter.room
 				}
 
-				NightSection {
-					id: night
-				}
+				MicSection {
+					id: mic
 
-				AwakeSection {
-					id: awake
-				}
-
-				Button {
-					id: more
-
-					width: parent.width
-					flat: true
-					icon: "gear"
-					text: "Settings"
-					onClicked: {
-						controlCenter.hide();
-						Settings.asked();
-					}
+					room: controlCenter.room
 				}
 			}
 		}
