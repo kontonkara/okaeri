@@ -8,8 +8,10 @@ import Quickshell
 Singleton {
 	// The panel sets this.
 	property bool open: false
-	// The section that's unfolded, by its name.
+	// The page that's open, by its name, and whether the keys opened it: the
+	// keys then go on to it.
 	property string unfolded: ""
+	property bool keyed: false
 
 	signal toggled
 

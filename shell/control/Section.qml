@@ -2,11 +2,10 @@ import QtQuick
 import qs
 import qs.ui
 
-// A card that folds, unless `folds` is off: `icon`, `title` and `summary`, a
-// switch that says toggled(wanted), unless `switches` is off, and under them
-// what's put in it. One section of the panel is unfolded at a time, the one
-// Control.unfolded names, and only while on. It shows while `wanted`, unless the
-// settings leave it out.
+// A page of the control center, in its place while Control.unfolded names it:
+// a way back, `icon`, `title` and `summary`, a switch that says toggled(wanted),
+// unless `switches` is off, and under them what's put in it. `room` is how tall
+// that can get.
 Card {
 	id: section
 
@@ -18,19 +17,29 @@ Card {
 	property bool checked: false
 	property bool canSwitch: true
 	property bool switches: true
-	property bool folds: true
-	property bool takesWheel: false
-	readonly property bool unfolded: checked && Control.unfolded === name
-	readonly property real foldedHeight: header.height + padding * 2
-	default property alias folded: rows.data
+	// For what's in it: the panel's room, less the page's own top.
+	property real room: 0
+	readonly property real roomInside: room - header.height - padding * 2
+	readonly property bool unfolded: visible
+	default property alias content: rows.data
 
 	signal toggled(bool wanted)
-	// Notches of the wheel, with `takesWheel`.
-	signal scrolled(int steps)
 
 	width: parent.width
 	padding: Theme.u(6)
-	visible: wanted && !Settings.control.hidden.includes(name)
+	visible: wanted && Control.unfolded === name
+
+	// Here, not as its own handler: a page has handlers of its own for it.
+	Connections {
+		target: section
+
+		function onUnfoldedChanged() {
+			if (section.unfolded && Control.keyed) {
+				Control.keyed = false;
+				back.forceActiveFocus();
+			}
+		}
+	}
 
 	Column {
 		width: parent.width
@@ -39,89 +48,64 @@ Card {
 			id: header
 
 			width: parent.width
-			height: Theme.u(44)
+			height: Theme.u(48)
 
 			Button {
-				id: fold
+				id: back
 
-				anchors.fill: parent
-				radius: Math.max(0, Theme.cardRadius - Theme.u(4))
+				anchors.left: parent.left
+				anchors.verticalCenter: parent.verticalCenter
+				height: Theme.u(34)
 				flat: true
-				takesWheel: section.takesWheel
-				onScrolled: steps => section.scrolled(steps)
-				onClicked: {
-					if (section.checked && section.folds)
-						Control.unfolded = section.unfolded ? "" : section.name;
+				icon: "back"
+				tip: "Back"
+				onClicked: Control.unfolded = ""
+			}
+
+			Icon {
+				id: glyph
+
+				anchors.left: back.right
+				anchors.leftMargin: Theme.u(4)
+				anchors.verticalCenter: parent.verticalCenter
+				name: section.icon
+				color: section.checked || !section.switches ? Theme.colors.text : Theme.colors.subtext
+			}
+
+			Column {
+				anchors.left: glyph.right
+				anchors.leftMargin: Theme.u(12)
+				anchors.right: toggle.visible ? toggle.left : parent.right
+				anchors.rightMargin: Theme.u(12)
+				anchors.verticalCenter: parent.verticalCenter
+
+				Text {
+					width: parent.width
+					text: section.title
+					color: Theme.colors.text
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize
+					font.weight: Theme.fontWeight
 				}
 
-				Item {
-					width: fold.width
-					height: fold.height
-
-					Icon {
-						id: glyph
-
-						x: Theme.u(8)
-						anchors.verticalCenter: parent.verticalCenter
-						name: section.icon
-						color: section.checked ? Theme.colors.text : Theme.colors.subtext
-					}
-
-					Column {
-						anchors.left: glyph.right
-						anchors.leftMargin: Theme.u(14)
-						anchors.right: chevron.left
-						anchors.rightMargin: Theme.u(8)
-						anchors.verticalCenter: parent.verticalCenter
-
-						Text {
-							width: parent.width
-							text: section.title
-							color: Theme.colors.text
-							elide: Text.ElideRight
-							font.family: Theme.font
-							font.pixelSize: Theme.fontSize
-							font.weight: Theme.fontWeight
-						}
-
-						// It can be a name, which anyone nearby picks.
-						Text {
-							width: parent.width
-							text: section.summary
-							textFormat: Text.PlainText
-							maximumLineCount: 1
-							color: Theme.colors.subtext
-							elide: Text.ElideRight
-							font.family: Theme.font
-							font.pixelSize: Theme.fontSize - Theme.u(2)
-						}
-					}
-
-					Icon {
-						id: chevron
-
-						anchors.right: parent.right
-						anchors.rightMargin: Theme.u(section.switches ? 58 : 14)
-						anchors.verticalCenter: parent.verticalCenter
-						visible: section.checked && section.folds
-						name: "chevron"
-						size: Theme.u(16)
-						color: Theme.colors.subtext
-						rotation: section.unfolded ? 90 : 0
-
-						Behavior on rotation {
-							enabled: Theme.animate
-
-							NumberAnimation {
-								duration: 160
-								easing.type: Easing.OutCubic
-							}
-						}
-					}
+				// It can be a name, which anyone nearby picks.
+				Text {
+					width: parent.width
+					visible: text !== ""
+					text: section.summary
+					textFormat: Text.PlainText
+					maximumLineCount: 1
+					color: Theme.colors.subtext
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
 				}
 			}
 
 			Toggle {
+				id: toggle
+
 				anchors.right: parent.right
 				anchors.rightMargin: Theme.u(8)
 				anchors.verticalCenter: parent.verticalCenter
@@ -132,26 +116,10 @@ Card {
 			}
 		}
 
-		Item {
+		Column {
+			id: rows
+
 			width: parent.width
-			height: section.unfolded ? rows.height : 0
-			visible: height > 0
-			clip: true
-
-			Behavior on height {
-				enabled: Theme.animate
-
-				NumberAnimation {
-					duration: 160
-					easing.type: Easing.OutCubic
-				}
-			}
-
-			Column {
-				id: rows
-
-				width: parent.width
-			}
 		}
 	}
 }

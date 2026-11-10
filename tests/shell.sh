@@ -270,12 +270,9 @@ ipc control toggle
 wait_up panel 1 "the control center"
 settle
 shot control-open
-# It's as tall as what the machine has: the button is at the end of what it covers.
-# The border gives what's looked for a background, whatever is at the corners.
-box=$(magick "$out/no-control.png" "$out/control-open.png" -compose difference -composite \
-	-crop 1x800+1206+60 +repage -threshold 3% -bordercolor black -border 1 -format '%@' info:)
-height=${box#*x}
-move 1206 $((60 + ${box##*+} - 1 + ${height%%+*} - 28))
+# The settings' button is in the panel's top row, at its right but for the
+# session menu's; the panel's right edge is 10 px in from the screen's.
+move 1331 70
 click
 sleep 0.6
 wait_up panel 0 "the control center, gone for the settings"
@@ -283,6 +280,9 @@ settings_up() {
 	niri msg --json windows | jq '[.[] | select(.title == "Settings")] | length'
 }
 [ "$(settings_up)" = 1 ] || fail "no settings window"
+# Out of where the control center was.
+move 300 850
+sleep 0.3
 shot settings-open
 [ "$(magick "$out/no-control.png" "$out/settings-open.png" -compose difference -composite \
 	-crop 1x700+700+100 +repage -format '%[fx:maxima * 255 > 8]' info:)" = 1 ] || fail "no settings in the middle"
@@ -369,9 +369,9 @@ settle
 key Tab
 sleep 0.2
 shot square
-# The ring has a corner where it's whitest: all that's white there is the ring
+# The ring, on the settings' button, has a corner where it's whitest: all that's white there is the ring
 # and the icon in it.
-[ "$(magick "$out/square.png" -crop 42x46+1030+54 +repage -fill black +opaque white -trim +repage \
+[ "$(magick "$out/square.png" -crop 42x46+1310+48 +repage -fill black +opaque white -trim +repage \
 	-format '%[fx:p{0,0}.r>0.5]' info:)" = 1 ] ||
 	fail "the ring around a square button isn't square"
 key Escape
@@ -395,6 +395,10 @@ frame() {
 	into "$1" "1x$((900 - $3))+$2+$3" "$5" -flip
 	into "$1" "$2x1+0+$3" "$5"
 	into "$1" "$((1400 - $2))x1+$2+$3" "$5" -flop
+}
+# Where a panel at the right of shot $1 starts, along row 300.
+panel_left() {
+	magick "$out/$1.png" -crop 500x1+900+300 +repage txt:- | awk 'NR == 2 { desk = $3 } NR > 1 && $3 != desk { split($1, at, ","); print 900 + at[1]; exit }'
 }
 # What's on the screen at theme scale $1 from row $2 on, as shots $3-name.
 framed() {
@@ -424,9 +428,12 @@ framed() {
 	shot "$3-toasts"
 	ipc notifications clear
 	wait_up toasts 0 "toasts at $1"
-	# The cards on the control center too, so five of them, and beside the text of
-	# the button at its end.
-	echo "control: $(frame "$3-control" 1300 110 "$2" 5)"
+	# The control center by its edges, short of what's in it: down its middle from
+	# the bar to its top, up from the bottom of the screen to its bottom, and in to
+	# its sides.
+	left=$(panel_left "$3-control")
+	middle=$(((left + 1390) / 2))
+	echo "control: $(into "$3-control" "1x$((300 - $2))+$middle+$2" 5) | $(into "$3-control" "1x600+$middle+300" 3 -flip) | $(into "$3-control" "$((left + 4))x1+0+300" 3 -flop) | $(into "$3-control" "20x1+1380+300" 3 -flop)"
 	echo "launcher: $(frame "$3-launcher" 700 450 "$2" 3)"
 	echo "dialog: $(frame "$3-polkit" 700 450 "$2" 3)"
 	echo "toasts: $(frame "$3-toasts" 1200 90 "$2" 3)"

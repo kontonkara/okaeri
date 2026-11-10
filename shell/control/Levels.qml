@@ -3,8 +3,9 @@ import qs
 import qs.services
 import qs.ui
 
-// The volume and the microphone, with a way to mute them, the brightness when
-// there's one, and that of external monitors when Ddc has them.
+// The volume and the microphone, with a way to mute them and an arrow to their
+// pages, the brightness when there's one, and that of external monitors when Ddc
+// has them.
 Card {
 	width: parent.width
 	padding: Theme.u(6)
@@ -17,6 +18,7 @@ Card {
 			// Full at the limit.
 			value: Audio.volume / Audio.limit
 			full: Audio.limit
+			opens: "sound"
 			onMoved: wanted => Audio.change(wanted * Audio.limit - Audio.volume)
 
 			Button {
@@ -58,8 +60,10 @@ Card {
 		}
 
 		Level {
-			visible: Audio.micReady
+			// With a microphone there, but none chosen, it's there for its arrow.
+			visible: Audio.micReady || Audio.inputs.length > 0
 			value: Audio.micVolume
+			opens: "mic"
 			onMoved: wanted => Audio.changeMic(wanted - Audio.micVolume)
 
 			Button {

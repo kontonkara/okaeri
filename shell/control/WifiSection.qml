@@ -7,7 +7,6 @@ import qs.ui
 Section {
 	id: section
 
-	property real room: 0
 	// The network that's asked for its password.
 	property var asking: null
 	// Rows stay put meanwhile, or they'd jump as signals change. What's gone
@@ -68,7 +67,7 @@ Section {
 
 	Rows {
 		values: section.networks
-		room: section.room
+		room: section.roomInside
 		empty: "Looking for networks..."
 		onActivated: (index, network) => section.pick(network)
 

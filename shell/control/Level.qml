@@ -2,7 +2,8 @@ import QtQuick
 import qs
 import qs.ui
 
-// A level: what's put in it in front, a slider, and the percentage.
+// A level: what's put in it in front, a slider, and the percentage, and with
+// `opens`, a page by that name, an arrow to it.
 Item {
 	id: level
 
@@ -12,6 +13,7 @@ Item {
 	property real full: 1
 	// Over the slider, for one that needs saying what it is.
 	property string label: ""
+	property string opens
 	default property alias front: front.data
 
 	signal moved(real wanted)
@@ -55,8 +57,8 @@ Item {
 	Text {
 		id: percent
 
-		anchors.right: parent.right
-		anchors.rightMargin: Theme.u(8)
+		anchors.right: arrow.visible ? arrow.left : parent.right
+		anchors.rightMargin: Theme.u(arrow.visible ? 2 : 8)
 		anchors.verticalCenter: parent.verticalCenter
 		width: Theme.u(36)
 		horizontalAlignment: Text.AlignRight
@@ -67,5 +69,18 @@ Item {
 		font.features: {
 			"tnum": 1
 		}
+	}
+
+	Button {
+		id: arrow
+
+		anchors.right: parent.right
+		anchors.verticalCenter: parent.verticalCenter
+		height: Theme.u(30)
+		visible: level.opens !== ""
+		flat: true
+		icon: "chevron"
+		iconSize: Theme.u(16)
+		onClicked: Control.unfolded = level.opens
 	}
 }

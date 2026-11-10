@@ -51,6 +51,10 @@ Panel {
 			menu.show();
 			menu.pick(row);
 		}
+
+		function onMenuWanted() {
+			menu.show();
+		}
 	}
 
 	IpcHandler {
