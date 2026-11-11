@@ -3,15 +3,17 @@ import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
 import qs
+import qs.clipboard
 import qs.services
 import qs.ui
 
 // The app launcher: what's typed picks from the apps and Enter launches the
 // selected one, copies the answer to a sum, or goes to an open window or to the
-// session menu. A / in front asks for one kind of thing alone, emoji among them,
-// and alone it says which there are. A right click or Shift+Enter on an app shows what else it can
-// do, in the list's place. The field keeps the keys, Up and Down reach the list
-// from it.
+// session menu. A / in front asks for one kind of thing alone, emoji, what was
+// copied and the settings among them, and alone it says which there are. A right
+// click or Shift+Enter on an app shows what else it can do, in the list's place.
+// `okaeri dmenu` has it show a script's lines instead, to pick one of, which the
+// script is told. The field keeps the keys, Up and Down reach the list from it.
 Panel {
 	id: launcher
 
@@ -21,10 +23,38 @@ Panel {
 		{ mode: "win", text: "Open windows", subtext: "/win", icon: "apps" },
 		{ mode: "wall", text: "Wallpapers", subtext: "/wall", icon: "image" },
 		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it, and copies it", icon: "text" },
+		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again", icon: "clipboard" },
+		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
+	// Whether what's typed asks for what was copied.
+	readonly property bool clipping: /^\s*\/clip\s/i.test(field.text)
+
+	onClippingChanged: {
+		if (clipping)
+			Clipboard.load();
+	}
+
+	// A script's lines to pick from, and the pipe that takes the answer: null with
+	// none asking.
+	property var picking: null
+
 	// The app whose menu is in the list's place, if one is.
 	property var menuOf: null
+
+	// The lines of a script that have what's typed, as they came.
+	function picks(wanted) {
+		return picking.lines.filter(line => line.toLowerCase().includes(wanted)).map((line, at) => ({ pick: line, text: line, mark: at }));
+	}
+
+	// What was picked, for the script that waits: nothing says none was.
+	function answer(text) {
+		if (!picking)
+			return;
+		// Not for ever: a script that's gone isn't there to take it.
+		Quickshell.execDetached(["timeout", "5", "sh", "-c", 'printf "%s" "$1" >"$2"', "sh", text, picking.pipe]);
+		picking = null;
+	}
 
 	function windows(wanted) {
 		return Niri.windows.filter(w => [w.title, w.app_id].some(text => (text || "").toLowerCase().includes(wanted))).map(w => ({
@@ -73,6 +103,22 @@ Panel {
 		}));
 	}
 
+	// What was copied, the newest first, a line of each.
+	function clips(wanted) {
+		return Clipboard.shown.filter(entry => entry.text.toLowerCase().includes(wanted)).slice(0, Apps.limit).map(entry => ({
+			clip: entry,
+			text: entry.text.replace(/\s+/g, " ").slice(0, 200),
+			subtext: entry.subtext || (entry.pinned ? "Pinned" : "Copied"),
+			icon: "clipboard",
+			mark: entry.id
+		}));
+	}
+
+	// The settings window, on what's looked for.
+	function settings(wanted) {
+		return [{ settings: wanted, text: wanted ? `Look for "${wanted}" in the settings` : "Open the settings", subtext: "Settings", icon: "gear" }];
+	}
+
 	// What else `entry` can do.
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
@@ -92,6 +138,8 @@ Panel {
 	function typed() {
 		const text = field.text;
 		const wanted = text.trim().toLowerCase();
+		if (picking)
+			return picks(wanted);
 		const asked = text.match(/^\s*\/(\S*)(\s+.*)?$/);
 		if (!asked)
 			return sum().concat(Apps.search(text), wanted ? windows(wanted) : [], wanted.length < 2 ? [] : session(wanted));
@@ -107,6 +155,10 @@ Panel {
 			return wallpapers(query);
 		case "emoji":
 			return emoji(query);
+		case "clip":
+			return clips(query);
+		case "set":
+			return settings(asked[2].trim());
 		case "session":
 			return session(query);
 		}
@@ -155,6 +207,9 @@ Panel {
 	align: "center"
 	panelWidth: Theme.u(600)
 
+	// Closed with a script still waiting: nothing was picked.
+	onPanelClosed: answer("")
+
 	onPanelOpened: {
 		Session.check();
 		menuOf = null;
@@ -171,6 +226,16 @@ Panel {
 		function onKnownChanged() {
 			if (launcher.shown && !launcher.menuOf)
 				launcher.refresh();
+		}
+	}
+
+	// What was copied is read as /clip asks for it, and comes a moment later.
+	Connections {
+		target: Clipboard
+
+		function onShownChanged() {
+			if (launcher.shown && launcher.clipping)
+				launcher.search();
 		}
 	}
 
@@ -191,10 +256,29 @@ Panel {
 			launcher.toggle();
 		}
 
+		// A script's lines to pick one of: the file that has them, and the pipe
+		// the answer goes to. `okaeri dmenu` is how it's called.
+		function menu(file: string, pipe: string, prompt: string): void {
+			launcher.answer("");
+			lines.path = "";
+			lines.path = file;
+			const read = lines.text().split("\n").filter(line => line !== "");
+			launcher.show();
+			launcher.picking = { lines: read, pipe, prompt };
+			launcher.search();
+		}
+
 		// For tests: how far down the list is.
 		function scrolled(): real {
 			return list.contentY;
 		}
+	}
+
+	FileView {
+		id: lines
+
+		blockLoading: true
+		printErrors: false
 	}
 
 	// Only names until /wall has them show.
@@ -218,14 +302,22 @@ Panel {
 		width: parent.width
 		focus: true
 		icon: "search"
-		placeholder: "Search, or / for more"
+		placeholder: launcher.picking ? launcher.picking.prompt || "Pick one" : "Search, or / for more"
 		shifted: true
 		onTextChanged: {
 			Calculator.ask(text);
 			launcher.menuOf = null;
 			launcher.search();
 		}
-		onAccepted: list.activate(list.currentIndex)
+		// With nothing found for a script, what's typed is the answer.
+		onAccepted: {
+			if (launcher.picking && list.count === 0) {
+				launcher.answer(text);
+				launcher.hide();
+			} else {
+				list.activate(list.currentIndex);
+			}
+		}
 		onShiftAccepted: launcher.openMenu(list.entry(list.currentIndex))
 		Keys.onUpPressed: list.move(-1)
 		Keys.onDownPressed: list.move(1)
@@ -283,6 +375,11 @@ Panel {
 				// The rows still take clicks as the panel fades: a double click does.
 				if (!launcher.shown)
 					return;
+				if (row.pick !== undefined) {
+					launcher.answer(row.pick);
+					launcher.hide();
+					return;
+				}
 				if (row.mode) {
 					field.text = `/${row.mode} `;
 					return;
@@ -307,6 +404,12 @@ Panel {
 					Calculator.copy(row.copy);
 				else if (row.wallpaper)
 					Settings.set("wallpaper", "path", row.wallpaper);
+				else if (row.clip) {
+					Clipboard.restore(row.clip);
+					if (Settings.clipboard.paste)
+						Clipboard.paste();
+				} else if (row.settings !== undefined)
+					Settings.sought(row.settings);
 				else if (row.emoji)
 					Emoji.put(row.emoji);
 				else

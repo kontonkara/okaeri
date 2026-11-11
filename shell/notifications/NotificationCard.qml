@@ -20,6 +20,9 @@ Card {
 	// What only the history has room for, or use.
 	readonly property bool inHistory: closable
 	property bool expanded: false
+	// How much of it is said: "all", only its "title", or "none" but who it's from,
+	// for a toast that others may see.
+	property string says: "all"
 	// With its app's name: under a heading that says it, there's no need.
 	property bool showsApp: true
 
@@ -213,7 +216,7 @@ Card {
 				id: summary
 
 				width: parent.width - (app.visible ? 0 : card.beside)
-				text: card.notification.summary
+				text: card.says === "none" ? "New notification" : card.notification.summary
 				maximumLineCount: 2
 				color: Theme.colors.text
 				font.weight: Theme.fontWeight
@@ -223,7 +226,7 @@ Card {
 				id: body
 
 				width: parent.width - (app.visible || summary.visible ? 0 : card.beside)
-				text: card.notification.body
+				text: card.says === "all" ? card.notification.body : ""
 				maximumLineCount: card.expanded ? 200 : 5
 				color: Theme.colors.subtext
 				font.pixelSize: Theme.fontSize - Theme.u(1)

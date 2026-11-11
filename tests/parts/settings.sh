@@ -521,12 +521,37 @@ same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power"
 move 656 254
 click
 sleep 0.3
-arrow "$higher_x" 637
+arrow "$higher_x" 652
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
 drag 594 480 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
 same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn","record"]'
+# A tile of one's own, by the button under the lanes, a row further down with
+# Bluetooth's on a row of its own: its card is at the foot of the page.
+move 1007 579
+click
+sleep 0.5
+same "a tile made" "$(value .control.custom)" '[{"name":"Mine","command":"","check":"","icon":"play"}]'
+move 700 400
+notch 30
+sleep 0.6
+shot control-own
+field 934 575 'touch somewhere'
+same "what a click on it runs" "$(value '.control.custom[0].command')" '"touch somewhere"'
+field 934 625 'true'
+same "when it's on" "$(value '.control.custom[0].check')" '"true"'
+arrow "$higher_x" 670
+sleep 0.3
+same "its sign, the next one" "$(value '.control.custom[0].icon')" '"power"'
+field 934 525 'Fan'
+same "its name" "$(value '.control.custom[0].name')" '"Fan"'
+same "its place under its new name" "$(value '.control.tiles | last')" '"Fan"'
+move 575 710
+click
+sleep 0.4
+same "the tiles of one's own with it removed" "$(value .control.custom)" '[]'
+same "the order without it" "$(value '.control.tiles | last')" '"record"'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"

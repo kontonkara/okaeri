@@ -239,6 +239,7 @@ PanelWindow {
 				width: parent.width
 				notification: toast.modelData
 				closable: false
+				says: Settings.notifications.toastText
 				color: Theme.toastFill
 			}
 

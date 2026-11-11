@@ -18,9 +18,11 @@ Singleton {
 	// Someone wants the panel up at a page.
 	signal asked(string page)
 
-	// The tiles there are, by their names, in Settings.control.tiles' order, the
+	// The tiles there are, by their names, the user's own in Settings.control.custom
+	// after the others, and all of them in Settings.control.tiles' order, the
 	// ones it doesn't name after it.
-	readonly property var tiles: ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record"]
+	readonly property var builtIn: ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record"]
+	readonly property var tiles: builtIn.concat(Settings.control.custom.map(own => own.name).filter(name => !builtIn.includes(name)))
 	readonly property var order: Settings.control.tiles.filter(name => tiles.includes(name)).concat(tiles.filter(name => !Settings.control.tiles.includes(name)))
 
 	function show(page) {

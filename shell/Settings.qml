@@ -11,8 +11,9 @@ import Quickshell.Io
 Singleton {
 	id: settings
 
-	// Someone wants the settings window.
+	// Someone wants the settings window, or it open on what `query` finds.
 	signal asked
+	signal sought(string query)
 
 	FileView {
 		id: defaultsFile

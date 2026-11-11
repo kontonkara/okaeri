@@ -715,6 +715,67 @@ shot symbol-mode
 key Escape
 is_closed "the symbols"
 
+# What was copied, by its words, out of a history of this stand's own: Enter
+# copies it again.
+clips=$XDG_STATE_HOME/okaeri/clipboard/history.db
+mkdir -p "${clips%/*}"
+printf 'the first thing copied' | cliphist -db-path "$clips" store
+printf 'another one after it' | cliphist -db-path "$clips" store
+open
+type "/clip first"
+sleep 0.6
+shot clip-mode
+key Return
+is_closed "what was copied"
+for _ in $(seq 20); do
+	[ "$(wl-paste -n 2>/dev/null)" = 'the first thing copied' ] && break
+	sleep 0.1
+done
+[ "$(wl-paste -n 2>/dev/null)" = 'the first thing copied' ] || fail "what was picked isn't on the clipboard: $(wl-paste -n 2>&1)"
+
+# The settings, on what's looked for: here there's no window to come, and the
+# panel goes for it.
+open
+type "/set tips"
+sleep 0.3
+key Return
+is_closed "the settings"
+nothing_launched
+
+# A script's lines to pick one of: what's typed narrows them down, Enter is the
+# answer, Escape is none, and with nothing found what's typed is.
+dmenu() {
+	OKAERI_SHELL_DIR="$work/shell" "$repo/bin/okaeri" dmenu "$@"
+}
+printf 'one\ntwo\nthree\n' | dmenu "Which" >"$work/picked" &
+picker=$!
+sleep 0.8
+shot dmenu
+type "tw"
+sleep 0.3
+key Return
+wait "$picker" || fail "a script got no answer"
+[ "$(cat "$work/picked")" = two ] || fail "a script was told \"$(cat "$work/picked")\", not two"
+is_closed "a script's lines"
+nothing_launched
+printf 'one\ntwo\n' | dmenu >"$work/picked" &
+picker=$!
+sleep 0.8
+key Escape
+if wait "$picker"; then
+	fail "a script got an answer with nothing picked: $(cat "$work/picked")"
+fi
+is_closed "a script's lines, with Escape"
+printf 'one\n' | dmenu >"$work/picked" &
+picker=$!
+sleep 0.8
+type "another"
+sleep 0.3
+key Return
+wait "$picker" || fail "a script got no answer for what was typed"
+[ "$(cat "$work/picked")" = another ] || fail "a script was told \"$(cat "$work/picked")\", not what was typed"
+is_closed "a script's lines, with something else typed"
+
 # Weight in the wheel and the touchpad, over a list long enough for them.
 for number in $(seq 20); do
 	ipc entries add "long.$number" "Longlist $number" nosuchicon

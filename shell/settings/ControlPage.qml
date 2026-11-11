@@ -8,11 +8,12 @@ import qs.ui
 // goes, or to Hidden to leave it out, and the panel follows as it's let go. A
 // click on one shows its width: half a row, or a whole one. One left alone in
 // its row takes all of it either way. What doesn't apply here doesn't show in
-// the panel either way.
+// the panel either way. A tile of the user's own is made here: a command for a
+// click, and one that says whether it's on.
 Flickable {
 	id: page
 
-	readonly property var names: ({
+	readonly property var builtIn: ({
 			wifi: "Wi-Fi",
 			bluetooth: "Bluetooth",
 			night: "Night light",
@@ -22,6 +23,15 @@ Flickable {
 			vpn: "VPN",
 			record: "Screen recording"
 		})
+	// The user's own go by the names they have.
+	readonly property var custom: Settings.control.custom
+	readonly property var names: {
+		const all = Object.assign({}, builtIn);
+		custom.forEach(own => all[own.name] = all[own.name] ?? own.name);
+		return all;
+	}
+	readonly property bool own: chosen !== "" && builtIn[chosen] === undefined
+	readonly property var signs: Object.keys(Theme.icons).map(name => ({ value: name, text: name }))
 	readonly property var lanes: [
 		{ name: "shown", text: "Tiles" },
 		{ name: "hidden", text: "Hidden" }
@@ -74,6 +84,39 @@ Flickable {
 		}
 		held = "";
 		moved = null;
+	}
+
+	// One more of the user's own, with its card up.
+	function add() {
+		let name = "Mine";
+		for (let count = 2; names[name] !== undefined; count++)
+			name = `Mine ${count}`;
+		Settings.set("control", "custom", custom.concat([{ name, command: "", check: "", icon: "play" }]));
+		chosen = name;
+	}
+
+	function change(name, key, value) {
+		Settings.set("control", "custom", custom.map(own => own.name === name ? Object.assign({}, own, { [key]: value }) : own));
+	}
+
+	// By another name it keeps its place, its width and whether it's hidden. Not
+	// by none, nor by one that's taken: false then.
+	function rename(name, to) {
+		if (to === name)
+			return true;
+		if (!to || names[to] !== undefined)
+			return false;
+		const order = Control.order;
+		change(name, "name", to);
+		["tiles", "wide", "hidden"].forEach(key => Settings.set("control", key, (key === "tiles" ? order : Settings.control[key]).map(other => other === name ? to : other)));
+		chosen = to;
+		return true;
+	}
+
+	function remove(name) {
+		["tiles", "wide", "hidden"].forEach(key => Settings.set("control", key, Settings.control[key].filter(other => other !== name)));
+		Settings.set("control", "custom", custom.filter(own => own.name !== name));
+		chosen = "";
 	}
 
 	function widen(name, wanted) {
@@ -192,8 +235,26 @@ Flickable {
 					}
 				}
 
-				Note {
-					text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN and the screen recording show only where the machine has them."
+				Item {
+					width: parent.width
+					height: Math.max(about.height, adding.height)
+
+					Note {
+						id: about
+
+						width: parent.width - adding.width - Theme.u(12)
+						text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN and the screen recording show only where the machine has them."
+					}
+
+					Button {
+						id: adding
+
+						anchors.right: parent.right
+						height: Theme.u(30)
+						text: "Add your own"
+						tip: "A tile that runs a command"
+						onClicked: page.add()
+					}
 				}
 			}
 
@@ -268,6 +329,59 @@ Flickable {
 				]
 				value: Settings.control.wide.includes(page.chosen)
 				onChosen: value => page.widen(page.chosen, value)
+			}
+
+			// Anew for another tile: what was typed and not kept goes.
+			Repeater {
+				model: page.own ? [page.chosen] : []
+
+				Column {
+					id: tile
+
+					required property string modelData
+					readonly property var its: page.custom.find(other => other.name === modelData) ?? ({})
+					// A name it couldn't take.
+					property bool refused: false
+
+					width: parent.width
+					spacing: Theme.u(10)
+
+					Field {
+						text: "What it's called"
+						subtext: tile.refused ? "A tile goes by that name" : "On the tile, Enter to keep"
+						value: tile.modelData
+						onKept: value => tile.refused = !page.rename(tile.modelData, value)
+					}
+
+					Field {
+						text: "A click runs"
+						subtext: "For sh: OKAERI_ON is 1 with the tile on"
+						placeholder: "A command"
+						value: tile.its.command ?? ""
+						onKept: value => page.change(tile.modelData, "command", value)
+					}
+
+					Field {
+						text: "It's on when"
+						subtext: "Its command ends well then: with none it's a button"
+						placeholder: "A command"
+						value: tile.its.check ?? ""
+						onKept: value => page.change(tile.modelData, "check", value)
+					}
+
+					Pick {
+						text: "Its sign"
+						options: page.signs
+						value: tile.its.icon ?? "play"
+						onChosen: value => page.change(tile.modelData, "icon", value)
+					}
+
+					Button {
+						height: Theme.u(30)
+						text: "Remove it"
+						onClicked: page.remove(tile.modelData)
+					}
+				}
 			}
 		}
 	}

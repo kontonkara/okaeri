@@ -4,9 +4,25 @@
 #   okaeri                runs it, in a Wayland session
 #   okaeri <target> ...   calls it, as a compositor's binds do: `okaeri launcher
 #                         toggle`, `okaeri volume up 10`
+#   okaeri dmenu [prompt] shows the lines of standard input to pick one of, and
+#                         prints it, as dmenu does for scripts
 set -eu
 
 shell=${OKAERI_SHELL_DIR:-$(dirname "$(readlink -f "$0")")/../shell}
+
+# A list to pick from, a line each on standard input: the launcher shows it, the
+# line picked is printed, and with none picked it ends in 1.
+if [ "${1:-}" = dmenu ]; then
+	dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/okaeri-dmenu.XXXXXX")
+	trap 'rm -rf "$dir"' EXIT
+	cat >"$dir/lines"
+	mkfifo "$dir/answer"
+	quickshell ipc -p "$shell" call -- launcher menu "$dir/lines" "$dir/answer" "${2:-}" >/dev/null || exit 1
+	picked=$(cat "$dir/answer")
+	[ -n "$picked" ] || exit 1
+	printf '%s\n' "$picked"
+	exit 0
+fi
 
 [ "$#" -eq 0 ] || exec quickshell ipc -p "$shell" call -- "$@"
 
