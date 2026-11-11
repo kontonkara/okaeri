@@ -128,6 +128,13 @@ Flickable {
 			}
 
 			Setting {
+				text: "A line for the time left"
+				subtext: "Under each: it has all of it again after the pointer was on it"
+				checked: Settings.notifications.timeLeft
+				onToggled: wanted => page.set("timeLeft", wanted)
+			}
+
+			Setting {
 				text: "Quiet while the screen is shared"
 				subtext: "Critical ones still show"
 				checked: Settings.notifications.quietSharing
@@ -288,7 +295,7 @@ Flickable {
 
 						TextField {
 							width: parent.width
-							placeholder: "Only when it says, Enter to keep"
+							placeholder: "Only when it says this, or /a pattern/, Enter to keep"
 							text: line.held.text ?? ""
 							onAccepted: page.change(line.modelData, "text", text || undefined)
 						}

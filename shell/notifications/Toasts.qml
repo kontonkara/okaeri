@@ -9,7 +9,9 @@ import qs.ui
 // the bar when that's up there and the screen has one, the newest nearest the edge, and beside a panel that
 // opens in that corner. They take no keys, and outside them the pointer goes through.
 // The window is a strip as wide as they are: a compositor
-// blurs all of a surface that asks for it, however little of it shows.
+// blurs all of a surface that asks for it, however little of it shows. A line under
+// each says how much of its time is left, unless Settings.notifications.timeLeft is
+// off, and it has all of it again once the pointer has been on it.
 PanelWindow {
 	id: window
 
@@ -213,10 +215,16 @@ PanelWindow {
 			// A replaced one starts over. The hints are all that's new when a new
 			// process sends the same words.
 			readonly property var sent: [modelData.summary, modelData.body, modelData.hints]
+			// How much of its time is left, 1 to 0, and whether a line says so:
+			// not for one that stays, nor where nothing moves.
+			property real remaining: 1
+			readonly property bool timed: Settings.notifications.timeLeft && Theme.animate && life.interval > 0
 
 			onSentChanged: {
-				if (life.running)
+				if (life.running) {
 					life.restart();
+					draining.restart();
+				}
 			}
 
 			width: ListView.view.width
@@ -245,6 +253,30 @@ PanelWindow {
 				interval: NotificationStore.lifetime(toast.modelData)
 				running: interval > 0 && !hover.hovered
 				onTriggered: NotificationStore.takeDown(n => n === toast.modelData)
+			}
+
+			// The line goes with the timer, which starts over after the pointer.
+			NumberAnimation {
+				id: draining
+
+				target: toast
+				property: "remaining"
+				from: 1
+				to: 0
+				duration: life.interval
+				running: toast.timed && life.running
+			}
+
+			// Along its lower edge, between its corners, on whole pixels: whole while
+			// the pointer is on it.
+			Rectangle {
+				x: Math.round(Theme.cardRadius)
+				y: Math.round(card.height) - height - Math.max(1, Math.round(Theme.u(1)))
+				width: (card.width - 2 * x) * (hover.hovered ? 1 : toast.remaining)
+				height: Math.max(2, Math.round(Theme.u(2)))
+				radius: height / 2
+				visible: toast.timed
+				color: card.critical ? Theme.colors.error : Qt.alpha(Theme.colors.text, 0.3)
 			}
 		}
 	}

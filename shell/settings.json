@@ -68,6 +68,7 @@
 		"position": "top-right",
 		"overFullscreen": true,
 		"actions": true,
+		"timeLeft": true,
 		"stack": true,
 		"bellAlways": true,
 		"bellCount": true,

@@ -715,6 +715,9 @@ send -a Photos -i "$out/picture.png" "Square" "Corners from the theme."
 send -a Files -A open=Open "No animations" "Still comes and goes." >/dev/null &
 sender=$!
 wait_state toasts 2
+# Nothing to wait out, but the window that has them comes a frame or two after
+# they're known.
+sleep 0.2
 shot square-toasts
 [ "$(pixel square-toasts 1016 42)" != "$backdrop" ]
 ipc notifications toggle
@@ -799,6 +802,16 @@ wait_state dnd true
 settle
 shot dnd-wheel
 wheel -1
+wait_state dnd false
+# The arrows beside the switch do the same, from off too: with a time under its
+# name the line is a little taller.
+move 1320 "$empty_toggle_y"
+click
+wait_state dnd true
+settle
+shot dnd-arrow
+move 1295 $((empty_toggle_y + 4))
+click
 wait_state dnd false
 key Escape
 wait_state panel false
@@ -969,6 +982,8 @@ send -a Mail "Read already" "Looked at before the reload."
 wait_state history 1
 ipc notifications toggle
 wait_state panel true
+# The keys are the panel's once it's on the screen, a moment after it's said to be.
+settle
 key Escape
 wait_state panel false
 is unread 0
@@ -977,6 +992,7 @@ wait_state history 2
 is unread 1
 ipc notifications toggle
 wait_state panel true
+settle
 key Escape
 wait_state panel false
 ipc notifications dnd true
@@ -1439,3 +1455,119 @@ printf '{}\n' >"$config"
 sleep 0.5
 ipc notifications clear
 wait_state history 0
+
+step "How long a toast has"
+# A line under it gets shorter as its time goes, is whole again with the pointer
+# on it, and isn't there with that off.
+# How many lit pixels the line under the top toast has in shot $1.
+line() {
+	magick "$out/$1.png" -crop 352x6+1030+118 +repage -colorspace Gray -threshold 20% -format '%[fx:round(mean*w*h)]' info:
+}
+send -a Mail -t 4000 "Timed" "Four seconds of it."
+wait_state toasts 1
+settle
+shot line-first
+sleep 1.5
+shot line-later
+first=$(line line-first)
+later=$(line line-later)
+[ "$first" -gt 300 ] && [ "$later" -gt 100 ] && [ "$later" -lt $((first * 3 / 4)) ] || {
+	echo "notifications: the line went from $first to $later" >&2
+	return 1
+}
+move 1200 80
+sleep 0.4
+shot line-held
+[ "$(line line-held)" -gt "$first" ] || {
+	echo "notifications: the line under the pointer is $(line line-held), not over $first" >&2
+	return 1
+}
+move 300 600
+printf '{ "notifications": { "timeLeft": false } }\n' >"$config"
+sleep 0.5
+shot line-off
+is toasts 1
+[ "$(line line-off)" = 0 ] || {
+	echo "notifications: a line with that off: $(line line-off)" >&2
+	return 1
+}
+printf '{}\n' >"$config"
+sleep 0.5
+reset
+
+step "A pattern for a rule"
+# Between slashes a rule's text is a pattern for the words, and one that's no
+# pattern fits nothing.
+printf '%s\n' '{ "notifications": { "rules": [{ "text": "/(/", "toast": false }, { "text": "/^build (failed|broke)/", "toast": false }] } }' >"$config"
+sleep 0.5
+send -a CI "Build FAILED" "On main."
+wait_state history 1
+sleep 0.4
+is toasts 0
+send -a CI "The build failed" "Not where the pattern wants it."
+wait_state toasts 1
+printf '{}\n' >"$config"
+sleep 0.5
+reset
+
+step "An app kept quiet"
+# For a while its toasts wait, and the history has them all the same; a critical
+# one shows, and so do the others'.
+quiet_apps() {
+	ipc notifications state | jq -c .quiet
+}
+quiet_is() {
+	[ "$(quiet_apps)" = "$1" ] || {
+		echo "notifications: quiet are $(quiet_apps), not $1" >&2
+		return 1
+	}
+}
+ipc notifications quiet Chat 600
+quiet_is '["Chat"]'
+send -a Chat "Chatter" "Not now."
+wait_state history 1
+sleep 0.4
+is toasts 0
+send -a Mail "A letter" "From someone else."
+wait_state toasts 1
+send -a Chat -u critical "Fire" "It shows."
+wait_state toasts 2
+# Its time over, it's heard again.
+ipc notifications quiet Chat 2
+sleep 3.2
+quiet_is '[]'
+reset
+# In the history, the button by an app's name: on its card when it's alone
+# there, for an hour, and off again.
+send -a Chat -t 1 "One" "A message."
+wait_state history 1
+wait_state toasts 0
+ipc notifications toggle
+wait_state panel true
+settle
+move 1310 113
+click
+quiet_is '["Chat"]'
+settle
+shot quiet-card
+click
+quiet_is '[]'
+key Escape
+wait_state panel false
+# And on the heading of each, with more than one.
+send -a Mail -t 1 "Two" "A letter."
+wait_state history 2
+wait_state toasts 0
+ipc notifications toggle
+wait_state panel true
+settle
+move 1347 106
+click
+quiet_is '["Mail"]'
+settle
+shot quiet-heading
+click
+quiet_is '[]'
+key Escape
+wait_state panel false
+reset

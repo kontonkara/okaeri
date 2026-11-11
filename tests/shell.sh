@@ -421,8 +421,10 @@ framed() {
 	shot "$3-polkit"
 	ipc polkit cancel
 	wait_up panel 0 "the dialog at $1"
-	timeout 30 notify-send -a Mail "One" "A toast."
-	timeout 30 notify-send -a Mail "Two" "A toast."
+	# With a minute each: the line under a toast, which says how much of that is
+	# left, is still all but whole in the shot.
+	timeout 30 notify-send -a Mail -t 60000 "One" "A toast."
+	timeout 30 notify-send -a Mail -t 60000 "Two" "A toast."
 	wait_up toasts 1 "toasts at $1"
 	settle
 	shot "$3-toasts"

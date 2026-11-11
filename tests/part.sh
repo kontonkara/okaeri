@@ -110,6 +110,10 @@ sed -i -e "s|^\treadonly property string drm: .*|\treadonly property string drm:
 # So do the machine's outputs and inputs: a test that wants some puts its own.
 sed -i -e 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' \
 	-e 's/^\treadonly property var inputs: .*/\tproperty var inputs: []/' "$work/shell/services/Audio.qml"
+# And who listens and watches: an app on the machine with the microphone would
+# be one more thing on the bar.
+sed -i -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' \
+	-e 's/^\treadonly property var camera: .*/\tproperty var camera: []/' "$work/shell/services/Privacy.qml"
 # The machine's battery could run low under a test: here it's what a test says.
 sed -i -e 's/^\treadonly property int charge: .*/\tproperty int charge: 100/' \
 	-e 's/^\treadonly property bool draining: .*/\tproperty bool draining: false/' \

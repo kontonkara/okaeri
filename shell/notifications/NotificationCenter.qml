@@ -65,6 +65,11 @@ Scope {
 			NotificationStore.setDnd(on, 0);
 		}
 
+		// No toasts from `app` for so long, 0 for no longer.
+		function quiet(app: string, seconds: int): void {
+			NotificationStore.setQuiet(app, seconds > 0 ? Date.now() + seconds * 1000 : 0);
+		}
+
 		// For tests and scripts.
 		function state(): string {
 			return JSON.stringify({
@@ -72,6 +77,7 @@ Scope {
 				toasts: NotificationStore.toasts.length,
 				unread: NotificationStore.unread,
 				dnd: NotificationStore.dnd,
+				quiet: Object.keys(NotificationStore.quietApps).sort(),
 				panel: NotificationStore.panelShown,
 				order: NotificationStore.grouped.map(n => n.appName),
 				shown: NotificationStore.shown.length,
