@@ -1376,6 +1376,19 @@ settings '{ "bar": { "right": ["system", "control"] }, "system": { "cpu": false,
 sleep 0.5
 shot load-nothing
 same "what's on the right with nothing to say" "$(lane load-nothing | wc -l)" 1
+# A click on it shows how each has gone: lines over a while, in a panel under it.
+settings '{ "bar": { "right": ["system", "control"] } }'
+sleep 2.5
+shot load-again
+move "$(lane load-again | head -n 1)" 16
+click
+wait_up 1
+sleep 2.5
+shot load-panel
+[ "$(magick "$out/load-panel.png" "$out/load-again.png" -compose difference -composite -crop 300x200+1000+60 +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "no panel under the load"
+key Escape
+wait_up 0
+move 300 600
 settings '{}'
 wait_tray
 

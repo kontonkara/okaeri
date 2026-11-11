@@ -3,7 +3,8 @@ import qs
 import qs.ui
 
 // Wi-Fi: on or off, and the networks in reach. A click connects to a known or
-// an open one, and asks a secured one's password first.
+// an open one, and asks a secured one's password first. One that hides its name is
+// asked for by that, under the rest.
 Section {
 	id: section
 
@@ -67,7 +68,7 @@ Section {
 
 	Rows {
 		values: section.networks
-		room: section.roomInside
+		room: section.roomInside - hidden.height
 		empty: "Looking for networks..."
 		onActivated: (index, network) => section.pick(network)
 
@@ -77,6 +78,94 @@ Section {
 			onKeyGiven: key => {
 				section.asking = null;
 				Wifi.connectWithKey(modelData, key);
+			}
+		}
+	}
+
+	// A network that doesn't say its name isn't among them: its name and its
+	// password, typed.
+	Item {
+		id: hidden
+
+		property bool asking: false
+
+		width: parent.width
+		height: asking ? fields.height + Theme.u(8) : opener.height
+		visible: Wifi.enabled
+
+		function join() {
+			if (name.text.trim() === "")
+				return;
+			Wifi.connectHidden(name.text.trim(), key.text);
+			asking = false;
+		}
+
+		onAskingChanged: {
+			name.text = "";
+			key.text = "";
+			if (asking)
+				name.take();
+			else
+				section.forceActiveFocus();
+		}
+
+		Button {
+			id: opener
+
+			visible: !hidden.asking
+			height: Theme.u(30)
+			flat: true
+			text: "One that hides its name"
+			ink: Theme.colors.subtext
+			onClicked: hidden.asking = true
+		}
+
+		Column {
+			id: fields
+
+			x: Theme.u(8)
+			y: Theme.u(4)
+			width: parent.width - Theme.u(16)
+			visible: hidden.asking
+			spacing: Theme.u(6)
+
+			TextField {
+				id: name
+
+				width: parent.width
+				implicitHeight: Theme.u(34)
+				placeholder: "Its name"
+				onAccepted: key.take()
+				Keys.onEscapePressed: hidden.asking = false
+			}
+
+			Item {
+				width: parent.width
+				height: key.height
+
+				TextField {
+					id: key
+
+					anchors.left: parent.left
+					anchors.right: join.left
+					anchors.rightMargin: Theme.u(6)
+					implicitHeight: Theme.u(34)
+					secret: true
+					placeholder: "Password, if it has one"
+					onAccepted: hidden.join()
+					Keys.onEscapePressed: hidden.asking = false
+				}
+
+				Button {
+					id: join
+
+					anchors.right: parent.right
+					height: key.height
+					filled: true
+					enabled: name.text.trim() !== ""
+					text: "Connect"
+					onClicked: hidden.join()
+				}
 			}
 		}
 	}

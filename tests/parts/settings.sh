@@ -567,7 +567,8 @@ mv "$config.new" "$config"
 sleep 0.5
 page "$launcher_y"
 shot launcher-page
-# The first switch, then the second, and those of the two lists.
+# The first switch, then the second, the folder for files, and the switches of the
+# two lists.
 move "$switch_x" 234
 click
 sleep 0.3
@@ -577,13 +578,15 @@ click
 sleep 0.3
 same "the last sums" "$(value .launcher.sums)" false
 same "the sums are gone" "$(cat "$XDG_STATE_HOME/okaeri/sums.json")" '[]'
-move "$switch_x" 372
+field 934 334 '~/documents'
+same "where files are looked for" "$(value .launcher.files)" "\"$HOME/documents\""
+move "$switch_x" 422
 click
 sleep 0.3
 same "the pinned" "$(value .launcher.pinned)" '[]'
 # With the list empty a line says how, about as tall as the row was.
 shot launcher-page-unpinned
-move "$switch_x" 463
+move "$switch_x" 513
 click
 sleep 0.3
 same "the hidden" "$(value .launcher.hidden)" '[]'

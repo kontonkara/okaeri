@@ -90,11 +90,12 @@ cat "$work/failed-\$scope" 2>/dev/null || echo '[]'
 SH
 chmod +x "$work/systemctl"
 sed -i "s|\"systemctl\"|\"$work/systemctl\"|" "$work/shell/services/Units.qml"
-# The lights here are files a test can write to, not the keyboard's.
+# The lights here are files a test can write to, not the keyboard's: one that wants
+# a keyboard that lights up puts that there too.
 mkdir -p "$work/leds/input9::capslock" "$work/leds/input9::numlock"
 echo 0 >"$work/leds/input9::capslock/brightness"
 echo 0 >"$work/leds/input9::numlock/brightness"
-sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml"
+sed -i "s|/sys/class/leds|$work/leds|g" "$work/shell/services/Locks.qml" "$work/shell/services/KeyboardLight.qml"
 # External monitors are a test's own too, and so is what asks them.
 mkdir -p "$work/drm"
 cat >"$work/ddcutil" <<'SH'

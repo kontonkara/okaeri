@@ -8,12 +8,12 @@ import qs.services
 import qs.ui
 
 // What the volume, the microphone, the brightness, the keyboard layout, a lock
-// key, the power profile, the night light, keeping awake or Do Not Disturb just
-// became, for a moment, on the screen in focus: at its bottom, its top
-// or in its middle, as Settings.osd says, which also says for how long, whether
-// the level is in numbers too and what has no card. The last four only show
-// with no panel open: there they change in sight. Clicks and keys go to what's
-// under it.
+// key, the keyboard's light, the power profile, the night light, keeping awake or
+// Do Not Disturb just became, for a moment, on the screen in focus: at its
+// bottom, its top or in its middle, as Settings.osd says, which also says for how
+// long, whether the level is in numbers too and what has no card. The last four
+// only show with no panel open: there they change in sight. Clicks and keys go to
+// what's under it.
 PanelWindow {
 	id: osd
 
@@ -29,7 +29,8 @@ PanelWindow {
 		profile: "bolt",
 		night: "sunset",
 		awake: "coffee",
-		dnd: "bellOff"
+		dnd: "bellOff",
+		keys: "keyboard"
 	})
 	// The kinds by what the settings turn off.
 	readonly property var groups: ({
@@ -44,7 +45,8 @@ PanelWindow {
 		profile: "profile",
 		night: "night",
 		awake: "awake",
-		dnd: "dnd"
+		dnd: "dnd",
+		keys: "keys"
 	})
 	readonly property real rise: Theme.u(8)
 	readonly property string position: Settings.osd.position
@@ -129,6 +131,13 @@ PanelWindow {
 		function show(kind: string, level: real): void {
 			osd.show(kind, level);
 		}
+	}
+
+	Watch {
+		value: KeyboardLight.level
+		ready: KeyboardLight.available
+		device: KeyboardLight.device
+		onMoved: osd.wants("keys") && osd.show("keys", KeyboardLight.level)
 	}
 
 	Watch {

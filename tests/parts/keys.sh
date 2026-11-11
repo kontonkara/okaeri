@@ -178,6 +178,23 @@ said "record start screen system"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
 
+# A keyboard that lights up, which this stand has only from here: the shell finds
+# it as it starts again. Three steps of light, one of them on.
+mkdir "$work/leds/platform::kbd_backlight"
+echo 1 >"$work/leds/platform::kbd_backlight/brightness"
+echo 3 >"$work/leds/platform::kbd_backlight/max_brightness"
+loads=$(log | grep -c "Configuration Loaded")
+printf '\n// Once more.\n' >>"$work/shell/keys/Keys.qml"
+for _ in $(seq 50); do
+	[ "$(log | grep -c "Configuration Loaded")" -gt "$loads" ] && break
+	sleep 0.1
+done
+sleep 0.5
+reach keylight up 30
+[ "$(lines | tail -n 1)" = "keyboard light 2" ] || fail "the keyboard's light up: $(lines | tail -n 1)"
+ipc keylight down 30
+said "keyboard light 0"
+
 # The bar hides, or stays, as its setting then says.
 hides() {
 	jq -c .bar.autoHide "$XDG_STATE_HOME/okaeri/settings.json"

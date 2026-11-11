@@ -15,7 +15,8 @@ Flickable {
 		{ name: "profile", text: "Power profile", subtext: "Changed with no panel open, as the next three" },
 		{ name: "night", text: "Night light" },
 		{ name: "awake", text: "Keep awake" },
-		{ name: "dnd", text: "Do Not Disturb" }
+		{ name: "dnd", text: "Do Not Disturb" },
+		{ name: "keys", text: "Keyboard light", subtext: "Where the keyboard has one" }
 	]
 
 	function show(name, wanted) {

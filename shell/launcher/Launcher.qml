@@ -10,10 +10,11 @@ import qs.ui
 // The app launcher: what's typed picks from the apps and Enter launches the
 // selected one, copies the answer to a sum, or goes to an open window or to the
 // session menu. A / in front asks for one kind of thing alone, emoji, what was
-// copied and the settings among them, and alone it says which there are. A right
-// click or Shift+Enter on an app shows what else it can do, in the list's place.
-// `okaeri dmenu` has it show a script's lines instead, to pick one of, which the
-// script is told. The field keeps the keys, Up and Down reach the list from it.
+// copied, files by their names and the settings among them, and alone it says
+// which there are. A right click or Shift+Enter on an app shows what else it can
+// do, in the list's place. `okaeri dmenu` has it show a script's lines instead,
+// to pick one of, which the script is told. The field keeps the keys, Up and Down
+// reach the list from it.
 Panel {
 	id: launcher
 
@@ -24,6 +25,7 @@ Panel {
 		{ mode: "wall", text: "Wallpapers", subtext: "/wall", icon: "image" },
 		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it, and copies it", icon: "text" },
 		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again", icon: "clipboard" },
+		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it", icon: "file" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
@@ -33,6 +35,19 @@ Panel {
 	onClippingChanged: {
 		if (clipping)
 			Clipboard.load();
+	}
+
+	// The part of a file's name that's asked for, and the files that have it, as
+	// they're found: under Settings.launcher.files, or the home folder, by fd where
+	// that's there and by find where it's not.
+	readonly property string filing: (field.text.match(/^\s*\/file\s+(.*)$/i) ?? [])[1]?.trim() ?? ""
+	property var files: []
+	readonly property string home: Quickshell.env("HOME")
+
+	onFilingChanged: {
+		files = [];
+		if (filing.length > 1)
+			looking.restart();
 	}
 
 	// A script's lines to pick from, and the pipe that takes the answer: null with
@@ -103,6 +118,24 @@ Panel {
 		}));
 	}
 
+	// Asked again as what's typed changes: one at a time, the last one last.
+	function look() {
+		if (finder.running || filing.length < 2)
+			return;
+		finder.asked = filing;
+		finder.command = ["sh", "-c", 'if command -v fd >/dev/null; then fd --max-results 40 --ignore-case --fixed-strings -- "$2" "$1"; else find "$1" -maxdepth 6 -not -path "*/.*" -iname "*$2*" 2>/dev/null | head -n 40; fi', "sh", Settings.launcher.files || home, filing];
+		finder.running = true;
+	}
+
+	// A row for each, by its name, with where it is under it.
+	function fileRows() {
+		return files.map(path => {
+			const whole = path.replace(/\/$/, "");
+			const cut = whole.lastIndexOf("/");
+			return { file: whole, text: whole.slice(cut + 1), subtext: whole.slice(0, cut).replace(home, "~") || "/", icon: "file", mark: whole };
+		});
+	}
+
 	// What was copied, the newest first, a line of each.
 	function clips(wanted) {
 		return Clipboard.shown.filter(entry => entry.text.toLowerCase().includes(wanted)).slice(0, Apps.limit).map(entry => ({
@@ -157,6 +190,8 @@ Panel {
 			return emoji(query);
 		case "clip":
 			return clips(query);
+		case "file":
+			return fileRows();
 		case "set":
 			return settings(asked[2].trim());
 		case "session":
@@ -271,6 +306,34 @@ Panel {
 		// For tests: how far down the list is.
 		function scrolled(): real {
 			return list.contentY;
+		}
+	}
+
+	// A moment after the last key.
+	Timer {
+		id: looking
+
+		interval: 200
+		onTriggered: launcher.look()
+	}
+
+	Process {
+		id: finder
+
+		// What it was asked for: by the time it's done, that may be something else.
+		property string asked
+
+		stdout: StdioCollector {
+			id: paths
+		}
+		onExited: {
+			if (asked !== launcher.filing) {
+				launcher.look();
+				return;
+			}
+			launcher.files = paths.text.split("\n").filter(path => path !== "");
+			if (launcher.shown)
+				launcher.search();
 		}
 	}
 
@@ -404,6 +467,8 @@ Panel {
 					Calculator.copy(row.copy);
 				else if (row.wallpaper)
 					Settings.set("wallpaper", "path", row.wallpaper);
+				else if (row.file)
+					Env.act("open file", () => Niri.spawn(["xdg-open", row.file]));
 				else if (row.clip) {
 					Clipboard.restore(row.clip);
 					if (Settings.clipboard.paste)
