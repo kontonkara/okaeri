@@ -6,13 +6,14 @@ import qs.ui
 
 // The bar laid out: what's on its left, in its middle, on its right and what's
 // off it. A part is dragged to where it goes, and the bar follows as it's let
-// go; a click on one shows what it has to set. The control center stays on, and
-// a bar on one screen: the way here goes through it. Under them what's for all of
-// the bar, and the screens it's on.
+// go; a click on one shows what it has to set, and under that what clicks on it
+// run. The control center stays on, and a bar on one screen: the way here goes
+// through it. A part of the user's own is made here, a command whose words show
+// on the bar. Under them what's for all of the bar, and the screens it's on.
 Flickable {
 	id: page
 
-	readonly property var names: ({
+	readonly property var builtIn: ({
 		battery: "Battery",
 		bluetooth: "Bluetooth",
 		cast: "Screen sharing",
@@ -30,6 +31,18 @@ Flickable {
 		units: "Failed units",
 		workspaces: "Workspaces"
 	})
+	// The user's own parts go by the names they have.
+	readonly property var scripts: Settings.bar.scripts
+	readonly property var names: {
+		const all = Object.assign({}, builtIn);
+		scripts.forEach(own => all[own.name] = all[own.name] ?? own.name);
+		return all;
+	}
+	readonly property var buttons: [
+		{ name: "left", text: "A click runs" },
+		{ name: "right", text: "A right click" },
+		{ name: "middle", text: "A middle click" }
+	]
 	// Those whose settings are on a page of their own, by its name.
 	readonly property var elsewhere: ({
 		clipboard: "Clipboard",
@@ -142,6 +155,63 @@ Flickable {
 		Settings.set("media", "ignored", wanted ? others.concat([name]) : others);
 	}
 
+	// One more of the user's own, off the bar, with its settings up.
+	function addScript() {
+		let name = "script";
+		for (let count = 2; names[name] !== undefined; count++)
+			name = `script ${count}`;
+		Settings.set("bar", "scripts", scripts.concat([{ name, command: "", every: 10 }]));
+		chosen = name;
+	}
+
+	function changeScript(name, key, value) {
+		Settings.set("bar", "scripts", scripts.map(own => own.name === name ? Object.assign({}, own, { [key]: value }) : own));
+	}
+
+	// By another name it keeps its place on the bar and its clicks. Not by none, nor
+	// by one that's taken: false then.
+	function renameScript(name, to) {
+		if (to === name)
+			return true;
+		if (!to || names[to] !== undefined)
+			return false;
+		// The part first: the bar knows nothing by the new name before.
+		changeScript(name, "name", to);
+		["left", "center", "right"].filter(lane => Settings.bar[lane].includes(name)).forEach(lane => Settings.set("bar", lane, Settings.bar[lane].map(other => other === name ? to : other)));
+		const actions = Object.assign({}, Settings.bar.actions);
+		if (actions[name]) {
+			actions[to] = actions[name];
+			delete actions[name];
+			Settings.set("bar", "actions", actions);
+		}
+		chosen = to;
+		return true;
+	}
+
+	function removeScript(name) {
+		["left", "center", "right"].filter(lane => Settings.bar[lane].includes(name)).forEach(lane => Settings.set("bar", lane, Settings.bar[lane].filter(other => other !== name)));
+		runs(name, "", "");
+		Settings.set("bar", "scripts", scripts.filter(own => own.name !== name));
+		chosen = "";
+	}
+
+	// What `button` on `part` runs from now on: nothing with no command, and with
+	// no button none of them does.
+	function runs(part, button, command) {
+		const actions = Object.assign({}, Settings.bar.actions);
+		const own = button ? Object.assign({}, actions[part]) : {};
+		if (command)
+			own[button] = command;
+		else
+			delete own[button];
+		if (Object.keys(own).length > 0)
+			actions[part] = own;
+		else
+			delete actions[part];
+		if (JSON.stringify(actions) !== JSON.stringify(Settings.bar.actions))
+			Settings.set("bar", "actions", actions);
+	}
+
 	contentHeight: stack.height
 	clip: true
 	boundsBehavior: Flickable.StopAtBounds
@@ -178,6 +248,62 @@ Flickable {
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize - Theme.u(2)
+	}
+
+	// A line with a field: `text`, `subtext` if it has one, and `value` in the
+	// field to start from. Enter keeps what's typed: kept(value).
+	component Field: Item {
+		id: field
+
+		required property string text
+		property string subtext
+		property string placeholder
+		property string value
+		property real fieldWidth: Theme.u(240)
+
+		signal kept(string value)
+
+		width: parent.width
+		height: Theme.u(subtext ? 40 : 34)
+
+		Column {
+			anchors.left: parent.left
+			anchors.right: input.left
+			anchors.rightMargin: Theme.u(12)
+			anchors.verticalCenter: parent.verticalCenter
+
+			Text {
+				width: parent.width
+				text: field.text
+				color: Theme.colors.text
+				elide: Text.ElideRight
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+			}
+
+			Text {
+				width: parent.width
+				visible: text !== ""
+				text: field.subtext
+				textFormat: Text.PlainText
+				color: Theme.colors.subtext
+				elide: Text.ElideRight
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+		}
+
+		TextField {
+			id: input
+
+			anchors.right: parent.right
+			anchors.verticalCenter: parent.verticalCenter
+			implicitWidth: field.fieldWidth
+			implicitHeight: Theme.u(32)
+			placeholder: field.placeholder
+			text: field.value
+			onAccepted: field.kept(text.trim())
+		}
 	}
 
 	Glide {
@@ -264,8 +390,26 @@ Flickable {
 					}
 				}
 
-				Note {
-					text: "A click on a part shows its settings. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+				Item {
+					width: parent.width
+					height: Math.max(about.height, adding.height)
+
+					Note {
+						id: about
+
+						width: parent.width - adding.width - Theme.u(12)
+						text: "A click on a part shows its settings, and under them what clicks on it run. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+					}
+
+					Button {
+						id: adding
+
+						anchors.right: parent.right
+						height: Theme.u(30)
+						text: "Add your own"
+						tip: "A part that shows what a command prints"
+						onClicked: page.addScript()
+					}
 				}
 			}
 
@@ -335,7 +479,48 @@ Flickable {
 
 			Loader {
 				width: parent.width
-				sourceComponent: page.partSettings[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : nothingSettings)
+				sourceComponent: page.partSettings[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : page.builtIn[page.chosen] ? nothingSettings : scriptSettings)
+			}
+		}
+
+		// The tray's icons are apps, with clicks of their own.
+		Card {
+			id: clicks
+
+			width: parent.width
+			visible: page.chosen !== "" && page.chosen !== "tray"
+			title: visible ? "Clicks on it" : ""
+
+			// Anew for another part: what was typed and not kept goes.
+			Repeater {
+				model: clicks.visible ? [page.chosen] : []
+
+				Column {
+					id: commands
+
+					required property string modelData
+					readonly property var kept: Settings.bar.actions[modelData] ?? ({})
+
+					width: parent.width
+					spacing: Theme.u(10)
+
+					Repeater {
+						model: page.buttons
+
+						Field {
+							required property var modelData
+
+							text: modelData.text
+							placeholder: "A command"
+							value: commands.kept[modelData.name] ?? ""
+							onKept: value => page.runs(commands.modelData, modelData.name, value)
+						}
+					}
+
+					Note {
+						text: "A command, kept with Enter, takes the place of what the part does with that button. Emptied, the part has it back."
+					}
+				}
 			}
 		}
 
@@ -365,9 +550,18 @@ Flickable {
 			}
 
 			Setting {
+				text: "It hides"
+				subtext: "Until the pointer rests at the top of the screen, or a panel opens"
+				checked: Settings.bar.autoHide
+				onToggled: wanted => Settings.set("bar", "autoHide", wanted)
+			}
+
+			Setting {
 				text: "Windows keep out from under it"
 				subtext: "Off, they take the whole screen, and the bar is over them"
 				checked: Settings.bar.reserve
+				// A bar that hides keeps no space.
+				enabled: !Settings.bar.autoHide
 				onToggled: wanted => Settings.set("bar", "reserve", wanted)
 			}
 		}
@@ -601,6 +795,13 @@ Flickable {
 			}
 
 			Setting {
+				text: "The apps on each"
+				subtext: "Their icons: a click on one goes to its window"
+				checked: Settings.workspaces.apps
+				onToggled: wanted => Settings.set("workspaces", "apps", wanted)
+			}
+
+			Setting {
 				text: "Those with windows stand out"
 				checked: Settings.workspaces.occupied
 				onToggled: wanted => Settings.set("workspaces", "occupied", wanted)
@@ -819,6 +1020,63 @@ Flickable {
 				height: Theme.u(30)
 				text: "Open"
 				onClicked: page.opens(page.elsewhere[page.chosen])
+			}
+		}
+	}
+
+	Component {
+		id: scriptSettings
+
+		Column {
+			// Anew for another part: what was typed and not kept goes.
+			Repeater {
+				model: [page.chosen]
+
+				Column {
+					id: script
+
+					required property string modelData
+					readonly property var own: page.scripts.find(other => other.name === modelData) ?? ({})
+					// A name it couldn't take.
+					property bool refused: false
+
+					width: parent.width
+					spacing: Theme.u(10)
+
+					Field {
+						text: "What it's called"
+						subtext: script.refused ? "A part goes by that name" : "On the lanes above, and in the config"
+						value: script.modelData
+						onKept: value => script.refused = !page.renameScript(script.modelData, value)
+					}
+
+					Field {
+						text: "Its command"
+						subtext: "For sh, Enter to keep"
+						placeholder: "date +%A"
+						value: script.own.command ?? ""
+						onKept: value => page.changeScript(script.modelData, "command", value)
+					}
+
+					Choice {
+						text: "It runs every"
+						subtext: "Once, each line it goes on to print is shown in turn"
+						values: [0, 1, 2, 5, 10, 30, 60, 300, 900, 3600]
+						value: script.own.every ?? 0
+						none: "Once"
+						onChosen: value => page.changeScript(script.modelData, "every", value)
+					}
+
+					Note {
+						text: "The first line it prints shows, and the second is what the pointer on it says; or a line of JSON as for waybar, with text, tooltip and class. With nothing printed the part isn't there."
+					}
+
+					Button {
+						height: Theme.u(30)
+						text: "Remove it"
+						onClicked: page.removeScript(script.modelData)
+					}
+				}
 			}
 		}
 	}

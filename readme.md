@@ -69,6 +69,13 @@ The settings window changes most things in place, over what the files say, and
 what it does and `theme.json` beside it for how it looks: `shell/settings.json` and
 `shell/themes/dark.json` have every key.
 
+The bar takes parts of your own, made on its page of the settings: a command, and
+what it prints is on the bar. The first line shows and the second is what the
+pointer on it says, or it's a line of JSON as waybar's scripts print, with `text`,
+`tooltip` and `class`. It runs every so many seconds, or once, and then each line
+it goes on to print is shown in turn. A click on any part, yours or not, can run a
+command too, in place of what the part does with that button.
+
 ## Working on it
 
 `./try` opens it in a niri of its own, in a window, next to the desktop you

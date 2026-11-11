@@ -39,6 +39,10 @@ right_y=497
 right2_y=533
 off_y=620
 off_gap_y=660
+# The part made here: in the last lane, on its second line, and on the left once
+# it's there.
+script_x=778
+script_on_x=796
 field_y=217
 picture_y=299
 lower_x=948
@@ -283,17 +287,81 @@ click
 sleep 0.3
 same "the drawer, off again" "$(value .tray.drawer)" false
 
+step "A part of one's own"
+# The button under the lanes makes one, off the bar, with its card up. Dragged
+# onto the bar, it's chosen anew, for its card to come up at the foot of the page.
+page "$bar_y"
+to_top
+move 1007 717
+click
+sleep 0.8
+shot script-added
+same "the part made" "$(value .bar.scripts)" '[{"name":"script","command":"","every":10}]'
+to_top
+drag "$script_x" "$off_gap_y" 900 "$left_y"
+same "the left with it" "$(value .bar.left)" '["workspaces","media","clock","script"]'
+shot script-on
+choose "$script_on_x" "$left_y"
+choose "$script_on_x" "$left_y"
+shot script-card
+# What's typed in the field at $1 $2, kept with Enter.
+field() {
+	move "$1" "$2"
+	click
+	wtype -M ctrl a -m ctrl
+	type "$3"
+	key Return
+	sleep 0.3
+}
+field 934 574 'echo hello'
+same "its command" "$(value '.bar.scripts[0].command')" '"echo hello"'
+move "$higher_x" 625
+click
+sleep 0.3
+same "how often it runs" "$(value '.bar.scripts[0].every')" 30
+# By another name it's the same part where it was, but not by a name that's taken.
+field 934 525 'mine'
+same "its name" "$(value '.bar.scripts[0].name')" '"mine"'
+same "the left with its new name" "$(value .bar.left)" '["workspaces","media","clock","mine"]'
+field 934 525 'clock'
+same "a name that's taken" "$(value '.bar.scripts[0].name')" '"mine"'
+shot script-refused
+# Under its card, what clicks on it run: a command, until the field is emptied.
+move 700 400
+notch 30
+sleep 0.6
+shot script-clicks
+field 932 264 'echo right'
+field 932 308 'echo middle'
+same "what clicks on it run" "$(value .bar.actions)" '{"mine":{"right":"echo right","middle":"echo middle"}}'
+move 932 308
+click
+wtype -M ctrl a -m ctrl
+key BackSpace
+key Return
+sleep 0.3
+same "with a command gone" "$(value .bar.actions)" '{"mine":{"right":"echo right"}}'
+# Removed, it leaves nothing of itself.
+choose "$script_on_x" "$left_y"
+choose "$script_on_x" "$left_y"
+move 575 710
+click
+sleep 0.4
+same "the parts with it removed" "$(value .bar.scripts)" '[]'
+same "the left without it" "$(value .bar.left)" '["workspaces","media","clock"]'
+same "the clicks without it" "$(value .bar.actions)" '{}'
+
 step "All of the bar, and its screens"
 page "$bar_y"
 move 700 400
 notch 30
 sleep 0.6
 shot bar-all
-move "$higher_x" 500
+move "$higher_x" 450
 click
 sleep 0.3
 same "the wheel" "$(value .bar.wheel)" '"volume"'
-move "$switch_x" 550
+move "$switch_x" 500
 click
 sleep 0.3
 same "tips" "$(value .bar.tips)" false
@@ -302,6 +370,15 @@ window_top() {
 	niri msg --json windows | jq '[.[] | select(.title == "Settings") | .layout.tile_pos_in_workspace_view[1]][0] | floor'
 }
 top_before=$(window_top)
+# A bar that hides gives its space up too.
+move "$switch_x" 550
+click
+sleep 0.5
+same "a bar that hides" "$(value .bar.autoHide)" true
+move "$switch_x" $((550 + $(window_top) - top_before))
+click
+sleep 0.5
+same "a bar that stays" "$(value .bar.autoHide)" false
 move "$switch_x" 600
 click
 sleep 0.5

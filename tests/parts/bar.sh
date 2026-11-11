@@ -176,6 +176,19 @@ grep -q '^	property var microphone: \[\]$' "$work/shell/services/Privacy.qml" ||
 sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \
 	"$work/shell/shell.qml" | swap "$work/shell/shell.qml"
 wait_log 'Reloading configuration'
+# That reload began with the first of these, and may have read the rest as they
+# were before: a file put in another's place isn't seen again. Once it's done,
+# one more, with all of them there.
+loaded() {
+	for _ in $(seq 50); do
+		[ "$(log | grep -c "Configuration Loaded")" -ge "$1" ] && return 0
+		sleep 0.1
+	done
+	fail "the shell loaded $(log | grep -c "Configuration Loaded") times, not $1"
+}
+loaded 2
+rewrite "$work/shell/shell.qml" <"$work/shell/shell.qml"
+loaded 3
 
 # Until the app is on the bar, and then where.
 wait_tray() {
@@ -1166,6 +1179,44 @@ shot pills-alike
 # Without the empty ones: the first with its window, and the second, in focus.
 settings '{ "workspaces": { "empty": false } }'
 same "the pills without the empty ones" "$(shot pills-busy-only; pills pills-busy-only)" "12 28"
+# With the apps on each, the first has an icon for each of its two: the one the
+# icon theme has in its colors, and a sign for the one nobody knows. A click on
+# one goes to that app's window, not to the one the workspace last showed.
+niri msg action focus-workspace 1
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-unknown --config NONE -o confirm_os_window_close=0 sleep 30 &
+unknown=$!
+sleep 1.5
+niri msg action focus-workspace 2
+move 300 600
+sleep 0.5
+settings '{ "workspaces": { "apps": true } }'
+shot pills-apps
+# Whether the 16 pixels from $2 across in shot $1 are warm in color, as a whole:
+# the edges of letters have colors of their own, which even out.
+colorful() {
+	magick "$out/$1.png" -crop "16x16+$2+13" +repage -format '%[fx:mean.r - mean.b > 0.01]' info:
+}
+same "the icon of an app" "$(colorful pills-apps 23)" 1
+same "the sign for an unknown one" "$(colorful pills-apps 43)" 0
+looks_apart pills-busy-only pills-apps "the first shows no apps"
+app_in_focus() {
+	niri msg --json focused-window | jq -r .app_id
+}
+move 31 21
+click
+sleep 0.5
+same "a click on the first icon" "$(app_in_focus)" kitty
+niri msg action focus-workspace 2
+sleep 0.4
+move 51 21
+click
+sleep 0.5
+same "a click on the second icon" "$(app_in_focus)" okaeri-unknown
+kill "$unknown"
+wait "$unknown" 2>/dev/null || true
+niri msg action focus-workspace 2
+move 300 600
+sleep 0.4
 # The other way: up goes to the next one.
 settings '{ "workspaces": { "reverse": true } }'
 niri msg action focus-workspace 1
@@ -1406,3 +1457,148 @@ shot no-gap
 [ "$(pixel no-gap 1 1)" != "$(pixel gap 1 1)" ] || fail "the corner is as it was with no gap"
 same "the corner against the screen's edge" "$(pixel no-gap 1 1)" "$(pixel no-gap 20 1)"
 theme '{}'
+
+step "A part of one's own"
+# What a command prints is a part of the bar: its first line, with the second
+# for the pointer on it, read anew every second; or a line of JSON, in red where
+# that says so. With nothing printed the part is gone.
+# The bar with `mine` and the control center on its right: mine runs $1 every $2.
+own() {
+	settings "{ \"bar\": { \"right\": [\"mine\", \"control\"], \"scripts\": [{ \"name\": \"mine\", \"command\": \"$1\", \"every\": $2 }]${3:-} } }"
+}
+# Whether what's on the bar around $2 in shot $1 is red, as a whole.
+tinted() {
+	[ "$(magick "$out/$1.png" -crop "160x18+$(($2 - 80))+12" +repage -format '%[fx:mean.r - mean.b > 0.01]' info:)" = 1 ]
+}
+move 300 600
+printf 'first\nsaid under it\n' >"$work/says"
+own "cat $work/says" 1
+sleep 1
+shot own
+same "what's on the right with it" "$(lane own | wc -l)" 2
+mine=$(lane own | head -n 1)
+tinted own "$mine" && fail "the part has a color with none asked for"
+move "$mine" 16
+sleep 1.2
+shot own-tip
+under own-tip "$mine" own || fail "no tip under the part"
+move 300 600
+printf '{"text": "a longer one", "tooltip": "said under it", "class": "critical"}\n' >"$work/says"
+sleep 1.5
+shot own-json
+[ "$(lane own-json | head -n 1)" -lt "$mine" ] || fail "the part doesn't say what's printed now"
+tinted own-json "$mine" || fail "the part isn't red"
+: >"$work/says"
+sleep 1.5
+shot own-nothing
+same "with nothing printed" "$(lane own-nothing | wc -l)" 1
+# Run once, it shows each line as it comes, and all it started goes with it.
+own "echo one; sleep 1; echo and another; exec sleep 37.3" 0
+sleep 0.5
+shot own-one
+sleep 1.2
+shot own-another
+[ "$(lane own-another | head -n 1)" -lt "$(lane own-one | head -n 1)" ] || fail "the part doesn't say the next line"
+same "what it runs" "$(pgrep -fc 'sleep 37[.]3')" 1
+own "echo one; exec sleep 38.3" 0
+sleep 0.5
+same "what it ran, with another command" "$(pgrep -fc 'sleep 37[.]3')" 0
+same "what it runs now" "$(pgrep -fc 'sleep 38[.]3')" 1
+settings '{}'
+sleep 0.5
+same "what it ran, off the bar" "$(pgrep -fc 'sleep 38[.]3')" 0
+
+step "Clicks on a part"
+# A command for a button of a part runs in place of what the part does with it,
+# and the other buttons are the part's still.
+ran() {
+	log | sed -n 's/.*okaeri: dry: run //p' | tr '\n' ','
+}
+own "echo here" 0 ', "actions": { "mine": { "left": "echo left", "right": "echo right" }, "clock": { "middle": "echo clock" } }'
+sleep 0.5
+shot clicks
+mine=$(lane clicks | head -n 1)
+# The pointer on a part with a command is still on the part: its tip comes.
+move 700 16
+sleep 1.2
+shot clicks-tip
+under clicks-tip 700 clicks || fail "no tip under a part with a command"
+move "$mine" 16
+click
+click right
+click middle
+move 700 16
+click middle
+sleep 0.3
+same "what the clicks ran" "$(ran)" "echo left,echo right,echo clock,"
+click
+sleep 0.6
+shot clicks-month
+under clicks-month 700 clicks || fail "the clock's own click doesn't open the month"
+key Escape
+sleep 0.4
+move 300 600
+settings '{}'
+
+step "A bar that hides"
+# Out of sight, it leaves the windows the whole screen. The pointer brings it
+# back once it rests at the top of the screen, not as it passes, which every
+# move here does by the corner; on the bar it stays, and a panel has it too.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 -T "Under the bar" sleep 30 &
+under=$!
+sleep 1.5
+kept=$(tile)
+move 300 600
+shot hides-not
+settings '{ "bar": { "autoHide": true } }'
+sleep 1
+shot hides
+there() {
+	[ "$(pixel "$1" 900 8)" = "$(pixel hides-not 900 8)" ]
+}
+there hides && fail "the bar stays in sight"
+[ "$(tile | cut -d. -f1)" -gt "$(echo "$kept" | cut -d. -f1)" ] || fail "the window doesn't take the bar's place: $kept, then $(tile)"
+move 400 600
+sleep 0.6
+shot hides-passed
+there hides-passed && fail "the pointer passing the top brought the bar"
+move 700 0
+sleep 0.8
+shot hides-edge
+there hides-edge || fail "the top of the screen doesn't bring the bar"
+move 700 20
+sleep 1
+shot hides-on
+there hides-on || fail "the bar went from under the pointer"
+move 300 600
+sleep 1
+shot hides-left
+there hides-left && fail "the bar stays with the pointer gone"
+ipc control toggle
+sleep 0.6
+shot hides-panel
+there hides-panel || fail "a panel opened without the bar"
+ipc control toggle
+sleep 1.2
+shot hides-closed
+there hides-closed && fail "the bar stays with the panel gone"
+# Started as one that hides, it's out of sight from the first, and comes as before.
+loads=$(log | grep -c "Configuration Loaded")
+printf '\n// Once more.\n' >>"$work/shell/bar/Bar.qml"
+loaded $((loads + 1))
+sleep 0.2
+shot hides-start
+there hides-start && fail "a bar that hides starts in sight"
+move 700 0
+sleep 0.8
+shot hides-start-edge
+there hides-start-edge || fail "the top of the screen doesn't bring a bar that started out of sight"
+move 300 600
+sleep 1
+settings '{}'
+sleep 0.6
+shot hides-over
+there hides-over || fail "the bar that doesn't hide is out of sight"
+same "the window with the space kept again" "$(tile)" "$kept"
+kill "$under"
+wait "$under" 2>/dev/null || true

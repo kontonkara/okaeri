@@ -87,6 +87,7 @@
 	},
 	"workspaces": {
 		"labels": "none",
+		"apps": false,
 		"occupied": true,
 		"empty": true,
 		"reverse": false
@@ -138,6 +139,9 @@
 		"hideOn": [],
 		"wheel": "split",
 		"tips": true,
-		"reserve": true
+		"reserve": true,
+		"autoHide": false,
+		"actions": {},
+		"scripts": []
 	}
 }
