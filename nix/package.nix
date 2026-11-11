@@ -15,6 +15,8 @@
   wl-clipboard,
   wtype,
   wlsunset,
+  wf-recorder,
+  slurp,
   ddcutil,
 }:
 
@@ -54,6 +56,8 @@ stdenvNoCC.mkDerivation {
           wl-clipboard
           wtype
           wlsunset
+          wf-recorder
+          slurp
           ddcutil
         ]
       } \

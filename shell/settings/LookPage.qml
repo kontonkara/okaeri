@@ -129,5 +129,82 @@ Flickable {
 				onChosen: value => Theme.set("scale", value / 100)
 			}
 		}
+
+		Card {
+			id: colors
+
+			// The palettes by the names they show under.
+			readonly property var palettes: Theme.palettes.map(name => ({ value: name, text: name.split("-").map(word => word[0].toUpperCase() + word.slice(1)).join(" ") }))
+			readonly property var hours: Array.from({ length: 24 }, (hour, at) => ({ value: `${String(at).padStart(2, "0")}:00`, text: `${String(at).padStart(2, "0")}:00` }))
+
+			width: parent.width
+			title: "Colors"
+
+			Pick {
+				text: "Palette"
+				subtext: Theme.own.extends ? "" : "With your own colors, where the file has them"
+				visible: !Theme.timed
+				valueWidth: Theme.u(150)
+				options: [{ value: "", text: "As the file says" }].concat(colors.palettes)
+				value: Theme.own.extends ?? ""
+				onChosen: value => Theme.set("extends", value || undefined)
+			}
+
+			Pick {
+				text: "Another by day"
+				subtext: Theme.values.auto === "sun" ? "From sunrise to sunset, where the night light or the weather is set for" : ""
+				valueWidth: Theme.u(150)
+				options: [
+					{ value: "off", text: "No" },
+					{ value: "time", text: "By the clock" },
+					{ value: "sun", text: "By the sun" }
+				]
+				value: Theme.values.auto
+				onChosen: value => Theme.set("auto", value)
+			}
+
+			Pick {
+				text: "By day"
+				visible: Theme.timed
+				valueWidth: Theme.u(150)
+				options: colors.palettes
+				value: Theme.values.day
+				onChosen: value => Theme.set("day", value)
+			}
+
+			Pick {
+				text: "By night"
+				visible: Theme.timed
+				valueWidth: Theme.u(150)
+				options: colors.palettes
+				value: Theme.values.night
+				onChosen: value => Theme.set("night", value)
+			}
+
+			Pick {
+				text: "Day is from"
+				visible: Theme.values.auto === "time"
+				valueWidth: Theme.u(150)
+				options: colors.hours
+				value: Theme.values.dayFrom
+				onChosen: value => Theme.set("dayFrom", value)
+			}
+
+			Pick {
+				text: "Night is from"
+				visible: Theme.values.auto === "time"
+				valueWidth: Theme.u(150)
+				options: colors.hours
+				value: Theme.values.nightFrom
+				onChosen: value => Theme.set("nightFrom", value)
+			}
+
+			Setting {
+				text: "The accent from the wallpaper"
+				subtext: "Its most vivid color, where it has one to speak of"
+				checked: !!Theme.values.wallpaperAccent
+				onToggled: wanted => Theme.set("wallpaperAccent", wanted)
+			}
+		}
 	}
 }

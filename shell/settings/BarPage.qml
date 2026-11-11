@@ -30,7 +30,9 @@ Flickable {
 		title: "Window title",
 		tray: "Tray",
 		units: "Failed units",
-		workspaces: "Workspaces"
+		workspaces: "Workspaces",
+		// Last, as the newest: the lanes show them in this order.
+		recording: "Screen recording"
 	})
 	// The user's own parts go by the names they have.
 	readonly property var scripts: Settings.bar.scripts
@@ -401,7 +403,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen recording, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
 					}
 
 					Button {

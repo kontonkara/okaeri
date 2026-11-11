@@ -7,11 +7,11 @@ import qs.ui
 
 // The battery, with the way to the settings and the session menu; the volume,
 // the brightness and the microphone; and tiles for Wi-Fi, Bluetooth, the night
-// light, keeping awake, the power profile, airplane mode and VPN. An arrow on a
-// tile or a level opens its page in the panel's place: the networks, the
-// devices, the VPNs, where the sound goes and what plays, the microphones.
-// Escape there goes back, and a closing panel too. What's in it is there only
-// while it shows, so what's typed in it goes with it.
+// light, keeping awake, the power profile, airplane mode, VPN and recording the
+// screen. An arrow on a tile or a level opens its page in the panel's place: the
+// networks, the devices, the VPNs, where the sound goes and what plays, the
+// microphones. Escape there goes back, and a closing panel too. What's in it is
+// there only while it shows, so what's typed in it goes with it.
 Panel {
 	id: controlCenter
 
@@ -40,6 +40,14 @@ Panel {
 			if (!controlCenter.shown)
 				controlCenter.show();
 		}
+	}
+
+	// Once the panel is out of sight.
+	Timer {
+		id: recording
+
+		interval: 300
+		onTriggered: Recorder.start()
 	}
 
 	IpcHandler {
@@ -190,7 +198,7 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
@@ -209,6 +217,7 @@ Panel {
 									bluetooth: bluetoothTile,
 									vpn: vpnTile,
 									airplane: airplaneTile,
+									record: recordTile,
 									night: nightTile,
 									awake: awakeTile,
 									power: powerTile
@@ -274,6 +283,28 @@ Panel {
 							summary: Airplane.on ? "Radios off" : "Off"
 							checked: Airplane.on
 							onToggled: wanted => Airplane.set(wanted)
+						}
+					}
+
+					// The panel goes first: it isn't what's to be recorded.
+					Component {
+						id: recordTile
+
+						Tile {
+							name: "record"
+							wanted: Recorder.available
+							icon: "video"
+							title: "Record"
+							summary: Recorder.recording ? Recorder.clock(Recorder.elapsed) : Settings.recording.area === "region" && Recorder.picks ? "A part of the screen" : "The screen"
+							checked: Recorder.recording
+							onToggled: wanted => {
+								if (wanted) {
+									controlCenter.hide();
+									recording.restart();
+								} else {
+									Recorder.stop();
+								}
+							}
 						}
 					}
 

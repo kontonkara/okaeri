@@ -774,7 +774,13 @@ sleep 3.5
 shot vpn-tile
 tiles_y4=$((tiles_y3 + 66))
 when 'dry: vpn down' at $left_tile_x $tiles_y4
-at $bt_arrow_x $tiles_y4
+# Recording the screen is the tile beside it: the panel goes first, as it isn't
+# what's to be recorded.
+when 'dry: record start screen none' at $right_tile_x $tiles_y4
+sleep 0.4
+[ "$(panels)" = 0 ] || fail "the panel stays for a recording"
+toggle
+at $wifi_arrow_x $tiles_y4
 sleep 0.4
 shot vpn-page
 when 'dry: vpn up' at $row_x "$(row 1)"
@@ -968,7 +974,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|record start screen none|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

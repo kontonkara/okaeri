@@ -5,9 +5,11 @@ import Quickshell
 import Quickshell.Io
 
 // What everything on screen is drawn with: themes/dark.json (it has every
-// key), the built-in theme the user's okaeri/theme.json extends, that file
-// itself, which takes effect as it's saved, and over those what the settings
-// window changed, in a file of the shell's own. Colors merge key by key.
+// key), the user's okaeri/theme.json, which takes effect as it's saved, and
+// over those what the settings window changed, in a file of the shell's own.
+// The colors are a palette's, the one the user's file `extends`, with its own
+// `colors` over that key by key, or the one chosen in the settings window, or
+// the hour's; and the accent can be the wallpaper's.
 Singleton {
 	id: theme
 
@@ -18,6 +20,13 @@ Singleton {
 			console.warn(`okaeri: can't read ${file}: ${error.message}`);
 			return {};
 		}
+	}
+
+	FileView {
+		id: palettesFile
+
+		path: Quickshell.shellPath("themes/palettes.json")
+		blockLoading: true
 	}
 
 	FileView {
@@ -68,10 +77,13 @@ Singleton {
 		}
 	}
 
-	readonly property var builtIn: ({
+	// The palettes there are, by name: dark and light, those of
+	// themes/palettes.json, and the user's own, `palettes` in their file.
+	readonly property var builtIn: Object.assign({
 		dark: parse(darkFile.text(), darkFile.path),
 		light: parse(lightFile.text(), lightFile.path)
-	})
+	}, parse(palettesFile.text(), palettesFile.path), user.palettes)
+	readonly property var palettes: Object.keys(builtIn)
 	property var user: ({})
 	property var own: ({})
 	property bool userRead: false
@@ -90,15 +102,97 @@ Singleton {
 		ownFile.setText("{}\n");
 	}
 
+	// With the file's own palettes, which the list above may not have yet.
 	onUserChanged: {
-		if (user.extends && !(user.extends in builtIn))
-			console.warn(`okaeri: no theme "${user.extends}", it's one of ${Object.keys(builtIn).join(", ")}`);
+		const known = Object.keys(Object.assign({}, builtIn, user.palettes));
+		if (user.extends && !known.includes(user.extends))
+			console.warn(`okaeri: no theme "${user.extends}", it's one of ${known.join(", ")}`);
 	}
 
-	readonly property var parent: builtIn[user.extends] || {}
-	readonly property var values: Object.assign({}, builtIn.dark, parent, user, own, {
-		colors: Object.assign({}, builtIn.dark.colors, parent.colors, user.colors)
+	// Everything but the colors, which come from a palette.
+	readonly property var plain: Object.assign({}, builtIn.dark, user, own)
+	// With `auto`, "time" or "sun", the palette is `day`'s by day and `night`'s
+	// by night: from `dayFrom` to `nightFrom` by the clock, or from sunrise to
+	// sunset where the night light or the weather is set for, and by the clock
+	// where neither is. A minute at a time, and only then.
+	readonly property bool timed: plain.auto === "time" || plain.auto === "sun"
+	readonly property bool day: {
+		if (!timed)
+			return false;
+		const at = clock.date.getHours() * 60 + clock.date.getMinutes();
+		const sun = plain.auto === "sun" ? sunOn(clock.date) : null;
+		const from = sun ? sun.rise : minutes(plain.dayFrom);
+		const to = sun ? sun.set : minutes(plain.nightFrom);
+		return from <= to ? at >= from && at < to : at >= from || at < to;
+	}
+	// The palette that's on: the hour's, the one the settings window chose, or
+	// the one the user's file extends. One chosen here or by the hour is all of
+	// the colors: the user's own would be those of one palette on another.
+	readonly property bool chosen: timed || !!own.extends
+	readonly property string named: timed ? (day ? plain.day : plain.night) : own.extends || user.extends || ""
+	readonly property var parent: builtIn[named] || {}
+	readonly property var palette: Object.assign({}, builtIn.dark.colors, parent.colors, chosen ? {} : user.colors)
+	readonly property bool light: Qt.color(palette.background).hslLightness > 0.5
+	// With `wallpaperAccent`, the accent is the wallpaper's most vivid color, as
+	// light or dark as the palette takes: one with no color to speak of leaves it.
+	readonly property var vivid: {
+		let best = null;
+		let most = 0.2;
+		for (let at = 0; at < quantizer.colors.length; at++) {
+			const color = quantizer.colors[at];
+			const vividness = color.hslSaturation * (1 - Math.abs(color.hslLightness - 0.5) * 1.2);
+			if (vividness > most) {
+				best = color;
+				most = vividness;
+			}
+		}
+		return best ? Qt.hsla(best.hslHue, Math.min(best.hslSaturation, 0.7), light ? 0.38 : 0.74, 1) : null;
+	}
+	readonly property var values: Object.assign({}, plain, {
+		colors: Object.assign({}, palette, plain.wallpaperAccent && vivid ? { accent: vivid } : {})
 	})
+
+	// "07:30" in minutes of the day.
+	function minutes(text) {
+		const parts = `${text}`.split(":");
+		return (Number(parts[0]) || 0) * 60 + (Number(parts[1]) || 0);
+	}
+
+	// When the sun rises and sets on `date`, in minutes of the day here, where the
+	// settings say where that is, and it does both that day.
+	function sunOn(date) {
+		const places = [Settings.nightLight, Settings.weather].filter(place => place.latitude !== 0 || place.longitude !== 0);
+		if (places.length === 0)
+			return null;
+		const degree = Math.PI / 180;
+		const latitude = places[0].latitude * degree;
+		const start = new Date(date.getFullYear(), 0, 0);
+		const year = 2 * Math.PI / 365 * (Math.floor((date - start) / 86400000) - 0.5);
+		const drift = 229.18 * (0.000075 + 0.001868 * Math.cos(year) - 0.032077 * Math.sin(year) - 0.014615 * Math.cos(2 * year) - 0.040849 * Math.sin(2 * year));
+		const tilt = 0.006918 - 0.399912 * Math.cos(year) + 0.070257 * Math.sin(year) - 0.006758 * Math.cos(2 * year) + 0.000907 * Math.sin(2 * year) - 0.002697 * Math.cos(3 * year) + 0.00148 * Math.sin(3 * year);
+		const reach = Math.cos(90.833 * degree) / (Math.cos(latitude) * Math.cos(tilt)) - Math.tan(latitude) * Math.tan(tilt);
+		if (reach < -1 || reach > 1)
+			return null;
+		const half = Math.acos(reach) / degree;
+		const noon = 720 - 4 * places[0].longitude - drift - date.getTimezoneOffset();
+		return { rise: noon - 4 * half, set: noon + 4 * half };
+	}
+
+	SystemClock {
+		id: clock
+
+		enabled: theme.timed
+		precision: SystemClock.Minutes
+	}
+
+	// The wallpaper's colors, read small, only when the accent is to be one.
+	ColorQuantizer {
+		id: quantizer
+
+		source: theme.plain.wallpaperAccent ? Settings.url(Settings.wallpaper.path) : ""
+		depth: 3
+		rescaleSize: 64
+	}
 
 	readonly property var colors: values.colors
 	readonly property string font: values.font || Qt.application.font.family

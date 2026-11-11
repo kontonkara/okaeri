@@ -41,10 +41,10 @@ off_y=620
 off_gap_y=660
 # The part made here: in the last lane, on its second line, and on the left once
 # it's there.
-script_x=778
+script_x=917
 script_on_x=796
-field_y=217
-picture_y=299
+field_y=257
+picture_y=339
 lower_x=948
 higher_x=1040
 lock_y=255
@@ -409,7 +409,7 @@ shot pictures
 same "the first" "$(pixel pictures 606 "$picture_y")" 336699
 same "the second" "$(pixel pictures 790 "$picture_y")" 996633
 same "the third" "$(pixel pictures 974 "$picture_y")" 339966
-same "after those" "$(pixel pictures 606 403)" 000000
+same "after those" "$(pixel pictures 606 443)" 000000
 
 step "One to pick"
 move 790 "$picture_y"
@@ -429,7 +429,31 @@ move 300 800
 sleep 0.3
 shot nothing
 same "where a picture was" "$(pixel nothing 606 "$picture_y")" 000000
-[ "$(magick "$out/nothing.png" -crop 200x30+690+429 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
+[ "$(magick "$out/nothing.png" -crop 200x30+690+498 +repage -format '%[fx:maxima]' info:)" != 0 ] || fail "nothing says there's nothing"
+
+step "How the wallpaper shows"
+# The other leaf: how one fills the screen, how a new one comes, and when.
+arrow() {
+	move "$1" "$2"
+	click
+}
+move 668 214
+click
+sleep 0.4
+shot wallpaper-how
+arrow "$higher_x" 300
+same "how it fills" "$(value .wallpaper.fill)" '"fit"'
+arrow "$higher_x" 439
+same "how a new one comes" "$(value .wallpaper.transition)" '"slide"'
+arrow "$higher_x" 524
+same "another by itself" "$(value .wallpaper.every)" 5
+move "$switch_x" 574
+click
+sleep 0.3
+same "any of them" "$(value .wallpaper.random)" true
+# Not while this goes on: back by the arrow of a line with words, further in.
+arrow 912 524
+same "another by itself, no more" "$(value .wallpaper.every)" 0
 
 step "When things happen by themselves"
 # The arrow at $1 on the line at $2.
@@ -478,17 +502,17 @@ shot control-page
 # Wi-Fi, the first tile, to Hidden; the rest move up a place.
 drag 656 254 600 480
 same "what's left out" "$(value .control.hidden)" '["wifi"]'
-same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","wifi"]'
+same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","record","wifi"]'
 # Bluetooth, now first, to a whole row, which takes Hidden a row down.
 move 656 254
 click
 sleep 0.3
-arrow "$higher_x" 593
+arrow "$higher_x" 637
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
 drag 594 480 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
-same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn","record"]'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"
@@ -645,6 +669,13 @@ key Return
 sleep 1.2
 same "the page of a part's line" "$(ipc settings shown)" Bar
 shot search-part
+# One on a page's other leaf turns the page to it.
+search 'way it comes'
+key Return
+sleep 0.8
+same "the page of a line on another leaf" "$(ipc settings shown)" Wallpaper
+shot search-leaf
+[ "$(magick "$out/search-leaf.png" -crop 400x20+520+429 +repage -format '%k' info:)" -gt 1 ] || fail "the wallpaper's page didn't turn to the line"
 # Escape empties the field first, and leaves the window there.
 search nothing-of-the-kind
 shot search-nothing
@@ -717,6 +748,18 @@ move "$switch_x" 622
 click
 sleep 0.3
 same "what has none" "$(value .osd.hidden)" '["locks"]'
+
+step "How the screen is recorded"
+page "$display_y"
+shot display-recording
+arrow "$higher_x" 520
+sleep 0.3
+same "what's recorded" "$(value .recording.area)" '"region"'
+arrow "$higher_x" 564
+sleep 0.3
+same "with what sound" "$(value .recording.audio)" '"system"'
+field 942 608 '~/clips'
+same "where the videos go" "$(value .recording.folder)" "\"$HOME/clips\""
 
 step "The display's page"
 page "$display_y"
@@ -807,6 +850,46 @@ sleep 0.3
 shot look-changed
 # The bar went by it: its lower edge is further down.
 [ "$(pixel look-changed 700 38)" != "$(pixel look-before 700 38)" ] || fail "the bar's height didn't change"
+# Its colors, at the foot of the page: a palette, on at once, and the config's
+# again; another by day; the accent from the wallpaper.
+move 700 400
+notch 30
+sleep 0.6
+shot look-colors
+# The arrow back of a wider line.
+wide_lower_x=862
+bright() {
+	magick "$out/$1.png" -format '%[fx:u.p{507,480}.r > 0.7]' info:
+}
+same "the window before" "$(bright look-colors)" 0
+arrow "$higher_x" 614
+arrow "$higher_x" 614
+sleep 0.4
+same "the palette" "$(jq -c .extends "$theme_own")" '"light"'
+shot look-light
+same "the window in a light palette" "$(bright look-light)" 1
+arrow "$wide_lower_x" 614
+arrow "$wide_lower_x" 614
+sleep 0.4
+same "the config's palette again" "$(jq -c .extends "$theme_own")" null
+arrow "$higher_x" 659
+sleep 0.4
+same "another by day" "$(jq -c .auto "$theme_own")" '"time"'
+shot look-timed
+# The palette's line went, and this one is where that was.
+arrow "$wide_lower_x" 609
+sleep 0.4
+same "one all day again" "$(jq -c .auto "$theme_own")" '"off"'
+# To the foot again: the page has moved with what came and went.
+move 700 400
+notch 30
+sleep 0.6
+move "$switch_x" 704
+click
+sleep 0.3
+same "the accent from the wallpaper" "$(jq -c .wallpaperAccent "$theme_own")" true
+click
+sleep 0.3
 page "$tray_y"
 
 step "Back to the config"

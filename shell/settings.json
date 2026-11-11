@@ -16,7 +16,7 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn"],
+		"tiles": ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record"],
 		"wide": [],
 		"hidden": []
 	},
@@ -50,7 +50,13 @@
 	"wallpaper": {
 		"path": "",
 		"folder": "",
+		"fill": "crop",
+		"transition": "fade",
 		"fade": 1500,
+		"every": 0,
+		"random": false,
+		"screens": {},
+		"light": "",
 		"backdrop": false
 	},
 	"tray": {
@@ -101,6 +107,11 @@
 		"units": "celsius",
 		"bar": false
 	},
+	"recording": {
+		"area": "screen",
+		"audio": "none",
+		"folder": ""
+	},
 	"display": {
 		"ddc": false
 	},
@@ -136,7 +147,7 @@
 	"bar": {
 		"left": ["workspaces", "media"],
 		"center": ["clock"],
-		"right": ["privacy", "cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
+		"right": ["privacy", "recording", "cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
 		"hideOn": [],
 		"wheel": "split",
 		"tips": true,
