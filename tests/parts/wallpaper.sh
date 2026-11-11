@@ -52,6 +52,34 @@ wait_color "back to the first" 336699
 settings "$work/brown #1?.png"
 wait_color "a name with # and ?" 996633
 
+# The other ways a new one comes each get it there.
+for way in slide wipe zoom; do
+	printf '{ "wallpaper": { "path": "%s", "fade": 200, "transition": "%s" } }\n' "$work/blue.png" "$way" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+	wait_color "the picture that comes by a $way" 336699
+	printf '{ "wallpaper": { "path": "%s", "fade": 200, "transition": "%s" } }\n' "$work/brown.png" "$way" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+	wait_color "the next picture that comes by a $way" 996633
+done
+
+# One of another shape fills the screen, cut at its sides, or is whole, with the
+# theme's black beside it.
+magick -size 600x1200 xc:'#339966' "$work/tall.png"
+settings "$work/tall.png"
+wait_color "the tall picture" 339966
+shot tall-cropped
+[ "$(pixel tall-cropped 20 450)" = 339966 ] || fail "a cropped picture leaves the side: $(pixel tall-cropped 20 450)"
+printf '{ "wallpaper": { "path": "%s", "fade": 200, "fill": "fit" } }\n' "$work/tall.png" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+shot tall-fitted
+[ "$(pixel tall-fitted 700 450)" = 339966 ] || fail "a fitted picture isn't in the middle: $(pixel tall-fitted 700 450)"
+[ "$(pixel tall-fitted 20 450)" = 000000 ] || fail "a fitted picture is at the side too: $(pixel tall-fitted 20 450)"
+
+# A screen's own picture is that screen's, and the rest have everyone's.
+output=$(niri msg --json outputs | jq -r 'keys[0]')
+printf '{ "wallpaper": { "path": "%s", "fade": 200, "screens": { "%s": "%s" } } }\n' "$work/blue.png" "$output" "$work/brown.png" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+wait_color "the screen's own picture" 996633
+printf '{ "wallpaper": { "path": "%s", "fade": 200, "screens": { "another": "%s" } } }\n' "$work/blue.png" "$work/brown.png" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+wait_color "everyone's picture" 336699
+
 # Blurred behind the overview, and out of the way on the desktop. Half and half,
 # for an edge that blurs.
 magick -size 800x1200 xc:black -size 800x1200 xc:white +append "$work/half.png"
@@ -78,5 +106,30 @@ sleep 0.6
 # Gone again.
 settings ""
 wait_layers 0 "without a path"
+
+
+# Another of the folder's by a call: the next by name, round to the first again,
+# the one before, and any other. That's kept over the config, so it's last here.
+mkdir "$work/pictures"
+magick -size 1600x1200 xc:'#336699' "$work/pictures/a.png"
+magick -size 1600x1200 xc:'#996633' "$work/pictures/b.png"
+magick -size 1600x1200 xc:'#339966' "$work/pictures/c.png"
+printf '{ "wallpaper": { "path": "%s", "folder": "%s", "fade": 200 } }\n' "$work/pictures/a.png" "$work/pictures" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+wait_color "the first of a folder" 336699
+ipc wallpaper next
+wait_color "the next of the folder" 996633
+ipc wallpaper next
+wait_color "the last of the folder" 339966
+ipc wallpaper next
+wait_color "round to the first" 336699
+ipc wallpaper previous
+wait_color "the one before the first" 339966
+ipc wallpaper random
+for _ in $(seq 30); do
+	shot color
+	[ "$(pixel color 700 600)" != 339966 ] && break
+	sleep 0.1
+done
+[ "$(pixel color 700 600)" != 339966 ] || fail "any other of the folder is the same one"
 
 echo "wallpaper: all good" >&2

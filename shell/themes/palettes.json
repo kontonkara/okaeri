@@ -1,0 +1,79 @@
+{
+  "catppuccin-mocha": {
+    "colors": {
+      "background": "#1e1e2e",
+      "surface": "#313244",
+      "text": "#cdd6f4",
+      "subtext": "#a6adc8",
+      "dim": "#7f849c",
+      "accent": "#cba6f7",
+      "error": "#f38ba8"
+    }
+  },
+  "catppuccin-latte": {
+    "colors": {
+      "background": "#eff1f5",
+      "surface": "#dce0e8",
+      "text": "#4c4f69",
+      "subtext": "#5c5f77",
+      "dim": "#7c7f93",
+      "accent": "#8839ef",
+      "error": "#d20f39"
+    }
+  },
+  "gruvbox-dark": {
+    "colors": {
+      "background": "#282828",
+      "surface": "#3c3836",
+      "text": "#ebdbb2",
+      "subtext": "#bdae93",
+      "dim": "#928374",
+      "accent": "#fabd2f",
+      "error": "#fb4934"
+    }
+  },
+  "gruvbox-light": {
+    "colors": {
+      "background": "#fbf1c7",
+      "surface": "#ebdbb2",
+      "text": "#3c3836",
+      "subtext": "#504945",
+      "dim": "#7c6f64",
+      "accent": "#af3a03",
+      "error": "#9d0006"
+    }
+  },
+  "nord": {
+    "colors": {
+      "background": "#2e3440",
+      "surface": "#3b4252",
+      "text": "#eceff4",
+      "subtext": "#d8dee9",
+      "dim": "#8892a6",
+      "accent": "#88c0d0",
+      "error": "#bf616a"
+    }
+  },
+  "tokyo-night": {
+    "colors": {
+      "background": "#1a1b26",
+      "surface": "#24283b",
+      "text": "#c0caf5",
+      "subtext": "#a9b1d6",
+      "dim": "#737aa2",
+      "accent": "#7aa2f7",
+      "error": "#f7768e"
+    }
+  },
+  "rose-pine": {
+    "colors": {
+      "background": "#191724",
+      "surface": "#26233a",
+      "text": "#e0def4",
+      "subtext": "#908caa",
+      "dim": "#6e6a86",
+      "accent": "#c4a7e7",
+      "error": "#eb6f92"
+    }
+  }
+}

@@ -202,6 +202,19 @@ FloatingWindow {
 			window.toggle();
 		}
 
+		// Open at a page, by its name as the menu has it: `okaeri settings open
+		// Wallpaper`.
+		function open(name: string): void {
+			const at = window.pages.findIndex(page => page.text.toLowerCase() === name.toLowerCase());
+			if (at < 0) {
+				console.info(`okaeri: no page "${name}" in the settings, it's one of ${window.pages.map(page => page.text).join(", ")}`);
+				return;
+			}
+			window.page = at;
+			if (!window.visible)
+				window.show();
+		}
+
 		// For tests: how much of the veil is there.
 		function veiled(): real {
 			return veil.opacity;
@@ -368,6 +381,9 @@ FloatingWindow {
 				window.seeking = "";
 				if (!item)
 					return;
+				// A page with more leaves than one turns to the one that has it.
+				if (content.item.bring)
+					content.item.bring(item);
 				const view = content.item;
 				if (view.contentY !== undefined) {
 					const at = item.mapToItem(view.contentItem, 0, 0).y;

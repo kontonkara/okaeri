@@ -36,10 +36,11 @@ the settings, and the media keys.
 
 It takes niri 26.04 or newer, Quickshell 0.3 or newer, and `cliphist`, `qalc`,
 `wl-clipboard`, `wtype`, `notify-send` and `pw-play` in `PATH`, `wlsunset` for the
-night light, `ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours,
-and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a clone of this repository, on
-any distribution: `nix/` is a package and a Home Manager module for those who want
-them. In niri's config:
+night light, `wf-recorder` to record the screen and `slurp` for a part of it,
+`ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours, `nmcli` for
+VPNs, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a
+clone of this repository, on any distribution: `nix/` is a package and a Home
+Manager module for those who want them. In niri's config:
 
 ```kdl
 spawn-at-startup "/path/to/okaeri/bin/okaeri"
@@ -76,6 +77,14 @@ pointer on it says, or it's a line of JSON as waybar's scripts print, with `text
 it goes on to print is shown in turn. A click or the wheel on any part, yours or
 not, can run a command too, in place of what the part does with it. `okaeri bar
 toggle` has the bar hide, or stay.
+
+Its colors are a palette's: `extends` in `theme.json` names one of
+`shell/themes`, your own `colors` go over it, and `palettes` there adds more by
+name. The settings window picks one too, or two, for the day and for the night,
+and can take the accent from the wallpaper. `okaeri wallpaper next` puts up
+another picture of the wallpaper's folder, `okaeri record toggle` starts and stops
+a recording of the screen, and `okaeri settings open Wallpaper` opens the
+settings at a page.
 
 ## Working on it
 

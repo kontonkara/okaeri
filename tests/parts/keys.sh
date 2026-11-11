@@ -165,6 +165,19 @@ settle
 ipc media toggle
 silent "after the players went"
 
+# A recording of the screen is asked for as the settings have it, and with none
+# running there's none to stop.
+ipc record stop
+silent "a stop with nothing recorded"
+ipc record start
+said "record start screen none"
+printf '{ "recording": { "audio": "system" } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc record toggle
+said "record start screen system"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+
 # The bar hides, or stays, as its setting then says.
 hides() {
 	jq -c .bar.autoHide "$XDG_STATE_HOME/okaeri/settings.json"

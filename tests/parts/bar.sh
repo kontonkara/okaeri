@@ -64,6 +64,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Qt.labs.platform as Labs
+import qs
 import qs.services
 
 Scope {
@@ -152,6 +153,17 @@ Scope {
 		function privacy(microphone: string, camera: string): void {
 			Privacy.microphone = microphone ? microphone.split(",") : [];
 			Privacy.camera = camera ? camera.split(",") : [];
+		}
+
+		// When the sun rises and sets on a day, as minutes of it at Greenwich.
+		function sun(day: string): string {
+			const date = new Date(day + "T12:00:00");
+			const times = Theme.sunOn(date);
+			return times ? Math.round(times.rise + date.getTimezoneOffset()) + " " + Math.round(times.set + date.getTimezoneOffset()) : "none";
+		}
+
+		function record(): void {
+			Recorder.toggle();
 		}
 
 		// As if from the machine's battery.
@@ -1604,3 +1616,90 @@ there hides-over || fail "the bar that doesn't hide is out of sight"
 same "the window with the space kept again" "$(tile)" "$kept"
 kill "$under"
 wait "$under" 2>/dev/null || true
+
+step "Palettes"
+# The colors are a palette's: one by name, one of the user's own, and by the
+# hour, here with all day being day, and then night.
+bar_color() {
+	shot "$1"
+	pixel "$1" 900 8
+}
+move 300 600
+theme '{ "extends": "nord" }'
+same "the bar in a palette" "$(bar_color palette-nord)" "srgb(46,52,64)"
+theme '{ "palettes": { "mine": { "colors": { "background": "#112233" } } }, "extends": "mine" }'
+same "the bar in a palette of one's own" "$(bar_color palette-own)" "srgb(17,34,51)"
+theme '{ "auto": "time", "dayFrom": "00:00", "nightFrom": "24:00", "day": "light", "night": "nord" }'
+same "the bar by day" "$(bar_color palette-day)" "srgb(255,255,255)"
+theme '{ "auto": "time", "dayFrom": "00:00", "nightFrom": "00:00", "day": "light", "night": "nord" }'
+same "the bar by night" "$(bar_color palette-night)" "srgb(46,52,64)"
+theme '{}'
+# By the sun it's from sunrise to sunset where the settings say one is: at
+# Greenwich on the longest day that's 3:43 to 20:21 there, within a few minutes,
+# and far north the sun doesn't set that day.
+near() {
+	[ "$1" -ge $(($2 - 4)) ] && [ "$1" -le $(($2 + 4)) ]
+}
+settings '{ "nightLight": { "latitude": 51.48, "longitude": 0 } }'
+sun=$(ipc probe sun 2026-06-21)
+near "${sun% *}" 223 && near "${sun#* }" 1221 || fail "the sun at Greenwich: $sun"
+settings '{ "nightLight": { "latitude": 80, "longitude": 0 } }'
+same "the sun far north" "$(ipc probe sun 2026-06-21)" none
+# The accent from the wallpaper: the pill of the workspace in focus takes a red
+# picture's red, and a gray one leaves it as it was.
+reddish() {
+	magick "$out/$1.png" -format '%[fx:u.p{24,21}.r - u.p{24,21}.b > 0.15]' info:
+}
+magick -size 64x64 xc:'#cc2222' "$work/red.png"
+magick -size 64x64 xc:'#777777' "$work/gray.png"
+settings "{ \"wallpaper\": { \"path\": \"$work/red.png\" } }"
+shot accent-own
+same "the accent without the wallpaper" "$(reddish accent-own)" 0
+theme '{ "wallpaperAccent": true }'
+sleep 0.5
+shot accent-red
+same "the accent from a red wallpaper" "$(reddish accent-red)" 1
+settings "{ \"wallpaper\": { \"path\": \"$work/gray.png\" } }"
+sleep 0.5
+shot accent-gray
+same "the accent from a gray wallpaper" "$(reddish accent-gray)" 0
+theme '{}'
+settings '{}'
+
+step "Recording the screen"
+# For real: what's asked of the recorder gets to it here, by way of one that
+# takes the screen as this stand has it. The part is on the bar while it runs,
+# and a click on it stops it, with the file there.
+printf '#!/bin/sh\nexec wf-recorder --no-dmabuf "$@"\n' >"$work/recorder"
+chmod +x "$work/recorder"
+loads=$(log | grep -c "Configuration Loaded")
+sed "s|readonly property string tool: \"wf-recorder\"|readonly property string tool: \"$work/recorder\"|" "$work/shell/services/Recorder.qml" | rewrite "$work/shell/services/Recorder.qml"
+loaded $((loads + 1))
+sleep 1
+loads=$(log | grep -c "Configuration Loaded")
+sed 's/!what.startsWith("tray")/!what.startsWith("tray") \&\& !what.startsWith("record")/' "$work/shell/services/Env.qml" | rewrite "$work/shell/services/Env.qml"
+loaded $((loads + 1))
+sleep 1
+settings "{ \"bar\": { \"right\": [\"recording\", \"control\"] }, \"recording\": { \"folder\": \"$work/videos\" } }"
+move 300 600
+shot record-before
+same "what's on the right before a recording" "$(lane record-before | wc -l)" 1
+ipc probe record
+sleep 2.5
+shot record-on
+same "what's on the right while it's recorded" "$(lane record-on | wc -l)" 2
+video=$(ls "$work/videos"/*.mp4 2>/dev/null | head -n 1)
+[ -n "$video" ] || fail "no video in the folder: $(ls "$work/videos" 2>&1)"
+move "$(lane record-on | head -n 1)" 16
+click
+for _ in $(seq 50); do
+	pgrep -f "wf-recorder --no-dmabuf -f $work/videos" >/dev/null || break
+	sleep 0.1
+done
+pgrep -f "wf-recorder --no-dmabuf -f $work/videos" >/dev/null && fail "the recorder goes on after the click"
+[ -s "$video" ] || fail "the video is empty"
+move 300 600
+sleep 0.5
+shot record-off
+same "what's on the right after the recording" "$(lane record-off | wc -l)" 1
+settings '{}'

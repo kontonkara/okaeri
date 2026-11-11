@@ -32,6 +32,7 @@ PanelWindow {
 		network,
 		notifications,
 		privacy,
+		recording,
 		system,
 		title,
 		tray,
@@ -286,6 +287,12 @@ PanelWindow {
 		id: privacy
 
 		PrivacyIndicator {}
+	}
+
+	Component {
+		id: recording
+
+		Recording {}
 	}
 
 	Component {

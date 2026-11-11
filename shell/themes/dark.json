@@ -21,5 +21,11 @@
   "opacity": 72,
   "barHeight": 34,
   "barMargin": 4,
-  "barIcon": 16
+  "barIcon": 16,
+  "auto": "off",
+  "day": "light",
+  "night": "dark",
+  "dayFrom": "07:00",
+  "nightFrom": "19:00",
+  "wallpaperAccent": false
 }

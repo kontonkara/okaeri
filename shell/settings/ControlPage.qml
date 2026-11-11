@@ -19,7 +19,8 @@ Flickable {
 			awake: "Keep awake",
 			power: "Power profile",
 			airplane: "Airplane mode",
-			vpn: "VPN"
+			vpn: "VPN",
+			record: "Screen recording"
 		})
 	readonly property var lanes: [
 		{ name: "shown", text: "Tiles" },
@@ -192,7 +193,7 @@ Flickable {
 				}
 
 				Note {
-					text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode and VPN show only where the machine has them."
+					text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN and the screen recording show only where the machine has them."
 				}
 			}
 

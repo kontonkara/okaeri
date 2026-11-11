@@ -104,4 +104,22 @@ Scope {
 			Settings.set("bar", "autoHide", !Settings.bar.autoHide);
 		}
 	}
+
+	// The screen as a video, from now, or no longer: `okaeri record toggle`.
+	IpcHandler {
+		target: "record"
+
+		function toggle(): void {
+			Recorder.toggle();
+		}
+
+		function start(): void {
+			Recorder.start();
+		}
+
+		function stop(): void {
+			if (Recorder.recording)
+				Recorder.stop();
+		}
+	}
 }

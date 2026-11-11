@@ -14,6 +14,8 @@ Item {
 	property string image
 	required property var options
 	property var value
+	// How wide what it shows gets.
+	property real valueWidth: Theme.u(100)
 	readonly property int at: options.findIndex(option => option.value === value)
 
 	signal chosen(var value)
@@ -81,7 +83,7 @@ Item {
 
 		Text {
 			anchors.verticalCenter: parent.verticalCenter
-			width: Theme.u(100)
+			width: pick.valueWidth
 			horizontalAlignment: Text.AlignHCenter
 			text: pick.options[pick.at]?.text ?? ""
 			color: Theme.colors.text
