@@ -15,6 +15,12 @@ Singleton {
 		{ profile: PowerProfile.Balanced, text: "Balanced" }
 	].concat(PowerProfiles.hasPerformanceProfile ? [{ profile: PowerProfile.Performance, text: "Performance" }] : [])
 
+	readonly property int at: choices.findIndex(choice => choice.profile === profile)
+	readonly property string profileName: choices[at]?.text ?? ""
+	// The profile there was before a low battery took the saver, -1 with none to go
+	// back to.
+	property int beforeSaver: -1
+
 	readonly property var battery: UPower.devices.values.find(device => device.isLaptopBattery) ?? null
 	readonly property string batteryLine: battery ? describe(battery.state, battery.state === UPowerDeviceState.Charging ? battery.timeToFull : battery.timeToEmpty, battery.changeRate, battery.healthSupported ? battery.healthPercentage : 0) : ""
 	// What's left of it in percent, whether the machine runs on it, and whether that's
@@ -23,8 +29,33 @@ Singleton {
 	readonly property bool draining: UPower.onBattery && UPower.displayDevice.isLaptopBattery
 	readonly property bool low: draining && charge <= Settings.battery.warning
 	readonly property bool present: UPower.displayDevice.isLaptopBattery && UPower.displayDevice.isPresent
+	// What else has a battery, a mouse or a headset: { name, percent }.
+	property var others: UPower.devices.values.filter(device => !device.isLaptopBattery && device.isPresent && device.type !== UPowerDeviceType.LinePower && device.percentage > 0).map(device => ({
+		name: device.model || UPowerDeviceType.toString(device.type),
+		percent: Math.round(device.percentage * 100)
+	}))
+	readonly property string othersLine: others.map(other => `${other.name} ${other.percent}%`).join(" · ")
 	// Until it's empty, or full while it charges, in seconds, 0 if that isn't known.
 	readonly property real timeLeft: draining ? UPower.displayDevice.timeToEmpty : UPower.displayDevice.timeToFull
+
+	// With Settings.battery.saver a low battery has the saver profile, and what it
+	// had before once it charges.
+	onLowChanged: {
+		if (low && Settings.battery.saver && profile !== PowerProfile.PowerSaver) {
+			beforeSaver = profile;
+			set(PowerProfile.PowerSaver);
+		} else if (!low && beforeSaver >= 0) {
+			set(beforeSaver);
+			beforeSaver = -1;
+		}
+	}
+
+	// Along the profiles, round to the first again.
+	function turn(steps) {
+		const count = choices.length;
+		if (count > 0)
+			set(choices[((at + steps) % count + count) % count].profile);
+	}
 
 	function set(choice) {
 		Env.act(`power profile ${PowerProfile.toString(choice)}`, () => PowerProfiles.profile = choice);

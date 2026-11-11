@@ -6,7 +6,8 @@ import qs.services
 
 // With no input for a while the session locks, and later the screens go off,
 // each after a slow fade to warn of it, and the machine can be put to sleep, on
-// battery or always, as Settings.idle.suspendOn says. Apps that keep the machine
+// battery or always, as Settings.idle.suspendOn says, though not while something
+// plays. Apps that keep the machine
 // awake hold all of it off, and so does Awake.
 Scope {
 	id: idle
@@ -18,7 +19,9 @@ Scope {
 	// Without animations it'd be a dark screen, not a fade.
 	readonly property real fade: Theme.animate ? Settings.idle.fade : 0
 	readonly property bool fading: (lockSoon.isIdle && !lock.isIdle) || (offSoon.isIdle && !off.isIdle)
-	readonly property bool sleeping: sleep.isIdle && (Settings.idle.suspendOn !== "battery" || Power.draining)
+	// Not with something playing, if Settings.idle.playingHolds says so: when that
+	// stops, it sleeps.
+	readonly property bool sleeping: sleep.isIdle && (Settings.idle.suspendOn !== "battery" || Power.draining) && !(Settings.idle.playingHolds && Media.playing)
 
 	onSleepingChanged: {
 		if (sleeping)

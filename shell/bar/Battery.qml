@@ -89,6 +89,6 @@ Item {
 	}
 
 	Tip {
-		text: [`${battery.level}%`, Power.batteryLine].filter(part => part !== "").join(" · ")
+		text: [`${battery.level}%`, Power.batteryLine, Power.othersLine].filter(part => part !== "").join(" · ")
 	}
 }

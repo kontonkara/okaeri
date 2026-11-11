@@ -545,3 +545,26 @@ shot glass
 [ "$(pixel glass $((left + 6)) $((top + 6)))" != 000000 ] || fail "the card isn't see-through with blur on"
 leaves "$(now)" >/dev/null
 theme '{}'
+
+# What's on or off says so in words, as keeping awake: on and off look apart,
+# and with that kind turned off there's no card for it.
+ipc awake toggle
+comes_up "no card for keeping awake"
+sleep 0.4
+shot awake-on
+ipc awake toggle
+sleep 0.4
+shot awake-off
+# Its card is as wide as its words, about the middle of the screen.
+words() {
+	magick "$out/$1.png" -crop "300x50+550+$top" +repage -format '%#' info:
+}
+[ "$(words awake-on)" != "$(words awake-off)" ] || fail "keeping awake looks the same on and off"
+[ "$(words awake-on)" != "$(words nothing)" ] || fail "keeping awake has nothing on its card"
+leaves "$(now)" >/dev/null
+settings '{ "osd": { "hidden": ["awake"] } }'
+ipc awake toggle
+stays_off 1300 "a card for keeping awake, with that off"
+ipc awake toggle
+stays_off 500 "a card for keeping awake, with that off"
+settings '{}'

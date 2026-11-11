@@ -83,7 +83,7 @@ FloatingWindow {
 	}
 
 	function barPartName(part) {
-		return ({ clock: "Clock", workspaces: "Workspaces", battery: "Battery", media: "Media", network: "Network", system: "System load", bluetooth: "Bluetooth" })[part] ?? part;
+		return ({ clock: "Clock", workspaces: "Workspaces", battery: "Battery", media: "Media", network: "Network", system: "System load", bluetooth: "Bluetooth", locks: "Caps Lock", profile: "Power profile" })[part] ?? part;
 	}
 
 	// A line has a text and a subtext; a card has a title.

@@ -146,7 +146,7 @@ Panel {
 						anchors.right: buttons.left
 						anchors.rightMargin: Theme.u(8)
 						anchors.verticalCenter: parent.verticalCenter
-						text: Power.present ? [`${Power.charge}%`, Power.batteryLine].filter(part => part !== "").join(" · ") : ""
+						text: (Power.present ? [`${Power.charge}%`, Power.batteryLine] : []).concat([Power.othersLine]).filter(part => part !== "").join(" · ")
 						color: Theme.colors.subtext
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -343,24 +343,16 @@ Panel {
 						id: powerTile
 
 						Tile {
-							readonly property int at: Power.choices.findIndex(choice => choice.profile === Power.profile)
-
-							// Along the profiles, round to the first again.
-							function turn(steps) {
-								const count = Power.choices.length;
-								Power.set(Power.choices[((at + steps) % count + count) % count].profile);
-							}
-
 							name: "power"
 							wanted: Power.choices.length > 1
 							icon: "bolt"
 							title: "Power"
-							summary: Power.choices[at]?.text ?? ""
+							summary: Power.profileName
 							checked: Power.profile !== PowerProfile.Balanced
 							switches: false
 							takesWheel: true
-							onClicked: turn(1)
-							onScrolled: steps => turn(-steps)
+							onClicked: Power.turn(1)
+							onScrolled: steps => Power.turn(-steps)
 						}
 					}
 				}

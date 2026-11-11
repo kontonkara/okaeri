@@ -155,6 +155,13 @@ Scope {
 			Privacy.camera = camera ? camera.split(",") : [];
 		}
 
+		// What else has a battery, as "Mouse=80;Buds=35", and what the line then says
+		// of it.
+		function others(devices: string): string {
+			Power.others = devices.split(";").map(device => ({ name: device.split("=")[0], percent: Number(device.split("=")[1]) }));
+			return Power.othersLine;
+		}
+
 		// When the sun rises and sets on a day, as minutes of it at Greenwich.
 		function sun(day: string): string {
 			const date = new Date(day + "T12:00:00");
@@ -1616,6 +1623,67 @@ there hides-over || fail "the bar that doesn't hide is out of sight"
 same "the window with the space kept again" "$(tile)" "$kept"
 kill "$under"
 wait "$under" 2>/dev/null || true
+
+step "More of the machine on the bar"
+# Caps Lock while it's on, the power profile, keeping awake and the night light:
+# a click on each of the last three does what its tile does.
+settings '{ "bar": { "right": ["locks", "profile", "awake", "night", "control"] } }'
+move 300 600
+shot machine
+same "what's on the right, with no lock on" "$(lane machine | wc -l)" 4
+profile_x=$(lane machine | sed -n 1p)
+awake_x=$(lane machine | sed -n 2p)
+night_x=$(lane machine | sed -n 3p)
+echo 1 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+shot machine-caps
+same "what's on the right, with Caps Lock on" "$(lane machine-caps | wc -l)" 5
+echo 0 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+dry() {
+	log | grep -c "okaeri: dry: $1" || true
+}
+profiles=$(dry 'power profile')
+move "$profile_x" 16
+click
+sleep 0.3
+[ "$(dry 'power profile')" -gt "$profiles" ] || fail "a click on the power profile asks for no other"
+move "$awake_x" 16
+click
+sleep 0.3
+same "kept awake, by a click" "$(ipc awake state | jq .on)" true
+click
+sleep 0.3
+same "kept awake no more" "$(ipc awake state | jq .on)" false
+nights=$(dry 'night light')
+move "$night_x" 16
+click
+sleep 0.5
+[ "$(dry 'night light')" -gt "$nights" ] || fail "a click on the night light doesn't turn it on"
+same "the night light, by a click" "$(ipc night state | jq .on)" true
+click
+sleep 0.3
+same "the night light, off again" "$(ipc night state | jq .on)" false
+move 300 600
+# What else has a battery is in the battery's line.
+same "a mouse's battery" "$(ipc probe others 'Mouse=80;Buds=35')" "Mouse 80% · Buds 35%"
+# With that asked for, a battery that's low takes the saver profile, and gives
+# it back once the charger is in: here on a machine that isn't saving already.
+settings '{ "battery": { "saver": true } }'
+savers=$(dry 'power profile PowerSaver')
+profiles=$(dry 'power profile')
+ipc probe battery 10 true 0
+sleep 0.4
+if [ "$(dry 'power profile PowerSaver')" -gt "$savers" ]; then
+	profiles=$(dry 'power profile')
+	ipc probe battery 100 false 0
+	sleep 0.4
+	[ "$(dry 'power profile')" -gt "$profiles" ] || fail "the profile from before the low battery doesn't come back"
+else
+	[ "$(powerprofilesctl get 2>/dev/null)" = power-saver ] || fail "a low battery doesn't take the saver profile"
+	ipc probe battery 100 false 0
+fi
+settings '{}'
 
 step "Palettes"
 # The colors are a palette's: one by name, one of the user's own, and by the

@@ -11,7 +11,11 @@ Flickable {
 		{ name: "mic", text: "Microphone", subtext: "Its volume, and muting it" },
 		{ name: "brightness", text: "Brightness" },
 		{ name: "layout", text: "Keyboard layout", subtext: "With more than one" },
-		{ name: "locks", text: "Caps Lock and Num Lock" }
+		{ name: "locks", text: "Caps Lock and Num Lock" },
+		{ name: "profile", text: "Power profile", subtext: "Changed with no panel open, as the next three" },
+		{ name: "night", text: "Night light" },
+		{ name: "awake", text: "Keep awake" },
+		{ name: "dnd", text: "Do Not Disturb" }
 	]
 
 	function show(name, wanted) {

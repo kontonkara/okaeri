@@ -39,9 +39,10 @@ right_y=497
 right2_y=533
 off_y=620
 off_gap_y=660
-# The part made here: in the last lane, on its second line, and on the left once
+# The part made here: in the last lane, on its third line, and on the left once
 # it's there.
-script_x=917
+script_x=882
+script_y=691
 script_on_x=796
 field_y=257
 picture_y=339
@@ -292,13 +293,17 @@ step "A part of one's own"
 # onto the bar, it's chosen anew, for its card to come up at the foot of the page.
 page "$bar_y"
 to_top
-move 1007 717
+# A wheel's notch down: the lanes take the page, with all there is to put on them.
+move 700 400
+notch 1
+sleep 0.6
+move 1007 649
 click
 sleep 0.8
 shot script-added
 same "the part made" "$(value .bar.scripts)" '[{"name":"script","command":"","every":10}]'
 to_top
-drag "$script_x" "$off_gap_y" 900 "$left_y"
+drag "$script_x" "$script_y" 900 "$left_y"
 same "the left with it" "$(value .bar.left)" '["workspaces","media","clock","script"]'
 shot script-on
 choose "$script_on_x" "$left_y"
@@ -482,6 +487,11 @@ same "sleep" "$(value .idle.suspend)" 60
 sleep 0.3
 arrow "$higher_x" $((sleep_y + 50))
 same "when it sleeps" "$(value .idle.suspendOn)" '"battery"'
+# And not while something plays, unless that's turned off.
+move "$switch_x" $((sleep_y + 95))
+click
+sleep 0.3
+same "sleep with something playing" "$(value .idle.playingHolds)" false
 shot session
 
 step "The battery's line"
@@ -489,12 +499,16 @@ step "The battery's line"
 move 700 446
 notch 30
 sleep 0.6
-battery_y=703
+battery_y=654
 arrow "$lower_x" "$battery_y"
 same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
 arrow "$higher_x" "$battery_y"
 same "the warning, two up" "$(value .battery.warning)" 25
+move "$switch_x" 704
+click
+sleep 0.3
+same "saving power from then on" "$(value .battery.saver)" true
 
 step "The control center's page"
 page "$control_y"

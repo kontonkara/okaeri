@@ -3,13 +3,16 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs
+import qs.notifications
 import qs.services
 import qs.ui
 
-// What the volume, the microphone, the brightness, the keyboard layout or a lock
-// key just became, for a moment, on the screen in focus: at its bottom, its top
+// What the volume, the microphone, the brightness, the keyboard layout, a lock
+// key, the power profile, the night light, keeping awake or Do Not Disturb just
+// became, for a moment, on the screen in focus: at its bottom, its top
 // or in its middle, as Settings.osd says, which also says for how long, whether
-// the level is in numbers too and what has no card. Clicks and keys go to what's
+// the level is in numbers too and what has no card. The last four only show
+// with no panel open: there they change in sight. Clicks and keys go to what's
 // under it.
 PanelWindow {
 	id: osd
@@ -22,7 +25,11 @@ PanelWindow {
 		micMute: "micOff",
 		layout: "keyboard",
 		caps: "capsLock",
-		num: "numLock"
+		num: "numLock",
+		profile: "bolt",
+		night: "sunset",
+		awake: "coffee",
+		dnd: "bellOff"
 	})
 	// The kinds by what the settings turn off.
 	readonly property var groups: ({
@@ -33,7 +40,11 @@ PanelWindow {
 		micMute: "mic",
 		layout: "layout",
 		caps: "locks",
-		num: "locks"
+		num: "locks",
+		profile: "profile",
+		night: "night",
+		awake: "awake",
+		dnd: "dnd"
 	})
 	readonly property real rise: Theme.u(8)
 	readonly property string position: Settings.osd.position
@@ -43,10 +54,18 @@ PanelWindow {
 	// What the slider shows: a volume is full at its limit.
 	readonly property real filled: groups[kind] === "volume" ? level / Audio.limit : level
 	readonly property bool lock: kind === "caps" || kind === "num"
-	readonly property bool off: kind === "mute" || kind === "micMute" || (lock && level === 0)
+	// Those that are on or off, and say it in words.
+	readonly property var switches: ({
+		night: "Night light",
+		awake: "Keep awake",
+		dnd: "Do Not Disturb"
+	})
+	readonly property bool off: kind === "mute" || kind === "micMute" || ((lock || kind in switches) && level === 0)
 	// What it says in words, if that's what it shows and not a level.
 	readonly property string label: kind === "layout" ? Niri.layoutLabel
 		: lock ? `${kind === "caps" ? "Caps Lock" : "Num Lock"} ${off ? "off" : "on"}`
+		: kind in switches ? `${switches[kind]} ${off ? "off" : "on"}`
+		: kind === "profile" ? Power.profileName
 		: ""
 	property bool shown: false
 
@@ -61,6 +80,12 @@ PanelWindow {
 		shown = true;
 		visible = true;
 		hold.restart();
+	}
+
+	// For what changes in sight in a panel: only with none open.
+	function tell(kind, level) {
+		if (wants(groups[kind]) && Panels.open.length === 0)
+			show(kind, level);
 	}
 
 	// Whether a change of `group` gets a card: a call by IPC always does.
@@ -159,6 +184,30 @@ PanelWindow {
 		ready: Locks.ready
 		device: Locks.device
 		onMoved: osd.wants("locks") && osd.show("num", Locks.num ? 1 : 0)
+	}
+
+	Watch {
+		value: Power.profile
+		ready: Power.choices.length > 1
+		onMoved: osd.tell("profile", 1)
+	}
+
+	Watch {
+		value: NightLight.on
+		ready: NightLight.available
+		onMoved: osd.tell("night", NightLight.on ? 1 : 0)
+	}
+
+	Watch {
+		value: Awake.on
+		ready: true
+		onMoved: osd.tell("awake", Awake.on ? 1 : 0)
+	}
+
+	Watch {
+		value: NotificationStore.dnd
+		ready: true
+		onMoved: osd.tell("dnd", NotificationStore.dnd ? 1 : 0)
 	}
 
 	Timer {
