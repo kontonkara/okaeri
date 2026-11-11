@@ -51,6 +51,14 @@ Flickable {
 						Calculator.forget();
 				}
 			}
+
+			Field {
+				text: "Files are looked for in"
+				subtext: "Under /file: a folder, Enter to keep, empty for your home"
+				placeholder: "~"
+				value: Settings.launcher.files
+				onKept: value => Settings.set("launcher", "files", value.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
+			}
 		}
 
 		Card {

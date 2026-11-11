@@ -4,8 +4,8 @@ import qs.services
 import qs.ui
 
 // The volume and the microphone, with a way to mute them and an arrow to their
-// pages, the brightness when there's one, and that of external monitors when Ddc
-// has them.
+// pages, the brightness when there's one, the keyboard's light too, and that of
+// external monitors when Ddc has them.
 Card {
 	width: parent.width
 	padding: Theme.u(6)
@@ -39,6 +39,17 @@ Card {
 			Icon {
 				anchors.centerIn: parent
 				name: "sun"
+			}
+		}
+
+		Level {
+			visible: KeyboardLight.available
+			value: KeyboardLight.level
+			onMoved: wanted => KeyboardLight.set(wanted)
+
+			Icon {
+				anchors.centerIn: parent
+				name: "keyboard"
 			}
 		}
 

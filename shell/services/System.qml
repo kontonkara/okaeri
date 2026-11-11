@@ -33,6 +33,12 @@ Singleton {
 	// Degrees Celsius, -1 with no sensor.
 	property real temperature: -1
 	property string sensor: ""
+	// The last of each, as many as `kept`, the newest last, for a line of them.
+	readonly property int kept: 60
+	property var cpus: []
+	property var memories: []
+	property var downs: []
+	property var ups: []
 	// The last /proc/stat line's busy and all, for the next to go from.
 	property var last: null
 
@@ -50,6 +56,10 @@ Singleton {
 		repeat: true
 		triggeredOnStart: true
 		onTriggered: system.read()
+	}
+
+	function keep(values, value) {
+		return values.concat([value]).slice(-kept);
 	}
 
 	// As many bytes as it takes, in whatever unit keeps that short.
@@ -100,6 +110,8 @@ Singleton {
 				const seconds = (now - system.lastNet.at) / 1000;
 				system.down = Math.max(0, (received - system.lastNet.received) / seconds);
 				system.up = Math.max(0, (sent - system.lastNet.sent) / seconds);
+				system.downs = system.keep(system.downs, system.down);
+				system.ups = system.keep(system.ups, system.up);
 			}
 			system.lastNet = { at: now, received, sent };
 		}
@@ -115,8 +127,10 @@ Singleton {
 			const fields = text().split("\n")[0].trim().split(/\s+/).slice(1).map(Number);
 			const idle = fields[3] + (fields[4] || 0);
 			const all = fields.reduce((sum, field) => sum + field, 0);
-			if (system.last && all > system.last.all)
+			if (system.last && all > system.last.all) {
 				system.cpu = Math.round(100 * (1 - (idle - system.last.idle) / (all - system.last.all)));
+				system.cpus = system.keep(system.cpus, system.cpu);
+			}
 			system.last = { idle, all };
 		}
 	}
@@ -137,6 +151,7 @@ Singleton {
 				system.memoryTotal = total * 1024;
 				system.memoryUsed = (total - available) * 1024;
 				system.memory = Math.round(100 * (total - available) / total);
+				system.memories = system.keep(system.memories, system.memory);
 			}
 		}
 	}

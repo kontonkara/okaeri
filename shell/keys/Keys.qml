@@ -105,6 +105,19 @@ Scope {
 		}
 	}
 
+	// The keyboard's own light, where it has one.
+	IpcHandler {
+		target: "keylight"
+
+		function up(percent: int): void {
+			KeyboardLight.change(percent / 100);
+		}
+
+		function down(percent: int): void {
+			KeyboardLight.change(-percent / 100);
+		}
+	}
+
 	// The screen as a video, from now, or no longer: `okaeri record toggle`.
 	IpcHandler {
 		target: "record"

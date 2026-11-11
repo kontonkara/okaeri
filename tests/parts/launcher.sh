@@ -742,6 +742,27 @@ key Return
 is_closed "the settings"
 nothing_launched
 
+# Files by a part of their names, under the folder the settings name, however
+# deep: Enter opens the one picked.
+mkdir -p "$work/files/deeper"
+: >"$work/files/the report.txt"
+: >"$work/files/deeper/another report.md"
+: >"$work/files/notes.md"
+printf '{ "launcher": { "files": "%s/files" } }\n' "$work" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+open
+type "/file report"
+sleep 1.2
+shot file-mode
+[ "$(magick "$out/file-mode.png" -crop 560x40+420+$(($(row 1) - 20)) +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "one file found for two that have the word"
+[ "$(magick "$out/file-mode.png" -crop 560x40+420+$(($(row 2) - 20)) +repage -format '%[fx:maxima > 0.3]' info:)" = 0 ] || fail "a file found that doesn't have the word"
+key Return
+wait_log "okaeri: dry: open file"
+is_closed "a file"
+nothing_launched
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.4
+
 # A script's lines to pick one of: what's typed narrows them down, Enter is the
 # answer, Escape is none, and with nothing found what's typed is.
 dmenu() {

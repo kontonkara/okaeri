@@ -5,7 +5,8 @@ import qs.ui
 
 // How busy the processor is, how much memory is in use, how warm the processor
 // is and how fast the network goes, each as Settings.system says, in red when
-// it's hot. The pointer on it says it in full, with the swap and the disk.
+// it's hot. The pointer on it says it in full, with the swap and the disk, and a
+// click shows how each has gone over the last while.
 Button {
 	id: button
 
@@ -43,4 +44,23 @@ Button {
 
 	Component.onCompleted: System.users += 1
 	Component.onDestruction: System.users -= 1
+
+	onClicked: {
+		load.middle = Panels.middleOf(button);
+		load.toggle();
+	}
+
+	Panel {
+		id: load
+
+		align: "top"
+		panelWidth: Theme.u(320)
+
+		Loader {
+			width: parent.width
+			active: load.visible
+
+			sourceComponent: LoadCard {}
+		}
+	}
 }

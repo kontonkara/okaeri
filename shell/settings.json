@@ -29,7 +29,8 @@
 		"pinned": [],
 		"hidden": [],
 		"usage": true,
-		"sums": true
+		"sums": true,
+		"files": ""
 	},
 	"clipboard": {
 		"paste": false,

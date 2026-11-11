@@ -70,6 +70,12 @@ Singleton {
 		Env.act("wifi connect with a key", () => network.connectWithPsk(key));
 	}
 
+	// One that doesn't say its name, by that name, with its password if it has one:
+	// nmcli asks NetworkManager, as there's no network to ask here.
+	function connectHidden(name, key) {
+		Env.act("wifi connect hidden", () => Quickshell.execDetached(["nmcli", "device", "wifi", "connect", name].concat(key ? ["password", key] : [], ["hidden", "yes"])));
+	}
+
 	function disconnect(network) {
 		Env.act("wifi disconnect", () => network.disconnect());
 	}
