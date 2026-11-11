@@ -1571,3 +1571,39 @@ quiet_is '[]'
 key Escape
 wait_state panel false
 reset
+
+step "What a toast says"
+# All of it, or only its title, or only who it's from, for others who may see:
+# without its text a toast is shorter, and the history has it all the same.
+below() {
+	shot "$1"
+	pixel "$1" 1200 116
+}
+send -a Mail "A subject" "And what it's about."
+wait_state toasts 1
+settle
+inside=$(below says-all)
+[ "$inside" != "$backdrop" ] || {
+	echo "notifications: a whole toast ends above its text" >&2
+	return 1
+}
+reset
+printf '{ "notifications": { "toastText": "title" } }\n' >"$config"
+sleep 0.5
+send -a Mail "A subject" "And what it's about."
+wait_state toasts 1
+settle
+[ "$(below says-title)" = "$backdrop" ] || {
+	echo "notifications: a toast with only its title is as tall as a whole one" >&2
+	return 1
+}
+printf '{ "notifications": { "toastText": "none" } }\n' >"$config"
+sleep 0.5
+shot says-none
+[ "$(area says-none 300x40+1060+50)" != "$(area says-title 300x40+1060+50)" ] || {
+	echo "notifications: a toast that says nothing says its title" >&2
+	return 1
+}
+printf '{}\n' >"$config"
+sleep 0.5
+reset

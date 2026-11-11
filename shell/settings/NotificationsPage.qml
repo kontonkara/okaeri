@@ -140,6 +140,18 @@ Flickable {
 				checked: Settings.notifications.quietSharing
 				onToggled: wanted => page.set("quietSharing", wanted)
 			}
+
+			Pick {
+				text: "They say"
+				subtext: "The history has all of it"
+				options: [
+					{ value: "all", text: "All of it" },
+					{ value: "title", text: "The title" },
+					{ value: "none", text: "Who it's from" }
+				]
+				value: Settings.notifications.toastText
+				onChosen: value => page.set("toastText", value)
+			}
 		}
 
 		Card {

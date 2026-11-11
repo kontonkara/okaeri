@@ -76,7 +76,8 @@ pointer on it says, or it's a line of JSON as waybar's scripts print, with `text
 `tooltip` and `class`. It runs every so many seconds, or once, and then each line
 it goes on to print is shown in turn. A click or the wheel on any part, yours or
 not, can run a command too, in place of what the part does with it. `okaeri bar
-toggle` has the bar hide, or stay.
+toggle` has the bar hide, or stay. The control center takes tiles of your own the
+same way: a command for a click, and one that says whether the tile is on.
 
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by
@@ -84,7 +85,8 @@ name. The settings window picks one too, or two, for the day and for the night,
 and can take the accent from the wallpaper. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri record toggle` starts and stops
 a recording of the screen, and `okaeri settings open Wallpaper` opens the
-settings at a page.
+settings at a page. For scripts, `okaeri dmenu` shows the lines of its standard
+input in the launcher and prints the one picked, as dmenu does.
 
 ## Working on it
 

@@ -20,7 +20,8 @@
 	"control": {
 		"tiles": ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record"],
 		"wide": [],
-		"hidden": []
+		"hidden": [],
+		"custom": []
 	},
 	"launcher": {
 		"pinned": [],
@@ -77,6 +78,7 @@
 		"overFullscreen": true,
 		"actions": true,
 		"timeLeft": true,
+		"toastText": "all",
 		"stack": true,
 		"bellAlways": true,
 		"bellCount": true,

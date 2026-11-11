@@ -8,10 +8,11 @@ import qs.ui
 // The battery, with the way to the settings and the session menu; the volume,
 // the brightness and the microphone; and tiles for Wi-Fi, Bluetooth, the night
 // light, keeping awake, the power profile, airplane mode, VPN and recording the
-// screen. An arrow on a tile or a level opens its page in the panel's place: the
-// networks, the devices, the VPNs, where the sound goes and what plays, the
-// microphones. Escape there goes back, and a closing panel too. What's in it is
-// there only while it shows, so what's typed in it goes with it.
+// screen, and the user's own. An arrow on a tile or a level opens its page in
+// the panel's place: the networks, the devices, the VPNs, where the sound goes
+// and what plays, the microphones. Escape there goes back, and a closing panel
+// too. What's in it is there only while it shows, so what's typed in it goes
+// with it.
 Panel {
 	id: controlCenter
 
@@ -221,7 +222,15 @@ Panel {
 									night: nightTile,
 									awake: awakeTile,
 									power: powerTile
-								})[modelData]
+								})[modelData] ?? customTile
+						}
+					}
+
+					Component {
+						id: customTile
+
+						CustomTile {
+							name: parent ? parent.modelData : ""
 						}
 					}
 

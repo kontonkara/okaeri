@@ -193,6 +193,13 @@ FloatingWindow {
 		function onAsked() {
 			window.show();
 		}
+
+		// With what's looked for in its search, a moment on: the field is made as
+		// the window shows.
+		function onSought(query) {
+			window.show();
+			Qt.callLater(() => window.query = query);
+		}
 	}
 
 	IpcHandler {

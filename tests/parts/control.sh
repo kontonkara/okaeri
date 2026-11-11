@@ -789,6 +789,20 @@ sleep 0.4
 : >"$work/vpns"
 sleep 3.5
 [ "$(ipc probe vpns)" = '' ] || fail "the VPNs that went are still $(ipc probe vpns)"
+
+# A tile of one's own, beside the recording's: it's on while its check ends well,
+# looked at every few seconds, and a click runs its command.
+printf '{ "control": { "custom": [{ "name": "Mine", "command": "touch %s", "check": "test -e %s" }] } }\n' "$work/flag" "$work/flag" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+shot own-off
+touch "$work/flag"
+sleep 3.5
+shot own-on
+[ "$(differ own-off own-on 170x50+1210+390)" != 0 ] || fail "a tile of one's own doesn't follow its check"
+when 'dry: tile run' at $right_tile_x $tiles_y4
+rm "$work/flag"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
 page bluetooth
 
 # Off, one and then the other: no scan or discovery while off, and the tiles
@@ -974,7 +988,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|record start screen none|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|record start screen none|tile run|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
