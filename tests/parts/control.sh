@@ -412,6 +412,19 @@ Scope {
 			probe.device(name).pairing = on;
 		}
 
+		function vpns(): string {
+			return Vpn.connections.map(connection => `${connection.name}=${connection.kind}${connection.on ? "+" : ""}`).join(",");
+		}
+
+		// As if bluetoothctl, the agent, had printed it.
+		function heard(text: string): void {
+			Bt.hear(text);
+		}
+
+		function asking(): string {
+			return JSON.stringify(Bt.asking);
+		}
+
 		// How many didn't pair the last time.
 		function failedPairs(): int {
 			return Bt.failed.length;
@@ -687,8 +700,90 @@ sleep 0.2
 when 'dry: bluetooth pair' at $row_x "$(bt_row 3)"
 [ "$(ipc probe failedPairs)" = 0 ] || fail "a new try still says it failed"
 ipc probe pairing Watch true
+# What BlueZ asks of it meanwhile comes over the devices, as its agent prints it,
+# colors and all: a code to compare, and the answer goes back.
+asking() {
+	[ "$(ipc probe asking)" = "$1" ] || fail "asked is $(ipc probe asking), not $1"
+}
+ipc probe heard "$(printf 'Request confirmation\n\033[0;94m[agent] Confirm passkey 123456 (yes/no): \033[0m')"
+sleep 0.4
+asking '{"kind":"confirm","code":"123456"}'
+shot bt-asked
+when 'dry: bluetooth answer confirm yes' at 1342 193
+asking null
+# A PIN to type here: the field has the keys, and what's typed stays out of the log.
+ipc probe heard "$(printf 'Request PIN code\n[agent] Enter PIN code: ')"
+sleep 0.4
+asking '{"kind":"pin","code":""}'
+type '0000'
+when 'dry: bluetooth answer pin' key Return
+log | grep -F 'bluetooth answer' | grep -qF 0000 && fail "the PIN is in the log"
+asking null
+# One to type on the device is only shown, until BlueZ says that's over.
+ipc probe heard "$(printf '[agent] Passkey: \033[1;90m\033[1;37m654321\n\033[0m')"
+sleep 0.3
+asking '{"kind":"show","code":"654321"}'
+shot bt-shown
+ipc probe heard "$(printf 'Request canceled\n')"
+sleep 0.3
+asking null
+# Asked with the panel closed, it comes up at the page.
+toggle
+[ "$(panels)" = 0 ] || fail "the panel didn't close"
+ipc probe heard "$(printf 'Request authorization\n[agent] Accept pairing (yes/no): ')"
+sleep 0.6
+[ "$(panels)" = 1 ] || fail "a question didn't bring the panel"
+asking '{"kind":"accept","code":""}'
+shot bt-accept
+when 'dry: bluetooth answer accept no' at 1286 160
+asking null
+ipc probe pairing Watch true
 ipc probe pairing Watch false
 sleep 3.2
+
+# Airplane mode, the tile beside the power profile's: Wi-Fi and Bluetooth go
+# off, what they were is kept, and they come back as it ends.
+at $back_x $page_y
+sleep 0.4
+airplane=$XDG_STATE_HOME/okaeri/airplane.json
+offs=$(seen 'dry: bluetooth false')
+when 'dry: wifi false' at $right_tile_x $tiles_y3
+sleep 0.3
+[ "$(seen 'dry: bluetooth false')" -gt "$offs" ] || fail "airplane mode left Bluetooth on"
+[ "$(jq -c . "$airplane")" = '{"wifi":true,"bluetooth":true}' ] || fail "what was on isn't kept: $(cat "$airplane")"
+shot airplane-on
+ons=$(seen 'dry: bluetooth true')
+when 'dry: wifi true' at $right_tile_x $tiles_y3
+sleep 0.3
+[ "$(seen 'dry: bluetooth true')" -gt "$ons" ] || fail "Bluetooth didn't come back after airplane mode"
+[ ! -s "$airplane" ] || fail "airplane mode is still kept: $(cat "$airplane")"
+# One of them turned on by hand meanwhile ends it, and the other stays as it is.
+ipc probe bluetooth false
+sleep 0.2
+when 'dry: wifi false' at $right_tile_x $tiles_y3
+[ "$(jq -c . "$airplane")" = '{"wifi":true,"bluetooth":false}' ] || fail "what was on isn't kept: $(cat "$airplane")"
+never 'dry: wifi true' ipc probe bluetooth true
+[ ! -s "$airplane" ] || fail "airplane mode goes on with Bluetooth turned on"
+
+# The VPNs NetworkManager has, WireGuard too, and nothing else of its: a tile,
+# which takes down the one that's up, and a page of them.
+printf '%s\n' 'Work:11111111-2222-3333-4444-555555555555:vpn:activated' 'Home\: wg:66666666-7777-8888-9999-000000000000:wireguard:' \
+	'Wired:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:802-3-ethernet:activated' >"$work/vpns"
+sleep 3.5
+[ "$(ipc probe vpns)" = 'Work=VPN+,Home: wg=WireGuard' ] || fail "the VPNs are $(ipc probe vpns)"
+shot vpn-tile
+tiles_y4=$((tiles_y3 + 66))
+when 'dry: vpn down' at $left_tile_x $tiles_y4
+at $bt_arrow_x $tiles_y4
+sleep 0.4
+shot vpn-page
+when 'dry: vpn up' at $row_x "$(row 1)"
+at $back_x $page_y
+sleep 0.4
+: >"$work/vpns"
+sleep 3.5
+[ "$(ipc probe vpns)" = '' ] || fail "the VPNs that went are still $(ipc probe vpns)"
+page bluetooth
 
 # Off, one and then the other: no scan or discovery while off, and the tiles
 # say so.
@@ -873,7 +968,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

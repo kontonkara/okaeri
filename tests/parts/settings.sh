@@ -476,19 +476,19 @@ step "The control center's page"
 page "$control_y"
 shot control-page
 # Wi-Fi, the first tile, to Hidden; the rest move up a place.
-drag 656 254 600 430
+drag 656 254 600 480
 same "what's left out" "$(value .control.hidden)" '["wifi"]'
-same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","wifi"]'
+same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","wifi"]'
 # Bluetooth, now first, to a whole row, which takes Hidden a row down.
 move 656 254
 click
 sleep 0.3
-arrow "$higher_x" 533
+arrow "$higher_x" 593
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
-drag 594 437 530 254
+drag 594 480 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
-same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn"]'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"

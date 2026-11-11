@@ -110,6 +110,17 @@ sed -i -e "s|^\treadonly property string drm: .*|\treadonly property string drm:
 # So do the machine's outputs and inputs: a test that wants some puts its own.
 sed -i -e 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' \
 	-e 's/^\treadonly property var inputs: .*/\tproperty var inputs: []/' "$work/shell/services/Audio.qml"
+# The VPNs are what a test puts in $work/vpns, as nmcli would list them, and
+# what's asked of them goes to $work/nmcli.log.
+cat >"$work/nmcli" <<SH
+#!/bin/sh
+case "\$*" in
+*"connection show"*) cat "$work/vpns" 2>/dev/null ;;
+*) echo "\$*" >>"$work/nmcli.log" ;;
+esac
+SH
+chmod +x "$work/nmcli"
+sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/nmcli\"|" "$work/shell/control/Vpn.qml"
 # And who listens and watches: an app on the machine with the microphone would
 # be one more thing on the bar.
 sed -i -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' \

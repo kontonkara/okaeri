@@ -9,9 +9,10 @@ import qs.services
 // The default Bluetooth adapter and its devices, connected ones first, then
 // paired ones, then those nearby, discovering while the panel is open. While
 // something pairs, the adapter is pairable, or BlueZ pairs and keeps no key, and
-// bluetoothctl, where it's there, answers BlueZ for us as an agent that asks
-// nothing; then it's all as it was. What goes to Env.act leaves out names: it
-// ends up in logs.
+// bluetoothctl, where it's there, answers BlueZ for us as an agent: what BlueZ
+// asks of it, a code to compare, to type here or on the device, is `asking`, for
+// the page to show and answer(); then it's all as it was. What goes to Env.act
+// leaves out names and codes: it ends up in logs.
 Singleton {
 	id: bt
 
@@ -33,6 +34,13 @@ Singleton {
 	// Whether the adapter was pairable before something was paired.
 	property bool wasPairable: true
 	property bool hasAgent: false
+	// What BlueZ wants to know, or says, of what's pairing: { kind, code }, kind
+	// being "confirm" for a code that's to be the same on both, "accept" for a yes
+	// or no with no code, "pin" and "passkey" for one to type here, and "show" for
+	// one to type on the device. Null with nothing asked.
+	property var asking: null
+	// What the agent has said so far, without the colors.
+	property string heard
 
 	onPairingChanged: {
 		if (!adapter)
@@ -45,9 +53,46 @@ Singleton {
 				Env.act("bluetooth agent", () => agent.running = true);
 		} else {
 			agent.running = false;
+			asking = null;
+			heard = "";
 			if (!wasPairable)
 				Env.act("bluetooth pairable false", () => adapter.pairable = false);
 		}
+	}
+
+	// What bluetoothctl prints, as it comes: a question has no end of line, so
+	// it's all looked through for the last thing asked or said.
+	function hear(text) {
+		heard = (heard + text.replace(/\x1b\[[0-9;]*[A-Za-z]|[\x01\x02\r]/g, "")).slice(-2000);
+		const kinds = [
+			{ kind: "confirm", says: /Confirm passkey (\d+) \(yes\/no\):/g },
+			{ kind: "accept", says: /(?:Accept pairing|Authorize service \S+) \(yes\/no\):/g },
+			{ kind: "pin", says: /Enter PIN code:/g },
+			{ kind: "passkey", says: /Enter passkey \(number in 0-999999\):/g },
+			{ kind: "show", says: /\[agent\] (?:PIN code|Passkey): (\S+)/g },
+			{ kind: "", says: /Request canceled|Agent unregistered/g }
+		];
+		let last = null;
+		kinds.forEach(entry => {
+			for (let found = entry.says.exec(heard); found; found = entry.says.exec(heard)) {
+				if (!last || found.index >= last.at)
+					last = { at: found.index, kind: entry.kind, code: found[1] ?? "" };
+			}
+		});
+		if (!last)
+			return;
+		// What's answered or over isn't asked again by what comes after it.
+		heard = heard.slice(last.at + 1);
+		asking = last.kind ? { kind: last.kind, code: last.code } : null;
+		if (asking)
+			Control.show("bluetooth");
+	}
+
+	// What's typed or chosen for the question there is: "yes", "no" or a code.
+	function answer(text) {
+		const kind = asking?.kind ?? "";
+		asking = null;
+		Env.act(`bluetooth answer ${kind}${text === "yes" || text === "no" ? ` ${text}` : ""}`, () => agent.write(`${text}\n`));
 	}
 
 	function discover() {
@@ -138,12 +183,17 @@ Singleton {
 
 	// An agent for as long as something pairs, the default one meanwhile: BlueZ
 	// asks that one for what's paired from here. It registers as it starts, and
-	// only then can it be made the default.
+	// only then can it be made the default. It says it can show a code and take
+	// one: with a device that can do neither BlueZ asks nothing.
 	Process {
 		id: agent
 
-		command: ["bluetoothctl", "--agent", "NoInputNoOutput"]
+		command: ["bluetoothctl", "--agent", "KeyboardDisplay"]
 		stdinEnabled: true
+		stdout: SplitParser {
+			splitMarker: ""
+			onRead: text => bt.hear(text)
+		}
 		onStarted: defaulting.restart()
 		onRunningChanged: {
 			if (!running)
