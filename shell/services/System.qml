@@ -5,7 +5,8 @@ import Quickshell
 import Quickshell.Io
 import qs
 
-// How busy the processor is, how much memory is in use, and how warm the
+// How busy the processor is, how much memory and swap are in use, how fast the
+// network goes, how full the disk under / is, and how warm the
 // processor is, every Settings.system.interval seconds while something `uses`
 // it: from /proc, and from the processor's own sensor, the first of k10temp,
 // zenpower, coretemp and cpu_thermal there is. A GPU's isn't read, as that could
@@ -20,6 +21,15 @@ Singleton {
 	property real memory: -1
 	property real memoryUsed: 0
 	property real memoryTotal: 0
+	// Swap in use and the disk under / filled, in percent, -1 with none or
+	// before it's known.
+	property real swap: -1
+	property real disk: -1
+	// What comes in and goes out over the network, in bytes a second, and the
+	// totals and the time of the last look, for the next to go from.
+	property real down: 0
+	property real up: 0
+	property var lastNet: null
 	// Degrees Celsius, -1 with no sensor.
 	property real temperature: -1
 	property string sensor: ""
@@ -29,6 +39,7 @@ Singleton {
 	function read() {
 		stat.reload();
 		meminfo.reload();
+		network.reload();
 		if (sensorFile.path !== "")
 			sensorFile.reload();
 	}
@@ -39,6 +50,59 @@ Singleton {
 		repeat: true
 		triggeredOnStart: true
 		onTriggered: system.read()
+	}
+
+	// As many bytes as it takes, in whatever unit keeps that short.
+	function rate(bytes) {
+		return bytes < 1024000 ? `${Math.round(bytes / 1024)}K` : `${(bytes / 1048576).toFixed(1)}M`;
+	}
+
+	// The disk fills slowly: looked at once a minute.
+	Timer {
+		running: system.users > 0
+		interval: 60000
+		repeat: true
+		triggeredOnStart: true
+		onTriggered: filled.running = true
+	}
+
+	Process {
+		id: filled
+
+		command: ["df", "-P", "/"]
+		stdout: StdioCollector {
+			onStreamFinished: {
+				const percent = (text.trim().split("\n").pop().match(/(\d+)%/) ?? [])[1];
+				system.disk = percent === undefined ? -1 : Number(percent);
+			}
+		}
+	}
+
+	// Every interface but the loopback one, in and out, since the last look.
+	FileView {
+		id: network
+
+		path: "/proc/net/dev"
+		blockLoading: true
+		printErrors: false
+		onLoaded: {
+			let received = 0;
+			let sent = 0;
+			text().split("\n").slice(2).forEach(line => {
+				const parts = line.trim().split(/[:\s]+/);
+				if (parts.length > 9 && parts[0] !== "lo") {
+					received += Number(parts[1]);
+					sent += Number(parts[9]);
+				}
+			});
+			const now = Date.now();
+			if (system.lastNet && now > system.lastNet.at) {
+				const seconds = (now - system.lastNet.at) / 1000;
+				system.down = Math.max(0, (received - system.lastNet.received) / seconds);
+				system.up = Math.max(0, (sent - system.lastNet.sent) / seconds);
+			}
+			system.lastNet = { at: now, received, sent };
+		}
 	}
 
 	FileView {
@@ -67,6 +131,8 @@ Singleton {
 			const value = name => Number((text().match(new RegExp(`^${name}:\\s+(\\d+)`, "m")) ?? [])[1] ?? 0);
 			const total = value("MemTotal");
 			const available = value("MemAvailable");
+			const swapTotal = value("SwapTotal");
+			system.swap = swapTotal > 0 ? Math.round(100 * (swapTotal - value("SwapFree")) / swapTotal) : -1;
 			if (total > 0) {
 				system.memoryTotal = total * 1024;
 				system.memoryUsed = (total - available) * 1024;

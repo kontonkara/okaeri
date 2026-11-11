@@ -107,7 +107,8 @@ PanelWindow {
 
 	anchors.bottom: position === "bottom"
 	anchors.top: fromTop
-	margins.bottom: Theme.u(48) - rise
+	// Clear of a bar that's down there.
+	margins.bottom: Math.max(Theme.u(48), Settings.bottom(screen) + Theme.u(16)) - rise
 	margins.top: Settings.top(screen) + Theme.u(16) - rise
 	implicitWidth: card.width
 	implicitHeight: Math.ceil(card.height + rise)

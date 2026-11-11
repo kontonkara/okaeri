@@ -14,8 +14,9 @@ import qs.ui
 // right, middle, up, down }, in place of what the part does. The wheel on what
 // doesn't use it does what Settings.bar.wheel says: "split" changes the brightness
 // on its left half and the volume on its right, or it's "volume", "brightness",
-// "workspaces" or "none". With Settings.bar.autoHide it's out of sight, and
-// windows have the whole screen, until the pointer rests at the top of the screen
+// "workspaces" or "none". It's at the top of the screen, or at the bottom with
+// Settings.bar.position. With Settings.bar.autoHide it's out of sight, and
+// windows have the whole screen, until the pointer rests at that edge of the screen
 // or a panel opens there.
 PanelWindow {
 	id: bar
@@ -43,8 +44,9 @@ PanelWindow {
 		awake,
 		night
 	})
-	// Under all of it, for Tip.
+	// Under all of it, for Tip, or over it when it's at the bottom.
 	readonly property real tipsFrom: Theme.barHeight + Theme.u(6)
+	readonly property bool tipsAbove: Settings.barBelow
 	// With no gap around it, it's against the screen's edges: square there.
 	readonly property real corners: Theme.edge > 0 ? Theme.cardRadius : 0
 	readonly property bool hides: Settings.bar.autoHide
@@ -86,12 +88,14 @@ PanelWindow {
 	}
 
 	anchors {
-		top: true
+		top: !Settings.barBelow
+		bottom: Settings.barBelow
 		left: true
 		right: true
 	}
 	margins {
-		top: Theme.edge
+		top: Settings.barBelow ? 0 : Theme.edge
+		bottom: Settings.barBelow ? Theme.edge : 0
 		left: Theme.edge
 		right: Theme.edge
 	}
@@ -128,7 +132,7 @@ PanelWindow {
 		onTriggered: bar.down = false
 	}
 
-	// The top of the screen, for the pointer to bring the bar back: a line of
+	// The edge of the screen the bar is at, for the pointer to bring it back: a line of
 	// pixels, as a click there is this one's and no window's. With the bar in sight
 	// it's the gap over the bar, where the theme has one, and without a gap it
 	// makes way for the bar, whose top it would cover.
@@ -136,7 +140,8 @@ PanelWindow {
 		screen: bar.screen
 		visible: bar.hides && (Theme.edge > 0 || !bar.visible)
 		anchors {
-			top: true
+			top: !Settings.barBelow
+			bottom: Settings.barBelow
 			left: true
 			right: true
 		}
@@ -375,10 +380,10 @@ PanelWindow {
 
 		width: parent.width
 		height: parent.height
-		y: bar.down ? 0 : -bar.away
+		y: bar.down ? 0 : Settings.barBelow ? bar.away : -bar.away
 
 		onYChanged: {
-			if (y === -bar.away && !bar.down)
+			if (Math.abs(y) === bar.away && !bar.down)
 				bar.visible = false;
 		}
 

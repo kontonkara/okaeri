@@ -5,7 +5,8 @@ import qs
 import qs.services
 
 // A panel over everything, on the screen in focus, at `align`: "top-right",
-// "top-left", "top" (under the bar) or "center". What's put in it goes on a
+// "top-left", "top" (by the bar, which is under the screen's top or over its
+// bottom, as Settings.bar.position says) or "center". What's put in it goes on a
 // card `panelWidth` wide, as tall as it needs. show(), hide() and toggle();
 // Escape, a click elsewhere and another panel opening in the same place close
 // it, unless it's `modal`, which is for whoever owns it to close. It takes the
@@ -30,7 +31,11 @@ PanelWindow {
 	property bool shown: false
 	// How tall what's put in it can get: the screen, without the bar and the
 	// card's own edges.
-	readonly property real room: height - Settings.top(screen) - Theme.edge - padding * 2
+	readonly property real room: height - Settings.top(screen) - Settings.bottom(screen) - padding * 2
+	// By a bar at the bottom it stands on that, and grows up out of it.
+	readonly property bool low: Settings.barBelow && align !== "center"
+	// Where on the screen that puts it, for what else is there.
+	readonly property string place: low ? align.replace("top", "bottom") : align
 	// The screen's width: the window's own isn't known yet as it first opens.
 	readonly property real across: screen ? screen.width : width
 	default property alias content: body.data
@@ -158,19 +163,21 @@ PanelWindow {
 
 			// Where in it transformOrigin is.
 			readonly property real originX: panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
-			readonly property real originY: panel.align === "center" ? height / 2 : 0
+			readonly property real originY: panel.align === "center" ? height / 2 : panel.low ? height : 0
 
-			y: panel.align === "center" ? Math.round((parent.height - height) / 2) : Settings.top(panel.screen)
+			y: panel.align === "center" ? Math.round((parent.height - height) / 2)
+				: panel.low ? parent.height - Settings.bottom(panel.screen) - height
+				: Settings.top(panel.screen)
 			width: parent.width
 			height: card.height
 			focus: true
 			opacity: 0
 			scale: 0.94
 			// It grows out of where it belongs.
-			transformOrigin: panel.align === "top-right" ? Item.TopRight
-				: panel.align === "top-left" ? Item.TopLeft
-				: panel.align === "top" ? Item.Top
-				: Item.Center
+			transformOrigin: panel.align === "center" ? Item.Center
+				: panel.align === "top-right" ? (panel.low ? Item.BottomRight : Item.TopRight)
+				: panel.align === "top-left" ? (panel.low ? Item.BottomLeft : Item.TopLeft)
+				: panel.low ? Item.Bottom : Item.Top
 
 			Keys.onEscapePressed: panel.leave()
 
