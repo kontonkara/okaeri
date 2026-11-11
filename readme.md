@@ -73,8 +73,9 @@ The bar takes parts of your own, made on its page of the settings: a command, an
 what it prints is on the bar. The first line shows and the second is what the
 pointer on it says, or it's a line of JSON as waybar's scripts print, with `text`,
 `tooltip` and `class`. It runs every so many seconds, or once, and then each line
-it goes on to print is shown in turn. A click on any part, yours or not, can run a
-command too, in place of what the part does with that button.
+it goes on to print is shown in turn. A click or the wheel on any part, yours or
+not, can run a command too, in place of what the part does with it. `okaeri bar
+toggle` has the bar hide, or stay.
 
 ## Working on it
 

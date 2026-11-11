@@ -165,4 +165,19 @@ settle
 ipc media toggle
 silent "after the players went"
 
+# The bar hides, or stays, as its setting then says.
+hides() {
+	jq -c .bar.autoHide "$XDG_STATE_HOME/okaeri/settings.json"
+}
+ipc bar hide
+sleep 0.3
+[ "$(hides)" = true ] || fail "the bar doesn't hide: $(hides)"
+ipc bar toggle
+sleep 0.3
+[ "$(hides)" = false ] || fail "the bar doesn't stay: $(hides)"
+ipc bar toggle
+ipc bar show
+sleep 0.3
+[ "$(hides)" = false ] || fail "the bar isn't back: $(hides)"
+
 echo "keys: all good" >&2

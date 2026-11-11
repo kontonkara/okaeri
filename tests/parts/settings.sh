@@ -326,21 +326,22 @@ same "the left with its new name" "$(value .bar.left)" '["workspaces","media","c
 field 934 525 'clock'
 same "a name that's taken" "$(value '.bar.scripts[0].name')" '"mine"'
 shot script-refused
-# Under its card, what clicks on it run: a command, until the field is emptied.
+# Under its card, what clicks and the wheel on it run: a command, until the field
+# is emptied. The last three of the five are in sight.
 move 700 400
 notch 30
 sleep 0.6
 shot script-clicks
-field 932 264 'echo right'
-field 932 308 'echo middle'
-same "what clicks on it run" "$(value .bar.actions)" '{"mine":{"right":"echo right","middle":"echo middle"}}'
-move 932 308
+field 932 220 'echo middle'
+field 932 264 'echo up'
+same "what clicks and the wheel on it run" "$(value .bar.actions)" '{"mine":{"middle":"echo middle","up":"echo up"}}'
+move 932 264
 click
 wtype -M ctrl a -m ctrl
 key BackSpace
 key Return
 sleep 0.3
-same "with a command gone" "$(value .bar.actions)" '{"mine":{"right":"echo right"}}'
+same "with a command gone" "$(value .bar.actions)" '{"mine":{"middle":"echo middle"}}'
 # Removed, it leaves nothing of itself.
 choose "$script_on_x" "$left_y"
 choose "$script_on_x" "$left_y"

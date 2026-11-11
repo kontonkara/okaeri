@@ -6,10 +6,11 @@ import qs.ui
 
 // The bar laid out: what's on its left, in its middle, on its right and what's
 // off it. A part is dragged to where it goes, and the bar follows as it's let
-// go; a click on one shows what it has to set, and under that what clicks on it
-// run. The control center stays on, and a bar on one screen: the way here goes
-// through it. A part of the user's own is made here, a command whose words show
-// on the bar. Under them what's for all of the bar, and the screens it's on.
+// go; a click on one shows what it has to set, and under that what clicks and
+// the wheel on it run. The control center stays on, and a bar on one screen: the
+// way here goes through it. A part of the user's own is made here, a command
+// whose words show on the bar. Under them what's for all of the bar, and the
+// screens it's on.
 Flickable {
 	id: page
 
@@ -41,7 +42,9 @@ Flickable {
 	readonly property var buttons: [
 		{ name: "left", text: "A click runs" },
 		{ name: "right", text: "A right click" },
-		{ name: "middle", text: "A middle click" }
+		{ name: "middle", text: "A middle click" },
+		{ name: "up", text: "The wheel up" },
+		{ name: "down", text: "The wheel down" }
 	]
 	// Those whose settings are on a page of their own, by its name.
 	readonly property var elsewhere: ({
@@ -398,7 +401,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A click on a part shows its settings, and under them what clicks on it run. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
 					}
 
 					Button {
@@ -489,7 +492,7 @@ Flickable {
 
 			width: parent.width
 			visible: page.chosen !== "" && page.chosen !== "tray"
-			title: visible ? "Clicks on it" : ""
+			title: visible ? "Clicks and the wheel on it" : ""
 
 			// Anew for another part: what was typed and not kept goes.
 			Repeater {
@@ -518,7 +521,7 @@ Flickable {
 					}
 
 					Note {
-						text: "A command, kept with Enter, takes the place of what the part does with that button. Emptied, the part has it back."
+						text: "A command, kept with Enter, takes the place of what the part does with that button, or with the wheel. Emptied, the part has it back."
 					}
 				}
 			}
