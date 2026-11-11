@@ -8,14 +8,15 @@ import qs
 import qs.services
 
 // What the server holds and what's shown of it: the history, the toasts, how
-// many are unread and Do Not Disturb. NotificationCenter gives it `server` and
-// `panel`; next to another shell there's no server and it all stays empty. The
-// history is kept over a restart, in a directory only the user can read.
+// many are unread, Do Not Disturb and the apps kept quiet for a while.
+// NotificationCenter gives it `server` and `panel`; next to another shell there's
+// no server and it all stays empty. The history is kept over a restart, in a
+// directory only the user can read.
 // Settings.notifications.rules say what's done with some: { app, text, toast,
 // history, sound, bypass, timeout }, app being its name or desktop entry, in any
-// case, and all if left out, text words it has to have, and the others what's
-// different for it: false to not show or sound, bypass to go through Do Not Disturb,
-// timeout in seconds, 0 to stay.
+// case, and all if left out, text words it has to have, or between slashes a
+// pattern for them, and the others what's different for it: false to not show or
+// sound, bypass to go through Do Not Disturb, timeout in seconds, 0 to stay.
 Singleton {
 	id: store
 
@@ -25,6 +26,9 @@ Singleton {
 	// When Do Not Disturb ends by itself, 0 for never.
 	property alias dndUntil: kept.dndUntil
 	readonly property alias dndLabel: timer.label
+	// The apps kept quiet for a while, as Do Not Disturb keeps them all: when
+	// that's over for each, by its name.
+	readonly property var quietApps: JSON.parse(kept.quiet)
 
 	// How many toasts show, and how many the history holds: past that the oldest go.
 	readonly property int cap: Settings.notifications.cap
@@ -99,11 +103,25 @@ Singleton {
 			takeDown(n => !critical(n));
 	}
 
+	// Whether `words` say what a rule's `text` asks: have it, in any case, or,
+	// with it between slashes, match that pattern.
+	function says(words, text) {
+		const pattern = /^\/(.+)\/$/.exec(text);
+		if (!pattern)
+			return words.toLowerCase().includes(text.toLowerCase());
+		try {
+			return new RegExp(pattern[1], "i").test(words);
+		} catch (error) {
+			// No pattern at all: it fits nothing.
+			return false;
+		}
+	}
+
 	// The first rule for this one, or none.
 	function rule(notification) {
 		const names = [notification.appName, notification.desktopEntry].map(name => (name || "").toLowerCase());
-		const words = `${notification.summary} ${notification.body}`.toLowerCase();
-		return Settings.notifications.rules.find(rule => (!rule.app || names.includes(rule.app.toLowerCase())) && (!rule.text || words.includes(rule.text.toLowerCase()))) ?? {};
+		const words = `${notification.summary} ${notification.body}`;
+		return Settings.notifications.rules.find(rule => (!rule.app || names.includes(rule.app.toLowerCase())) && (!rule.text || says(words, rule.text))) ?? {};
 	}
 
 	// When it came in, in ms, 0 if that isn't known.
@@ -167,7 +185,7 @@ Singleton {
 	// Toasts keep quiet, for now.
 	function quiet(notification) {
 		const own = rule(notification);
-		return !critical(notification) && (panelShown || own.toast === false || ((dnd || sharing) && !own.bypass));
+		return !critical(notification) && (panelShown || own.toast === false || !!quietApps[notification.appName] || ((dnd || sharing) && !own.bypass));
 	}
 
 	function receive(notification) {
@@ -360,6 +378,30 @@ Singleton {
 		dndUntil = wanted ? end : 0;
 	}
 
+	// `app` keeps quiet until `end`, or no longer with 0: what it has up goes.
+	function setQuiet(app, end) {
+		const next = Object.assign({}, quietApps);
+		if (end > 0)
+			next[app] = end;
+		else
+			delete next[app];
+		kept.quiet = JSON.stringify(next);
+		quieting.now = Date.now();
+		if (end > 0)
+			takeDown(n => n.appName === app && !critical(n));
+	}
+
+	// For an hour, or no longer if it is.
+	function toggleQuiet(app) {
+		setQuiet(app, quietApps[app] ? 0 : Date.now() + 3600000);
+	}
+
+	// How long `app` still keeps quiet, in words, "" if it doesn't.
+	function quietLabel(app) {
+		const end = quietApps[app] ?? 0;
+		return end > 0 ? `${Power.span(Math.max(0, end - quieting.now) / 1000)} · until ${Qt.formatDateTime(new Date(end), "HH:mm")}` : "";
+	}
+
 	function togglePanel() {
 		if (panel)
 			panel.toggle();
@@ -423,6 +465,22 @@ Singleton {
 		onOver: store.setDnd(false, 0)
 	}
 
+	// Each second while an app keeps quiet, as a sleep would stop a long timer:
+	// those whose time is over are let go.
+	Timer {
+		id: quieting
+
+		property double now: Date.now()
+
+		interval: 1000
+		repeat: true
+		running: Object.keys(store.quietApps).length > 0
+		onTriggered: {
+			now = Date.now();
+			Object.keys(store.quietApps).filter(app => store.quietApps[app] <= now).forEach(app => store.setQuiet(app, 0));
+		}
+	}
+
 	// What a reload leaves as it was.
 	PersistentProperties {
 		id: kept
@@ -430,6 +488,8 @@ Singleton {
 		property bool dnd: false
 		property double dndUntil: 0
 		property int seenId: 0
+		// As text: an object doesn't go through a reload.
+		property string quiet: "{}"
 
 		reloadableId: "notifications"
 	}

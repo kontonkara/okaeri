@@ -168,9 +168,7 @@ sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted:
 	"$work/shell/bar/Workspaces.qml" | swap "$work/shell/bar/Workspaces.qml"
 sed 's/^\tid: time$/&\n\n\treadonly property string shows: visible ? text : "nothing"\n\n\tonShowsChanged: console.info("okaeri: clock:", shows)\n\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
 	"$work/shell/bar/Clock.qml" | swap "$work/shell/bar/Clock.qml"
-# What listens and watches, as the probe says: not the machine's own.
-sed -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' -e 's/^\treadonly property var camera: .*/\tproperty var camera: []/' \
-	"$work/shell/services/Privacy.qml" | swap "$work/shell/services/Privacy.qml"
+# What listens and watches is what the probe says: part.sh took the machine's own out.
 grep -q '^	property var microphone: \[\]$' "$work/shell/services/Privacy.qml" || fail "the stand's Privacy is the machine's"
 # And the control center, for a panel to open over a menu.
 sed -e '0,/^import qs\.bar$/s//&\nimport qs.control/' -e 's/^\tScope {}$/\tProbe {}\n\n\tControlCenter {}/' \

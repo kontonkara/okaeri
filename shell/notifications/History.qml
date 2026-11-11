@@ -104,6 +104,9 @@ Panel {
 		}
 
 		section.property: NotificationStore.headed ? "modelData.appName" : ""
+		// A card that was there before the headings came keeps its place under
+		// its own otherwise.
+		section.onPropertyChanged: Qt.callLater(list.forceLayout)
 		section.delegate: Item {
 			id: heading
 
@@ -123,14 +126,14 @@ Panel {
 			Row {
 				anchors.left: parent.left
 				anchors.leftMargin: Theme.u(4)
-				anchors.right: closeApp.left
+				anchors.right: quietApp.left
 				anchors.verticalCenter: parent.verticalCenter
 				spacing: Theme.u(4)
 
 				Text {
 					anchors.verticalCenter: parent.verticalCenter
 					width: Math.min(implicitWidth, parent.width - Theme.u(20))
-					text: (heading.section || "Unknown") + (heading.many > 1 ? ` · ${heading.many}` : "")
+					text: (heading.section || "Unknown") + (heading.many > 1 ? ` · ${heading.many}` : "") + (quietApp.span ? " · quiet" : "")
 					textFormat: Text.PlainText
 					color: Theme.colors.subtext
 					elide: Text.ElideRight
@@ -146,6 +149,14 @@ Panel {
 					color: Theme.colors.subtext
 					rotation: NotificationStore.opened.includes(heading.section) ? 90 : 0
 				}
+			}
+
+			QuietButton {
+				id: quietApp
+
+				anchors.right: closeApp.left
+				anchors.verticalCenter: parent.verticalCenter
+				app: heading.section
 			}
 
 			Button {
@@ -231,6 +242,8 @@ Panel {
 		}
 	}
 
+	// Do Not Disturb, and for how long: the arrows and the wheel make that half an
+	// hour less or more, from on for good, or from off.
 	Item {
 		width: parent.width
 		height: Math.max(label.implicitHeight, toggle.implicitHeight) + Theme.u(4)
@@ -251,19 +264,63 @@ Panel {
 			}
 		}
 
-		Text {
+		Column {
 			id: label
 
 			anchors.left: parent.left
 			anchors.leftMargin: Theme.u(4)
 			anchors.verticalCenter: parent.verticalCenter
+			anchors.right: less.left
+			anchors.rightMargin: Theme.u(6)
+
+			Text {
+				width: parent.width
+				text: "Do Not Disturb"
+				elide: Text.ElideRight
+				color: Theme.colors.text
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+			}
+
+			Text {
+				width: parent.width
+				visible: text !== ""
+				text: NotificationStore.dndLabel
+				elide: Text.ElideRight
+				color: Theme.colors.subtext
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+		}
+
+		Button {
+			id: less
+
+			anchors.right: more.left
+			anchors.verticalCenter: parent.verticalCenter
+			height: Theme.u(26)
+			flat: true
+			activeFocusOnTab: false
+			enabled: NotificationStore.dndUntil > 0
+			icon: "back"
+			iconSize: Theme.u(14)
+			tip: "Half an hour less"
+			onClicked: NotificationStore.stepDnd(-1)
+		}
+
+		Button {
+			id: more
+
 			anchors.right: toggle.left
 			anchors.rightMargin: Theme.u(6)
-			text: NotificationStore.dndLabel ? `Do Not Disturb · ${NotificationStore.dndLabel}` : "Do Not Disturb"
-			elide: Text.ElideRight
-			color: Theme.colors.text
-			font.family: Theme.font
-			font.pixelSize: Theme.fontSize
+			anchors.verticalCenter: parent.verticalCenter
+			height: Theme.u(26)
+			flat: true
+			activeFocusOnTab: false
+			icon: "chevron"
+			iconSize: Theme.u(14)
+			tip: NotificationStore.dndUntil > 0 ? "Half an hour more" : "For half an hour"
+			onClicked: NotificationStore.stepDnd(1)
 		}
 
 		Toggle {
@@ -275,6 +332,9 @@ Panel {
 			checked: NotificationStore.dnd
 			onToggled: wanted => NotificationStore.setDnd(wanted, 0)
 
+			// With the keys on it, the arrows are those beside it.
+			Keys.onLeftPressed: NotificationStore.stepDnd(-1)
+			Keys.onRightPressed: NotificationStore.stepDnd(1)
 			Keys.onBacktabPressed: list.enter(list.count - 1, -1)
 		}
 	}

@@ -28,7 +28,7 @@ Card {
 	readonly property bool critical: NotificationStore.critical(notification)
 	readonly property real side: Theme.u(40)
 	// What the top line leaves for the close button.
-	readonly property real beside: closable ? close.width + copy.width + Theme.u(4) : 0
+	readonly property real beside: closable ? close.width + copy.width + quieter.width + Theme.u(4) : 0
 	// How far along, 0 to 100, if it's that kind.
 	readonly property int progress: notification.hints?.value ?? -1
 
@@ -341,6 +341,22 @@ Card {
 						asynchronous: true
 					}
 				}
+			}
+		}
+
+		// Beside its app's name, where no heading has that: not made for a toast.
+		Loader {
+			id: quieter
+
+			anchors.top: parent.top
+			anchors.right: copy.left
+			anchors.topMargin: -Theme.u(6)
+			active: card.inHistory && card.showsApp
+
+			sourceComponent: QuietButton {
+				height: Theme.u(26)
+				iconSize: Theme.u(16)
+				app: card.notification.appName
 			}
 		}
 
