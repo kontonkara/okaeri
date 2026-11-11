@@ -41,6 +41,16 @@ Singleton {
 		return windows.some(w => w.workspace_id === workspace.id);
 	}
 
+	// The windows on `workspace`, from its left and down each column, those that
+	// float after them.
+	function windowsOn(workspace) {
+		const place = w => {
+			const at = w.layout?.pos_in_scrolling_layout;
+			return at ? at[0] * 1000 + at[1] : Infinity;
+		};
+		return windows.filter(w => w.workspace_id === workspace.id).sort((a, b) => (place(a) - place(b)) || a.id - b.id);
+	}
+
 	// The title of the window `workspace` shows, or "".
 	function titleOn(workspace) {
 		return windows.find(w => w.id === workspace.active_window_id)?.title ?? "";
