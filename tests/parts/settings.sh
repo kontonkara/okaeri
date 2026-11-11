@@ -88,6 +88,15 @@ drag() {
 	let_go
 	sleep 0.2
 }
+# What's typed in the field at $1 $2, kept with Enter.
+field() {
+	move "$1" "$2"
+	click
+	wtype -M ctrl a -m ctrl
+	type "$3"
+	key Return
+	sleep 0.3
+}
 # The folder field, with $1 in it.
 folder() {
 	move 790 "$field_y"
@@ -188,29 +197,31 @@ choose() {
 }
 choose 745 "$left_y"
 shot part-clock
-move "$switch_x" 570
+move "$switch_x" 520
 click
 sleep 0.3
 same "seconds" "$(value .clock.seconds)" true
-move "$higher_x" 424
+move "$higher_x" 374
 click
 sleep 0.3
 same "the date" "$(value .clock.date)" '"after"'
-move 968 474
+move 968 424
 click
 wtype -M ctrl a -m ctrl
 type 'yyyy'
 key Return
 sleep 0.3
 same "how the date's written" "$(value .clock.dateFormat)" '"yyyy"'
-move "$higher_x" 614
+move "$higher_x" 564
 click
 sleep 0.3
 same "the first day of a week" "$(value .clock.weekStart)" '"monday"'
-move "$switch_x" 659
+move "$switch_x" 609
 click
 sleep 0.3
 same "week numbers" "$(value .clock.weekNumbers)" true
+field 934 659 'UTC, Asia/Tokyo'
+same "the other places" "$(value .clock.zones)" '["UTC","Asia/Tokyo"]'
 move "$switch_x" 709
 click
 sleep 0.3
@@ -309,15 +320,6 @@ shot script-on
 choose "$script_on_x" "$left_y"
 choose "$script_on_x" "$left_y"
 shot script-card
-# What's typed in the field at $1 $2, kept with Enter.
-field() {
-	move "$1" "$2"
-	click
-	wtype -M ctrl a -m ctrl
-	type "$3"
-	key Return
-	sleep 0.3
-}
 field 934 574 'echo hello'
 same "its command" "$(value '.bar.scripts[0].command')" '"echo hello"'
 move "$higher_x" 625
@@ -332,21 +334,21 @@ field 934 525 'clock'
 same "a name that's taken" "$(value '.bar.scripts[0].name')" '"mine"'
 shot script-refused
 # Under its card, what clicks and the wheel on it run: a command, until the field
-# is emptied. The last three of the five are in sight.
+# is emptied. The last two of the five are in sight.
 move 700 400
 notch 30
 sleep 0.6
 shot script-clicks
-field 932 220 'echo middle'
-field 932 264 'echo up'
-same "what clicks and the wheel on it run" "$(value .bar.actions)" '{"mine":{"middle":"echo middle","up":"echo up"}}'
-move 932 264
+field 932 214 'echo up'
+field 932 258 'echo down'
+same "what clicks and the wheel on it run" "$(value .bar.actions)" '{"mine":{"up":"echo up","down":"echo down"}}'
+move 932 258
 click
 wtype -M ctrl a -m ctrl
 key BackSpace
 key Return
 sleep 0.3
-same "with a command gone" "$(value .bar.actions)" '{"mine":{"middle":"echo middle"}}'
+same "with a command gone" "$(value .bar.actions)" '{"mine":{"up":"echo up"}}'
 # Removed, it leaves nothing of itself.
 choose "$script_on_x" "$left_y"
 choose "$script_on_x" "$left_y"
@@ -499,16 +501,21 @@ step "The battery's line"
 move 700 446
 notch 30
 sleep 0.6
-battery_y=654
+battery_y=575
 arrow "$lower_x" "$battery_y"
 same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
 arrow "$higher_x" "$battery_y"
 same "the warning, two up" "$(value .battery.warning)" 25
-move "$switch_x" 704
+move "$switch_x" 625
 click
 sleep 0.3
 same "saving power from then on" "$(value .battery.saver)" true
+arrow "$higher_x" 670
+same "the lock on battery" "$(value .idle.batteryLock)" 60
+# Over the battery's card, the commands for when things happen: the last of them.
+field 934 473 'true'
+same "what a new wallpaper runs" "$(value .hooks.wallpaper)" '"true"'
 
 step "The control center's page"
 page "$control_y"

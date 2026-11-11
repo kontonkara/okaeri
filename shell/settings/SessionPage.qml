@@ -5,7 +5,8 @@ import qs.ui
 
 // When the session locks, the screens go off and the machine sleeps by
 // themselves, what's in the session menu and the time left there to change your
-// mind, and when the battery is said to be low.
+// mind, commands of yours for when things happen, and what a battery changes:
+// when it's said to be low, and how soon things happen on it.
 Flickable {
 	id: page
 
@@ -116,6 +117,39 @@ Flickable {
 
 		Card {
 			width: parent.width
+			title: "Commands"
+
+			Text {
+				width: parent.width
+				wrapMode: Text.WordWrap
+				text: "Run when that happens, Enter to keep. What it's about is in the command's environment: OKAERI_CHARGE, OKAERI_LIGHT, OKAERI_PALETTE and OKAERI_COLOR_ACCENT with the other colors, OKAERI_WALLPAPER."
+				color: Theme.colors.subtext
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+
+			Repeater {
+				model: [
+					{ name: "charger", text: "The charger goes in" },
+					{ name: "battery", text: "The charger comes out" },
+					{ name: "low", text: "The battery gets low" },
+					{ name: "colors", text: "The colors change" },
+					{ name: "wallpaper", text: "The wallpaper changes" }
+				]
+
+				Field {
+					required property var modelData
+
+					text: modelData.text
+					placeholder: "A command"
+					value: Settings.hooks[modelData.name] ?? ""
+					onKept: value => Settings.set("hooks", modelData.name, value)
+				}
+			}
+		}
+
+		Card {
+			width: parent.width
 			title: "Battery"
 
 			Choice {
@@ -132,6 +166,22 @@ Flickable {
 				subtext: "The saver profile, until the charger is in"
 				checked: Settings.battery.saver
 				onToggled: wanted => Settings.set("battery", "saver", wanted)
+			}
+
+			Choice {
+				text: "On it, lock after"
+				values: page.waits
+				value: Settings.idle.batteryLock
+				none: "The same"
+				onChosen: value => Settings.set("idle", "batteryLock", value)
+			}
+
+			Choice {
+				text: "On it, screens off after"
+				values: page.waits
+				value: Settings.idle.batteryScreenOff
+				none: "The same"
+				onChosen: value => Settings.set("idle", "batteryScreenOff", value)
 			}
 		}
 	}

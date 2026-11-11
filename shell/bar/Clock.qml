@@ -7,7 +7,7 @@ import qs.ui
 // The time, and the date beside it, as Settings.clock has them, in `room` pixels:
 // with less the date goes, and then the time, and the weather after it if
 // Settings.weather.bar says so. The pointer on it says the whole date, and a click
-// shows the month, under the weather if that's on.
+// shows the month, under the weather if that's on and the time in other places.
 Text {
 	id: time
 
@@ -76,6 +76,10 @@ Text {
 				WeatherNow {
 					width: parent.width
 					visible: Weather.on
+				}
+
+				Zones {
+					width: parent.width
 				}
 
 				Calendar {

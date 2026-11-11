@@ -142,6 +142,20 @@ wake
 sleep 1.5
 said "session suspend" 20
 
+# On battery the lock comes sooner, where there's a time for that.
+settings '{ "idle": { "lock": 600, "batteryLock": 2, "screenOff": 0 } }'
+ipc probe draining true
+wake
+said "session lock" 40
+ipc probe draining false
+wake
+sleep 3.5
+silent "the lock on the charger, at the time for the battery"
+settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 2 } }'
+wake
+sleep 1.5
+said "session suspend" 20
+
 # Not while something plays, a player on this bus with nothing to hear: once it's
 # gone, the machine sleeps after all.
 mpv --no-config --no-terminal --ao=null --vo=null --loop-playlist=inf --script="$OKAERI_MPV_MPRIS" av://lavfi:sine >/dev/null 2>&1 &

@@ -65,6 +65,7 @@ Singleton {
 	readonly property var weather: Object.assign({}, defaults.weather, user.weather, own.weather)
 	readonly property var display: Object.assign({}, defaults.display, user.display, own.display)
 	readonly property var recording: Object.assign({}, defaults.recording, user.recording, own.recording)
+	readonly property var hooks: Object.assign({}, defaults.hooks, user.hooks, own.hooks)
 	readonly property var locks: Object.assign({}, defaults.locks, user.locks, own.locks)
 	readonly property var profile: Object.assign({}, defaults.profile, user.profile, own.profile)
 	readonly property var nightLight: Object.assign({}, defaults.nightLight, user.nightLight, own.nightLight)
@@ -92,9 +93,17 @@ Singleton {
 		return !screen || !bar.hideOn.includes(screen.name);
 	}
 
-	// Where what opens on `screen` starts: under its bar, or at the edge.
+	// Whether the bars are at the bottom of their screens.
+	readonly property bool barBelow: bar.position === "bottom"
+
+	// How far what opens on `screen` stays from its top, and from its bottom: clear
+	// of its bar on the side that has it, and off the edge on the other.
 	function top(screen) {
-		return barOn(screen) ? Theme.below : Theme.edge;
+		return barOn(screen) && !barBelow ? Theme.below : Theme.edge;
+	}
+
+	function bottom(screen) {
+		return barOn(screen) && barBelow ? Theme.below : Theme.edge;
 	}
 
 	// `path` as a URL, with what would mean something else in one kept as a name.

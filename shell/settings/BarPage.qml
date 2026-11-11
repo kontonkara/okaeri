@@ -484,6 +484,17 @@ Flickable {
 			title: "All of the bar"
 
 			Pick {
+				text: "It's at"
+				subtext: "And its panels with it"
+				options: [
+					{ value: "top", text: "The top" },
+					{ value: "bottom", text: "The bottom" }
+				]
+				value: Settings.bar.position
+				onChosen: value => Settings.set("bar", "position", value)
+			}
+
+			Pick {
 				text: "The wheel on it"
 				subtext: Settings.bar.wheel === "split" ? "Brightness on the left half, volume on the right" : "Where no part takes it"
 				options: [
@@ -633,6 +644,14 @@ Flickable {
 				text: "Week numbers"
 				checked: Settings.clock.weekNumbers
 				onToggled: wanted => Settings.set("clock", "weekNumbers", wanted)
+			}
+
+			Field {
+				text: "Other places"
+				subtext: "Their time, over the month: Europe/Berlin, Asia/Tokyo"
+				placeholder: "Zones, with commas"
+				value: Settings.clock.zones.join(", ")
+				onKept: value => Settings.set("clock", "zones", value.split(",").map(zone => zone.trim()).filter(zone => zone !== ""))
 			}
 
 			Setting {
@@ -900,6 +919,13 @@ Flickable {
 				subtext: "The processor's, where it has a sensor"
 				checked: Settings.system.temperature
 				onToggled: wanted => Settings.set("system", "temperature", wanted)
+			}
+
+			Setting {
+				text: "The network"
+				subtext: "How fast it comes in and goes out"
+				checked: Settings.system.network
+				onToggled: wanted => Settings.set("system", "network", wanted)
 			}
 
 			Choice {

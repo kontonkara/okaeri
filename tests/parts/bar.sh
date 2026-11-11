@@ -1161,6 +1161,11 @@ months_apart month-sunday month-monday || fail "the weeks start on the same day 
 settings '{ "clock": { "weekNumbers": true } }'
 shot month-numbered
 months_apart month-monday month-numbered || fail "no numbers beside the weeks"
+# The time in other places, over the month, which goes down for it.
+settings '{ "clock": { "zones": ["UTC", "Asia/Tokyo"] } }'
+sleep 0.6
+shot month-zones
+months_apart month-back month-zones || fail "no other places over the month"
 settings '{}'
 key Escape
 wait_up 0
@@ -1363,6 +1368,10 @@ settings '{ "bar": { "right": ["system", "control"] }, "system": { "temperature"
 sleep 0.5
 shot load-cooler
 [ "$(right_start load-cooler)" -gt "$(right_start load)" ] || fail "no narrower without the temperature"
+settings '{ "bar": { "right": ["system", "control"] }, "system": { "network": true } }'
+sleep 0.5
+shot load-network
+[ "$(right_start load-network)" -lt "$(right_start load)" ] || fail "no wider with the network"
 settings '{ "bar": { "right": ["system", "control"] }, "system": { "cpu": false, "memory": false, "temperature": false } }'
 sleep 0.5
 shot load-nothing
@@ -1771,3 +1780,41 @@ sleep 0.5
 shot record-off
 same "what's on the right after the recording" "$(lane record-off | wc -l)" 1
 settings '{}'
+
+step "A bar at the bottom"
+# The whole of it down there, with what it opens standing on it, and tips over
+# it: nothing of it is left at the top.
+move 300 600
+shot bottom-not
+settings '{ "bar": { "position": "bottom" } }'
+sleep 0.6
+shot bottom
+same "the bar at the bottom" "$(pixel bottom 900 878)" "$(pixel bottom-not 900 20)"
+same "the top without it" "$(pixel bottom 900 20)" "$(pixel bottom-not 900 878)"
+# The control center, by its button at the right end: over the bar, not under
+# the top.
+ipc control toggle
+sleep 0.6
+shot bottom-panel
+[ "$(pixel bottom-panel 1200 780)" != "$(pixel bottom 1200 780)" ] || fail "no panel over a bar at the bottom"
+same "the top with a panel up" "$(pixel bottom-panel 1200 120)" "$(pixel bottom 1200 120)"
+ipc control toggle
+sleep 0.6
+# A tip: over the clock.
+move 700 882
+sleep 1.2
+shot bottom-tip
+[ "$(magick "$out/bottom-tip.png" "$out/bottom.png" -compose difference -composite -crop 200x40+600+810 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip over a bar at the bottom"
+move 300 600
+# And it hides down there, with the bottom of the screen to bring it back.
+settings '{ "bar": { "position": "bottom", "autoHide": true } }'
+sleep 1.2
+shot bottom-hidden
+same "the bar at the bottom, hidden" "$(pixel bottom-hidden 900 878)" "$(pixel bottom-not 900 878)"
+move 700 899
+sleep 0.8
+shot bottom-back
+same "the bar at the bottom, back" "$(pixel bottom-back 900 878)" "$(pixel bottom 900 878)"
+move 300 600
+settings '{}'
+sleep 0.6

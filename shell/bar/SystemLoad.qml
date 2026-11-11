@@ -3,9 +3,9 @@ import qs
 import qs.services
 import qs.ui
 
-// How busy the processor is, how much memory is in use and how warm the
-// processor is, each as Settings.system says, in red when it's hot. The pointer
-// on it says it in full.
+// How busy the processor is, how much memory is in use, how warm the processor
+// is and how fast the network goes, each as Settings.system says, in red when
+// it's hot. The pointer on it says it in full, with the swap and the disk.
 Button {
 	id: button
 
@@ -14,7 +14,8 @@ Button {
 	readonly property var parts: [
 		own.cpu && System.cpu >= 0 ? `${System.cpu}%` : "",
 		own.memory && System.memory >= 0 ? `${System.memory}%` : "",
-		own.temperature && System.temperature >= 0 ? `${System.temperature}°` : ""
+		own.temperature && System.temperature >= 0 ? `${System.temperature}°` : "",
+		own.network ? `↓${System.rate(System.down)} ↑${System.rate(System.up)}` : ""
 	].filter(part => part !== "")
 	readonly property bool wanted: parts.length > 0
 
@@ -34,7 +35,10 @@ Button {
 	tip: [
 		System.cpu >= 0 ? `Processor ${System.cpu}%` : "",
 		System.memory >= 0 ? `Memory ${gib(System.memoryUsed)} of ${gib(System.memoryTotal)} GiB` : "",
-		System.temperature >= 0 ? `${System.temperature} °C` : ""
+		System.temperature >= 0 ? `${System.temperature} °C` : "",
+		System.swap >= 0 ? `Swap ${System.swap}%` : "",
+		System.disk >= 0 ? `Disk ${System.disk}%` : "",
+		`Down ${System.rate(System.down)}/s, up ${System.rate(System.up)}/s`
 	].filter(part => part !== "").join(" · ")
 
 	Component.onCompleted: System.users += 1

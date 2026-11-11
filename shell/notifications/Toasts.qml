@@ -27,7 +27,7 @@ PanelWindow {
 	readonly property int side: inMiddle ? 0 : atLeft ? -1 : 1
 	// How far they go for what's open in their corner.
 	readonly property real aside: {
-		const widths = Panels.open.filter(panel => panel.align === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
+		const widths = Panels.open.filter(panel => panel.place === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
 		return widths.length ? Math.round(Math.max(...widths) + Theme.u(8)) : 0;
 	}
 
@@ -116,7 +116,7 @@ PanelWindow {
 		x: window.atLeft ? Theme.edge : 0
 		y: window.atBottom ? 0 : Settings.top(window.screen)
 		width: Math.round(Theme.u(380))
-		height: parent.height - y - (window.atBottom ? Theme.edge : 0)
+		height: parent.height - y - (window.atBottom ? Settings.bottom(window.screen) : 0)
 		verticalLayoutDirection: window.atBottom ? ListView.BottomToTop : ListView.TopToBottom
 		interactive: false
 		spacing: Math.round(Theme.u(8))

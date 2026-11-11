@@ -13,8 +13,9 @@ Scope {
 	id: idle
 
 	// Seconds, 0 for never.
-	readonly property real lockAfter: Settings.idle.lock
-	readonly property real offAfter: Settings.idle.screenOff
+	// On battery each comes sooner, where Settings.idle has a time for that.
+	readonly property real lockAfter: Power.draining && Settings.idle.batteryLock > 0 ? Settings.idle.batteryLock : Settings.idle.lock
+	readonly property real offAfter: Power.draining && Settings.idle.batteryScreenOff > 0 ? Settings.idle.batteryScreenOff : Settings.idle.screenOff
 	readonly property real sleepAfter: Settings.idle.suspend
 	// Without animations it'd be a dark screen, not a fade.
 	readonly property real fade: Theme.animate ? Settings.idle.fade : 0

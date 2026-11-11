@@ -86,7 +86,10 @@ and can take the accent from the wallpaper. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri record toggle` starts and stops
 a recording of the screen, and `okaeri settings open Wallpaper` opens the
 settings at a page. For scripts, `okaeri dmenu` shows the lines of its standard
-input in the launcher and prints the one picked, as dmenu does.
+input in the launcher and prints the one picked, as dmenu does. Commands of
+yours can run when the charger goes in or comes out, the battery gets low, the
+colors change or another wallpaper goes up, with what that's about in their
+environment: they're `hooks` in the settings, and on the Session page.
 
 ## Working on it
 

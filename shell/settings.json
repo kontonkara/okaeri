@@ -9,7 +9,9 @@
 		"fade": 5,
 		"suspend": 0,
 		"suspendOn": "always",
-		"playingHolds": true
+		"playingHolds": true,
+		"batteryLock": 0,
+		"batteryScreenOff": 0
 	},
 	"battery": {
 		"warning": 20,
@@ -94,7 +96,8 @@
 		"hours12": false,
 		"seconds": false,
 		"weekStart": "locale",
-		"weekNumbers": false
+		"weekNumbers": false,
+		"zones": []
 	},
 	"workspaces": {
 		"labels": "none",
@@ -110,6 +113,13 @@
 		"longitude": 0,
 		"units": "celsius",
 		"bar": false
+	},
+	"hooks": {
+		"charger": "",
+		"battery": "",
+		"low": "",
+		"colors": "",
+		"wallpaper": ""
 	},
 	"locks": {
 		"show": "caps"
@@ -138,6 +148,7 @@
 		"cpu": true,
 		"memory": true,
 		"temperature": true,
+		"network": false,
 		"interval": 2
 	},
 	"network": {
@@ -158,6 +169,7 @@
 		"left": ["workspaces", "media"],
 		"center": ["clock"],
 		"right": ["privacy", "recording", "cast", "units", "tray", "notifications", "clipboard", "battery", "control"],
+		"position": "top",
 		"hideOn": [],
 		"wheel": "split",
 		"tips": true,

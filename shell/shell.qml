@@ -4,6 +4,7 @@ import qs
 import qs.bar
 import qs.clipboard
 import qs.control
+import qs.hooks
 import qs.idle
 import qs.keys
 import qs.launcher
@@ -44,6 +45,8 @@ ShellRoot {
 	Keys {}
 
 	Idle {}
+
+	Hooks {}
 
 	Wallpaper {}
 
