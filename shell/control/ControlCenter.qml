@@ -7,11 +7,11 @@ import qs.ui
 
 // The battery, with the way to the settings and the session menu; the volume,
 // the brightness and the microphone; and tiles for Wi-Fi, Bluetooth, the night
-// light, keeping awake and the power profile. An arrow on a tile or a level
-// opens its page in the panel's place: the networks, the devices, where the
-// sound goes and what plays, the microphones. Escape there goes back, and a
-// closing panel too. What's in it is there only while it shows, so what's typed
-// in it goes with it.
+// light, keeping awake, the power profile, airplane mode and VPN. An arrow on a
+// tile or a level opens its page in the panel's place: the networks, the
+// devices, the VPNs, where the sound goes and what plays, the microphones.
+// Escape there goes back, and a closing panel too. What's in it is there only
+// while it shows, so what's typed in it goes with it.
 Panel {
 	id: controlCenter
 
@@ -34,6 +34,12 @@ Panel {
 		function onToggled() {
 			controlCenter.toggle();
 		}
+
+		function onAsked(page) {
+			Control.unfolded = page;
+			if (!controlCenter.shown)
+				controlCenter.show();
+		}
 	}
 
 	IpcHandler {
@@ -43,11 +49,9 @@ Panel {
 			controlCenter.toggle();
 		}
 
-		// Open at a page: wifi, bluetooth, sound or mic.
+		// Open at a page: wifi, bluetooth, vpn, sound or mic.
 		function page(name: string): void {
-			Control.unfolded = name;
-			if (!controlCenter.shown)
-				controlCenter.show();
+			Control.show(name);
 		}
 	}
 
@@ -80,7 +84,7 @@ Panel {
 				id: column
 
 				// A page in the place of the rest.
-				readonly property bool paging: [wifi, bluetooth, sound, mic].some(page => page.visible)
+				readonly property bool paging: [wifi, bluetooth, vpn, sound, mic].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
@@ -186,7 +190,7 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
@@ -203,6 +207,8 @@ Panel {
 							sourceComponent: ({
 									wifi: wifiTile,
 									bluetooth: bluetoothTile,
+									vpn: vpnTile,
+									airplane: airplaneTile,
 									night: nightTile,
 									awake: awakeTile,
 									power: powerTile
@@ -239,6 +245,35 @@ Panel {
 							canSwitch: !Bt.blocked
 							opens: "bluetooth"
 							onToggled: wanted => Bt.setEnabled(wanted)
+						}
+					}
+
+					Component {
+						id: vpnTile
+
+						Tile {
+							name: "vpn"
+							wanted: Vpn.connections.length > 0
+							icon: "shield"
+							title: "VPN"
+							summary: vpn.summary
+							checked: Vpn.up.length > 0
+							opens: "vpn"
+							onToggled: wanted => Vpn.setEnabled(wanted)
+						}
+					}
+
+					Component {
+						id: airplaneTile
+
+						Tile {
+							name: "airplane"
+							wanted: Airplane.possible
+							icon: "plane"
+							title: "Airplane mode"
+							summary: Airplane.on ? "Radios off" : "Off"
+							checked: Airplane.on
+							onToggled: wanted => Airplane.set(wanted)
 						}
 					}
 
@@ -307,6 +342,12 @@ Panel {
 
 				BluetoothSection {
 					id: bluetooth
+
+					room: controlCenter.room
+				}
+
+				VpnSection {
+					id: vpn
 
 					room: controlCenter.room
 				}

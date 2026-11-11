@@ -15,11 +15,17 @@ Singleton {
 	property bool keyed: false
 
 	signal toggled
+	// Someone wants the panel up at a page.
+	signal asked(string page)
 
 	// The tiles there are, by their names, in Settings.control.tiles' order, the
 	// ones it doesn't name after it.
-	readonly property var tiles: ["wifi", "bluetooth", "night", "awake", "power"]
+	readonly property var tiles: ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn"]
 	readonly property var order: Settings.control.tiles.filter(name => tiles.includes(name)).concat(tiles.filter(name => !Settings.control.tiles.includes(name)))
+
+	function show(page) {
+		asked(page);
+	}
 
 	function toggle() {
 		toggled();

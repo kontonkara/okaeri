@@ -16,7 +16,7 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "bluetooth", "night", "awake", "power"],
+		"tiles": ["wifi", "bluetooth", "night", "awake", "power", "airplane", "vpn"],
 		"wide": [],
 		"hidden": []
 	},
