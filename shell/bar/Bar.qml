@@ -10,8 +10,8 @@ import qs.ui
 
 // The bar of a screen: what Settings.bar names on its left, in its middle and
 // on its right, out of `parts` and the user's own, Settings.bar.scripts. A click
-// on a part runs what Settings.bar.actions has for it and that button, { left,
-// right, middle }, in place of what the part does with it. The wheel on what
+// or the wheel on a part runs what Settings.bar.actions has for it, { left,
+// right, middle, up, down }, in place of what the part does. The wheel on what
 // doesn't use it does what Settings.bar.wheel says: "split" changes the brightness
 // on its left half and the volume on its right, or it's "volume", "brightness",
 // "workspaces" or "none". With Settings.bar.autoHide it's out of sight, and
@@ -74,7 +74,8 @@ PanelWindow {
 		}
 	}
 
-	// A command of the user's, for a click on a part: started by niri, as an app is.
+	// A command of the user's, for a click or the wheel on a part: started by niri, as
+	// an app is.
 	function run(command) {
 		Env.act(`run ${command}`, () => Niri.spawn(["sh", "-c", command]));
 	}
@@ -177,8 +178,8 @@ PanelWindow {
 
 				required property string modelData
 				readonly property real room: lane.room
-				// What its clicks run, by the button. The tray's icons are apps, with
-				// clicks of their own.
+				// What its clicks and the wheel on it run, by the button or the way.
+				// The tray's icons are apps, with clicks of their own.
 				readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
 
 				anchors.verticalCenter: parent.verticalCenter
@@ -190,16 +191,33 @@ PanelWindow {
 						console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}, or of the scripts`);
 				}
 
-				// Over the part, for the buttons that have a command: the rest, the
-				// wheel and where the pointer is go through to it. Only with a command,
-				// as the pointer has this one's shape and not the part's.
+				// Over the part, for the buttons that have a command, and the wheel
+				// if either way has one: the rest and where the pointer is go
+				// through to it. Only with a command, as the pointer has this one's
+				// shape and not the part's.
 				MouseArea {
+					readonly property bool wheeled: !!place.runs.up || !!place.runs.down
+					property int wheel: 0
+
 					anchors.fill: parent
 					z: 1
-					visible: acceptedButtons !== Qt.NoButton
+					visible: wheeled || acceptedButtons !== Qt.NoButton
 					cursorShape: Qt.PointingHandCursor
 					acceptedButtons: (place.runs.left ? Qt.LeftButton : Qt.NoButton) | (place.runs.right ? Qt.RightButton : Qt.NoButton) | (place.runs.middle ? Qt.MiddleButton : Qt.NoButton)
 					onClicked: event => bar.run(place.runs[event.button === Qt.RightButton ? "right" : event.button === Qt.MiddleButton ? "middle" : "left"])
+					onWheel: event => {
+						if (!wheeled) {
+							event.accepted = false;
+							return;
+						}
+						// A touchpad comes in small parts of a notch.
+						wheel += event.angleDelta.y;
+						const steps = Math.trunc(wheel / 120);
+						wheel -= steps * 120;
+						const command = place.runs[steps > 0 ? "up" : "down"];
+						for (let step = 0; command && step < Math.abs(steps); step++)
+							bar.run(command);
+					}
 				}
 			}
 		}

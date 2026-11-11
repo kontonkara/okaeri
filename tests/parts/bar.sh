@@ -1509,12 +1509,12 @@ sleep 0.5
 same "what it ran, off the bar" "$(pgrep -fc 'sleep 38[.]3')" 0
 
 step "Clicks on a part"
-# A command for a button of a part runs in place of what the part does with it,
-# and the other buttons are the part's still.
+# A command for a button of a part, or for the wheel on it, runs in place of what
+# the part does with it, and the other buttons are the part's still.
 ran() {
 	log | sed -n 's/.*okaeri: dry: run //p' | tr '\n' ','
 }
-own "echo here" 0 ', "actions": { "mine": { "left": "echo left", "right": "echo right" }, "clock": { "middle": "echo clock" } }'
+own "echo here" 0 ', "actions": { "mine": { "left": "echo left", "right": "echo right" }, "clock": { "middle": "echo clock", "up": "echo up" } }'
 sleep 0.5
 shot clicks
 mine=$(lane clicks | head -n 1)
@@ -1530,7 +1530,11 @@ click middle
 move 700 16
 click middle
 sleep 0.3
-same "what the clicks ran" "$(ran)" "echo left,echo right,echo clock,"
+# The wheel on it too, the way that has a command: the other does nothing then.
+wheel 1
+wheel -1
+sleep 0.3
+same "what the clicks and the wheel ran" "$(ran)" "echo left,echo right,echo clock,echo up,"
 click
 sleep 0.6
 shot clicks-month
