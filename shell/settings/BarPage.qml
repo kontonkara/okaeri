@@ -31,8 +31,12 @@ Flickable {
 		tray: "Tray",
 		units: "Failed units",
 		workspaces: "Workspaces",
-		// Last, as the newest: the lanes show them in this order.
-		recording: "Screen recording"
+		// The newer ones last: the lanes show them in this order.
+		recording: "Screen recording",
+		locks: "Caps Lock",
+		profile: "Power profile",
+		awake: "Keep awake",
+		night: "Night light"
 	})
 	// The user's own parts go by the names they have.
 	readonly property var scripts: Settings.bar.scripts
@@ -84,7 +88,9 @@ Flickable {
 			media: mediaSettings,
 			network: networkSettings,
 			system: systemSettings,
-			bluetooth: bluetoothSettings
+			bluetooth: bluetoothSettings,
+			locks: locksSettings,
+			profile: profileSettings
 		})
 	// The screens there are, and those left without a bar that aren't there now.
 	readonly property var screens: {
@@ -403,7 +409,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen recording, Screen sharing, Failed units and Keyboard layout show only when they have something to say."
+						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen recording, Screen sharing, Failed units, Keyboard layout and Caps Lock show only when they have something to say."
 					}
 
 					Button {
@@ -1000,6 +1006,35 @@ Flickable {
 				value: Settings.bluetooth.label
 				onChosen: value => Settings.set("bluetooth", "label", value)
 			}
+		}
+	}
+
+	Component {
+		id: locksSettings
+
+		Pick {
+			text: "It shows for"
+			subtext: "While that's on"
+			options: [
+				{ value: "caps", text: "Caps Lock" },
+				{ value: "both", text: "Num Lock too" }
+			]
+			value: Settings.locks.show
+			onChosen: value => Settings.set("locks", "show", value)
+		}
+	}
+
+	Component {
+		id: profileSettings
+
+		Pick {
+			text: "Beside it"
+			options: [
+				{ value: "none", text: "Nothing" },
+				{ value: "name", text: "Its name" }
+			]
+			value: Settings.profile.label
+			onChosen: value => Settings.set("profile", "label", value)
 		}
 	}
 

@@ -64,6 +64,8 @@ Singleton {
 	readonly property var weather: Object.assign({}, defaults.weather, user.weather, own.weather)
 	readonly property var display: Object.assign({}, defaults.display, user.display, own.display)
 	readonly property var recording: Object.assign({}, defaults.recording, user.recording, own.recording)
+	readonly property var locks: Object.assign({}, defaults.locks, user.locks, own.locks)
+	readonly property var profile: Object.assign({}, defaults.profile, user.profile, own.profile)
 	readonly property var nightLight: Object.assign({}, defaults.nightLight, user.nightLight, own.nightLight)
 	readonly property var system: Object.assign({}, defaults.system, user.system, own.system)
 	readonly property var network: Object.assign({}, defaults.network, user.network, own.network)

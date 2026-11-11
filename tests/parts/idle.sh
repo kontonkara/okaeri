@@ -142,4 +142,16 @@ wake
 sleep 1.5
 said "session suspend" 20
 
+# Not while something plays, a player on this bus with nothing to hear: once it's
+# gone, the machine sleeps after all.
+mpv --no-config --no-terminal --ao=null --vo=null --loop-playlist=inf --script="$OKAERI_MPV_MPRIS" av://lavfi:sine >/dev/null 2>&1 &
+player=$!
+sleep 2
+wake
+sleep 4
+silent "sleep with something playing"
+kill "$player"
+wait "$player" 2>/dev/null || true
+said "session suspend" 20
+
 echo "idle: all good" >&2

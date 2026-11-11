@@ -37,7 +37,11 @@ PanelWindow {
 		title,
 		tray,
 		units,
-		workspaces
+		workspaces,
+		locks,
+		profile,
+		awake,
+		night
 	})
 	// Under all of it, for Tip.
 	readonly property real tipsFrom: Theme.barHeight + Theme.u(6)
@@ -331,6 +335,30 @@ PanelWindow {
 		Workspaces {
 			output: bar.screen ? bar.screen.name : ""
 		}
+	}
+
+	Component {
+		id: locks
+
+		LockKeys {}
+	}
+
+	Component {
+		id: profile
+
+		PowerProfileButton {}
+	}
+
+	Component {
+		id: awake
+
+		AwakeButton {}
+	}
+
+	Component {
+		id: night
+
+		NightButton {}
 	}
 
 	Component {

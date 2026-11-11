@@ -76,6 +76,14 @@ Flickable {
 				value: Settings.idle.suspendOn
 				onChosen: value => Settings.set("idle", "suspendOn", value)
 			}
+
+			Setting {
+				text: "Not while something plays"
+				subtext: "Music keeps it up, with the screens off"
+				visible: Settings.idle.suspend > 0
+				checked: Settings.idle.playingHolds
+				onToggled: wanted => Settings.set("idle", "playingHolds", wanted)
+			}
 		}
 
 		Card {
@@ -117,6 +125,13 @@ Flickable {
 				value: Settings.battery.warning
 				unit: "%"
 				onChosen: value => Settings.set("battery", "warning", value)
+			}
+
+			Setting {
+				text: "Save power from then on"
+				subtext: "The saver profile, until the charger is in"
+				checked: Settings.battery.saver
+				onToggled: wanted => Settings.set("battery", "saver", wanted)
 			}
 		}
 	}

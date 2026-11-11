@@ -8,11 +8,13 @@
 		"screenOff": 660,
 		"fade": 5,
 		"suspend": 0,
-		"suspendOn": "always"
+		"suspendOn": "always",
+		"playingHolds": true
 	},
 	"battery": {
 		"warning": 20,
 		"show": "always",
+		"saver": false,
 		"label": "percent"
 	},
 	"control": {
@@ -106,6 +108,12 @@
 		"longitude": 0,
 		"units": "celsius",
 		"bar": false
+	},
+	"locks": {
+		"show": "caps"
+	},
+	"profile": {
+		"label": "none"
 	},
 	"recording": {
 		"area": "screen",
