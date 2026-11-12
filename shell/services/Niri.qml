@@ -164,6 +164,11 @@ window-rule {
 			act({ MoveWindowToWorkspace: { window_id: id, reference: { Id: here.id }, focus: true } });
 	}
 
+	// To workspace `workspace`, by its id, the focus staying where it is.
+	function moveWindow(id, workspace) {
+		act({ MoveWindowToWorkspace: { window_id: id, reference: { Id: workspace }, focus: false } });
+	}
+
 	// To a window of the app that goes by one of `names`, if it has one.
 	function focusApp(names) {
 		const wanted = names.filter(name => !!name).map(name => name.toLowerCase());
