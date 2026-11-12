@@ -71,9 +71,9 @@ Scope {
 			NotificationStore.setDnd(on, 0);
 		}
 
-		// No toasts from `app` for so long, 0 for no longer.
+		// No toasts from `app` for so long, -1 until it's let speak again, 0 for no longer.
 		function quiet(app: string, seconds: int): void {
-			NotificationStore.setQuiet(app, seconds > 0 ? Date.now() + seconds * 1000 : 0);
+			NotificationStore.setQuiet(app, seconds > 0 ? Date.now() + seconds * 1000 : seconds < 0 ? NotificationStore.always : 0);
 		}
 
 		// For tests and scripts.

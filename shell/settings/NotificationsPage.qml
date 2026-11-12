@@ -250,6 +250,71 @@ Flickable {
 			}
 		}
 
+		// The apps kept quiet by the bell beside their names in the history, for how
+		// long still, each to be let speak again.
+		Card {
+			width: parent.width
+			title: "Kept quiet"
+
+			Text {
+				width: parent.width
+				visible: Object.keys(NotificationStore.quietApps).length === 0
+				wrapMode: Text.WordWrap
+				text: "No app now: the bell beside an app's name in the history keeps it quiet for a while"
+				color: Theme.colors.subtext
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(1)
+			}
+
+			Repeater {
+				model: Object.keys(NotificationStore.quietApps).sort()
+
+				Item {
+					required property string modelData
+
+					width: parent.width
+					height: Theme.u(40)
+
+					Column {
+						anchors.left: parent.left
+						anchors.right: speak.left
+						anchors.rightMargin: Theme.u(12)
+						anchors.verticalCenter: parent.verticalCenter
+
+						Text {
+							width: parent.width
+							text: parent.parent.modelData || "Unknown"
+							textFormat: Text.PlainText
+							color: Theme.colors.text
+							elide: Text.ElideRight
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize
+						}
+
+						Text {
+							width: parent.width
+							text: NotificationStore.quietLabel(parent.parent.modelData).replace(/^until/, "Until").replace(/^(?!Until)/, "For ")
+							color: Theme.colors.subtext
+							elide: Text.ElideRight
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize - Theme.u(2)
+						}
+					}
+
+					Button {
+						id: speak
+
+						anchors.right: parent.right
+						anchors.verticalCenter: parent.verticalCenter
+						height: Theme.u(28)
+						icon: "bell"
+						text: "Let it speak"
+						onClicked: NotificationStore.setQuiet(parent.modelData, 0)
+					}
+				}
+			}
+		}
+
 		Card {
 			width: parent.width
 			title: "Apps"

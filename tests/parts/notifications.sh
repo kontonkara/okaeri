@@ -813,6 +813,24 @@ click right
 wait_state toasts 0
 [ "$(log | grep -c "okaeri: dry: notification open")" = 1 ] || fail "a right click opened the screenshot"
 is history 0
+# Under it, its folder and away with it.
+sleep 1.1
+niri msg action screenshot-screen
+wait_state toasts 1
+settle
+move 1077 340
+click
+wait_log "okaeri: dry: notification folder $work/shots"
+wait_state toasts 0
+sleep 1.1
+niri msg action screenshot-screen
+wait_state toasts 1
+settle
+newest=$(ls -t "$work"/shots/*.png | head -n 1)
+move 1271 340
+click
+wait_log "okaeri: dry: notification delete $newest"
+wait_state toasts 0
 reset
 
 step "Do Not Disturb for a while"
@@ -1560,8 +1578,14 @@ ipc notifications quiet Chat 2
 sleep 3.2
 quiet_is '[]'
 reset
+# Until it's let speak again: not over by itself.
+ipc notifications quiet Chat -1
+sleep 2.2
+quiet_is '["Chat"]'
+ipc notifications quiet Chat 0
+quiet_is '[]'
 # In the history, the button by an app's name: on its card when it's alone
-# there, for an hour, and off again.
+# there, asking for how long, for an hour, and off again.
 send -a Chat -t 1 "One" "A message."
 wait_state history 1
 wait_state toasts 0
@@ -1570,9 +1594,15 @@ wait_state panel true
 settle
 move 1310 113
 click
+quiet_is '[]'
+settle
+shot quiet-card-asked
+move 1095 185
+click
 quiet_is '["Chat"]'
 settle
 shot quiet-card
+move 1310 113
 click
 quiet_is '[]'
 key Escape
@@ -1586,9 +1616,15 @@ wait_state panel true
 settle
 move 1347 106
 click
+quiet_is '[]'
+settle
+shot quiet-heading-asked
+move 1085 138
+click
 quiet_is '["Mail"]'
 settle
 shot quiet-heading
+move 1347 106
 click
 quiet_is '[]'
 key Escape

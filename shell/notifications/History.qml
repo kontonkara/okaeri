@@ -114,10 +114,11 @@ Panel {
 			readonly property int many: NotificationStore.countOf(section)
 
 			width: ListView.view.width
-			height: Theme.u(30)
+			height: Theme.u(30) + (choices.visible ? choices.height : 0)
 
 			MouseArea {
-				anchors.fill: parent
+				width: parent.width
+				height: Theme.u(30)
 				enabled: heading.many > 1
 				cursorShape: Qt.PointingHandCursor
 				onClicked: NotificationStore.toggleApp(heading.section)
@@ -127,7 +128,8 @@ Panel {
 				anchors.left: parent.left
 				anchors.leftMargin: Theme.u(4)
 				anchors.right: quietApp.left
-				anchors.verticalCenter: parent.verticalCenter
+				anchors.verticalCenter: parent.top
+				anchors.verticalCenterOffset: Theme.u(15)
 				spacing: Theme.u(4)
 
 				Text {
@@ -155,7 +157,8 @@ Panel {
 				id: quietApp
 
 				anchors.right: closeApp.left
-				anchors.verticalCenter: parent.verticalCenter
+				anchors.verticalCenter: parent.top
+				anchors.verticalCenterOffset: Theme.u(15)
 				app: heading.section
 			}
 
@@ -163,13 +166,23 @@ Panel {
 				id: closeApp
 
 				anchors.right: parent.right
-				anchors.verticalCenter: parent.verticalCenter
+				anchors.verticalCenter: parent.top
+				anchors.verticalCenterOffset: Theme.u(15)
 				height: Theme.u(24)
 				flat: true
 				activeFocusOnTab: false
 				icon: "close"
 				iconSize: Theme.u(14)
 				onClicked: NotificationStore.clearApp(heading.section)
+			}
+
+			QuietChoices {
+				id: choices
+
+				x: Theme.u(4)
+				y: Theme.u(30)
+				width: parent.width - Theme.u(8)
+				app: heading.section
 			}
 		}
 
