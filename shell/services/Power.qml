@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.UPower
 import qs
 
@@ -51,6 +52,11 @@ Singleton {
 	readonly property string othersLine: others.map(other => `${other.name} ${other.percent}%`).join(" · ")
 	// Until it's empty, or full while it charges, in seconds, 0 if that isn't known.
 	readonly property real timeLeft: draining ? UPower.displayDevice.timeToEmpty : UPower.displayDevice.timeToFull
+	// The charge over the last day, one each quarter of an hour, the newest last,
+	// as UPower keeps it: read with lookHistory(), as the battery's card opens.
+	property var history: []
+	readonly property int historyHours: 24
+	readonly property string bus: "busctl"
 
 	// With Settings.battery.saver a low battery has the saver profile, and what it
 	// had before once it charges.
@@ -62,6 +68,39 @@ Singleton {
 			set(beforeSaver);
 			beforeSaver = -1;
 		}
+	}
+
+	function lookHistory() {
+		if (battery)
+			historyLook.running = true;
+	}
+
+	// From what busctl prints of GetHistory, the newest first, each [time, percent,
+	// state]: a state of 0 is a time nothing is known of, as the machine was off.
+	// Each quarter has the last charge known by its end.
+	function readHistory(text, now) {
+		let known = [];
+		try {
+			known = JSON.parse(text).data[0].filter(one => one[2] !== 0).sort((a, b) => a[0] - b[0]);
+		} catch (error) {
+			history = [];
+			return;
+		}
+		const quarters = historyHours * 4;
+		const values = [];
+		let at = 0;
+		let last = -1;
+		for (let quarter = quarters - 1; quarter >= 0; quarter--) {
+			const end = now - quarter * 900;
+			while (at < known.length && known[at][0] <= end)
+				last = known[at++][1];
+			if (last >= 0)
+				values.push(last);
+		}
+		// And now, as it is.
+		if (values.length > 0)
+			values[values.length - 1] = charge;
+		history = values;
 	}
 
 	// Along the profiles, round to the first again.
@@ -103,5 +142,17 @@ Singleton {
 		if (health > 0)
 			parts.push(`health ${Math.round(health)}%`);
 		return parts.filter(part => part !== "").join(" · ");
+	}
+
+	Process {
+		id: historyLook
+
+		// Its object, by its name in /sys as UPower makes it. A week back: it keeps
+		// a charge as it changes, and one that held all day is from before it.
+		command: [power.bus, "--json=short", "call", "--system", "org.freedesktop.UPower", `/org/freedesktop/UPower/devices/battery_${(power.battery?.nativePath ?? "").replace(/[^A-Za-z0-9_]/g, "_")}`, "org.freedesktop.UPower.Device", "GetHistory", "suu", "charge", "604800", "2000"]
+
+		stdout: StdioCollector {
+			onStreamFinished: power.readHistory(text, Date.now() / 1000)
+		}
 	}
 }
