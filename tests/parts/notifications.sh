@@ -1631,6 +1631,21 @@ key Escape
 wait_state panel false
 reset
 
+# How many of an app's are unread, as the dock has them: by its name, and none
+# once the panel showed them.
+send -a Mail "One" "A letter."
+send -a Mail "Two" "Another."
+send -a Chat "Three" "A message."
+wait_state history 3
+[ "$(ipc notifications unread Mail)" = 2 ] || fail "unread of one app: $(ipc notifications unread Mail)"
+[ "$(ipc notifications unread Chat)" = 1 ] || fail "unread of another: $(ipc notifications unread Chat)"
+ipc notifications toggle
+wait_state panel true
+ipc notifications toggle
+wait_state panel false
+[ "$(ipc notifications unread Mail)" = 0 ] || fail "unread after the panel: $(ipc notifications unread Mail)"
+reset
+
 step "What a toast says"
 # All of it, or only its title, or only who it's from, for others who may see:
 # without its text a toast is shorter, and the history has it all the same.

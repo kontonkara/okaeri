@@ -167,6 +167,16 @@ Singleton {
 		return notification.isPast ? notification.unread : notification.id > seenId;
 	}
 
+	// How many of the app `app` of the dock, { id, entry }, are unread: by the desktop
+	// entry they name, else by its name or its id.
+	function unreadOf(app) {
+		if (panelShown)
+			return 0;
+		const id = (app.id || "").toLowerCase();
+		const name = (app.entry?.name || "").toLowerCase();
+		return history.filter(n => isUnread(n) && ((n.desktopEntry || "").toLowerCase() === id || [id, name].filter(one => one !== "").includes((n.appName || "").toLowerCase()))).length;
+	}
+
 	// For the moment, not for later.
 	function fleeting(notification) {
 		return notification.transient || rule(notification).history === false;

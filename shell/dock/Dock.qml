@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import qs
 import qs.launcher
+import qs.notifications
 import qs.services
 import qs.ui
 
@@ -52,9 +53,23 @@ PanelWindow {
 	// The icons one after another, the launcher's button where it goes.
 	readonly property var items: own.launcher === "start" ? [launcherItem].concat(apps) : own.launcher === "end" ? apps.concat([launcherItem]) : apps
 	readonly property var launcherItem: ({ id: "*launcher", launcher: true, windows: [] })
+	// Where those it keeps end and the others begin, for a line between them with
+	// Settings.dock.separator: the index of the first of the others, -1 for none,
+	// and the room the line takes.
+	readonly property int split: {
+		if (!own.separator)
+			return -1;
+		const first = items.findIndex(item => !item.launcher && !own.pinned.includes(item.id));
+		return first > 0 && items.slice(0, first).some(item => !item.launcher) ? first : -1;
+	}
+	readonly property real sep: Theme.u(12)
 	// One icon's place along the dock, and from one to the next.
 	readonly property real slot: size + Theme.u(4)
 	readonly property real step: slot + row.spacing
+	// Where along the row the middle of icon `index` is.
+	function middleOf(index) {
+		return row.padding + index * step + (split >= 0 && index >= split ? sep : 0) + slot / 2;
+	}
 	readonly property real length: Math.ceil(upright ? row.implicitHeight : row.implicitWidth)
 	// For Tip.
 	readonly property real tipsFrom: across + Theme.u(6)
@@ -81,7 +96,7 @@ PanelWindow {
 	readonly property var grown: {
 		const reach = step * 2;
 		return items.map((item, index) => {
-			const away = Math.abs(hoverAt - (row.padding + index * step + slot / 2));
+			const away = Math.abs(hoverAt - middleOf(index));
 			const near = away < reach ? Math.pow(Math.cos(Math.PI / 2 * away / reach), 2) : 0;
 			return size * (magnify - 1) * lift * near;
 		});
@@ -339,9 +354,13 @@ PanelWindow {
 					// Hopping: as it starts, and while it asks to be looked at.
 					readonly property bool bouncing: dock.own.bounce && (dock.launching.includes(modelData.id) || urgent)
 					property real up: 0
+					// The line before it, if it's the first of those not kept.
+					readonly property real lead: index === dock.split ? dock.sep : 0
+					// What it said that's not been seen.
+					readonly property int unread: launcher || !dock.own.unread ? 0 : NotificationStore.unreadOf(modelData)
 
-					width: dock.upright ? dock.thick - Theme.u(12) : dock.slot
-					height: dock.upright ? dock.slot : dock.thick - Theme.u(12)
+					width: dock.upright ? dock.thick - Theme.u(12) : dock.slot + lead
+					height: dock.upright ? dock.slot + lead : dock.thick - Theme.u(12)
 					// The larger in front.
 					z: grow
 
@@ -374,177 +393,226 @@ PanelWindow {
 						}
 					}
 
-					// Under the pointer, where icons don't grow there.
+					// The line between those kept and the others, in the middle of the gap, as
+					// far along as the icon after it moves.
 					Rectangle {
-						anchors.fill: parent
-						visible: !dock.magnifies
-						radius: Math.max(0, Theme.cardRadius - Theme.u(4))
-						color: pointer.pressed ? Theme.pressed : pointer.containsMouse ? Theme.hover : "transparent"
+						readonly property real middle: (app.lead - row.spacing) / 2
+						readonly property real moved: app.shift - (dock.grown[app.index] ?? 0) / 2
+
+						objectName: "separator"
+						visible: app.lead > 0
+						x: dock.upright ? (parent.width - width) / 2 : middle - width / 2 + moved
+						y: dock.upright ? middle - height / 2 + moved : (parent.height - height) / 2
+						width: dock.upright ? dock.size * 0.6 : Math.max(1, Theme.u(1.5))
+						height: dock.upright ? Math.max(1, Theme.u(1.5)) : dock.size * 0.6
+						color: Qt.alpha(Theme.colors.text, 0.3)
 					}
 
-					// Toward the screen's middle; the mark has the side by its edge. It
-					// moves along as those before it grow, and away from the edge as it
-					// hops, and grows from its side by the edge.
+					// The app's own place, past the line before the first of those not kept.
 					Item {
-						x: dock.at === "left" ? parent.width - width : dock.at === "right" ? 0 : (parent.width - width) / 2
-						y: dock.at === "top" ? parent.height - height : dock.at === "bottom" ? 0 : (parent.height - height) / 2
-						width: dock.size
-						height: dock.size
-						transform: Translate {
-							readonly property real away: app.up * dock.hop
-							x: dock.upright ? (dock.at === "left" ? away : -away) : app.shift
-							y: dock.upright ? app.shift : (dock.at === "top" ? away : -away)
+						id: body
+
+						x: dock.upright ? 0 : app.lead
+						y: dock.upright ? app.lead : 0
+						width: dock.upright ? parent.width : dock.slot
+						height: dock.upright ? dock.slot : parent.height
+
+						// Under the pointer, where icons don't grow there.
+						Rectangle {
+							anchors.fill: parent
+							visible: !dock.magnifies
+							radius: Math.max(0, Theme.cardRadius - Theme.u(4))
+							color: pointer.pressed ? Theme.pressed : pointer.containsMouse ? Theme.hover : "transparent"
 						}
 
+						// Toward the screen's middle; the mark has the side by its edge. It
+						// moves along as those before it grow, and away from the edge as it
+						// hops, and grows from its side by the edge.
 						Item {
-							anchors.fill: parent
-							scale: app.grow
-							transformOrigin: dock.at === "top" ? Item.Top : dock.at === "left" ? Item.Left : dock.at === "right" ? Item.Right : Item.Bottom
+							x: dock.at === "left" ? parent.width - width : dock.at === "right" ? 0 : (parent.width - width) / 2
+							y: dock.at === "top" ? parent.height - height : dock.at === "bottom" ? 0 : (parent.height - height) / 2
+							width: dock.size
+							height: dock.size
+							transform: Translate {
+								readonly property real away: app.up * dock.hop
+								x: dock.upright ? (dock.at === "left" ? away : -away) : app.shift
+								y: dock.upright ? app.shift : (dock.at === "top" ? away : -away)
+							}
 
-							IconImage {
+							Item {
 								anchors.fill: parent
-								visible: app.image !== ""
-								source: app.image
-							}
+								scale: app.grow
+								transformOrigin: dock.at === "top" ? Item.Top : dock.at === "left" ? Item.Left : dock.at === "right" ? Item.Right : Item.Bottom
 
-							// An app the icon theme doesn't know, or the launcher's button.
-							Icon {
-								anchors.centerIn: parent
-								visible: app.image === ""
-								name: app.launcher ? "search" : "apps"
-								size: dock.size * (app.launcher ? 0.6 : 0.7)
-							}
+								IconImage {
+									anchors.fill: parent
+									visible: app.image !== ""
+									source: app.image
+								}
 
-							// How many windows it has, from two on.
-							Rectangle {
-								anchors.right: parent.right
-								anchors.top: parent.top
-								anchors.margins: -Theme.u(3)
-								visible: dock.own.count && app.modelData.windows.length > 1
-								width: Math.max(height, count.implicitWidth + Theme.u(8))
-								height: Math.round(Theme.u(16))
-								radius: height / 2
-								color: Theme.colors.accent
-
-								Text {
-									id: count
-
+								// An app the icon theme doesn't know, or the launcher's button.
+								Icon {
 									anchors.centerIn: parent
-									text: app.modelData.windows.length
-									color: Theme.colors.background
-									font.family: Theme.font
-									font.pixelSize: Theme.fontSize - Theme.u(4)
-									font.weight: Theme.fontWeight
+									visible: app.image === ""
+									name: app.launcher ? "search" : "apps"
+									size: dock.size * (app.launcher ? 0.6 : 0.7)
+								}
+
+								// How many of its notifications are unread, in the corner across.
+								Rectangle {
+									objectName: "unread"
+									anchors.left: parent.left
+									anchors.top: parent.top
+									anchors.margins: -Theme.u(3)
+									visible: app.unread > 0
+									width: Math.max(height, unread.implicitWidth + Theme.u(8))
+									height: Math.round(Theme.u(16))
+									radius: height / 2
+									color: Theme.colors.error
+
+									Text {
+										id: unread
+
+										anchors.centerIn: parent
+										text: app.unread > 99 ? "99+" : app.unread
+										color: Theme.colors.background
+										font.family: Theme.font
+										font.pixelSize: Theme.fontSize - Theme.u(4)
+										font.weight: Theme.fontWeight
+									}
+								}
+
+								// How many windows it has, from two on.
+								Rectangle {
+									anchors.right: parent.right
+									anchors.top: parent.top
+									anchors.margins: -Theme.u(3)
+									visible: dock.own.count && app.modelData.windows.length > 1
+									width: Math.max(height, count.implicitWidth + Theme.u(8))
+									height: Math.round(Theme.u(16))
+									radius: height / 2
+									color: Theme.colors.accent
+
+									Text {
+										id: count
+
+										anchors.centerIn: parent
+										text: app.modelData.windows.length
+										color: Theme.colors.background
+										font.family: Theme.font
+										font.pixelSize: Theme.fontSize - Theme.u(4)
+										font.weight: Theme.fontWeight
+									}
 								}
 							}
 						}
-					}
 
-					Rectangle {
-						property real long: Theme.u(app.focused ? 14 : 4)
-						readonly property real short: Theme.u(4)
+						Rectangle {
+							property real long: Theme.u(app.focused ? 14 : 4)
+							readonly property real short: Theme.u(4)
 
-						x: dock.upright ? (dock.at === "left" ? 0 : parent.width - width) : (parent.width - width) / 2
-						y: dock.upright ? (parent.height - height) / 2 : (dock.at === "top" ? 0 : parent.height - height)
-						width: dock.upright ? short : long
-						height: dock.upright ? long : short
-						radius: Theme.round(short)
-						visible: app.running
-						color: app.urgent ? Theme.colors.error : app.focused ? Theme.colors.accent : Theme.colors.subtext
-						transform: Translate {
-							x: dock.upright ? 0 : app.shift
-							y: dock.upright ? app.shift : 0
-						}
+							x: dock.upright ? (dock.at === "left" ? 0 : parent.width - width) : (parent.width - width) / 2
+							y: dock.upright ? (parent.height - height) / 2 : (dock.at === "top" ? 0 : parent.height - height)
+							width: dock.upright ? short : long
+							height: dock.upright ? long : short
+							radius: Theme.round(short)
+							visible: app.running
+							color: app.urgent ? Theme.colors.error : app.focused ? Theme.colors.accent : Theme.colors.subtext
+							transform: Translate {
+								x: dock.upright ? 0 : app.shift
+								y: dock.upright ? app.shift : 0
+							}
 
-						Behavior on long {
-							enabled: Theme.animate
+							Behavior on long {
+								enabled: Theme.animate
 
-							NumberAnimation {
-								duration: Theme.ms(140)
-								easing.type: Easing.OutCubic
+								NumberAnimation {
+									duration: Theme.ms(140)
+									easing.type: Easing.OutCubic
+								}
 							}
 						}
-					}
 
-					MouseArea {
-						id: pointer
+						MouseArea {
+							id: pointer
 
-						anchors.fill: parent
-						hoverEnabled: true
-						acceptedButtons: app.launcher ? Qt.LeftButton : Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-						// Where along the dock the button went down, and whether the pointer
-						// went far enough from there since to be dragging the app.
-						property real from: 0
-						property bool dragging: false
-						property int notches: 0
+							anchors.fill: parent
+							hoverEnabled: true
+							acceptedButtons: app.launcher ? Qt.LeftButton : Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+							// Where along the dock the button went down, and whether the pointer
+							// went far enough from there since to be dragging the app.
+							property real from: 0
+							property bool dragging: false
+							property int notches: 0
 
-						function along(event) {
-							const at = mapToItem(row, event.x, event.y);
-							return dock.upright ? at.y : at.x;
+							function along(event) {
+								const at = mapToItem(row, event.x, event.y);
+								return dock.upright ? at.y : at.x;
+							}
+
+							cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+							onDraggingChanged: dock.dragging = dragging
+							onPressed: event => {
+								dragging = false;
+								from = along(event);
+							}
+							// Into the place of the one beside it, and that one takes this
+							// one's: the pointer is over its own app again. By where its place
+							// is, not where it's gliding to.
+							onPositionChanged: event => {
+								if (!(pressedButtons & Qt.LeftButton) || !app.kept)
+									return;
+								const at = along(event);
+								if (!dragging && Math.abs(at - from) < Theme.u(8))
+									return;
+								dragging = true;
+								const middle = dock.middleOf(app.index);
+								const reach = dock.slot / 2 + row.spacing;
+								if (at > middle + reach)
+									dock.moved(app.modelData, 1);
+								else if (at < middle - reach)
+									dock.moved(app.modelData, -1);
+							}
+							onReleased: letGo.restart()
+							onCanceled: dragging = false
+							onClicked: event => {
+								if (dragging)
+									return;
+								if (app.launcher)
+									Apps.launcherWanted();
+								else if (event.button === Qt.RightButton)
+									dock.asked(app.modelData, dock.alongOf(body));
+								else if (event.button === Qt.MiddleButton && app.modelData.entry)
+									dock.started(app.modelData);
+								else if (event.button === Qt.LeftButton)
+									dock.activated(app.modelData);
+							}
+							// 120 to a notch, down being the next window.
+							onWheel: event => {
+								notches += event.angleDelta.y;
+								const steps = Math.trunc(notches / 120);
+								if (steps === 0)
+									return;
+								notches -= steps * 120;
+								if (app.running)
+									dock.turned(app.modelData, -steps);
+							}
+
+							// The click that ends a drag comes after the release.
+							Timer {
+								id: letGo
+
+								interval: 0
+								onTriggered: pointer.dragging = false
+							}
 						}
 
-						cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
-						onDraggingChanged: dock.dragging = dragging
-						onPressed: event => {
-							dragging = false;
-							from = along(event);
+						Tip {
+							listens: false
+							hovered: pointer.containsMouse && !dock.held
+							pressed: pointer.pressed
+							text: app.launcher ? "Apps" : [app.modelData.entry?.name ?? app.modelData.id, app.modelData.windows.length > 1 ? `${app.modelData.windows.length} windows` : "", app.kept ? "kept" : ""].filter(part => part !== "").join(" · ")
 						}
-						// Into the place of the one beside it, and that one takes this
-						// one's: the pointer is over its own app again. By where its place
-						// is, not where it's gliding to.
-						onPositionChanged: event => {
-							if (!(pressedButtons & Qt.LeftButton) || !app.kept)
-								return;
-							const at = along(event);
-							if (!dragging && Math.abs(at - from) < Theme.u(8))
-								return;
-							dragging = true;
-							const middle = row.padding + app.index * dock.step + dock.slot / 2;
-							const reach = dock.slot / 2 + row.spacing;
-							if (at > middle + reach)
-								dock.moved(app.modelData, 1);
-							else if (at < middle - reach)
-								dock.moved(app.modelData, -1);
-						}
-						onReleased: letGo.restart()
-						onCanceled: dragging = false
-						onClicked: event => {
-							if (dragging)
-								return;
-							if (app.launcher)
-								Apps.launcherWanted();
-							else if (event.button === Qt.RightButton)
-								dock.asked(app.modelData, dock.alongOf(app));
-							else if (event.button === Qt.MiddleButton && app.modelData.entry)
-								dock.started(app.modelData);
-							else if (event.button === Qt.LeftButton)
-								dock.activated(app.modelData);
-						}
-						// 120 to a notch, down being the next window.
-						onWheel: event => {
-							notches += event.angleDelta.y;
-							const steps = Math.trunc(notches / 120);
-							if (steps === 0)
-								return;
-							notches -= steps * 120;
-							if (app.running)
-								dock.turned(app.modelData, -steps);
-						}
-
-						// The click that ends a drag comes after the release.
-						Timer {
-							id: letGo
-
-							interval: 0
-							onTriggered: pointer.dragging = false
-						}
-					}
-
-					Tip {
-						listens: false
-						hovered: pointer.containsMouse && !dock.held
-						pressed: pointer.pressed
-						text: app.launcher ? "Apps" : [app.modelData.entry?.name ?? app.modelData.id, app.modelData.windows.length > 1 ? `${app.modelData.windows.length} windows` : "", app.kept ? "kept" : ""].filter(part => part !== "").join(" · ")
 					}
 				}
 			}
