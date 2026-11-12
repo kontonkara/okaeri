@@ -47,6 +47,9 @@ Singleton {
 		return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}` : `${minutes}:${rest}`;
 	}
 
+	// A key of the player's was pressed, for the OSD: what plays, or doesn't now.
+	signal keyed
+
 	function toggle() {
 		if (player?.canTogglePlaying)
 			Env.act(`media toggle ${player.dbusName}`, () => player.togglePlaying());

@@ -94,7 +94,8 @@ notifications come, growing, fading or sliding in, are on the Look page with the
 rest. "Back to the config", under the pages, takes back what the window set: on
 the page that shows, or all of it. `okaeri theme toggle` goes between the day's
 and the night's palettes, for a key. A choice in the window takes the wheel and the
-arrow keys, and the Notifications page has one to show, to see how they come.
+arrow keys, and the Notifications page has one to show, to see how they come. The
+on-screen display says what plays after a key of the player's, too.
 
 The bar takes parts of your own, made on its page of the settings: a command, and
 what it prints is on the bar. The first line shows and the second is what the

@@ -9,11 +9,12 @@ import qs.ui
 
 // What the volume, the microphone, the brightness, the keyboard layout, a lock
 // key, the keyboard's light, the power profile, the night light, keeping awake or
-// Do Not Disturb just became, for a moment, on the screen in focus: at its
-// bottom, its top or in its middle, as Settings.osd says, which also says for how
-// long, whether the level is in numbers too and what has no card. The last four
-// only show with no panel open: there they change in sight. Clicks and keys go to
-// what's under it.
+// Do Not Disturb just became, or what plays after a key of the player's, for a
+// moment, on the screen in focus: at its bottom, its top or in its middle, as
+// Settings.osd says, which also says for how long, whether the level is in
+// numbers too and what has no card. The power profile, the night light, keeping
+// awake and Do Not Disturb only show with no panel open: there they change in
+// sight. Clicks and keys go to what's under it.
 PanelWindow {
 	id: osd
 
@@ -30,7 +31,8 @@ PanelWindow {
 		night: "sunset",
 		awake: "coffee",
 		dnd: "bellOff",
-		keys: "keyboard"
+		keys: "keyboard",
+		media: "music"
 	})
 	// The kinds by what the settings turn off.
 	readonly property var groups: ({
@@ -46,7 +48,8 @@ PanelWindow {
 		night: "night",
 		awake: "awake",
 		dnd: "dnd",
-		keys: "keys"
+		keys: "keys",
+		media: "media"
 	})
 	readonly property real rise: Theme.u(8)
 	readonly property string position: Settings.osd.position
@@ -63,6 +66,9 @@ PanelWindow {
 		dnd: "Do Not Disturb"
 	})
 	readonly property bool off: kind === "mute" || kind === "micMute" || ((lock || kind in switches) && level === 0)
+	// What plays, as its title and who by; the icon says whether it does.
+	readonly property var player: Media.player
+	readonly property string track: player ? [player.trackTitle, player.trackArtist].filter(part => part).join(" \u2014 ") || player.identity : ""
 	// What it says in words, if that's what it shows and not a level.
 	// A layout by its whole name: two of one language would say the same in two
 	// letters.
@@ -70,6 +76,7 @@ PanelWindow {
 		: lock ? `${kind === "caps" ? "Caps Lock" : "Num Lock"} ${off ? "off" : "on"}`
 		: kind in switches ? `${switches[kind]} ${off ? "off" : "on"}`
 		: kind === "profile" ? Power.profileName
+		: kind === "media" ? track
 		: ""
 	property bool shown: false
 
@@ -78,6 +85,8 @@ PanelWindow {
 			console.info(`okaeri: no osd "${kind}", it's one of ${Object.keys(icons).join(", ")}`);
 			return;
 		}
+		if (kind === "media" && !player)
+			return;
 		osd.kind = kind;
 		osd.level = level;
 		screen = Niri.focusedScreen;
@@ -132,6 +141,24 @@ PanelWindow {
 
 		function show(kind: string, level: real): void {
 			osd.show(kind, level);
+		}
+	}
+
+	// The player's keys: what plays, kept up while the track changes.
+	Connections {
+		target: Media
+
+		function onKeyed() {
+			if (osd.wants("media"))
+				osd.show("media", 1);
+		}
+	}
+
+	Connections {
+		target: osd.kind === "media" && osd.shown ? osd.player : null
+
+		function onTrackTitleChanged() {
+			hold.restart();
 		}
 	}
 
@@ -315,7 +342,7 @@ PanelWindow {
 
 			Icon {
 				anchors.verticalCenter: parent.verticalCenter
-				name: osd.icons[osd.kind]
+				name: osd.kind === "media" ? (osd.player?.isPlaying ? "play" : "pause") : osd.icons[osd.kind]
 				color: osd.off ? Theme.colors.subtext : Theme.colors.text
 			}
 

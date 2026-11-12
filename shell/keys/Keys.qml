@@ -77,10 +77,12 @@ Scope {
 
 		function toggle(): void {
 			Media.toggle();
+			Media.keyed();
 		}
 
 		function stop(): void {
 			Media.stop();
+			Media.keyed();
 		}
 
 		// The card of what plays, on the bar of the screen in focus.
@@ -90,10 +92,12 @@ Scope {
 
 		function previous(): void {
 			Media.previous();
+			Media.keyed();
 		}
 
 		function next(): void {
 			Media.next();
+			Media.keyed();
 		}
 
 		function forward(seconds: int): void {

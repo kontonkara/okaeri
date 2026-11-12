@@ -8,8 +8,11 @@
 # the track runs along y 827 from x 614, 200 long.
 left=572 right=828 top=802 bottom=852 middle=827 track=614
 
+mpv_pid=
+
 fail() {
 	echo "osd: $*" >&2
+	[ -z "$mpv_pid" ] || kill "$mpv_pid"
 	exit 1
 }
 now() {
@@ -189,6 +192,11 @@ ShellRoot {
 
 		function brightness(level: real): void {
 			Brightness.level = level;
+		}
+
+		// A key of the player's.
+		function media(): void {
+			Media.keyed();
 		}
 
 		function under(): void {
@@ -594,3 +602,31 @@ stays_off 1300 "a card for keeping awake, with that off"
 ipc awake toggle
 stays_off 500 "a card for keeping awake, with that off"
 settings '{}'
+
+# A key of the player's: with none, no card; with one, what plays, in words, and
+# not with that kind turned off.
+ipc poke media
+stays_off 800 "a card for the player's key with no player"
+mpv --no-config --no-terminal --ao=null --vo=null --loop-playlist=inf --force-media-title="A sine for the test" \
+	--script="$OKAERI_MPV_MPRIS" av://lavfi:sine >/dev/null 2>&1 &
+mpv_pid=$!
+for _ in $(seq 100); do
+	dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+		org.freedesktop.DBus.ListNames | grep -q 'org\.mpris\.MediaPlayer2\.mpv' && break
+	sleep 0.1
+done
+sleep 0.6
+ipc poke media
+comes_up "no card for the player's key"
+sleep 0.4
+shot media
+[ "$(words media)" != "$(words nothing)" ] || fail "nothing of what plays on its card"
+[ "$(words media)" != "$(words awake-on)" ] || fail "what plays looks as keeping awake does"
+leaves "$(now)" >/dev/null
+settings '{ "osd": { "hidden": ["media"] } }'
+ipc poke media
+stays_off 1000 "a card for the player's key, with that off"
+settings '{}'
+kill "$mpv_pid"
+wait "$mpv_pid" 2>/dev/null || true
+mpv_pid=
