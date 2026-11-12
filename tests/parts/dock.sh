@@ -79,6 +79,14 @@ set -- $(ends two)
 [ $(($2 - $1)) -gt $((one + 30)) ] || fail "the dock is no longer with another app: $1 to $2"
 left=$1
 right=$2
+# A line between the one kept and the other: without it the dock is shorter.
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "separator": false } }'
+sleep 0.4
+shot two-plain
+set -- $(ends two-plain)
+[ $(($2 - $1)) -lt $((right - left - 6)) ] || fail "no room for the line after the one kept: $1 to $2, and $left to $right with it"
+settings '{ "dock": { "on": true, "pinned": ["kitty"] } }'
+sleep 0.4
 [ "$(focused)" = okaeri-other ] || fail "the new window isn't in focus: $(focused)"
 # A click on the first goes to its window.
 move $((left + one / 2)) 862

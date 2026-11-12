@@ -139,7 +139,9 @@
 		"bounce": true,
 		"count": true,
 		"launcher": "none",
-		"smartHide": false
+		"smartHide": false,
+		"separator": true,
+		"unread": true
 	},
 	"hooks": {
 		"charger": "",

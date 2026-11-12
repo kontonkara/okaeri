@@ -124,6 +124,22 @@ Flickable {
 				onToggled: wanted => Settings.set("dock", "count", wanted)
 			}
 
+			Setting {
+				holds: "dock.unread"
+				text: "Unread notifications"
+				subtext: "How many, on the app they're from"
+				checked: page.own.unread
+				onToggled: wanted => Settings.set("dock", "unread", wanted)
+			}
+
+			Setting {
+				holds: "dock.separator"
+				text: "A line after those kept"
+				subtext: "Before the others with windows"
+				checked: page.own.separator
+				onToggled: wanted => Settings.set("dock", "separator", wanted)
+			}
+
 			Pick {
 				holds: "dock.launcher"
 				text: "A button for the launcher"

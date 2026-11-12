@@ -76,6 +76,12 @@ Scope {
 			NotificationStore.setQuiet(app, seconds > 0 ? Date.now() + seconds * 1000 : seconds < 0 ? NotificationStore.always : 0);
 		}
 
+		// How many of `app` are unread, by its desktop entry's id or its name, as the
+		// dock has it.
+		function unread(app: string): int {
+			return NotificationStore.unreadOf({ id: app, entry: null });
+		}
+
 		// For tests and scripts.
 		function state(): string {
 			return JSON.stringify({

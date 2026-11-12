@@ -132,7 +132,8 @@ keeps and those with windows, all of them or only its screen's, and a right clic
 on one has its windows, what else it can start, bringing its windows here,
 keeping it and closing it. Its icons grow under the pointer, an app hops as it
 starts and while it asks to be looked at, and it can have a button for the
-launcher, and stay in sight on an empty workspace where it hides.
+launcher, and stay in sight on an empty workspace where it hides. An app has how
+many of its notifications are unread, and a line goes after the apps it keeps.
 
 A click on a workspace that wants attention goes to the window that does, an
 app's icon on a workspace dragged onto another takes its window there, and the
