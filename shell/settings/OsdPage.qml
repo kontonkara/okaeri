@@ -16,7 +16,8 @@ Flickable {
 		{ name: "night", text: "Night light" },
 		{ name: "awake", text: "Keep awake" },
 		{ name: "dnd", text: "Do Not Disturb" },
-		{ name: "keys", text: "Keyboard light", subtext: "Where the keyboard has one" }
+		{ name: "keys", text: "Keyboard light", subtext: "Where the keyboard has one" },
+		{ name: "media", text: "What plays", subtext: "After a key of the player's" }
 	]
 
 	function show(name, wanted) {

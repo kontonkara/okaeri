@@ -23,11 +23,17 @@ Singleton {
 	readonly property bool micReady: !!source && source.ready && !!source.audio
 	readonly property real micVolume: micReady ? source.audio.volume : 0
 	readonly property bool micMuted: micReady && source.audio.muted
+	// How loud the microphone in use hears it now, 0 to 1, while something asks to
+	// know: the microphone's page, while it's open. Not in a dry run: a test
+	// doesn't listen to the machine's microphone.
+	property bool hearing: false
+	readonly property real micPeak: peak.peak
 
 	// What apps are playing, each with a volume of its own: to Quickshell a stream
 	// that plays is a sink too. What has no app is the sound server's own, a filter's,
-	// and what plays as a notification is over as soon as it shows.
-	readonly property var streams: Pipewire.nodes.values.filter(node => node.isStream)
+	// and what plays as a notification is over as soon as it shows. The meter of
+	// the microphone's page is the shell's own.
+	readonly property var streams: Pipewire.nodes.values.filter(node => node.isStream && node.name !== "quickshell-peak-monitor")
 	readonly property var nodes: streams.filter(node => node.isSink && !!node.audio && !!node.properties["application.name"] && node.properties["media.role"] !== "Notification")
 	// What apps are listening to a microphone, each with a volume of its own: a
 	// stream that records is a source.
@@ -182,6 +188,13 @@ Singleton {
 	}
 
 	// Its properties are there only while tracked.
+	PwNodePeakMonitor {
+		id: peak
+
+		node: audio.hearing && audio.micReady && !Env.dry ? audio.source : null
+		enabled: !!node
+	}
+
 	PwObjectTracker {
 		objects: [audio.sink, audio.source].concat(audio.streams).filter(node => !!node)
 	}

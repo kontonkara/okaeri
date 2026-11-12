@@ -1061,6 +1061,7 @@ sed -e 's/^\tproperty var nodes: .*/\tproperty var nodes: [{ audio: { volume: 0.
 	-e 's/^\tproperty bool micReady: false$/\tproperty bool micReady: true/' \
 	-e 's/^\treadonly property real micVolume: .*/\tproperty real micVolume: 0.7/' \
 	-e 's/^\treadonly property bool micMuted: .*/\tproperty bool micMuted: false/' \
+	-e 's/^\treadonly property real micPeak: .*/\tproperty real micPeak: 0.1/' \
 	"$work/shell/services/Audio.qml" >"$work/Audio.qml"
 grep -q 'Player-wrapped' "$work/Audio.qml"
 reloads=$(seen "Reloading configuration")
@@ -1115,6 +1116,13 @@ rm "$work/cards"
 at $sound_x $mic_y
 sleep 0.4
 shot inputs
+# Under them, how loud the one in use is: a tenth of full, -20 dB, two thirds of
+# the meter.
+level_at() {
+	magick "$out/inputs.png" -depth 8 -format "%[hex:p{$1,193}]" info:
+}
+[ "$(level_at 1100)" = "$(level_at 1250)" ] && [ "$(level_at 1250)" != "$(level_at 1340)" ] ||
+	fail "the microphone's level isn't two thirds of its meter"
 when 'dry: input' at 1200 157
 toggle
 
