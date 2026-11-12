@@ -508,10 +508,13 @@ sleep 0.3
 arrow "$higher_x" $((sleep_y + 50))
 same "when it sleeps" "$(value .idle.suspendOn)" '"battery"'
 # And not while something plays, unless that's turned off.
-move "$switch_x" $((sleep_y + 95))
+move "$switch_x" $((sleep_y + 130))
 click
 sleep 0.3
 same "sleep with something playing" "$(value .idle.playingHolds)" false
+# How it sleeps: suspended and then hibernated, a step on.
+arrow "$higher_x" $((sleep_y + 85))
+same "how it sleeps" "$(value .idle.sleepAs)" '"suspend-then-hibernate"'
 shot session
 
 step "The battery's line"
@@ -519,20 +522,22 @@ step "The battery's line"
 move 700 446
 notch 30
 sleep 0.6
-battery_y=575
+battery_y=525
 arrow "$lower_x" "$battery_y"
 same "the warning" "$(value .battery.warning)" 15
 arrow "$higher_x" "$battery_y"
 arrow "$higher_x" "$battery_y"
 same "the warning, two up" "$(value .battery.warning)" 25
-move "$switch_x" 625
+move "$switch_x" 575
 click
 sleep 0.3
 same "saving power from then on" "$(value .battery.saver)" true
-arrow "$higher_x" 670
+arrow "$higher_x" 620
 same "the lock on battery" "$(value .idle.batteryLock)" 60
+arrow "$higher_x" 705
+same "sleep on battery" "$(value .idle.batterySuspend)" 60
 # Over the battery's card, the commands for when things happen: the last of them.
-field 934 473 'true'
+field 934 423 'true'
 same "what a new wallpaper runs" "$(value .hooks.wallpaper)" '"true"'
 
 step "The dock's page"

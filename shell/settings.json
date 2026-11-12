@@ -14,6 +14,8 @@
 		"playingHolds": true,
 		"batteryLock": 0,
 		"batteryScreenOff": 0,
+		"batterySuspend": 0,
+		"sleepAs": "suspend",
 		"lockedScreenOff": 0
 	},
 	"battery": {
