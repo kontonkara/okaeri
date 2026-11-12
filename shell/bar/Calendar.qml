@@ -1,11 +1,15 @@
 import QtQuick
 import qs
+import qs.services
 import qs.ui
 
 // A month, today in it marked: the arrows and the wheel go to the months around
-// it, and its name back to this one. Weeks start as Settings.clock.weekStart
+// it, and its name back to this one. By the keys that's Left and Right, or Page
+// Up and Down, and Home. Weeks start as Settings.clock.weekStart
 // says, the locale's way by default, with their numbers if
-// Settings.clock.weekNumbers says so.
+// Settings.clock.weekNumbers says so. With calendars to read, as Events has
+// them, a dot is under each day with something on it, and under the month is
+// what's on the day picked: today, or one clicked.
 Column {
 	id: calendar
 
@@ -25,6 +29,15 @@ Column {
 		return Array.from({ length: 42 }, (_, index) => new Date(year, month, 1 - back + index));
 	}
 	readonly property real cell: Theme.u(36)
+	// A day clicked, or null for today.
+	property var chosen: null
+	readonly property date picked: chosen ?? today
+	// The days with something on them, of the months around this one too, and
+	// what's on the day picked.
+	readonly property var marks: Events.on ? Events.marked(new Date(year, month - 1, 1), new Date(year, month + 2, 1)) : ({})
+	readonly property var happening: Events.on ? Events.happening(picked) : []
+	// As many lines of that as show: past them the last one says how many more.
+	readonly property int lines: 6
 
 	function turn(months) {
 		const to = new Date(year, month + months, 1);
@@ -35,6 +48,22 @@ Column {
 	function back() {
 		year = today.getFullYear();
 		month = today.getMonth();
+		chosen = null;
+	}
+
+	function pick(day) {
+		chosen = same(day, today) ? null : day;
+	}
+
+	// When something on the day picked is, at the start of its line: the time it
+	// starts, or ends if it began the day before, or all day.
+	function timeOf(one) {
+		const format = Settings.clock.hours12 ? "h:mm AP" : "HH:mm";
+		const from = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate());
+		const to = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate() + 1);
+		if (one.allDay || (one.start < from && one.end >= to))
+			return "All day";
+		return one.start < from ? `Until ${Qt.formatDateTime(one.end, format)}` : Qt.formatDateTime(one.start, format);
 	}
 
 	function same(a, b) {
@@ -46,6 +75,18 @@ Column {
 		const thursday = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 3 - (day.getDay() + 6) % 7);
 		const first = new Date(thursday.getFullYear(), 0, 4);
 		return 1 + Math.round(((thursday - first) / 86400000 - 3 + (first.getDay() + 6) % 7) / 7);
+	}
+
+	Keys.onPressed: event => {
+		if (event.key === Qt.Key_Left || event.key === Qt.Key_PageUp)
+			turn(-1);
+		else if (event.key === Qt.Key_Right || event.key === Qt.Key_PageDown)
+			turn(1);
+		else if (event.key === Qt.Key_Home)
+			back();
+		else
+			return;
+		event.accepted = true;
 	}
 
 	spacing: Theme.u(6)
@@ -145,6 +186,7 @@ Column {
 					required property var modelData
 					readonly property bool isToday: calendar.same(modelData, calendar.today)
 					readonly property bool inMonth: modelData.getMonth() === calendar.month
+					readonly property bool isPicked: calendar.chosen !== null && calendar.same(modelData, calendar.chosen)
 
 					width: calendar.cell
 					height: calendar.cell
@@ -158,6 +200,18 @@ Column {
 						color: Theme.colors.accent
 					}
 
+					// The day picked, ringed, and one under the pointer that can be.
+					Rectangle {
+						anchors.centerIn: parent
+						width: calendar.cell - Theme.u(6)
+						height: width
+						radius: Theme.round(height)
+						visible: !parent.isToday && (parent.isPicked || pointer.containsMouse)
+						color: parent.isPicked ? "transparent" : Theme.hover
+						border.width: parent.isPicked ? Math.max(1, Math.round(Theme.u(1.5))) : 0
+						border.color: Theme.colors.accent
+					}
+
 					Text {
 						anchors.centerIn: parent
 						text: parent.modelData.getDate()
@@ -169,8 +223,124 @@ Column {
 							"tnum": 1
 						}
 					}
+
+					// Something on it, from a calendar.
+					Rectangle {
+						anchors.horizontalCenter: parent.horizontalCenter
+						anchors.bottom: parent.bottom
+						anchors.bottomMargin: Theme.u(5)
+						width: 2 * Math.max(1, Math.round(Theme.u(2)))
+						height: width
+						radius: width / 2
+						visible: !!calendar.marks[Events.key(parent.modelData)]
+						color: parent.isToday ? Theme.colors.background : Theme.colors.accent
+						opacity: parent.inMonth ? 1 : 0.4
+					}
+
+					// Only with calendars is there anything to pick a day for.
+					MouseArea {
+						id: pointer
+
+						anchors.fill: parent
+						enabled: Events.on
+						hoverEnabled: true
+						cursorShape: Events.on ? Qt.PointingHandCursor : Qt.ArrowCursor
+						onClicked: calendar.pick(parent.modelData)
+					}
 				}
 			}
+		}
+	}
+
+	// What's on the day picked, with calendars to tell it.
+	Column {
+		width: parent.width
+		visible: Events.on
+		spacing: Theme.u(2)
+
+		Rectangle {
+			width: parent.width
+			height: 1
+			color: Theme.border
+		}
+
+		Text {
+			x: Theme.u(8)
+			width: parent.width - Theme.u(16)
+			topPadding: Theme.u(6)
+			bottomPadding: Theme.u(2)
+			text: calendar.same(calendar.picked, calendar.today) ? "Today" : Qt.formatDate(calendar.picked, calendar.picked.getFullYear() === calendar.today.getFullYear() ? "dddd, d MMMM" : "dddd, d MMMM yyyy")
+			color: Theme.colors.subtext
+			elide: Text.ElideRight
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize - Theme.u(2)
+		}
+
+		Repeater {
+			model: calendar.happening.length > calendar.lines ? calendar.happening.slice(0, calendar.lines - 1) : calendar.happening
+
+			Item {
+				required property var modelData
+
+				width: parent.width
+				height: Theme.u(24)
+
+				Text {
+					id: starts
+
+					anchors.left: parent.left
+					anchors.leftMargin: Theme.u(8)
+					anchors.verticalCenter: parent.verticalCenter
+					width: Theme.u(Settings.clock.hours12 ? 88 : 72)
+					text: calendar.timeOf(parent.modelData)
+					color: Theme.colors.subtext
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+					font.features: {
+						"tnum": 1
+					}
+				}
+
+				Text {
+					anchors.left: starts.right
+					anchors.leftMargin: Theme.u(8)
+					anchors.right: parent.right
+					anchors.rightMargin: Theme.u(8)
+					anchors.verticalCenter: parent.verticalCenter
+					text: parent.modelData.summary
+					textFormat: Text.PlainText
+					color: Theme.colors.text
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize
+				}
+			}
+		}
+
+		Text {
+			x: Theme.u(8)
+			width: parent.width - Theme.u(16)
+			height: Theme.u(24)
+			visible: text !== ""
+			verticalAlignment: Text.AlignVCenter
+			text: calendar.happening.length === 0 ? "Nothing that day" : calendar.happening.length > calendar.lines ? `And ${calendar.happening.length - calendar.lines + 1} more` : ""
+			color: Theme.colors.subtext
+			elide: Text.ElideRight
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize - Theme.u(2)
+		}
+
+		// A calendar that hasn't come.
+		Text {
+			x: Theme.u(8)
+			width: parent.width - Theme.u(16)
+			visible: Events.problem !== ""
+			text: `A calendar: ${Events.problem}`
+			color: Theme.colors.error
+			elide: Text.ElideRight
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize - Theme.u(2)
 		}
 	}
 

@@ -436,6 +436,18 @@ Singleton {
 		function remove(id: string): void {
 			entries.applications = { values: entries.applications.values.filter(entry => entry.id !== id) };
 		}
+
+		// An app with one action, named `action`.
+		function actor(id: string, name: string, action: string): void {
+			const actions = [{ id: "own", name: action, icon: "", command: ["own"] }];
+			const entry = { id, name, icon: "nosuchicon", actions, genericName: "", comment: "", keywords: [] };
+			entries.applications = { values: [...entries.applications.values, entry] };
+		}
+	}
+
+	// What a window's app is found by, with no app of its id: none here.
+	function heuristicLookup(id) {
+		return null;
 	}
 }
 QML
@@ -540,6 +552,25 @@ ipc entries add never.launched "Oftener" nosuchicon
 ipc entries add whole.name "Often" nosuchicon
 pick oft zz.frequent
 pick often whole.name
+
+# An app's own actions are found by their names, Enter launches the one found,
+# and the app with the same fit comes before its action. With the setting off
+# they're not found.
+ipc entries actor org.example.Browser Browsing "Open A Hidden Tab"
+pick "open a hidden" "org.example.Browser own"
+ipc entries actor hidden.Tab "Hidden Tab" "Hidden Tab"
+pick "hidden tab" hidden.Tab
+printf '{ "launcher": { "actions": false } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+open
+type "open a hidden"
+sleep 0.2
+key Return
+nothing_launched
+key Escape
+is_closed "an action with the setting off"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
 
 # What else an app can do, by the pointer: its own first.
 own=$XDG_STATE_HOME/okaeri/settings.json
@@ -695,6 +726,27 @@ key Return
 sleep 0.4
 [ "$(title)" = icon-window ] || fail "/win didn't go to the window: $(title)"
 nothing_launched
+# Shift+Enter or a right click on one closes it, and the launcher stays open.
+# The window is over the corner is_closed looks at: the layers say it here.
+panel_up() {
+	niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-panel")' >/dev/null
+}
+open
+type "/win icon"
+sleep 0.2
+shot window-close
+shifted_enter
+wait_log "okaeri: dry: close window"
+panel_up || fail "closing a window closed the launcher"
+glide 700 "$(row 0)"
+click right
+sleep 0.3
+[ "$(log | grep -cF 'okaeri: dry: close window')" = 2 ] || fail "a right click didn't close the window"
+panel_up || fail "a right click on a window closed the launcher"
+key Escape
+sleep 0.4
+panel_up && fail "Escape after closing a window left the launcher up"
+nothing_launched
 kill "$icon_window"
 wait "$icon_window" 2>/dev/null || true
 sleep 0.4
@@ -736,6 +788,23 @@ shot symbol-mode
 [ "$(magick "$out/symbol-mode.png" "$out/emoji-mode.png" -compose difference -composite -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "the same for a symbol as for an emoji"
 key Escape
 is_closed "the symbols"
+# The last ones picked are kept, and come first with nothing asked for:
+# Shift+Enter only copies one.
+recent=$XDG_STATE_HOME/okaeri/emoji.json
+open
+type "/emoji euro"
+sleep 0.3
+shifted_enter
+wait_log "okaeri: dry: emoji copy"
+is_closed "an emoji that's only copied"
+[ "$(jq -r 'length' "$recent")" = 2 ] || fail "the emoji picked aren't kept: $(cat "$recent" 2>/dev/null)"
+first=$(jq -r '.[0]' "$recent")
+open
+type "/emoji "
+sleep 0.3
+key Return
+is_closed "the first emoji"
+[ "$(jq -r '.[0]' "$recent")" = "$first" ] || fail "with nothing asked for, the first isn't the one picked last: $(cat "$recent")"
 
 # What was copied, by its words, out of a history of this stand's own: Enter
 # copies it again.
@@ -782,6 +851,13 @@ key Return
 wait_log "okaeri: dry: open file"
 is_closed "a file"
 nothing_launched
+# Shift+Enter opens the folder it's in.
+open
+type "/file report"
+sleep 1.2
+shifted_enter
+wait_log "okaeri: dry: open folder"
+is_closed "a file's folder"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.4
 
@@ -818,6 +894,56 @@ key Return
 wait "$picker" || fail "a script got no answer for what was typed"
 [ "$(cat "$work/picked")" = another ] || fail "a script was told \"$(cat "$work/picked")\", not what was typed"
 is_closed "a script's lines, with something else typed"
+
+# --index prints where the line picked was among all of them, not among those
+# left.
+printf 'one\ntwo\nthree\n' | dmenu --index >"$work/picked" &
+picker=$!
+sleep 0.8
+type "tw"
+sleep 0.3
+key Return
+wait "$picker" || fail "--index got no answer"
+[ "$(cat "$work/picked")" = 1 ] || fail "--index printed \"$(cat "$work/picked")\", not 1"
+is_closed "--index"
+# --only-match takes nothing but a line.
+printf 'one\ntwo\n' | dmenu --only-match >"$work/picked" &
+picker=$!
+sleep 0.8
+type "another"
+sleep 0.3
+key Return
+if wait "$picker"; then
+	fail "--only-match took what was typed: $(cat "$work/picked")"
+fi
+is_closed "--only-match"
+# --select starts on its line, and a prompt can have a comma.
+printf 'one\ntwo\nthree\n' | dmenu --select three -p "Which, then" >"$work/picked" &
+picker=$!
+sleep 0.8
+shot dmenu-select
+key Return
+wait "$picker" || fail "--select got no answer"
+[ "$(cat "$work/picked")" = three ] || fail "--select started on \"$(cat "$work/picked")\", not three"
+is_closed "--select"
+# --password hides what's typed, which is the answer with no lines, and it's
+# nowhere else; the next opening shows what's typed again.
+printf '' | dmenu --password -p Password >"$work/picked" &
+picker=$!
+sleep 0.8
+[ "$(ipc launcher secret)" = true ] || fail "--password didn't hide what's typed"
+type "s3cret"
+sleep 0.3
+shot dmenu-password
+key Return
+wait "$picker" || fail "--password got no answer"
+[ "$(cat "$work/picked")" = s3cret ] || fail "--password was told \"$(cat "$work/picked")\""
+is_closed "--password"
+log | grep -qF s3cret && fail "the password is in the log"
+open
+[ "$(ipc launcher secret)" = false ] || fail "what's typed stayed hidden"
+key Escape
+is_closed "after the password"
 
 # Weight in the wheel and the touchpad, over a list long enough for them.
 for number in $(seq 20); do

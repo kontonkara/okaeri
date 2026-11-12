@@ -4,7 +4,8 @@ import qs.services
 import qs.ui
 
 // Where the sound comes from: the microphones there are, a click taking it
-// from there.
+// from there, and the apps listening, each with its volume and a way to mute it
+// for that app alone.
 Section {
 	id: section
 
@@ -34,6 +35,50 @@ Section {
 			Icon {
 				name: row.current ? "check" : "mic"
 				color: row.current ? Theme.colors.text : Theme.colors.subtext
+			}
+		}
+	}
+
+	Text {
+		width: parent.width
+		leftPadding: Theme.u(10)
+		topPadding: Theme.u(6)
+		bottomPadding: Theme.u(4)
+		text: "Apps"
+		color: Theme.colors.subtext
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(2)
+	}
+
+	Text {
+		width: parent.width
+		visible: Audio.listeners.length === 0
+		leftPadding: Theme.u(10)
+		bottomPadding: Theme.u(8)
+		text: "Nothing listens"
+		color: Theme.colors.subtext
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(2)
+	}
+
+	Repeater {
+		model: Audio.listeners
+
+		Level {
+			required property var modelData
+
+			label: Audio.streamName(modelData)
+			value: modelData.audio.volume
+			onMoved: wanted => Audio.changeStream(modelData, wanted)
+
+			Button {
+				anchors.centerIn: parent
+				height: Theme.u(28)
+				flat: true
+				icon: modelData.audio.muted ? "micOff" : "mic"
+				iconSize: Theme.u(16)
+				ink: modelData.audio.muted ? Theme.colors.subtext : Theme.colors.text
+				onClicked: Audio.toggleStream(modelData)
 			}
 		}
 	}

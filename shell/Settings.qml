@@ -14,6 +14,10 @@ Singleton {
 	// Someone wants the settings window, or it open on what `query` finds.
 	signal asked
 	signal sought(string query)
+	// The settings window at a page, by its name in the menu.
+	signal pageWanted(string name)
+	// The settings window at the Bar page, with a part of the bar chosen there.
+	signal barPartWanted(string name)
 
 	FileView {
 		id: defaultsFile
@@ -72,6 +76,7 @@ Singleton {
 	readonly property var nightLight: Object.assign({}, defaults.nightLight, user.nightLight, own.nightLight)
 	readonly property var system: Object.assign({}, defaults.system, user.system, own.system)
 	readonly property var network: Object.assign({}, defaults.network, user.network, own.network)
+	readonly property var hotspot: Object.assign({}, defaults.hotspot, user.hotspot, own.hotspot)
 	readonly property var bluetooth: Object.assign({}, defaults.bluetooth, user.bluetooth, own.bluetooth)
 	readonly property var media: Object.assign({}, defaults.media, user.media, own.media)
 	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications, own.notifications)
@@ -130,6 +135,40 @@ Singleton {
 	// Back to what the files say.
 	function reset() {
 		own = {};
+		save();
+	}
+
+	// Whether the shell's own file has any of `names` set: sections, or single
+	// keys of one as "battery.warning", where a section is on more than one page of
+	// the settings window.
+	function owns(names) {
+		return names.some(name => {
+			const [section, key] = name.split(".");
+			const keys = Object.keys(own[section] ?? {});
+			return key === undefined ? keys.length > 0 : keys.includes(key);
+		});
+	}
+
+	// Back to what the files say for those alone, as a page of the settings window
+	// has them, and the rest as it was set. A section left with nothing goes too.
+	function resetSections(names) {
+		if (!owns(names))
+			return;
+		const kept = Object.assign({}, own);
+		names.forEach(name => {
+			const [section, key] = name.split(".");
+			if (key === undefined) {
+				delete kept[section];
+				return;
+			}
+			const rest = Object.assign({}, kept[section]);
+			delete rest[key];
+			if (Object.keys(rest).length > 0)
+				kept[section] = rest;
+			else
+				delete kept[section];
+		});
+		own = kept;
 		save();
 	}
 

@@ -89,7 +89,7 @@ ListView {
 	activeFocusOnTab: true
 	keyNavigationEnabled: false
 	currentIndex: -1
-	highlightMoveDuration: Theme.animate ? 120 : 0
+	highlightMoveDuration: Theme.animate ? Theme.ms(120) : 0
 	highlightResizeDuration: 0
 
 	Keys.onPressed: event => {

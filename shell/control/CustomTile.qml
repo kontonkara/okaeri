@@ -8,19 +8,22 @@ import qs.ui
 // `name`: { name, command, check, icon }. A click runs its command, which has
 // OKAERI_ON as 1 or 0 for how the tile stands. With `check`, a command that ends
 // well while the thing is on, it's a switch, and looks again every few seconds
-// and after each click; without, it's a button.
+// and after each click, with the first line the check prints, if it prints one,
+// under its name; without, it's a button. niri starts the command, as it does an
+// app: a tile goes with the panel, and what it started would go too.
 Tile {
 	id: tile
 
 	readonly property var own: Settings.control.custom.find(other => other.name === name) ?? ({})
 	readonly property string check: own.check ?? ""
 	property bool on: false
+	// What the check last said of it.
+	property string said: ""
 
 	function run() {
 		Env.act("tile run", () => {
-			runner.command = ["sh", "-c", own.command ?? ""];
-			runner.environment = { OKAERI_ON: on ? "1" : "0" };
-			runner.running = true;
+			Niri.spawn(["env", `OKAERI_ON=${on ? 1 : 0}`, "sh", "-c", own.command ?? ""]);
+			soon.restart();
 		});
 	}
 
@@ -31,7 +34,7 @@ Tile {
 
 	icon: own.icon in Theme.icons ? own.icon : "play"
 	title: name
-	summary: check === "" ? "" : on ? "On" : "Off"
+	summary: check === "" ? "" : said || (on ? "On" : "Off")
 	checked: check !== "" && on
 	switches: check !== ""
 	onToggled: run()
@@ -39,17 +42,26 @@ Tile {
 	onCheckChanged: look()
 	Component.onCompleted: look()
 
-	Process {
-		id: runner
+	// How it stands once the command has had a moment, and the look every few
+	// seconds has the rest.
+	Timer {
+		id: soon
 
-		onExited: tile.look()
+		interval: 600
+		onTriggered: tile.look()
 	}
 
 	Process {
 		id: checker
 
 		command: ["sh", "-c", tile.check]
-		onExited: code => tile.on = code === 0
+		stdout: StdioCollector {
+			id: told
+		}
+		onExited: code => {
+			tile.on = code === 0;
+			tile.said = told.text.split("\n")[0].trim();
+		}
 	}
 
 	// A tile is there only while the panel is.

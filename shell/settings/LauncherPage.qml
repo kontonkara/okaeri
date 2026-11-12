@@ -59,6 +59,13 @@ Flickable {
 				value: Settings.launcher.files
 				onKept: value => Settings.set("launcher", "files", value.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
 			}
+
+			Setting {
+				text: "Apps' own actions in the search"
+				subtext: "New private window and such, by their names"
+				checked: Settings.launcher.actions
+				onToggled: wanted => Settings.set("launcher", "actions", wanted)
+			}
 		}
 
 		Card {
@@ -79,8 +86,12 @@ Flickable {
 				model: Settings.launcher.pinned
 
 				App {
+					required property int index
+
 					checked: true
+					movable: index > 0
 					onToggled: wanted => Apps.pin(modelData, wanted)
+					onRaised: Apps.raise("launcher", modelData)
 				}
 			}
 		}

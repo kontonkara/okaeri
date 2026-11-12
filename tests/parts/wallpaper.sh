@@ -131,6 +131,9 @@ for _ in $(seq 30); do
 	sleep 0.1
 done
 [ "$(pixel color 700 600)" != 339966 ] || fail "any other of the folder is the same one"
+# One by its path, by a call.
+ipc wallpaper set "$work/pictures/b.png"
+wait_color "the picture set by a call" 996633
 
 # By itself with `every`, and not before its time: that's counted from the last
 # one, kept in a file, so a day's picture comes on a machine that was off too.

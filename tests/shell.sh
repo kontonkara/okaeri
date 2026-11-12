@@ -361,6 +361,21 @@ theme '{"animations":false}'
 rapid
 tour still
 
+step "Other motion"
+# Panels that slide in from the bar, notifications that grow, all of it slower:
+# every panel still comes and goes, and calls on each other's heels too.
+theme '{"panelMotion":"slide","toastMotion":"grow","speed":"slow"}'
+rapid
+tour sliding
+theme '{"panelMotion":"fade","speed":"quick"}'
+tour fading
+# The bar as islands and small tiles in the control center go the same way.
+printf '{ "bar": { "look": "islands" }, "control": { "size": "small" } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+tour islands
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+
 step "Square"
 theme '{"radius":0}'
 ipc control toggle
@@ -541,6 +556,18 @@ if [ "${OKAERI_GUEST:-}" != 1 ]; then
 fi
 theme '{}'
 printf '{}' >"$config"
+
+step "Panels of the bar by a call"
+# The month under the clock and the load of the machine, for keys: on the bar
+# of the screen in focus, and the same call again puts it away. With no load on
+# the bar, its call says so.
+ipc calendar toggle
+wait_up panel 1 "the month by a call"
+ipc calendar toggle
+wait_up panel 0 "the month put away by a call"
+ipc load toggle
+wait_log "okaeri: no load on a bar to open"
+wait_up panel 0 "a call for what isn't on the bar"
 
 step "A reload with a panel up"
 theme '{}'

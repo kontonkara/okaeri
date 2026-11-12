@@ -17,6 +17,20 @@ Singleton {
 
 	readonly property int at: choices.findIndex(choice => choice.profile === profile)
 	readonly property string profileName: choices[at]?.text ?? ""
+	// Why the profile isn't all it says, or what app holds it: "" for neither.
+	readonly property string profileWhy: {
+		const reason = PowerProfiles.degradationReason;
+		if (profile === PowerProfile.Performance && reason === PerformanceDegradationReason.HighTemperature)
+			return "Held back, it's hot";
+		if (profile === PowerProfile.Performance && reason === PerformanceDegradationReason.LapDetected)
+			return "Held back, it's on a lap";
+		const holds = PowerProfiles.holds ?? [];
+		for (let at = 0; at < holds.length; at++) {
+			if (holds[at].profile === profile && holds[at].applicationId)
+				return `Held by ${holds[at].applicationId}`;
+		}
+		return "";
+	}
 	// The profile there was before a low battery took the saver, -1 with none to go
 	// back to.
 	property int beforeSaver: -1

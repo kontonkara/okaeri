@@ -15,6 +15,24 @@ MouseArea {
 	// How fast the fingers went, in pixels a second, and when they last did.
 	property real speed: 0
 	property double heard: 0
+	// When the wheel last moved it.
+	property double rolled: 0
+
+	// Whether what's at `x`, `y` takes the wheel itself, as the value of a Pick or
+	// a Choice does: an item there that says `takesWheel`.
+	function taken(x, y) {
+		let item = view.contentItem;
+		let at = mapToItem(item, x, y);
+		while (item) {
+			if (item.takesWheel === true && item.enabled)
+				return true;
+			const child = item.childAt(at.x, at.y);
+			if (child)
+				at = item.mapToItem(child, at.x, at.y);
+			item = child;
+		}
+		return false;
+	}
 
 	function inside(y) {
 		return Math.max(view.originY, Math.min(y, view.originY + view.contentHeight - view.height));
@@ -66,8 +84,16 @@ MouseArea {
 	z: 1
 	acceptedButtons: Qt.NoButton
 
-	// A wheel comes with no phase, and with pixels of its own as well.
+	// A wheel comes with no phase, and with pixels of its own as well. Over what
+	// takes the wheel itself it goes there, but not while the view is on its way:
+	// what it rolls under the pointer then is passed by, not changed.
 	onWheel: event => {
+		const now = Date.now();
+		if (now - rolled > 500 && taken(event.x, event.y)) {
+			event.accepted = false;
+			return;
+		}
+		rolled = now;
 		if (event.phase === Qt.NoScrollPhase)
 			roll(event.angleDelta.y / 120);
 		else if (event.phase === Qt.ScrollEnd)
@@ -82,7 +108,7 @@ MouseArea {
 		target: glide.view
 		property: "contentY"
 		to: glide.goal
-		duration: 320
+		duration: Theme.ms(320)
 		easing.type: Easing.OutCubic
 		// The list may have turned out shorter than it looked from afar.
 		onFinished: glide.view.returnToBounds()

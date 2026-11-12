@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import qs
 import qs.services
@@ -8,7 +9,9 @@ import qs.services
 // each after a slow fade to warn of it, and the machine can be put to sleep, on
 // battery or always, as Settings.idle.suspendOn says, though not while something
 // plays. Apps that keep the machine
-// awake hold all of it off, and so does Awake.
+// awake hold all of it off, and so does Awake. Once the session is locked, by this or
+// anything else, the screens can go off sooner, after
+// Settings.idle.lockedScreenOff, as logind's LockedHint says it is.
 Scope {
 	id: idle
 
@@ -17,6 +20,10 @@ Scope {
 	readonly property real lockAfter: Power.draining && Settings.idle.batteryLock > 0 ? Settings.idle.batteryLock : Settings.idle.lock
 	readonly property real offAfter: Power.draining && Settings.idle.batteryScreenOff > 0 ? Settings.idle.batteryScreenOff : Settings.idle.screenOff
 	readonly property real sleepAfter: Settings.idle.suspend
+	// Whether the session is locked, looked up every few seconds while that's
+	// wanted, by `lockedHint`, which a test has its own of.
+	property bool locked: false
+	readonly property var lockedHint: ["busctl", "get-property", "org.freedesktop.login1", "/org/freedesktop/login1/session/auto", "org.freedesktop.login1.Session", "LockedHint"]
 	// Without animations it'd be a dark screen, not a fade.
 	readonly property real fade: Theme.animate ? Settings.idle.fade : 0
 	readonly property bool fading: (lockSoon.isIdle && !lock.isIdle) || (offSoon.isIdle && !off.isIdle)
@@ -73,6 +80,38 @@ Scope {
 		onIsIdleChanged: {
 			if (isIdle)
 				Env.act("screens off", () => Niri.act({ PowerOffMonitors: {} }));
+		}
+	}
+
+	// Locked, the screens go off sooner, and with no fade: nobody's there.
+	Stage {
+		id: lockedOff
+
+		after: idle.locked ? Settings.idle.lockedScreenOff : 0
+		onIsIdleChanged: {
+			if (isIdle)
+				Env.act("screens off", () => Niri.act({ PowerOffMonitors: {} }));
+		}
+	}
+
+	Timer {
+		interval: 3000
+		running: Settings.idle.lockedScreenOff > 0
+		repeat: true
+		triggeredOnStart: true
+		onTriggered: hint.running = true
+		onRunningChanged: {
+			if (!running)
+				idle.locked = false;
+		}
+	}
+
+	Process {
+		id: hint
+
+		command: idle.lockedHint
+		stdout: StdioCollector {
+			onStreamFinished: idle.locked = /\btrue\b/.test(text)
 		}
 	}
 
@@ -135,7 +174,7 @@ Scope {
 
 						NumberAnimation {
 							property: "opacity"
-							duration: 160
+							duration: Theme.ms(160)
 						}
 					}
 				]

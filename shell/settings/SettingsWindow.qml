@@ -7,26 +7,32 @@ import qs.services
 import qs.ui
 
 // What's in Settings, to change in place, a page at a time. A change stays over
-// what the config says, and the button under the pages goes back to that. It's a
-// window, not a panel: the compositor's keys go to it and not to what's under it,
-// and it stays while what it changes is looked at.
+// what the config says, and the button under the pages goes back to that, for
+// the page that shows or for all of them. It's a window, not a panel: the
+// compositor's keys go to it and not to what's under it, and it stays while what
+// it changes is looked at.
 FloatingWindow {
 	id: window
 
+	// The pages, and what each of them sets, for the page alone to go back to the
+	// config: `sections` of Settings, or single keys of one as "battery.warning"
+	// where two pages share it, and `keys` of Theme. The night light's "on" is the
+	// control center's, not the Display page's. tests/parts/settings.sh reads each
+	// page for what it sets and looks for that here, on the page's own line.
 	readonly property var pages: [
-		{ text: "Bar", icon: "bar", page: barPage },
-		{ text: "Dock", icon: "apps", page: dockPage },
-		{ text: "Tray", icon: "tray", page: trayPage },
-		{ text: "Control center", icon: "sliders", page: controlPage },
-		{ text: "Launcher", icon: "search", page: launcherPage },
-		{ text: "Clipboard", icon: "clipboard", page: clipboardPage },
-		{ text: "Notifications", icon: "bell", page: notificationsPage },
-		{ text: "Sounds", icon: "volume", page: soundsPage },
-		{ text: "On-screen display", icon: "osd", page: osdPage },
-		{ text: "Display", icon: "sunset", page: displayPage },
-		{ text: "Wallpaper", icon: "image", page: wallpaperPage },
-		{ text: "Look", icon: "eye", page: lookPage },
-		{ text: "Session", icon: "lock", page: sessionPage }
+		{ text: "Bar", icon: "bar", page: barPage, sections: ["bar", "clock", "weather", "workspaces", "battery.show", "battery.label", "media", "system", "network", "bluetooth", "locks", "profile", "audio.label", "audio.step", "recording.show"] },
+		{ text: "Dock", icon: "apps", page: dockPage, sections: ["dock"] },
+		{ text: "Tray", icon: "tray", page: trayPage, sections: ["tray"] },
+		{ text: "Control center", icon: "sliders", page: controlPage, sections: ["control", "hotspot"] },
+		{ text: "Launcher", icon: "search", page: launcherPage, sections: ["launcher"] },
+		{ text: "Clipboard", icon: "clipboard", page: clipboardPage, sections: ["clipboard"] },
+		{ text: "Notifications", icon: "bell", page: notificationsPage, sections: ["notifications"] },
+		{ text: "Sounds", icon: "volume", page: soundsPage, sections: ["sounds", "audio.max"] },
+		{ text: "On-screen display", icon: "osd", page: osdPage, sections: ["osd"] },
+		{ text: "Display", icon: "sunset", page: displayPage, sections: ["display", "recording", "nightLight.mode", "nightLight.temperature", "nightLight.from", "nightLight.until", "nightLight.latitude", "nightLight.longitude"] },
+		{ text: "Wallpaper", icon: "image", page: wallpaperPage, sections: ["wallpaper"] },
+		{ text: "Look", icon: "eye", page: lookPage, sections: ["bar.look", "control.size"], keys: ["blur", "toastBlur", "barBlur", "realBlur", "opacity", "animations", "speed", "panelMotion", "toastMotion", "barHeight", "barIcon", "barMargin", "radius", "fontSize", "scale", "font", "fontWeight", "extends", "auto", "day", "night", "dayFrom", "nightFrom", "wallpaperAccent"] },
+		{ text: "Session", icon: "lock", page: sessionPage, sections: ["session", "idle", "hooks", "battery.warning", "battery.saver"] }
 	]
 	property int page: 0
 	// What the screen in focus has room for, and the least it's made.
@@ -100,6 +106,34 @@ FloatingWindow {
 	}
 
 	// Its page, and the line on it in sight.
+	// At a page, by its name as the menu has it.
+	function openPage(name) {
+		const at = pages.findIndex(page => page.text.toLowerCase() === name.toLowerCase());
+		if (at < 0) {
+			console.info(`okaeri: no page "${name}" in the settings, it's one of ${pages.map(page => page.text).join(", ")}`);
+			return;
+		}
+		page = at;
+		if (!visible)
+			show();
+	}
+
+	// At the Bar page, with the card of part `name` open.
+	function openPart(name) {
+		const at = pages.findIndex(page => page.text === "Bar");
+		seeking = "";
+		choosing = name;
+		query = "";
+		if (!visible) {
+			page = at;
+			show();
+		} else if (page === at) {
+			sought();
+		} else {
+			page = at;
+		}
+	}
+
 	function open(entry) {
 		seeking = entry.text;
 		choosing = entry.part;
@@ -143,6 +177,17 @@ FloatingWindow {
 			visible = false;
 		else
 			show();
+	}
+
+	// Whether the page at `at` has anything set here, and back to the config for
+	// that alone.
+	function changedOn(at) {
+		return Settings.owns(pages[at].sections ?? []) || Theme.owns(pages[at].keys ?? []);
+	}
+
+	function resetPage(at) {
+		Settings.resetSections(pages[at].sections ?? []);
+		Theme.resetKeys(pages[at].keys ?? []);
 	}
 
 	title: "Settings"
@@ -201,6 +246,14 @@ FloatingWindow {
 			window.show();
 			Qt.callLater(() => window.query = query);
 		}
+
+		function onPageWanted(name) {
+			window.openPage(name);
+		}
+
+		function onBarPartWanted(name) {
+			window.openPart(name);
+		}
 	}
 
 	IpcHandler {
@@ -213,14 +266,7 @@ FloatingWindow {
 		// Open at a page, by its name as the menu has it: `okaeri settings open
 		// Wallpaper`.
 		function open(name: string): void {
-			const at = window.pages.findIndex(page => page.text.toLowerCase() === name.toLowerCase());
-			if (at < 0) {
-				console.info(`okaeri: no page "${name}" in the settings, it's one of ${window.pages.map(page => page.text).join(", ")}`);
-				return;
-			}
-			window.page = at;
-			if (!window.visible)
-				window.show();
+			window.openPage(name);
 		}
 
 		// For tests: how much of the veil is there.
@@ -272,7 +318,7 @@ FloatingWindow {
 		target: veil
 		property: "opacity"
 		to: 0
-		duration: Theme.animate ? 200 : 0
+		duration: Theme.animate ? Theme.ms(200) : 0
 		easing.type: Easing.OutCubic
 	}
 
@@ -390,7 +436,9 @@ FloatingWindow {
 				if (window.choosing !== "" && content.item.chosen !== undefined) {
 					content.item.chosen = window.choosing;
 					window.choosing = "";
-					choosing.restart();
+					// With a line in its card to look for.
+					if (window.seeking !== "")
+						choosing.restart();
 					return;
 				}
 				const item = line(content.item, window.seeking);
@@ -526,33 +574,89 @@ FloatingWindow {
 				}
 			}
 
-			Button {
+			// Back to the config. What was set here goes with it, so it asks first,
+			// in its place for a while: the page that shows, or all of it. With the
+			// keys on it, they go along to the two and back.
+			Item {
 				id: back
 
 				anchors.bottom: parent.bottom
 				width: menu.width
-				enabled: Object.keys(Settings.own).length + Object.keys(Theme.own).length > 0
-				atStart: true
-				pad: Theme.u(10)
-				flat: true
-				// All that was set here goes with it, so it asks first: a second click
-				// while it does.
-				text: sure.running ? "Drop all that's set here?" : "Back to the config"
-				ink: sure.running ? Theme.colors.error : Theme.colors.text
-				onClicked: {
-					if (!sure.running) {
+				height: Theme.u(34)
+
+				Button {
+					id: ask
+
+					width: parent.width
+					visible: !sure.running
+					enabled: Object.keys(Settings.own).length + Object.keys(Theme.own).length > 0
+					atStart: true
+					pad: Theme.u(10)
+					flat: true
+					text: "Back to the config"
+					onClicked: {
+						const keyed = activeFocus;
 						sure.start();
-						return;
+						if (keyed)
+							(pageOnly.enabled ? pageOnly : allOfIt).forceActiveFocus();
 					}
-					sure.stop();
-					Settings.reset();
-					Theme.reset();
+				}
+
+				// Two halves of its width, each an even number of whole pixels: text in
+				// the middle of half a pixel smears.
+				Row {
+					visible: sure.running
+					spacing: Math.round(Theme.u(4))
+
+					Button {
+						id: pageOnly
+
+						width: Math.floor((back.width - parent.spacing) / 4) * 2
+						enabled: window.changedOn(window.page)
+						flat: true
+						pad: Theme.u(6)
+						longest: width - pad * 2
+						text: "This page"
+						ink: Theme.colors.error
+						onClicked: {
+							const keyed = activeFocus;
+							sure.stop();
+							window.resetPage(window.page);
+							if (keyed)
+								ask.forceActiveFocus();
+						}
+					}
+
+					Button {
+						id: allOfIt
+
+						width: Math.floor((back.width - pageOnly.width - parent.spacing) / 2) * 2
+						enabled: ask.enabled
+						flat: true
+						pad: Theme.u(6)
+						longest: width - pad * 2
+						text: "All of it"
+						ink: Theme.colors.error
+						onClicked: {
+							const keyed = activeFocus;
+							sure.stop();
+							Settings.reset();
+							Theme.reset();
+							if (keyed)
+								ask.forceActiveFocus();
+						}
+					}
 				}
 
 				Timer {
 					id: sure
 
 					interval: 4000
+					// A moment on, once the button is there again to take the keys.
+					onTriggered: {
+						if (pageOnly.focus || allOfIt.focus)
+							Qt.callLater(() => ask.forceActiveFocus());
+					}
 				}
 			}
 
@@ -569,7 +673,7 @@ FloatingWindow {
 				onLoaded: {
 					if (Theme.animate)
 						appear.restart();
-					if (window.seeking !== "")
+					if (window.seeking !== "" || window.choosing !== "")
 						Qt.callLater(reveal);
 				}
 			}
@@ -592,7 +696,7 @@ FloatingWindow {
 					target: mark
 					property: "opacity"
 					to: 1
-					duration: Theme.animate ? 120 : 0
+					duration: Theme.animate ? Theme.ms(120) : 0
 				}
 
 				PauseAnimation {
@@ -603,7 +707,7 @@ FloatingWindow {
 					target: mark
 					property: "opacity"
 					to: 0
-					duration: Theme.animate ? 400 : 0
+					duration: Theme.animate ? Theme.ms(400) : 0
 				}
 			}
 
@@ -616,7 +720,7 @@ FloatingWindow {
 					property: "opacity"
 					from: 0
 					to: 1
-					duration: 140
+					duration: Theme.ms(140)
 					easing.type: Easing.OutCubic
 				}
 
@@ -625,7 +729,7 @@ FloatingWindow {
 					property: "y"
 					from: Theme.u(8)
 					to: 0
-					duration: 180
+					duration: Theme.ms(180)
 					easing.type: Easing.OutCubic
 				}
 			}

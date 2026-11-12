@@ -56,7 +56,7 @@ Scope {
 		Qt.callLater(() => wallpaper.reading = false);
 		if (folder.count === 0)
 			return;
-		const at = folder.indexOf(Settings.url(own.path));
+		const at = folder.indexOf(Settings.url(Theme.picture));
 		let to = ((at + stepping) % folder.count + folder.count) % folder.count;
 		if (stepping === 0 && folder.count > 1) {
 			do
@@ -64,8 +64,8 @@ Scope {
 			while (to === at);
 		}
 		const next = folder.get(to, "filePath");
-		if (next !== own.path)
-			Settings.set("wallpaper", "path", next);
+		if (next !== Theme.picture)
+			Theme.hang(next);
 	}
 
 	// The folder's pictures, read only while one of them is to be next.
@@ -148,6 +148,12 @@ Scope {
 
 		function random(): void {
 			wallpaper.turn(0);
+		}
+
+		// This picture, for a script: everyone's, or the light colors' while that's
+		// the one that shows.
+		function set(path: string): void {
+			Theme.hang(path);
 		}
 	}
 

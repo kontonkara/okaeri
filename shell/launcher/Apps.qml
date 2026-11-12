@@ -24,11 +24,13 @@ Singleton {
 
 	// What a search goes through, in lower case once and not at each keystroke:
 	// `texts` in the order they count. A reverse-DNS id's first part names no app,
-	// so an id counts without it first, and in full last.
+	// so an id counts without it first, and in full last. `actions` are what else
+	// the app can do, each with its name the same way.
 	readonly property var known: !scanned ? [] : DesktopEntries.applications.values.filter(entry => !entry.noDisplay).map(entry => ({
 		entry,
 		texts: [[entry.name], [entry.genericName], Array.from(entry.keywords), [entry.id.replace(/^[a-z]+\./i, "")], [entry.id]]
-			.map(texts => texts.map(text => text.toLowerCase()))
+			.map(texts => texts.map(text => text.toLowerCase())),
+		actions: Array.from(entry.actions).map(action => ({ action, name: action.name.toLowerCase() }))
 	}))
 
 	// What image() found for each file: it takes reading the file, and each
@@ -89,9 +91,14 @@ Singleton {
 
 	// Rows for List, the best first, the most launched of equals before the
 	// rest. Without a query that's all the apps but the hidden, the pinned first.
+	// With two letters or more, and Settings.launcher.actions on, an app's own
+	// actions come up too by their names, as New Private Window does, each a little
+	// under the app with the same fit: that one is what's more often meant. Only
+	// what starts a word counts for them, or most queries would bring up every
+	// app's New Window.
 	function search(query) {
 		const wanted = query.trim().toLowerCase();
-		const { pinned, hidden, usage } = Settings.launcher;
+		const { pinned, hidden, usage, actions } = Settings.launcher;
 		const found = [];
 		for (const app of known) {
 			const points = hidden.includes(app.entry.id) ? 0 : wanted ? score(wanted, app) : 1;
@@ -100,9 +107,18 @@ Singleton {
 				const pin = wanted ? -1 : pinned.indexOf(app.entry.id);
 				found.push({ entry: app.entry, points: points + weight(times), times, pin: pin < 0 ? pinned.length : pin });
 			}
+			if (!actions || wanted.length < 2 || hidden.includes(app.entry.id))
+				continue;
+			for (const own of app.actions) {
+				const level = fit(wanted, own.name);
+				if (level > 1)
+					found.push({ entry: app.entry, action: own.action, points: (level === 4 ? 24 : level * 4) - 0.5, times: 0, pin: pinned.length });
+			}
 		}
 		found.sort((a, b) => a.pin - b.pin || b.points - a.points || b.times - a.times || a.entry.name.localeCompare(b.entry.name));
-		return found.slice(0, limit).map(({ entry }) => {
+		return found.slice(0, limit).map(({ entry, action }) => {
+			if (action)
+				return { entry, action, text: action.name, subtext: entry.name, image: (action.icon && image(action.icon)) || image(entry.icon), icon: "apps" };
 			const source = image(entry.icon);
 			return {
 				entry,
@@ -137,6 +153,16 @@ Singleton {
 			return null;
 		const own = known.find(app => app.entry.id.toLowerCase() === id.toLowerCase());
 		return own ? own.entry : DesktopEntries.heuristicLookup(id);
+	}
+
+	// One place up among those pinned to the launcher, or with "dock" kept on that.
+	function raise(where, id) {
+		const pinned = Settings[where].pinned.slice();
+		const at = pinned.indexOf(id);
+		if (at < 1)
+			return;
+		pinned.splice(at - 1, 2, id, pinned[at - 1]);
+		Settings.set(where, "pinned", pinned);
 	}
 
 	// On the dock, or off it.

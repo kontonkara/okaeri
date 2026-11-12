@@ -103,7 +103,7 @@ Grid {
 				enabled: Theme.animate
 
 				NumberAnimation {
-					duration: 180
+					duration: Theme.ms(180)
 					easing.type: Easing.OutCubic
 				}
 			}

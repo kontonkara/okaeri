@@ -64,7 +64,9 @@ PanelWindow {
 	})
 	readonly property bool off: kind === "mute" || kind === "micMute" || ((lock || kind in switches) && level === 0)
 	// What it says in words, if that's what it shows and not a level.
-	readonly property string label: kind === "layout" ? Niri.layoutLabel
+	// A layout by its whole name: two of one language would say the same in two
+	// letters.
+	readonly property string label: kind === "layout" ? Niri.layouts[Niri.layout] || Niri.layoutLabel
 		: lock ? `${kind === "caps" ? "Caps Lock" : "Num Lock"} ${off ? "off" : "on"}`
 		: kind in switches ? `${switches[kind]} ${off ? "off" : "on"}`
 		: kind === "profile" ? Power.profileName
@@ -154,6 +156,16 @@ PanelWindow {
 		function onStayed() {
 			if (osd.wants("brightness"))
 				osd.show("brightness", Brightness.level);
+		}
+	}
+
+	// An external screen's, by the keys.
+	Connections {
+		target: Ddc
+
+		function onStepped(level) {
+			if (osd.wants("brightness"))
+				osd.show("brightness", level);
 		}
 	}
 
@@ -278,7 +290,7 @@ PanelWindow {
 				enabled: Theme.animate
 
 				NumberAnimation {
-					duration: 160
+					duration: Theme.ms(160)
 					easing.type: Easing.OutCubic
 				}
 			}
@@ -288,7 +300,7 @@ PanelWindow {
 			enabled: Theme.animate
 
 			NumberAnimation {
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -310,7 +322,12 @@ PanelWindow {
 			Text {
 				anchors.verticalCenter: parent.verticalCenter
 				visible: osd.label !== ""
+				// A long name is cut, so the card stays about as wide as one with a
+				// level: in even pixels, as the card is centred.
+				width: Math.min(Math.ceil(implicitWidth / 2) * 2, Math.round(Theme.u(240) / 2) * 2)
 				text: osd.label
+				textFormat: Text.PlainText
+				elide: Text.ElideRight
 				color: Theme.colors.text
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize
@@ -328,7 +345,7 @@ PanelWindow {
 					enabled: Theme.animate && osd.shown
 
 					NumberAnimation {
-						duration: 120
+						duration: Theme.ms(120)
 						easing.type: Easing.OutCubic
 					}
 				}

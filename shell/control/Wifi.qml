@@ -7,10 +7,15 @@ import Quickshell.Networking
 import qs.services
 
 // The Wi-Fi device and its networks, best first, scanning while the panel is
-// open. What goes to Env.act leaves out names: it ends up in logs.
+// open. What goes to Env.act leaves out names and passwords: it ends up in logs.
 Singleton {
 	id: wifi
 
+	// For what Quickshell doesn't do itself: one that hides its name, the password
+	// of the one it's on, and the hotspot. Whether it's there, taken as so until
+	// it's been looked for: NetworkManager, which the rest goes by, has it.
+	readonly property string tool: "nmcli"
+	property bool hasTool: true
 	property var device: Networking.devices.values.find(d => d.type === DeviceType.Wifi) || null
 	property bool enabled: Networking.wifiEnabled
 	readonly property bool blocked: !Networking.wifiHardwareEnabled
@@ -83,9 +88,86 @@ Singleton {
 		joinFailure = "";
 		joined = name;
 		Env.act("wifi connect hidden", () => {
-			join.command = ["nmcli", "device", "wifi", "connect", name].concat(key ? ["password", key] : [], ["hidden", "yes"]);
+			join.command = [tool, "device", "wifi", "connect", name].concat(key ? ["password", key] : [], ["hidden", "yes"]);
 			join.running = true;
 		});
+	}
+
+	// What a phone's camera reads as a network to join: its name, and its
+	// password unless it has none, with what would end a field taken as text.
+	function code(name, key) {
+		const plain = text => text.replace(/[\\;,:"]/g, "\\$&");
+		return key ? `WIFI:T:WPA;S:${plain(name)};P:${plain(key)};;` : `WIFI:T:nopass;S:${plain(name)};;`;
+	}
+
+	// The password of the one it's on, for a phone to join it by: asked of
+	// NetworkManager as it's shared, where polkit may want a word first, and let
+	// go of as that ends. Why it couldn't be had, or "".
+	property bool sharing: false
+	property string key
+	property string keyFailure
+	readonly property bool readingKey: reader.running
+
+	function readKey() {
+		sharing = true;
+		key = "";
+		keyFailure = "";
+		if (!hasTool) {
+			keyFailure = "It needs nmcli, which isn't here";
+			return;
+		}
+		reader.command = [tool, "device", "wifi", "show-password"].concat(device?.name ? ["ifname", device.name] : []);
+		reader.running = true;
+	}
+
+	function forgetKey() {
+		sharing = false;
+		reader.running = false;
+		key = "";
+		keyFailure = "";
+	}
+
+	// The page that showed it can go with the panel before it's folded.
+	Connections {
+		target: Control
+
+		function onOpenChanged() {
+			if (!Control.open)
+				wifi.forgetKey();
+		}
+	}
+
+	// It says "Password: " and the password, in English as asked; or nothing of
+	// that, and why on its other stream.
+	Process {
+		id: reader
+
+		environment: ({
+				LC_ALL: "C"
+			})
+		stdout: StdioCollector {
+			id: readerSaid
+		}
+		stderr: StdioCollector {
+			id: readerComplained
+		}
+		onExited: code => {
+			if (!wifi.sharing)
+				return;
+			const line = readerSaid.text.split("\n").find(said => said.startsWith("Password: "));
+			if (code === 0 && line !== undefined && line.length > 10) {
+				wifi.key = line.slice(10);
+				return;
+			}
+			const why = readerComplained.text.trim().split("\n").pop().replace(/^(Error|Warning): /, "");
+			wifi.keyFailure = why ? why.charAt(0).toUpperCase() + why.slice(1) : "Couldn't get its password";
+		}
+	}
+
+	Process {
+		running: true
+		command: ["sh", "-c", `command -v ${wifi.tool}`]
+		onExited: code => wifi.hasTool = code === 0
 	}
 
 	Process {

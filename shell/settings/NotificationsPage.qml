@@ -1,7 +1,9 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs
 import qs.notifications
+import qs.services
 import qs.ui
 
 // How toasts go, what's kept of them, and what's different for each app.
@@ -14,6 +16,8 @@ Flickable {
 	readonly property var apps: [...new Set(NotificationStore.apps.concat(Settings.notifications.rules.map(rule => rule.app ?? "").filter(app => app !== "")))].sort((a, b) => a.localeCompare(b)).concat([""])
 	// The one that's open.
 	property string unfolded: "\n"
+	// Whether there's notify-send, for a toast to see the settings on.
+	property bool notifier: true
 
 	function same(rule, app) {
 		return (rule.app ?? "").toLowerCase() === app.toLowerCase();
@@ -51,6 +55,12 @@ Flickable {
 
 	Glide {
 		view: page
+	}
+
+	Process {
+		running: true
+		command: ["sh", "-c", "command -v notify-send"]
+		onExited: code => page.notifier = code === 0
 	}
 
 	Column {
@@ -151,6 +161,43 @@ Flickable {
 				]
 				value: Settings.notifications.toastText
 				onChosen: value => page.set("toastText", value)
+			}
+
+			// One to see all of the above on, where it comes: a long text and a
+			// button, and it stays out of the history. With a text and a subtext
+			// it's a line the search finds.
+			Item {
+				id: sample
+
+				readonly property string text: "Show one"
+				readonly property string subtext: page.notifier ? "A toast as these say, to see them in place" : "It needs notify-send, which isn't here."
+
+				width: parent.width
+				height: Theme.u(34)
+
+				Text {
+					anchors.left: parent.left
+					anchors.right: showing.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+					text: sample.subtext
+					textFormat: Text.PlainText
+					elide: Text.ElideRight
+					color: page.notifier ? Theme.colors.subtext : Theme.colors.error
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+				}
+
+				Button {
+					id: showing
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					height: Theme.u(30)
+					enabled: page.notifier
+					text: sample.text
+					onClicked: Env.act("notify test", () => Quickshell.execDetached(["notify-send", "-e", "--app-name=okaeri", "--icon=dialog-information", "-A", "Got it", "This is how they look", "Where a toast comes, what it says of itself and for how long, with a line for the time it has left and the buttons it came with, as they're set on this page. A text as long as this one shows where it's cut, too."]))
+				}
 			}
 		}
 

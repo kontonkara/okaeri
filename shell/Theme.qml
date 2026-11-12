@@ -102,6 +102,23 @@ Singleton {
 		ownFile.setText("{}\n");
 	}
 
+	// Whether the settings window set any of the keys `names`.
+	function owns(names) {
+		const keys = Object.keys(own);
+		return names.some(name => keys.includes(name));
+	}
+
+	// Back to what the files say for those keys alone, as the Look page has them,
+	// and the rest as it was set.
+	function resetKeys(names) {
+		if (!owns(names))
+			return;
+		const kept = Object.assign({}, own);
+		names.forEach(name => delete kept[name]);
+		own = kept;
+		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
+	}
+
 	// With the file's own palettes, which the list above may not have yet.
 	onUserChanged: {
 		const known = Object.keys(Object.assign({}, builtIn, user.palettes));
@@ -133,6 +150,14 @@ Singleton {
 	readonly property var parent: builtIn[named] || {}
 	readonly property var palette: Object.assign({}, builtIn.dark.colors, parent.colors, chosen ? {} : user.colors)
 	readonly property bool light: Qt.color(palette.background).hslLightness > 0.5
+	// Everyone's wallpaper as it is now: the one for a light palette while that's on.
+	readonly property string picture: (light && Settings.wallpaper.light) || Settings.wallpaper.path
+
+	// Another in its place: in the setting that has the one that shows.
+	function hang(path) {
+		Settings.set("wallpaper", light && Settings.wallpaper.light ? "light" : "path", path);
+	}
+
 	// With `wallpaperAccent`, the accent is the wallpaper's most vivid color, as
 	// light or dark as the palette takes: one with no color to speak of leaves it.
 	readonly property var vivid: {
@@ -189,7 +214,7 @@ Singleton {
 	ColorQuantizer {
 		id: quantizer
 
-		source: theme.plain.wallpaperAccent ? Settings.url(Settings.wallpaper.path) : ""
+		source: theme.plain.wallpaperAccent ? Settings.url(theme.picture) : ""
 		depth: 3
 		rescaleSize: 64
 	}
@@ -199,6 +224,17 @@ Singleton {
 	readonly property real fontSize: u(values.fontSize)
 	readonly property int fontWeight: values.fontWeight
 	readonly property bool animate: !!values.animations
+	// How fast what moves does: "quick", "normal" or "slow", and how a panel comes:
+	// "grow" out of where it belongs, "fade" in place, or "slide" in from the bar;
+	// and how a notification does: "slide" in from its side, "fade" or "grow".
+	readonly property real pace: ({ quick: 0.6, slow: 1.6 })[values.speed] ?? 1
+	readonly property string panelMotion: ["fade", "slide"].includes(values.panelMotion) ? values.panelMotion : "grow"
+	readonly property string toastMotion: ["fade", "grow"].includes(values.toastMotion) ? values.toastMotion : "slide"
+
+	// An animation `n` milliseconds long at the pace that's set.
+	function ms(n) {
+		return Math.round(n * pace);
+	}
 	// Panels let what's under them through, blurred, where the compositor has that,
 	// and so do toasts. In niri that's the wallpaper, and with realBlur the windows
 	// too, which takes a rule of Niri.rules.
@@ -246,6 +282,52 @@ Singleton {
 		return radius < 0 ? size / 2 : Math.min(size / 2, Math.max(0, radius - (inset || 0)));
 	}
 
+	// The palette from outside, as the Look page chooses it, so the settings window
+	// shows it and Back to the config undoes it: `okaeri theme toggle` goes between
+	// the day's and the night's, for a key. Any of these is one all day from then on.
+	IpcHandler {
+		id: calls
+
+		target: "theme"
+
+		// The other of the two, from how light what's on is.
+		function toggle(): void {
+			calls.palette(theme.light ? theme.plain.night : theme.plain.day);
+		}
+
+		function dark(): void {
+			calls.palette(theme.plain.night);
+		}
+
+		function light(): void {
+			calls.palette(theme.plain.day);
+		}
+
+		function palette(name: string): void {
+			if (!theme.palettes.includes(name)) {
+				console.info(`okaeri: no palette "${name}", it's one of ${theme.palettes.join(", ")}`);
+				return;
+			}
+			theme.set("auto", "off");
+			theme.set("extends", name);
+		}
+
+		// Along the palettes, as the Look page lists them: none named is dark's.
+		function next(): void {
+			const at = Math.max(0, theme.palettes.indexOf(theme.named));
+			calls.palette(theme.palettes[(at + 1) % theme.palettes.length]);
+		}
+
+		function previous(): void {
+			const at = Math.max(0, theme.palettes.indexOf(theme.named));
+			calls.palette(theme.palettes[(at + theme.palettes.length - 1) % theme.palettes.length]);
+		}
+
+		function state(): string {
+			return JSON.stringify({ palette: theme.named, light: theme.light, auto: theme.plain.auto });
+		}
+	}
+
 	// Line icons on a 24x24 grid, as SVG paths, for Icon.
 	readonly property var icons: ({
 		alert: "M12 4l9.5 16.5h-19z M12 10v5 M12 18h.01",
@@ -273,8 +355,11 @@ Singleton {
 		eyeOff: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z M4 4l16 16",
 		file: "M6 3h8l4 4v14H6z M14 3v4h4",
 		fog: "M7 12h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 5 3.5 3.5 0 0 0 7 12z M4 16h16 M6 20h12",
+		gamepad: "M6 8h12a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-1a4 4 0 0 1 4-4z M6.5 11v3 M5 12.5h3 M15 11.5h.01 M17.5 13.5h.01",
 		gear: "M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z",
+		headphones: "M4 15v-3a8 8 0 0 1 16 0v3 M4 14h3v6H4z M17 14h3v6h-3z",
 		hibernate: "M12 3v18 M4.2 7.5l15.6 9 M4.2 16.5l15.6-9 M9.5 4.5L12 6l2.5-1.5 M9.5 19.5L12 18l2.5 1.5",
+		hotspot: "M12 12h.01 M8.5 8.5a5 5 0 0 0 0 7 M15.5 8.5a5 5 0 0 1 0 7 M5.6 5.6a9 9 0 0 0 0 12.8 M18.4 5.6a9 9 0 0 1 0 12.8",
 		image: "M4 5h16v14H4z M4 16l5-5 4 4 3-3 4 4 M15 9h.01",
 		keyboard: "M3 7h18v10H3z M7 11h.01 M11 11h.01 M15 11h.01 M8 14h8",
 		lock: "M7 11V7a5 5 0 0 1 10 0v4 M5 11h14v10H5z",
@@ -282,17 +367,20 @@ Singleton {
 		mic: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z M5 11a7 7 0 0 0 14 0 M12 18v3",
 		micOff: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z M5 11a7 7 0 0 0 14 0 M12 18v3 M3 3l18 18",
 		moon: "M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z",
+		mouse: "M6 9a6 6 0 0 1 12 0v6a6 6 0 0 1-12 0z M12 7v3",
 		music: "M9 18V5l11-2v13 M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M17 13a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
 		next: "M6 5l10 7-10 7z M18 5v14",
 		numLock: "M5 9h14 M5 15h14 M10 4L8 20 M16 4l-2 16",
 		osd: "M3 14h18v6H3z M7 17h6 M12 4v6 M9 7l3 3 3-3",
 		pause: "M8 5v14 M16 5v14",
+		phone: "M7 3h10v18H7z M11 18h2",
 		pin: "M9 4h6l-1 7 3 3H7l3-3z M12 14v7",
 		plus: "M12 5v14 M5 12h14",
 		plane: "M12 3c-.8 0-1.5 1-1.5 2.5V9L3 13.5V16l7.5-2.5V18L8 20v1.5l4-1 4 1V20l-2.5-2v-4.5L21 16v-2.5L13.5 9V5.5C13.5 4 12.8 3 12 3z",
 		play: "M7 5l12 7-12 7z",
 		power: "M12 3v8 M17.66 6.34A8 8 0 1 1 6.34 6.34",
 		previous: "M18 5L8 12l10 7z M6 5v14",
+		qr: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h.01 M17 17h.01 M20 14h.01 M14 20h.01 M20 20h.01",
 		rain: "M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7 3.5 3.5 0 0 0 7 14z M8 17l-1 3 M12 17l-1 3 M16 17l-1 3",
 		refresh: "M20 12a8 8 0 1 1-2.34-5.66L20 8.5 M20 4v4.5h-4.5",
 		repeat: "M17 3l3 3-3 3 M4 12v-2a4 4 0 0 1 4-4h12 M7 21l-3-3 3-3 M20 12v2a4 4 0 0 1-4 4H4",
@@ -308,6 +396,7 @@ Singleton {
 		text: "M5 6h14 M12 6v13 M9 19h6",
 		trash: "M4 7h16 M9 7V4h6v3 M6 7l1 14h10l1-14",
 		tray: "M4 13l2-8h12l2 8v6H4z M4 13h5l1 2h4l1-2h5",
+		up: "M6 15l6-6 6 6",
 		video: "M3 7h12v10H3z M15 10.5l6-3.5v10l-6-3.5",
 		volume: "M4 9.5v5h3.5l4.5 4v-13l-4.5 4z M16 9a4.2 4.2 0 0 1 0 6 M18.5 6.5a7.8 7.8 0 0 1 0 11",
 		volumeOff: "M4 9.5v5h3.5l4.5 4v-13l-4.5 4z M16.5 9.5l5 5 M21.5 9.5l-5 5",

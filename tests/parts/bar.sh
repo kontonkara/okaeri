@@ -173,6 +173,12 @@ Scope {
 			Recorder.toggle();
 		}
 
+		// What a part's menu changed of the bar, back to what the files say.
+		function unown(): void {
+			Settings.own = Object.assign({}, Settings.own, { bar: {} });
+			Settings.save();
+		}
+
 		// As if from the machine's battery.
 		function battery(charge: int, draining: bool, left: int): void {
 			Power.charge = charge;
@@ -187,6 +193,10 @@ sed 's/^\t\t\trequired property var modelData$/&\n\n\t\t\tComponent.onCompleted:
 	"$work/shell/bar/Workspaces.qml" | swap "$work/shell/bar/Workspaces.qml"
 sed 's/^\tid: time$/&\n\n\treadonly property string shows: visible ? text : "nothing"\n\n\tonShowsChanged: console.info("okaeri: clock:", shows)\n\tComponent.onCompleted: console.info("okaeri: clock:", shows)/' \
 	"$work/shell/bar/Clock.qml" | swap "$work/shell/bar/Clock.qml"
+# And what the month has from calendars: how many of its days have a dot, the day
+# picked, and what's on it.
+sed 's/^\tid: calendar$/&\n\n\treadonly property string told: happening.map(one => one.summary).join(" | ")\n\treadonly property int dotted: days.filter(day => day.getMonth() === month \&\& marks[Events.key(day)]).length\n\n\tonToldChanged: console.info("okaeri: that day:", told)\n\tonDottedChanged: console.info("okaeri: dotted:", dotted)\n\tonPickedChanged: console.info("okaeri: picked:", Qt.formatDate(picked, "yyyy-MM-dd"))/' \
+	"$work/shell/bar/Calendar.qml" | swap "$work/shell/bar/Calendar.qml"
 # What listens and watches is what the probe says: part.sh took the machine's own out.
 grep -q '^	property var microphone: \[\]$' "$work/shell/services/Privacy.qml" || fail "the stand's Privacy is the machine's"
 # And the control center, for a panel to open over a menu.
@@ -618,6 +628,26 @@ click
 wait_up 1
 sleep 0.3
 shot units-list
+# Each has a button to start it again, and one to take it off the list.
+key Tab
+key Return
+wait_log "okaeri: dry: unit restart"
+key Tab
+key Return
+wait_log "okaeri: dry: unit clear"
+# Its journal's last lines, by the next button: the stand's journal has two.
+key Tab
+key Return
+wait_log "okaeri: units: told 2"
+# With two, both off the list at once, by the button under them.
+cleared=$(log | grep -c "okaeri: dry: unit clear")
+key Tab
+key Tab
+key Tab
+key Tab
+key Return
+sleep 0.4
+[ "$(log | grep -c "okaeri: dry: unit clear")" -ge $((cleared + 2)) ] || fail "Clear all didn't take both off"
 key Escape
 wait_up 0
 # With the last of them gone it all goes, even with the list up.
@@ -1153,6 +1183,16 @@ shot month-wheel
 months_apart month-wheel month-before && fail "the wheel up didn't go back a month"
 move 700 71
 click
+sleep 0.3
+# By the keys: Left is the month before, and Home this one again.
+key Left
+sleep 0.3
+shot month-key
+months_apart month-key month-before && fail "Left didn't go back a month"
+key Home
+sleep 0.3
+shot month-home
+months_apart month month-home && fail "Home didn't go back to this month"
 settings '{ "clock": { "weekStart": "sunday" } }'
 shot month-sunday
 settings '{ "clock": { "weekStart": "monday" } }'
@@ -1166,7 +1206,134 @@ settings '{ "clock": { "zones": ["UTC", "Asia/Tokyo"] } }'
 sleep 0.6
 shot month-zones
 months_apart month-back month-zones || fail "no other places over the month"
+# Events from a calendar, with a dot under the days they're on and under the month
+# what's on today, all day first. The summary goes on over a line, as a calendar
+# folds it, and what's in an alarm isn't the event's. A rule repeats one, though not
+# on the day left out nor past its count, and one that ended long ago is gone.
+this_month=$(date +%Y%m)
+today=$(date +%Y%m%d)
+cat >"$work/events.ics" <<ICS
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//okaeri//tests//EN
+X-WR-CALNAME:Tests
+BEGIN:VEVENT
+UID:all-day
+DTSTART;VALUE=DATE:$today
+SUMMARY:All-day thing
+END:VEVENT
+BEGIN:VEVENT
+UID:meeting
+DTSTART:${today}T090000
+DTEND:${today}T100000
+SUMMARY:Meeting\, with a comma\; and
+  more
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Not this
+SUMMARY:Nor this
+TRIGGER:-PT10M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday
+DTSTART;VALUE=DATE:2000$(date +%m%d)
+RRULE:FREQ=YEARLY
+SUMMARY:Birthday
+END:VEVENT
+BEGIN:VEVENT
+UID:standup
+DTSTART:${this_month}01T120000
+RRULE:FREQ=WEEKLY;COUNT=4
+EXDATE:${this_month}08T120000
+SUMMARY:Standup
+END:VEVENT
+BEGIN:VEVENT
+UID:long-ago
+DTSTART:20200101T080000Z
+RRULE:FREQ=DAILY;UNTIL=20200110T080000Z
+SUMMARY:Long ago
+END:VEVENT
+END:VCALENDAR
+ICS
+# The standup is on the 1st, 15th and 22nd.
+case $(date +%d) in
+01 | 15 | 22)
+	dotted=3
+	standup=" | Standup"
+	;;
+*)
+	dotted=4
+	standup=""
+	;;
+esac
+# What the month said last of $1.
+month_said() {
+	log | sed -n "s/.*okaeri: $1:[ ]\{0,1\}//p" | tail -n 1
+}
+# Until it says $2 of $1, or fails as $3.
+month_says() {
+	for _ in $(seq 50); do
+		[ "$(month_said "$1")" = "$2" ] && return 0
+		sleep 0.1
+	done
+	fail "$3: \"$(month_said "$1")\", not \"$2\""
+}
+settings "{ \"clock\": { \"calendars\": [\"$work/events.ics\"] } }"
+# The other places go with that, and the month comes up to where it was.
+sleep 0.6
+month_says dotted "$dotted" "the days with a dot"
+month_says "that day" "All-day thing | Birthday | Meeting, with a comma; and more$standup" "what's on today"
+shot month-events
+months_apart month-back month-events || fail "no dots under the days with events"
+# A click on a day picks it, and then it's what's under the month: two a week apart
+# in the middle of it, one of them not today. Home goes back to today.
+move 700 220
+click
+sleep 0.3
+case $(month_said picked) in
+"" | "$(date +%F)")
+	move 700 256
+	click
+	sleep 0.3
+	;;
+esac
+picked=$(month_said picked)
+[ -n "$picked" ] && [ "$picked" != "$(date +%F)" ] || fail "a click on a day didn't pick it"
+case ${picked#"${picked%??}"} in
+15 | 22) month_says "that day" "Standup" "what's on the day picked" ;;
+*) month_says "that day" "" "what's on the day picked" ;;
+esac
+key Home
+month_says picked "$(date +%F)" "the day picked after Home"
+month_says "that day" "All-day thing | Birthday | Meeting, with a comma; and more$standup" "what's on today again"
+# And one at an address, as a calendar's secret one is, from a server of its own
+# here: today has what's in it too, in its place among the rest.
+mkdir -p "$work/calendars"
+cat >"$work/calendars/basic.ics" <<ICS
+BEGIN:VCALENDAR
+BEGIN:VEVENT
+UID:afar
+DTSTART:${today}T070000
+SUMMARY:From afar
+END:VEVENT
+END:VCALENDAR
+ICS
+calendar_port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+# Gone in two minutes even if the test stops before it does.
+timeout 120 python3 -m http.server "$calendar_port" --bind 127.0.0.1 --directory "$work/calendars" >"$out/calendar-server.log" 2>&1 &
+calendar_server=$!
+# It's asked as it's added, and not again for a while: the server has to be up.
+for _ in $(seq 50); do
+	python3 -c 'import socket, sys; socket.create_connection(("127.0.0.1", int(sys.argv[1])), 1)' "$calendar_port" 2>/dev/null && break
+	sleep 0.1
+done
+settings "{ \"clock\": { \"calendars\": [\"$work/events.ics\", \"http://127.0.0.1:$calendar_port/basic.ics\"] } }"
+month_says "that day" "All-day thing | Birthday | From afar | Meeting, with a comma; and more$standup" "what's on today with an address"
+kill "$calendar_server"
+wait "$calendar_server" 2>/dev/null || true
 settings '{}'
+month_says dotted 0 "the days with a dot with no calendars"
 key Escape
 wait_up 0
 
@@ -1409,6 +1576,12 @@ sleep 1.2
 shot privacy-tip
 [ "$(magick "$out/privacy-tip.png" "$out/privacy-both.png" -compose difference -composite \
 	-crop "400x40+$(($(right_start privacy-both) - 150))+44" +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip for who's listening"
+# The middle button on it opens the control center, at the microphone.
+click middle
+wait_up 1
+move 420 16
+click
+wait_up 0
 move 300 600
 ipc probe privacy "" ""
 sleep 0.3
@@ -1547,6 +1720,17 @@ tinted own-json "$mine" || fail "the part isn't red"
 sleep 1.5
 shot own-nothing
 same "with nothing printed" "$(lane own-nothing | wc -l)" 1
+# A command that's a mistake says so, and the part is its name, in red; one that
+# only ends badly, with nothing said, isn't there.
+own "no-such-command-of-okaeri" 1
+sleep 1.5
+shot own-mistake
+same "with a command that isn't one" "$(lane own-mistake | wc -l)" 2
+tinted own-mistake "$(lane own-mistake | head -n 1)" || fail "a part whose command failed isn't red"
+own "false" 1
+sleep 1.5
+shot own-false
+same "with a command that only ends badly" "$(lane own-false | wc -l)" 1
 # Run once, it shows each line as it comes, and all it started goes with it.
 own "echo one; sleep 1; echo and another; exec sleep 37.3" 0
 sleep 0.5
@@ -1596,6 +1780,24 @@ shot clicks-month
 under clicks-month 700 clicks || fail "the clock's own click doesn't open the month"
 key Escape
 sleep 0.4
+move 300 600
+settings '{}'
+
+step "A part of one's own, at once after a click"
+# Its command runs again right after one of a click on it, to show what that
+# changed: here every minute, so the next run is the click's.
+: >"$work/runs"
+own "echo run >>$work/runs; echo runs" 60 ', "actions": { "mine": { "left": "true" } }'
+sleep 1
+shot again
+runs=$(wc -l <"$work/runs")
+move "$(lane again | head -n 1)" 16
+click
+for _ in $(seq 20); do
+	[ "$(wc -l <"$work/runs")" -gt "$runs" ] && break
+	sleep 0.1
+done
+same "the runs after a click" "$(wc -l <"$work/runs")" $((runs + 1))
 move 300 600
 settings '{}'
 
@@ -1723,6 +1925,88 @@ else
 fi
 settings '{}'
 
+step "The volume, and the bar with a panel open"
+# The middle button on it mutes, the wheel turns it, and a click opens the
+# control center.
+settings '{ "bar": { "right": ["volume", "control"] } }'
+move 300 600
+sleep 0.5
+shot volume
+same "what's on the right, with the volume" "$(lane volume | wc -l)" 2
+volume_x=$(lane volume | sed -n 1p)
+mutes=$(dry 'mute ')
+move "$volume_x" 16
+click middle
+sleep 0.3
+[ "$(dry 'mute ')" -gt "$mutes" ] || fail "the middle button on the volume doesn't mute"
+turns=$(dry 'volume ')
+notch 1
+sleep 0.3
+[ "$(dry 'volume ')" -gt "$turns" ] || fail "the wheel on the volume doesn't turn it"
+# Its right click is its own, and no menu.
+mutes=$(dry 'mute ')
+click right
+sleep 0.3
+[ "$(dry 'mute ')" -gt "$mutes" ] || fail "a right click on the volume doesn't mute"
+same "the panels after a right click on the volume" "$(up)" 0
+# By the step that's set, here and on the bar's own wheel: up a notch by a
+# tenth, and then by a hundredth, from where it is, as a dry run leaves it, so
+# however loud the machine is: a notch of -1 is one up here.
+levels() {
+	log | sed -n 's/.*okaeri: dry: volume //p'
+}
+settings '{ "bar": { "right": ["volume", "control"] }, "audio": { "step": 10 } }'
+notch -1
+sleep 0.3
+by_tenth=$(levels | tail -n 1)
+settings '{ "bar": { "right": ["volume", "control"] }, "audio": { "step": 1 } }'
+notch -1
+sleep 0.3
+by_hundredth=$(levels | tail -n 1)
+awk -v a="$by_tenth" -v b="$by_hundredth" 'BEGIN { d = a - b; exit !(d > 0.085 && d < 0.095) }' ||
+	fail "a notch by steps of 10 and of 1: $by_tenth, $by_hundredth"
+# Right of the middle, where nothing is: the volume's half of the bar.
+move 1000 16
+notch -1
+sleep 0.3
+same "a notch on the bar's own wheel, by 1" "$(levels | tail -n 1)" "$by_hundredth"
+settings '{ "bar": { "right": ["volume", "control"] } }'
+move "$volume_x" 16
+click
+wait_up 1
+sleep 0.5
+shot volume-panel
+[ "$(pixel volume-panel 1300 120)" != "$(pixel volume 1300 120)" ] || fail "a click on the volume opens no control center"
+# With that open a click on the clock is the clock's: the month is there at
+# once, beside the control center, which stays where it is.
+move 700 16
+click
+sleep 0.8
+same "the panels after a click on the clock, with one open" "$(up)" 2
+shot month-at-once
+[ "$(pixel month-at-once 700 200)" != "$(pixel volume 700 200)" ] || fail "a click on the clock with a panel open doesn't open the month"
+same "the control center beside it" "$(pixel month-at-once 1300 120)" "$(pixel volume-panel 1300 120)"
+# A click on the bar where nothing is closes them, as one elsewhere does.
+move 420 16
+click
+wait_up 0
+settings '{}'
+move 300 600
+
+step "Islands"
+# Each lane on its own, and between them the desktop.
+settings '{ "bar": { "right": ["control"] } }'
+move 300 600
+sleep 0.4
+shot whole
+settings '{ "bar": { "right": ["control"], "look": "islands" } }'
+sleep 0.5
+shot islands
+same "between the lanes of a bar that's whole" "$(pixel whole 400 16)" "$(pixel whole 1300 16)"
+same "between the islands" "$(pixel islands 400 16)" "$(pixel islands 400 500)"
+[ "$(pixel islands 700 16)" != "$(pixel islands 400 16)" ] || fail "no island around the clock"
+settings '{}'
+
 step "Palettes"
 # The colors are a palette's: one by name, one of the user's own, and by the
 # hour, here with all day being day, and then night.
@@ -1808,6 +2092,35 @@ move 300 600
 sleep 0.5
 shot record-off
 same "what's on the right after the recording" "$(lane record-off | wc -l)" 1
+# Set to be there always, it's on the bar before one starts, and a right click on
+# it has its menu, whose last row takes it off the bar.
+settings "{ \"bar\": { \"right\": [\"recording\", \"control\"] }, \"recording\": { \"show\": \"always\", \"folder\": \"$work/videos\" } }"
+move 300 600
+sleep 0.3
+shot record-always
+same "what's on the right with it always there" "$(lane record-always | wc -l)" 2
+move "$(lane record-always | head -n 1)" 16
+click right
+wait_up 1
+key Escape
+wait_up 0
+sleep 0.3
+click right
+wait_up 1
+sleep 0.3
+key End
+key Return
+wait_up 0
+for _ in $(seq 20); do
+	[ "$(jq -c '.bar.right' "$XDG_STATE_HOME/okaeri/settings.json" 2>/dev/null)" = '["control"]' ] && break
+	sleep 0.1
+done
+same "the lane after Off the bar" "$(jq -c '.bar.right' "$XDG_STATE_HOME/okaeri/settings.json")" '["control"]'
+move 300 600
+sleep 0.4
+shot record-off-bar
+same "what's on the right with it off the bar" "$(lane record-off-bar | wc -l)" 1
+ipc probe unown
 settings '{}'
 
 step "A bar at the bottom"

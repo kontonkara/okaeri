@@ -25,6 +25,11 @@ PanelWindow {
 	// The side a toast comes in from and goes out to: in the middle it grows
 	// where it is instead.
 	readonly property int side: inMiddle ? 0 : atLeft ? -1 : 1
+	// As Theme.toastMotion has them come and go: in from that side, "slide", or in
+	// their place, by fading, "fade", or growing a little, "grow"; in the middle
+	// a slide grows.
+	readonly property real travel: Theme.toastMotion === "slide" ? Theme.u(24) * side : 0
+	readonly property real small: Theme.toastMotion === "grow" || (Theme.toastMotion === "slide" && side === 0) ? 0.94 : 1
 	// How far they go for what's open in their corner.
 	readonly property real aside: {
 		const widths = Panels.open.filter(panel => panel.place === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
@@ -38,7 +43,7 @@ PanelWindow {
 		enabled: Theme.animate
 
 		NumberAnimation {
-			duration: 160
+			duration: Theme.ms(160)
 			easing.type: Easing.OutCubic
 		}
 	}
@@ -133,23 +138,23 @@ PanelWindow {
 				property: "opacity"
 				from: 0
 				to: 1
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 
 			NumberAnimation {
 				property: "x"
-				from: Theme.u(24) * window.side
+				from: window.travel
 				to: 0
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 
 			NumberAnimation {
 				property: "scale"
-				from: window.side === 0 ? 0.95 : 1
+				from: window.small
 				to: 1
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -160,21 +165,21 @@ PanelWindow {
 			NumberAnimation {
 				property: "opacity"
 				to: 0
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 
 			NumberAnimation {
 				property: "x"
-				to: Theme.u(24) * window.side
-				duration: 160
+				to: window.travel
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 
 			NumberAnimation {
 				property: "scale"
-				to: window.side === 0 ? 0.95 : 1
-				duration: 160
+				to: window.small
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -184,7 +189,7 @@ PanelWindow {
 
 			NumberAnimation {
 				property: "y"
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 
@@ -192,19 +197,19 @@ PanelWindow {
 			NumberAnimation {
 				property: "opacity"
 				to: 1
-				duration: 160
+				duration: Theme.ms(160)
 			}
 
 			NumberAnimation {
 				property: "x"
 				to: 0
-				duration: 160
+				duration: Theme.ms(160)
 			}
 
 			NumberAnimation {
 				property: "scale"
 				to: 1
-				duration: 160
+				duration: Theme.ms(160)
 			}
 		}
 

@@ -18,6 +18,7 @@
   wf-recorder,
   slurp,
   ddcutil,
+  qrencode,
 }:
 
 stdenvNoCC.mkDerivation {
@@ -59,6 +60,7 @@ stdenvNoCC.mkDerivation {
           wf-recorder
           slurp
           ddcutil
+          qrencode
         ]
       } \
       --suffix XDG_DATA_DIRS : ${sound-theme-freedesktop}/share

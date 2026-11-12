@@ -1,15 +1,23 @@
 import QtQuick
+import Quickshell.Networking
 import qs
 import qs.ui
 
 // Wi-Fi: on or off, and the networks in reach. A click connects to a known or
 // an open one, and asks a secured one's password first. One that hides its name is
-// asked for by that, under the rest.
+// asked for by that, under the rest, and beside that the one it's on is shared
+// with a phone: its name, its password and the code for a phone's camera.
 Section {
 	id: section
 
 	// The network that's asked for its password.
 	property var asking: null
+	// The one it's on, where a phone can join it with no more than a password,
+	// and whether that's shown. Watched by its name, which changes only with the
+	// network: the list it's found in is made anew as any signal changes.
+	readonly property var shareable: Wifi.connected && (Wifi.takesKey(Wifi.connected) || Wifi.isOpen(Wifi.connected)) ? Wifi.connected : null
+	readonly property string sharedName: shareable ? shareable.name : ""
+	property bool sharing: false
 	// Rows stay put meanwhile, or they'd jump as signals change. What's gone
 	// still goes, what's new waits at the end.
 	property var held: []
@@ -38,14 +46,29 @@ Section {
 			return "Blocked by a switch";
 		if (!Wifi.enabled)
 			return "Off";
-		return Wifi.connected ? Wifi.connected.name : "Not connected";
+		if (!Wifi.connected)
+			return "Not connected";
+		// What the network part of the bar says of it too.
+		const reach = Networking.connectivity;
+		const trouble = reach === NetworkConnectivity.Portal ? "Sign in to the network" : reach === NetworkConnectivity.Limited || reach === NetworkConnectivity.None ? "No internet" : "";
+		return [Wifi.connected.name, trouble].filter(part => part !== "").join(" · ");
 	}
 	checked: Wifi.enabled
 	canSwitch: !Wifi.blocked
 	onToggled: wanted => Wifi.setEnabled(wanted)
 	onUnfoldedChanged: {
-		if (!unfolded)
+		if (!unfolded) {
 			asking = null;
+			sharing = false;
+		}
+	}
+	// Another network, or none: what was shared was that one's.
+	onSharedNameChanged: sharing = false
+	onSharingChanged: {
+		if (sharing && shareable && !Wifi.isOpen(shareable))
+			Wifi.readKey();
+		else
+			Wifi.forgetKey();
 	}
 	onAskingChanged: {
 		held = asking ? Wifi.networks : [];
@@ -68,7 +91,7 @@ Section {
 
 	Rows {
 		values: section.networks
-		room: section.roomInside - hidden.height
+		room: section.roomInside - hidden.height - (shareCard.visible ? shareCard.height : 0)
 		empty: "Looking for networks..."
 		onActivated: (index, network) => section.pick(network)
 
@@ -82,8 +105,21 @@ Section {
 		}
 	}
 
+	WifiShare {
+		id: shareCard
+
+		file: "share-wifi.png"
+		visible: section.sharing
+		active: section.sharing
+		name: section.sharedName
+		key: Wifi.key
+		open: !!section.shareable && Wifi.isOpen(section.shareable)
+		note: Wifi.keyFailure || (Wifi.key === "" ? "Asking for it..." : "")
+		failed: Wifi.keyFailure !== ""
+	}
+
 	// A network that doesn't say its name isn't among them: its name and its
-	// password, typed.
+	// password, typed. The way to share the one it's on is on the same line.
 	Item {
 		id: hidden
 
@@ -103,10 +139,12 @@ Section {
 		onAskingChanged: {
 			name.text = "";
 			key.text = "";
-			if (asking)
+			if (asking) {
+				section.sharing = false;
 				name.take();
-			else
+			} else {
 				section.forceActiveFocus();
+			}
 		}
 
 		Button {
@@ -116,11 +154,30 @@ Section {
 			height: Theme.u(30)
 			flat: true
 			// How the last try at one went is here too: it has no row to say it on.
-			longest: hidden.width - Theme.u(24)
+			longest: hidden.width - Theme.u(24) - (sharer.visible ? sharer.width + Theme.u(8) : 0)
 			enabled: !Wifi.joining
 			text: Wifi.joining ? `Connecting to ${Wifi.joined}...` : Wifi.joinFailure ? `${Wifi.joined}: ${Wifi.joinFailure}` : "One that hides its name"
 			ink: Wifi.joinFailure && !Wifi.joining ? Theme.colors.error : Theme.colors.subtext
 			onClicked: hidden.asking = true
+		}
+
+		// Escape ends the sharing first, where the keys are on this.
+		Button {
+			id: sharer
+
+			anchors.right: parent.right
+			visible: !hidden.asking && !!section.shareable
+			height: Theme.u(30)
+			flat: true
+			icon: section.sharing ? "" : "qr"
+			text: section.sharing ? "Done" : "Share"
+			tip: section.sharing ? "" : "Its name, its password and a code for a phone"
+			ink: Theme.colors.subtext
+			onClicked: section.sharing = !section.sharing
+			Keys.onEscapePressed: event => {
+				event.accepted = section.sharing;
+				section.sharing = false;
+			}
 		}
 
 		Column {

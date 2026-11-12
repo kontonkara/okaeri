@@ -12,20 +12,21 @@ import qs.ui
 // session menu. A / in front asks for one kind of thing alone, emoji, what was
 // copied, files by their names and the settings among them, and alone it says
 // which there are. A right click or Shift+Enter on an app shows what else it can
-// do, in the list's place. `okaeri dmenu` has it show a script's lines instead,
-// to pick one of, which the script is told. The field keeps the keys, Up and Down
-// reach the list from it.
+// do, in the list's place, and on a file, an emoji or something copied does the
+// other thing there is to do with it; a window it closes. `okaeri dmenu` has it
+// show a script's lines instead, to pick one of, which the script is told. The
+// field keeps the keys, Up and Down reach the list from it.
 Panel {
 	id: launcher
 
 	// What a / in front asks for.
 	readonly property var modes: [
 		{ mode: "calc", text: "Sums", subtext: "/calc and the sum, or the last ones", icon: "calculator" },
-		{ mode: "win", text: "Open windows", subtext: "/win", icon: "apps" },
+		{ mode: "win", text: "Open windows", subtext: "/win: Enter goes to one, Shift+Enter closes it", icon: "apps" },
 		{ mode: "wall", text: "Wallpapers", subtext: "/wall", icon: "image" },
-		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it, and copies it", icon: "text" },
-		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again", icon: "clipboard" },
-		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it", icon: "file" },
+		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it and copies it, Shift+Enter only copies", icon: "text" },
+		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
+		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
@@ -54,15 +55,47 @@ Panel {
 	}
 
 	// A script's lines to pick from, and the pipe that takes the answer: null with
-	// none asking.
+	// none asking. What else it has is what pickFrom() was asked.
 	property var picking: null
+	// A script asked for a password, and what's typed shows as dots: until the
+	// next opening, not only until the answer, or it would show as the panel
+	// fades.
+	property bool hiding: false
 
 	// The app whose menu is in the list's place, if one is.
 	property var menuOf: null
 
-	// The lines of a script that have what's typed, as they came.
+	// The lines of a script that have what's typed, as they came, each with where
+	// it was among all of them, which --index answers with.
 	function picks(wanted) {
-		return picking.lines.filter(line => line.toLowerCase().includes(wanted)).map((line, at) => ({ pick: line, text: line, mark: at }));
+		return picking.lines.map((line, at) => ({ pick: line, at: picking.places[at], text: line, mark: at })).filter(row => row.text.toLowerCase().includes(wanted));
+	}
+
+	// A file of a script's, "" for one that isn't there.
+	function readOf(path) {
+		lines.path = "";
+		lines.path = path;
+		return lines.text();
+	}
+
+	// A script's lines to pick one of, from `file`, and the pipe the answer goes
+	// to. `asked` says how: { prompt, password (what's typed shows as dots),
+	// index (the answer is where the line picked was), onlyMatch (only a line is
+	// an answer, never what's typed), select (the line to start on) }, any of them
+	// left out.
+	function pickFrom(file, pipe, asked) {
+		answer("");
+		const all = readOf(file).split("\n");
+		const places = all.map((line, at) => at).filter(at => all[at] !== "");
+		show();
+		picking = Object.assign({ lines: places.map(at => all[at]), places, pipe }, asked);
+		hiding = !!asked.password;
+		search();
+		const start = asked.select ? found.values.findIndex(row => row.pick === asked.select) : -1;
+		if (start > 0) {
+			list.currentIndex = start;
+			list.positionViewAtIndex(start, ListView.Contain);
+		}
 	}
 
 	// What was picked, for the script that waits: nothing says none was.
@@ -74,14 +107,22 @@ Panel {
 		picking = null;
 	}
 
+	// Each by its title, with its app, its workspace and, with more than one
+	// screen, the screen under it; the one in focus is checked.
 	function windows(wanted) {
-		return Niri.windows.filter(w => [w.title, w.app_id].some(text => (text || "").toLowerCase().includes(wanted))).map(w => ({
-			window: w.id,
-			text: w.title,
-			subtext: "Open window",
-			image: Apps.imageOf(w.app_id),
-			icon: "apps"
-		}));
+		const screens = new Set(Niri.workspaces.map(space => space.output)).size;
+		return Niri.windows.filter(w => [w.title, w.app_id].some(text => (text || "").toLowerCase().includes(wanted))).map(w => {
+			const space = Niri.workspaces.find(space => space.id === w.workspace_id);
+			const where = space ? [`workspace ${space.name || space.idx}`].concat(screens > 1 && space.output ? [space.output] : []) : [];
+			return {
+				window: w.id,
+				text: w.title,
+				subtext: [Apps.entryOf(w.app_id)?.name || w.app_id || "Window"].concat(where).join(" · "),
+				image: Apps.imageOf(w.app_id),
+				icon: "apps",
+				mark: w.is_focused ? "check" : ""
+			};
+		});
 	}
 
 	function session(wanted) {
@@ -209,7 +250,7 @@ Panel {
 		// What tells rows apart, so one that stays from a search to the next moves
 		// instead of being made anew: all that shows on it.
 		return (menuOf ? menu(menuOf) : typed()).map(row => Object.assign({
-			key: [row.text, row.subtext, row.entry?.id, row.window, row.session?.text, row.mark].join("|")
+			key: [row.text, row.subtext, row.entry?.id, row.action?.id, row.window, row.session?.text, row.mark].join("|")
 		}, row));
 	}
 
@@ -232,7 +273,31 @@ Panel {
 		if (row?.entry) {
 			menuOf = row.entry;
 			search();
+		} else {
+			otherWay(row);
 		}
+	}
+
+	// What Shift+Enter or a right click does with a row that's no app, the other
+	// thing there is to do with it: a file's folder opens, what was copied is
+	// pasted where Enter copies and copied where it pastes, and an emoji is only
+	// copied. A window closes, and the launcher stays on the rest of them.
+	function otherWay(row) {
+		if (row?.window) {
+			Env.act("close window", () => Niri.closeWindow(row.window));
+			return;
+		}
+		if (row?.file)
+			Env.act("open folder", () => Niri.spawn(["xdg-open", row.file.replace(/\/[^/]*$/, "") || "/"]));
+		else if (row?.clip) {
+			Clipboard.restore(row.clip);
+			if (!Settings.clipboard.paste)
+				Clipboard.paste();
+		} else if (row?.emoji)
+			Emoji.put(row.emoji, true);
+		else
+			return;
+		hide();
 	}
 
 	// Back on the app it was for, if that's still there.
@@ -254,6 +319,8 @@ Panel {
 		Session.check();
 		menuOf = null;
 		field.text = "";
+		hiding = false;
+		field.revealed = false;
 		list.pointer = null;
 		field.take();
 		search();
@@ -276,6 +343,21 @@ Panel {
 		function onShownChanged() {
 			if (launcher.shown && launcher.clipping)
 				launcher.search();
+		}
+	}
+
+	// The windows listed follow those there are, one closed from here too, on the
+	// same row.
+	Connections {
+		target: Niri
+
+		function onWindowsChanged() {
+			if (!launcher.shown || launcher.menuOf || !found.values.some(row => row.window))
+				return;
+			const at = list.currentIndex;
+			launcher.search();
+			list.currentIndex = Math.max(0, Math.min(at, found.values.length - 1));
+			list.positionViewAtIndex(list.currentIndex, ListView.Contain);
 		}
 	}
 
@@ -304,20 +386,36 @@ Panel {
 		}
 
 		// A script's lines to pick one of: the file that has them, and the pipe
-		// the answer goes to. `okaeri dmenu` is how it's called.
+		// the answer goes to. `okaeri dmenu` called it so before menuWith.
 		function menu(file: string, pipe: string, prompt: string): void {
-			launcher.answer("");
-			lines.path = "";
-			lines.path = file;
-			const read = lines.text().split("\n").filter(line => line !== "");
-			launcher.show();
-			launcher.picking = { lines: read, pipe, prompt };
-			launcher.search();
+			launcher.pickFrom(file, pipe, { prompt });
+		}
+
+		// The same as `okaeri dmenu` calls it now: `options` are the words
+		// password, index and only-match, those wanted, as pickFrom() has them.
+		// The prompt and the line to start on are in the files prompt and select
+		// beside `file`: they can have anything in them, and a call's arguments
+		// can't have commas.
+		function menuWith(file: string, pipe: string, options: string): void {
+			const words = options.split(/\s+/);
+			const dir = file.replace(/[^/]*$/, "");
+			launcher.pickFrom(file, pipe, {
+				prompt: launcher.readOf(`${dir}prompt`),
+				select: launcher.readOf(`${dir}select`),
+				password: words.includes("password"),
+				index: words.includes("index"),
+				onlyMatch: words.includes("only-match")
+			});
 		}
 
 		// For tests: how far down the list is.
 		function scrolled(): real {
 			return list.contentY;
+		}
+
+		// For tests: whether what's typed shows as dots.
+		function secret(): bool {
+			return field.secret && !field.revealed;
 		}
 	}
 
@@ -378,16 +476,19 @@ Panel {
 		focus: true
 		icon: "search"
 		placeholder: launcher.picking ? launcher.picking.prompt || "Pick one" : "Search, or / for more"
+		secret: launcher.hiding
 		shifted: true
+		// No sums of what a script is told, a password least of all.
 		onTextChanged: {
-			Calculator.ask(text);
+			Calculator.ask(launcher.picking ? "" : text);
 			launcher.menuOf = null;
 			launcher.search();
 		}
-		// With nothing found for a script, what's typed is the answer.
+		// With nothing found for a script, what's typed is the answer, but for one
+		// that wants a line or where it is.
 		onAccepted: {
 			if (launcher.picking && list.count === 0) {
-				launcher.answer(text);
+				launcher.answer(launcher.picking.onlyMatch || launcher.picking.index ? "" : text);
 				launcher.hide();
 			} else {
 				list.activate(list.currentIndex);
@@ -446,7 +547,7 @@ Panel {
 					property: "opacity"
 					from: 0
 					to: 1
-					duration: 120
+					duration: Theme.ms(120)
 				}
 			}
 
@@ -455,7 +556,7 @@ Panel {
 
 				NumberAnimation {
 					property: "y"
-					duration: 120
+					duration: Theme.ms(120)
 					easing.type: Easing.OutCubic
 				}
 			}
@@ -467,7 +568,7 @@ Panel {
 				if (!launcher.shown)
 					return;
 				if (row.pick !== undefined) {
-					launcher.answer(row.pick);
+					launcher.answer(launcher.picking.index ? String(row.at) : row.pick);
 					launcher.hide();
 					return;
 				}
@@ -485,8 +586,9 @@ Panel {
 					launcher.closeMenu();
 					return;
 				}
+				// From the app's menu, or a row of the search.
 				if (row.action)
-					Apps.launch(launcher.menuOf, row.action);
+					Apps.launch(launcher.menuOf ?? row.entry, row.action);
 				else if (row.window)
 					Niri.focusWindow(row.window);
 				else if (row.session)
@@ -496,7 +598,7 @@ Panel {
 				else if (row.copy)
 					Calculator.copy(row.copy);
 				else if (row.wallpaper)
-					Settings.set("wallpaper", "path", row.wallpaper);
+					Theme.hang(row.wallpaper);
 				else if (row.file)
 					Env.act("open file", () => Niri.spawn(["xdg-open", row.file]));
 				else if (row.clip) {
@@ -516,7 +618,8 @@ Panel {
 		Text {
 			anchors.centerIn: parent
 			visible: list.count === 0
-			text: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
+			text: /^\s*\/calc(\s|$)/i.test(field.text) && Env.lacks("qalc") ? "Sums need qalc, which isn't here"
+				: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
 				: launcher.filing.length < 2 ? "Two letters of a file's name, or more"
 				: looking.running || finder.running ? "Looking..." : "Nothing found"
 			color: Theme.colors.subtext

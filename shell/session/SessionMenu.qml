@@ -64,6 +64,16 @@ Panel {
 		function toggle(): void {
 			menu.toggle();
 		}
+
+		// One of what it can do, by its name, as a pick in it: what waits counts down
+		// first. lock, suspend, hibernate, logout, reboot, firmware or poweroff.
+		function run(name: string): void {
+			const row = Session.actions.find(other => other.action === name);
+			if (row)
+				Session.asked(row);
+			else
+				console.info(`okaeri: no session action "${name}" here, it's one of ${Session.actions.map(other => other.action).join(", ")}`);
+		}
 	}
 
 	Timer {

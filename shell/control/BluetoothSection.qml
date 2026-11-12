@@ -19,7 +19,8 @@ Section {
 			return "Off";
 		if (Bt.connected.length > 1)
 			return `${Bt.connected.length} connected`;
-		return Bt.connected.length ? Bt.connected[0].name : "Not connected";
+		const one = Bt.connected[0];
+		return !one ? "Not connected" : one.batteryAvailable ? `${one.name} · ${Math.round(one.battery * 100)}%` : one.name;
 	}
 	checked: Bt.enabled
 	canSwitch: !Bt.blocked

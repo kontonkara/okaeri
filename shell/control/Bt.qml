@@ -119,6 +119,14 @@ Singleton {
 		}
 	}
 
+	// A pairing stopped from here, not left until BlueZ gives up on it: it's
+	// not one that failed, and nothing is asked of it any more.
+	function cancel(device) {
+		Env.act("bluetooth cancel", () => device.cancelPair());
+		joining = joining.filter(d => d !== device);
+		asking = null;
+	}
+
 	function disconnect(device) {
 		Env.act("bluetooth disconnect", () => device.disconnect());
 	}

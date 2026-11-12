@@ -13,7 +13,7 @@ BarButton {
 	takesWheel: true
 	icon: "bolt"
 	text: Settings.profile.label === "name" && !stacked ? Power.profileName : ""
-	tip: `Power profile: ${Power.profileName}`
+	tip: [`Power profile: ${Power.profileName}`, Power.profileWhy].filter(part => part !== "").join(" · ")
 	ink: Power.profile === PowerProfile.Balanced ? Theme.colors.subtext : Power.profile === PowerProfile.Performance ? Theme.colors.text : Theme.colors.accent
 	onClicked: Power.turn(1)
 	onScrolled: steps => Power.turn(-steps)

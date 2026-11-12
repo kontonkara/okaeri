@@ -31,6 +31,11 @@ Panel {
 			image: Apps.image(action.icon),
 			icon: "apps"
 		}))) : [];
+		// Its windows on other workspaces than the one in focus.
+		const here = Niri.workspaces.find(workspace => workspace.is_focused)?.id;
+		const away = app.windows.filter(window => window.workspace_id !== here);
+		if (away.length && here !== undefined)
+			starts.push({ bringing: true, text: away.length > 1 ? `Bring its ${away.length} windows here` : "Bring it here", icon: "apps" });
 		const rest = [{ keeping: true, keep: !kept, text: kept ? "Take off the dock" : "Keep on the dock", icon: "pin" }];
 		if (app.windows.length)
 			rest.push({ closing: true, text: app.windows.length > 1 ? `Close ${app.windows.length} windows` : "Close", icon: "close" });
@@ -94,6 +99,8 @@ Panel {
 				Apps.launch(app.entry, row.action);
 			else if (row.keeping)
 				Apps.dock(app.id, row.keep);
+			else if (row.bringing)
+				app.windows.filter(window => window.workspace_id !== Niri.workspaces.find(workspace => workspace.is_focused)?.id).forEach(window => Niri.bringWindow(window.id));
 			else if (row.closing)
 				app.windows.forEach(window => Niri.closeWindow(window.id));
 		}

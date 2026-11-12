@@ -1,0 +1,62 @@
+/* okaeri's colors for GTK 4, written anew as they change, to
+   ~/.config/gtk-4.0/gtk.css: this is then all of that file. Apps on libadwaita
+   take them as they start, 1.6 and later by the variables, and older ones by
+   the named colors further down. */
+
+:root {
+	--accent-color: {{accent}};
+	--accent-bg-color: {{accent}};
+	--accent-fg-color: {{background}};
+	--destructive-color: {{error}};
+	--destructive-bg-color: {{error}};
+	--destructive-fg-color: {{background}};
+	--error-color: {{error}};
+	--error-bg-color: {{error}};
+	--error-fg-color: {{background}};
+	--window-bg-color: {{background}};
+	--window-fg-color: {{text}};
+	--view-bg-color: {{background}};
+	--view-fg-color: {{text}};
+	--headerbar-bg-color: {{surface}};
+	--headerbar-fg-color: {{text}};
+	--headerbar-backdrop-color: {{background}};
+	--sidebar-bg-color: {{surface}};
+	--sidebar-fg-color: {{text}};
+	--sidebar-backdrop-color: {{background}};
+	--card-bg-color: {{surface}};
+	--card-fg-color: {{text}};
+	--dialog-bg-color: {{surface}};
+	--dialog-fg-color: {{text}};
+	--popover-bg-color: {{surface}};
+	--popover-fg-color: {{text}};
+	--thumbnail-bg-color: {{surface}};
+	--thumbnail-fg-color: {{text}};
+}
+
+@define-color accent_color {{accent}};
+@define-color accent_bg_color {{accent}};
+@define-color accent_fg_color {{background}};
+@define-color destructive_color {{error}};
+@define-color destructive_bg_color {{error}};
+@define-color destructive_fg_color {{background}};
+@define-color error_color {{error}};
+@define-color error_bg_color {{error}};
+@define-color error_fg_color {{background}};
+@define-color window_bg_color {{background}};
+@define-color window_fg_color {{text}};
+@define-color view_bg_color {{background}};
+@define-color view_fg_color {{text}};
+@define-color headerbar_bg_color {{surface}};
+@define-color headerbar_fg_color {{text}};
+@define-color headerbar_backdrop_color {{background}};
+@define-color sidebar_bg_color {{surface}};
+@define-color sidebar_fg_color {{text}};
+@define-color sidebar_backdrop_color {{background}};
+@define-color card_bg_color {{surface}};
+@define-color card_fg_color {{text}};
+@define-color dialog_bg_color {{surface}};
+@define-color dialog_fg_color {{text}};
+@define-color popover_bg_color {{surface}};
+@define-color popover_fg_color {{text}};
+@define-color thumbnail_bg_color {{surface}};
+@define-color thumbnail_fg_color {{text}};

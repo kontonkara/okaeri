@@ -21,12 +21,31 @@ Singleton {
 	// change() left it where it was, at an end of it.
 	signal stayed
 
+	// By `by` of all of it, and by a step at least: a panel can have only a few,
+	// and a small change would round back to where it was.
 	function change(by) {
 		if (!available)
 			return;
-		const value = Math.round(Math.max(lowest, Math.min(1, level + by)) * maximum);
+		const steps = Math.max(1, Math.round(Math.abs(by) * maximum));
+		const value = within(current + (by < 0 ? -steps : steps));
 		if (value === current)
 			stayed();
+		put(value);
+	}
+
+	// To `wanted` of all of it, as near as its steps go: the slider's, which
+	// moves by one of them at least.
+	function set(wanted) {
+		if (available)
+			put(within(Math.round(wanted * maximum)));
+	}
+
+	// Between the lowest, which is a step at least, and all of it.
+	function within(value) {
+		return Math.max(Math.max(1, Math.round(lowest * maximum)), Math.min(maximum, value));
+	}
+
+	function put(value) {
 		Env.act(`brightness ${value}`, () => {
 			// Shown at once; the file follows.
 			current = value;

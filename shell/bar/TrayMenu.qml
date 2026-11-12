@@ -64,10 +64,13 @@ Panel {
 			path = [];
 	}
 
-	// Its app went away.
+	// Its app went away. A moment on: putting it away changes the rows again.
 	onRowsChanged: {
 		if (shown && !openers.instances[0]?.menu)
-			hide();
+			Qt.callLater(() => {
+				if (menu.shown && !openers.instances[0]?.menu)
+					menu.hide();
+			});
 	}
 
 	// Any panel takes a menu's place.

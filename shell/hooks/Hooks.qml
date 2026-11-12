@@ -9,14 +9,15 @@ import qs.services
 // the shell starts, and "wallpaper" as another picture goes up. Each has what
 // it's about in its environment: OKAERI_CHARGE, OKAERI_LIGHT and OKAERI_PALETTE
 // with every color as OKAERI_COLOR_ACCENT and so on, OKAERI_WALLPAPER. niri
-// starts them, as it does apps.
+// starts them, as it does apps. The colors go into other apps' files too, by
+// Templates, and those are written before the "colors" command runs.
 Scope {
 	id: hooks
 
 	readonly property var own: Settings.hooks
 	// Not for how things are as the shell comes up: those aren't changes.
 	property bool ready: false
-	readonly property string wallpaper: Settings.wallpaper.path
+	readonly property string wallpaper: Theme.picture
 	// The colors as text, to tell one set from another.
 	readonly property string colors: Object.keys(Theme.colors).map(name => `${name}=${Theme.colors[name]}`).join(" ")
 
@@ -29,6 +30,7 @@ Scope {
 	}
 
 	function painted() {
+		templates.paint();
 		const about = { OKAERI_LIGHT: Theme.light ? 1 : 0, OKAERI_PALETTE: Theme.named || "dark" };
 		Object.keys(Theme.colors).forEach(name => about[`OKAERI_COLOR_${name.toUpperCase()}`] = `${Theme.colors[name]}`);
 		run("colors", about);
@@ -74,5 +76,9 @@ Scope {
 
 		interval: 300
 		onTriggered: hooks.painted()
+	}
+
+	Templates {
+		id: templates
 	}
 }

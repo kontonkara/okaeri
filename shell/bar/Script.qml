@@ -10,7 +10,8 @@ import qs.ui
 // scripts print, with "text", "tooltip" and "class", which makes it red when it's
 // "critical". The command runs every so many seconds, or once with `every` 0, and
 // then each line it prints, for as long as it runs, is the next thing to show.
-// With nothing to show the part isn't there.
+// With nothing to show the part isn't there, unless the command failed and said
+// why: then it's its name, red, with that for the pointer.
 BarButton {
 	id: part
 
@@ -29,6 +30,8 @@ BarButton {
 	// for another to start: what it still prints isn't for showing.
 	property var lines: []
 	property bool stale: false
+	// The last thing a run said of what went wrong.
+	property string wrong
 
 	function take(lines) {
 		let text = lines[0] ?? "";
@@ -75,6 +78,15 @@ BarButton {
 			process.running = true;
 	}
 
+	// A command of Settings.bar.actions ran from a click or the wheel on it: a run
+	// a moment later shows what that changed at once, as waybar's exec-on-event
+	// does, and what it shows stays until then. One that keeps running says so
+	// itself.
+	function ran() {
+		if (!stays)
+			again.restart();
+	}
+
 	visible: wanted
 	longest: Theme.u(240)
 	text: said
@@ -99,13 +111,37 @@ BarButton {
 					part.lines.push(line);
 			}
 		}
-		onExited: {
+		stderr: SplitParser {
+			onRead: line => part.wrong = line
+		}
+		onExited: code => {
+			const why = part.wrong.trim();
+			part.wrong = "";
 			if (part.stale) {
 				part.start();
-			} else if (!part.stays) {
+				return;
+			}
+			if (!part.stays) {
 				part.take(part.lines);
 				part.lines = [];
 			}
+			// One that ends badly with nothing to say is only not there, as a test
+			// for something that isn't: a mistake says what it is.
+			if (code !== 0 && why !== "" && part.said === "") {
+				part.said = part.name;
+				part.hint = why;
+				part.critical = true;
+			}
+		}
+	}
+
+	Timer {
+		id: again
+
+		interval: 300
+		onTriggered: {
+			if (!process.running && !part.stale)
+				part.start();
 		}
 	}
 

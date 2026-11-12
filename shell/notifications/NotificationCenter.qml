@@ -57,6 +57,12 @@ Scope {
 			NotificationStore.dismissLast();
 		}
 
+		// And to where it came from, as a click on it goes.
+		function activate(): void {
+			if (NotificationStore.toasts[0])
+				NotificationStore.activate(NotificationStore.toasts[0]);
+		}
+
 		function dndFor(seconds: int): void {
 			NotificationStore.dndFor(seconds);
 		}

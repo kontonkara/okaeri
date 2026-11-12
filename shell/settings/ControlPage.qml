@@ -9,7 +9,8 @@ import qs.ui
 // click on one shows its width: half a row, or a whole one. One left alone in
 // its row takes all of it either way. What doesn't apply here doesn't show in
 // the panel either way. A tile of the user's own is made here: a command for a
-// click, and one that says whether it's on.
+// click, and one that says whether it's on. The hotspot's name and password are
+// with its width.
 Flickable {
 	id: page
 
@@ -21,7 +22,8 @@ Flickable {
 			power: "Power profile",
 			airplane: "Airplane mode",
 			vpn: "VPN",
-			record: "Screen recording"
+			record: "Screen recording",
+			hotspot: "Hotspot"
 		})
 	// The user's own go by the names they have.
 	readonly property var custom: Settings.control.custom
@@ -211,7 +213,7 @@ Flickable {
 
 								NumberAnimation {
 									properties: "x,y"
-									duration: 120
+									duration: Theme.ms(120)
 									easing.type: Easing.OutCubic
 								}
 							}
@@ -243,7 +245,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN and the screen recording show only where the machine has them."
+						text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN, the screen recording and the hotspot show only where the machine has them."
 					}
 
 					Button {
@@ -380,6 +382,38 @@ Flickable {
 						height: Theme.u(30)
 						text: "Remove it"
 						onClicked: page.remove(tile.modelData)
+					}
+				}
+			}
+
+			// The hotspot's: what phones see it as, and the password they join it with,
+			// which take effect as it next goes up. A password too short or too long
+			// for Wi-Fi is kept all the same, and nmcli says no on the tile.
+			Repeater {
+				model: page.chosen === "hotspot" ? [page.chosen] : []
+
+				Column {
+					id: hotspot
+
+					readonly property string password: Settings.hotspot.password
+
+					width: parent.width
+					spacing: Theme.u(10)
+
+					Field {
+						text: "What phones see it as"
+						subtext: "Empty is the machine's name"
+						placeholder: "The machine's name"
+						value: Settings.hotspot.name
+						onKept: value => Settings.set("hotspot", "name", value)
+					}
+
+					Field {
+						text: "Its password"
+						subtext: hotspot.password !== "" && (hotspot.password.length < 8 || hotspot.password.length > 63) ? "It takes 8 to 63 letters" : "Empty makes one up as it first goes on"
+						placeholder: "Made up"
+						value: hotspot.password
+						onKept: value => Settings.set("hotspot", "password", value)
 					}
 				}
 			}

@@ -6,8 +6,9 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs
 
-// The default output's volume, 0 to 1 or up to Settings.audio.max past it, and
-// the default microphone's.
+// The default output's volume, 0 to 1 or up to Settings.audio.max past it, the
+// default microphone's, and the sound cards with the ways each can work: a
+// headset as one to listen to or one to talk through, a card's plugs.
 Singleton {
 	id: audio
 
@@ -28,6 +29,9 @@ Singleton {
 	// and what plays as a notification is over as soon as it shows.
 	readonly property var streams: Pipewire.nodes.values.filter(node => node.isStream)
 	readonly property var nodes: streams.filter(node => node.isSink && !!node.audio && !!node.properties["application.name"] && node.properties["media.role"] !== "Notification")
+	// What apps are listening to a microphone, each with a volume of its own: a
+	// stream that records is a source.
+	readonly property var listeners: streams.filter(node => !node.isSink && !!node.audio && !!node.properties["application.name"])
 
 	// Where sound can go: the sinks of devices, not the filters on the way to them.
 	// They go by their names, as properties would take tracking each, and that's
@@ -37,6 +41,11 @@ Singleton {
 	readonly property var inputs: Pipewire.nodes.values.filter(node => !node.isSink && !node.isStream && /^(alsa|bluez)_input/.test(node.name))
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
+	// The sound cards that can work in more ways than one: { id, name, profiles:
+	// [{ index, text }], profile }, `profile` the index of the one that's on. Read
+	// with lookCards(), from what `dump` prints, which a test has its own of.
+	property var cards: []
+	readonly property string dump: "pw-dump"
 
 	// change() or changeMic() left the level where it was, at an end of it: the
 	// key that asked still gets an answer.
@@ -48,6 +57,35 @@ Singleton {
 	function reaches(node) {
 		const gpu = node.name.match(/^alsa_output\.pci-(\w+)_(\w+)_(\w+)\.\d\.(hdmi|dp)/i);
 		return !gpu || node === sink || screens.includes(`${gpu[1]}:${gpu[2]}:${gpu[3]}`);
+	}
+
+	function lookCards() {
+		cardLook.running = true;
+	}
+
+	// A way that can't be now isn't one, and off is no way to work: the card's
+	// outputs would go, and with them the row to bring it back by.
+	function readCards(text) {
+		let all = [];
+		try {
+			all = JSON.parse(text || "[]");
+		} catch (error) {
+			return;
+		}
+		cards = all.filter(object => object.type === "PipeWire:Interface:Device" && object.info?.props?.["media.class"] === "Audio/Device").map(object => ({
+			id: object.id,
+			name: object.info.props["device.description"] || object.info.props["device.name"] || "",
+			profile: object.info.params?.Profile?.[0]?.index ?? -1,
+			profiles: (object.info.params?.EnumProfile ?? []).filter(profile => profile.available !== "no" && profile.name !== "off").map(profile => ({ index: profile.index, text: profile.description || profile.name }))
+		})).filter(card => card.profiles.length > 1);
+	}
+
+	// The way of `card.profiles` by that `index`, kept for the next time too.
+	function setProfile(card, index) {
+		Env.act(`card profile ${index}`, () => {
+			Quickshell.execDetached(["pw-cli", "set-param", String(card.id), "Profile", `{ index: ${index}, save: true }`]);
+			cardSoon.restart();
+		});
 	}
 
 	// sysfs says what it last saw: this doesn't wake a GPU that sleeps.
@@ -115,6 +153,23 @@ Singleton {
 	}
 
 	Component.onCompleted: checkScreens()
+
+	Process {
+		id: cardLook
+
+		command: [audio.dump]
+		stdout: StdioCollector {
+			onStreamFinished: audio.readCards(text)
+		}
+	}
+
+	// A card takes a moment to work another way.
+	Timer {
+		id: cardSoon
+
+		interval: 700
+		onTriggered: audio.lookCards()
+	}
 
 	Process {
 		id: screenCheck

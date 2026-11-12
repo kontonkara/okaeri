@@ -189,7 +189,7 @@ Panel {
 			NumberAnimation {
 				property: "opacity"
 				to: 0
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -199,7 +199,7 @@ Panel {
 
 			NumberAnimation {
 				property: "y"
-				duration: 160
+				duration: Theme.ms(160)
 				easing.type: Easing.OutCubic
 			}
 		}

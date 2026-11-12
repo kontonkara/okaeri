@@ -1,6 +1,7 @@
 # The user's commands for when things happen: what would run shows as dry lines
 # in the log, by what happened. The battery is a probe's here, a file only this
-# test has, put into the shell's copy.
+# test has, put into the shell's copy. Then the colors in other apps' files, as
+# templates have them.
 
 fail() {
 	echo "hooks: $1" >&2
@@ -76,5 +77,70 @@ sleep 0.6
 # And another wallpaper.
 settings "{ \"hooks\": { \"wallpaper\": \"true\" }, \"wallpaper\": { \"path\": \"$work/a.png\" } }"
 once_more wallpaper 0
+
+# Until the file $1 has the line $2, or fails after 5 s.
+has() {
+	for _ in $(seq 50); do
+		grep -qxF -- "$2" "$1" 2>/dev/null && return 0
+		sleep 0.1
+	done
+	fail "no \"$2\" in ${1##*/}, which has: $(cat "$1" 2>/dev/null || echo nothing)"
+}
+
+# The colors into other apps' files. One in the shell's own folder is written,
+# in a folder that isn't there yet; one elsewhere only would be, as that's a
+# change to the machine; and each that comes with the shell goes by its name.
+cat >"$work/colors.tpl" <<'TPL'
+bg={{background}} fg={{text.strip}} red={{error.rgb}} {{mode}} {{nothing}} {{text.other}}
+TPL
+written=$XDG_STATE_HOME/okaeri/test/colors.conf
+shipped=$XDG_STATE_HOME/okaeri/test/shipped
+templates="{ \"from\": \"$work/colors.tpl\", \"to\": \"$written\" }, { \"from\": \"$work/colors.tpl\", \"to\": \"$work/elsewhere.conf\" }"
+for template in "$work"/shell/templates/*; do
+	templates="$templates, { \"from\": \"${template##*/}\", \"to\": \"$shipped/${template##*/}\" }"
+done
+settings "{ \"hooks\": { \"templates\": [$templates] } }"
+# Under nord, which is dark.
+has "$written" 'bg=#2e3440 fg=eceff4 red=191, 97, 106 dark {{nothing}} {{text.other}}'
+wait_log 'okaeri: dry: template 2'
+[ ! -e "$work/elsewhere.conf" ] || fail "a file outside the shell's own was written in a dry run"
+for template in "$work"/shell/templates/*; do
+	for _ in $(seq 50); do
+		[ -s "$shipped/${template##*/}" ] && break
+		sleep 0.1
+	done
+	[ -s "$shipped/${template##*/}" ] || fail "nothing written of ${template##*/}"
+	! grep -q '{{' "$shipped/${template##*/}" || fail "${template##*/} has what isn't a color: $(grep '{{' "$shipped/${template##*/}")"
+done
+has "$shipped/kitty.conf" 'background #2e3440'
+
+# A light palette: the files follow, once its colors have all come.
+printf '{ "extends": "catppuccin-latte" }\n' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+has "$written" 'bg=#eff1f5 fg=4c4f69 red=210, 15, 57 light {{nothing}} {{text.other}}'
+has "$shipped/foot.ini" 'background=eff1f5'
+
+# A color a template doesn't have leaves its file as it was, not written again.
+before=$(stat -c %y "$written")
+printf '{ "extends": "catppuccin-latte", "colors": { "accent": "#123456" } }\n' >"$XDG_CONFIG_HOME/okaeri/theme.json"
+has "$shipped/kitty.conf" 'cursor #123456'
+[ "$(stat -c %y "$written")" = "$before" ] || fail "a file was written again with nothing new in it"
+
+# A template that changes is written again.
+printf 'mode={{mode}}\n' >"$work/colors.tpl"
+has "$written" 'mode=light'
+
+# At a start a file that isn't as its template has it is written anew, and one
+# that is stays as it was.
+printf 'by hand\n' >"$written"
+before=$(stat -c %y "$shipped/kitty.conf")
+reloads=$(log | grep -c 'Reloading configuration' || true)
+echo >>"$work/shell/hooks/Templates.qml"
+for _ in $(seq 50); do
+	[ "$(log | grep -c 'Reloading configuration' || true)" -gt "$reloads" ] && break
+	sleep 0.1
+done
+[ "$(log | grep -c 'Reloading configuration' || true)" -gt "$reloads" ] || fail "the shell didn't reload"
+has "$written" 'mode=light'
+[ "$(stat -c %y "$shipped/kitty.conf")" = "$before" ] || fail "a start wrote a file that was as it should be"
 
 echo "hooks: all good" >&2

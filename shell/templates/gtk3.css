@@ -1,0 +1,38 @@
+/* okaeri's colors for GTK 3, written anew as they change, to
+   ~/.config/gtk-3.0/gtk.css: this is then all of that file. Apps take them as
+   they start, with the adw-gtk3 theme, which goes by libadwaita's names, or
+   with a theme that goes by GTK 3's own, further down. */
+
+@define-color accent_color {{accent}};
+@define-color accent_bg_color {{accent}};
+@define-color accent_fg_color {{background}};
+@define-color destructive_color {{error}};
+@define-color destructive_bg_color {{error}};
+@define-color destructive_fg_color {{background}};
+@define-color error_color {{error}};
+@define-color error_bg_color {{error}};
+@define-color error_fg_color {{background}};
+@define-color window_bg_color {{background}};
+@define-color window_fg_color {{text}};
+@define-color view_bg_color {{background}};
+@define-color view_fg_color {{text}};
+@define-color headerbar_bg_color {{surface}};
+@define-color headerbar_fg_color {{text}};
+@define-color headerbar_backdrop_color {{background}};
+@define-color sidebar_bg_color {{surface}};
+@define-color sidebar_fg_color {{text}};
+@define-color sidebar_backdrop_color {{background}};
+@define-color card_bg_color {{surface}};
+@define-color card_fg_color {{text}};
+@define-color dialog_bg_color {{surface}};
+@define-color dialog_fg_color {{text}};
+@define-color popover_bg_color {{surface}};
+@define-color popover_fg_color {{text}};
+
+@define-color theme_bg_color {{background}};
+@define-color theme_fg_color {{text}};
+@define-color theme_base_color {{background}};
+@define-color theme_text_color {{text}};
+@define-color theme_selected_bg_color {{accent}};
+@define-color theme_selected_fg_color {{background}};
+@define-color insensitive_fg_color {{dim}};

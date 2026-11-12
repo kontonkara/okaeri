@@ -112,6 +112,7 @@ package() {
 	wlsunset) echo wlsunset ;;
 	wf-recorder) echo wf-recorder ;;
 	slurp) echo slurp ;;
+	qrencode) echo qrencode ;;
 	sounds) echo sound-theme-freedesktop ;;
 	esac
 }
@@ -140,7 +141,7 @@ sounds_there() {
 	return 1
 }
 missing() {
-	for command in quickshell niri cliphist qalc wl-copy wtype notify-send pw-play wlsunset wf-recorder slurp; do
+	for command in quickshell niri cliphist qalc wl-copy wtype notify-send pw-play wlsunset wf-recorder slurp qrencode; do
 		has "$command" || echo "$command"
 	done
 	sounds_there || echo sounds

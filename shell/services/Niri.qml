@@ -18,6 +18,8 @@ Singleton {
 	readonly property var lastWindow: windows.find(w => w.id === lastFocused) ?? null
 	// What's showing the screen or a window, as niri has it.
 	property var casts: []
+	// Whether niri's overview is open.
+	property bool overview: false
 	// The keyboard layouts by name, and which is on.
 	property var layouts: []
 	property int layout: 0
@@ -155,6 +157,13 @@ window-rule {
 		act({ CloseWindow: { id } });
 	}
 
+	// To the workspace in focus, and the focus with it.
+	function bringWindow(id) {
+		const here = workspaces.find(w => w.is_focused);
+		if (here)
+			act({ MoveWindowToWorkspace: { window_id: id, reference: { Id: here.id }, focus: true } });
+	}
+
 	// To a window of the app that goes by one of `names`, if it has one.
 	function focusApp(names) {
 		const wanted = names.filter(name => !!name).map(name => name.toLowerCase());
@@ -215,6 +224,8 @@ window-rule {
 		} else if (event.CastStopped) {
 			casts = casts.filter(c => c.stream_id !== event.CastStopped.stream_id);
 		}
+		if (event.OverviewOpenedOrClosed)
+			overview = event.OverviewOpenedOrClosed.is_open;
 		if (event.WorkspaceActiveWindowChanged) {
 			const change = event.WorkspaceActiveWindowChanged;
 			workspaces = workspaces.map(w => w.id === change.workspace_id ? Object.assign({}, w, { active_window_id: change.active_window_id }) : w);

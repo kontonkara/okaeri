@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import qs
 import qs.services
 import qs.ui
@@ -40,9 +41,27 @@ BarButton {
 	Component.onCompleted: System.users += 1
 	Component.onDestruction: System.users -= 1
 
-	onClicked: {
+	onClicked: flip()
+
+	// On this bar's screen, not the one in focus: a click can come from another.
+	function flip() {
 		load.middle = Panels.middleOf(button);
-		load.toggle();
+		if (load.shown)
+			load.hide();
+		else
+			load.show(button.QsWindow.window.screen);
+	}
+
+	// `okaeri load toggle`, for a key.
+	Connections {
+		target: Panels
+
+		function onPartWanted(name, screen) {
+			if (name !== "load" || Panels.answered || (screen !== "" && screen !== button.QsWindow.window?.screen?.name))
+				return;
+			Panels.answered = true;
+			button.flip();
+		}
 	}
 
 	Panel {

@@ -110,14 +110,16 @@ watchers() {
 	done
 }
 
-# They're there, and wl-paste runs cliphist as it is: that's what keeps what a
-# password manager marks sensitive out.
+# They're there, and wl-paste runs cliphist as it is, through the sh that drops
+# what's copied while paused and execs it: that's what keeps what a password
+# manager marks sensitive out.
+paused=$XDG_RUNTIME_DIR/okaeri/clipboard-paused
 for _ in $(seq 50); do
 	[ "$(watchers | wc -l)" = 2 ] && break
 	sleep 0.1
 done
 for type in text image; do
-	watchers | grep -qF " --type $type --watch cliphist -db-path $db -max-items 750 -max-dedupe-search 750 store " ||
+	watchers | grep -F " --type $type --watch sh -c " | grep -qF " $paused cliphist -db-path $db -max-items 750 -max-dedupe-search 750 store " ||
 		fail "the $type watcher isn't what it should be: $(watchers)"
 done
 sleep 0.5
@@ -365,6 +367,52 @@ done
 sleep 0.5
 count_is 0
 copy 'after the restart' 'after the restart'
+
+# Paused by the call, nothing copied is kept, and the watchers go on: one
+# started again would keep what was copied last. The panel says so. Kept again
+# by the next call, what's copied then is there, and what came before isn't.
+mark
+ipc clipboard pause
+wait_new paused
+sleep 0.5
+[ -e "$paused" ] || fail "a pause left no file for the watchers"
+printf 'copied while paused' | wl-copy
+sleep 1
+entries | grep -qF 'copied while paused' && fail "what was copied while paused was kept"
+[ "$(watchers | wc -l)" = 2 ] || fail "the watchers went with the pause: $(watchers)"
+open_panel
+shot paused
+close_panel
+mark
+ipc clipboard resume
+wait_new 'kept again'
+sleep 0.5
+[ ! -e "$paused" ] || fail "the pause's file stayed"
+copy 'copied after the pause' 'copied after the pause'
+entries | grep -qF 'copied while paused' && fail "what was copied while paused came in after it"
+
+# With pictures off their watcher goes, and a picture copied isn't kept; on
+# again, it's back.
+printf '{ "clipboard": { "images": false } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 50); do
+	[ "$(watchers | wc -l)" = 1 ] && break
+	sleep 0.1
+done
+[ "$(watchers | wc -l)" = 1 ] || fail "the pictures' watcher stayed: $(watchers)"
+watchers | grep -qF ' --type text ' || fail "the text watcher went with the pictures': $(watchers)"
+magick -size 40x30 xc:'#123456' "$files/unkept.png"
+wl-copy --type image/png <"$files/unkept.png"
+sleep 1
+entries | grep -qF '40x30' && fail "a picture was kept with pictures off"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 50); do
+	[ "$(watchers | wc -l)" = 2 ] && break
+	sleep 0.1
+done
+[ "$(watchers | wc -l)" = 2 ] || fail "the pictures' watcher didn't come back: $(watchers)"
+# A watcher starts by storing what's on the clipboard, the picture here: that
+# comes in now, and not among the rows filled next.
+wait_entry '40x30'
 
 # The trash in a lower row: the next row comes up under the pointer, a second
 # click takes that one, and the clipboard has nothing to do with it.
@@ -684,7 +732,7 @@ wait "$terminal" 2>/dev/null || true
 [ "$(cat "$files/typed")" = "$(printf 'pasted by shift\n\npasted by enter')" ] || fail "in the window: $(cat "$files/typed")"
 
 # Nothing that was copied is in the log, and no picture stayed.
-for text in hunter2 zebra 'He said' 'filler number' 'after the restart'; do
+for text in hunter2 zebra 'He said' 'filler number' 'after the restart' 'copied while paused'; do
 	log | grep -qF "$text" && fail "\"$text\" is in the log"
 done
 [ -z "$(find "$pictures" -type f 2>/dev/null)" ] || fail "a decoded picture stayed in $pictures"
