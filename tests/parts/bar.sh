@@ -1611,6 +1611,8 @@ wait_up 1
 sleep 2.5
 shot load-panel
 [ "$(magick "$out/load-panel.png" "$out/load-again.png" -compose difference -composite -crop 300x200+1000+60 +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "no panel under the load"
+# Under the processor, what keeps it busiest, by top.
+wait_log "okaeri: load: busiest"
 key Escape
 wait_up 0
 move 300 600

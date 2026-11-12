@@ -1,13 +1,18 @@
 import QtQuick
+import Quickshell.Io
 import qs
 import qs.services
 import qs.ui
 
 // What the machine is busy with, over the last while: the processor and how
-// warm it is, the memory and the swap, the network both ways, and how full the
-// disk is. It's read for as long as this shows, as for the bar.
+// warm it is, with what keeps it busiest now, the memory and the swap, the
+// network both ways, and how full the disk is. It's read for as long as this
+// shows, as for the bar.
 Column {
 	id: card
+
+	// { name, cpu }, the busiest first.
+	property var busiest: []
 
 	function gib(bytes) {
 		return (bytes / 1073741824).toFixed(1);
@@ -64,6 +69,81 @@ Column {
 			values: System.cpus
 			ink: System.temperature >= 85 ? Theme.colors.error : Theme.colors.accent
 		}
+	}
+
+	// What keeps the processor busiest now, by top's second look: its first is the
+	// time since each started.
+	Column {
+		width: parent.width
+		spacing: Theme.u(2)
+		visible: card.busiest.length > 0
+
+		Repeater {
+			model: card.busiest
+
+			Item {
+				required property var modelData
+
+				width: parent.width
+				height: Theme.u(18)
+
+				Text {
+					anchors.left: parent.left
+					anchors.leftMargin: Theme.u(4)
+					anchors.right: share.left
+					anchors.rightMargin: Theme.u(8)
+					anchors.verticalCenter: parent.verticalCenter
+					text: parent.modelData.name
+					textFormat: Text.PlainText
+					elide: Text.ElideRight
+					color: Theme.colors.subtext
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+				}
+
+				Text {
+					id: share
+
+					anchors.right: parent.right
+					anchors.rightMargin: Theme.u(4)
+					anchors.verticalCenter: parent.verticalCenter
+					text: `${Math.round(parent.modelData.cpu)}%`
+					color: Theme.colors.subtext
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+					font.features: {
+						"tnum": 1
+					}
+				}
+			}
+		}
+	}
+
+	Process {
+		id: looking
+
+		running: true
+		command: ["sh", "-c", 'top -b -n 2 -d 1 -o %CPU -w 512 2>/dev/null | awk \'/^ *PID/ { block++; next } block == 2 && NF >= 12 && count < 5 { sub(",", ".", $9); if ($9 + 0 >= 1) { print $9 "\t" $12; count++ } }\'']
+
+		stdout: StdioCollector {
+			onStreamFinished: {
+				card.busiest = text.split("\n").filter(line => line.includes("\t")).map(line => ({ cpu: Number(line.split("\t")[0]), name: line.split("\t")[1] }));
+				// For tests: how many, and never which.
+				console.info("okaeri: load: busiest", card.busiest.length);
+			}
+		}
+
+		onRunningChanged: {
+			if (!running)
+				again.restart();
+		}
+	}
+
+	Timer {
+		id: again
+
+		interval: 2000
+		onTriggered: looking.running = true
 	}
 
 	Column {
