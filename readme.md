@@ -170,6 +170,10 @@ yours can run when the charger goes in or comes out, the battery gets low, the
 colors change or another wallpaper goes up, with what that's about in their
 environment: they're `hooks` in the settings, and on the Session page.
 
+A right click on an entry of the clipboard's history, or Right, shows it whole,
+to copy or paste it, open the link in it, or save the picture, to `saveTo` in
+the clipboard's settings or Pictures.
+
 Other apps can have the shell's colors too, as matugen and pywal give them out:
 a template is written to a file of the app's as the colors change, from light to
 dark and back as well, and again as the template itself changes. In a template

@@ -731,6 +731,56 @@ kill "$terminal"
 wait "$terminal" 2>/dev/null || true
 [ "$(cat "$files/typed")" = "$(printf 'pasted by shift\n\npasted by enter')" ] || fail "in the window: $(cat "$files/typed")"
 
+# An entry whole, by Right on its row, past the pins: its link opens, Escape
+# goes back to the list and not out, and Enter copies all of it, past what the
+# row shows.
+printf 'the first line\nsee https://example.org/page, for more\n%0300d\n' 0 >"$files/long"
+wl-copy <"$files/long"
+wait_entry 'the first line'
+open_panel
+type 'the first line'
+key Down
+key Right
+sleep 0.5
+shot look-text
+mark
+wtype -M ctrl -k o -m ctrl
+for _ in $(seq 30); do
+	log | tail -n "+$((seen + 1))" | grep -qF 'dry: clipboard open link' && break
+	sleep 0.1
+done
+log | tail -n "+$((seen + 1))" | grep -qF 'dry: clipboard open link' || fail "the link didn't open"
+key Escape
+sleep 0.4
+is_open || fail "Escape on an entry closed the panel"
+shot look-back
+[ "$(apart look-text look-back 1400x900+0+0)" != 0 ] || fail "Escape didn't go back to the list"
+key Right
+sleep 0.5
+key Return
+wait_closed
+pasted_is "$files/long"
+# A picture's is saved, where the settings say, as it was copied.
+magick -size 40x30 xc:orange "$files/saved.png"
+cliphist -db-path "$db" store <"$files/saved.png"
+printf '{ "clipboard": { "saveTo": "%s" } }\n' "$files/kept" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+open_panel
+type '40x30'
+key Down
+key Right
+sleep 0.5
+shot look-picture
+mark
+wtype -M ctrl -k s -m ctrl
+wait_new "saved $files/kept/Clipboard "
+cmp "$(ls "$files"/kept/Clipboard*.png)" "$files/saved.png" || fail "the picture saved isn't the one copied"
+key Escape
+sleep 0.3
+close_panel
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.3
+
 # Nothing that was copied is in the log, and no picture stayed.
 for text in hunter2 zebra 'He said' 'filler number' 'after the restart' 'copied while paused'; do
 	log | grep -qF "$text" && fail "\"$text\" is in the log"

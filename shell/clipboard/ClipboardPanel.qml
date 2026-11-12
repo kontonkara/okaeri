@@ -8,7 +8,8 @@ import qs.ui
 // entry back and closes, with Shift pastes it too, or the other way round by the
 // settings, Ctrl+P pins it, Delete removes it, Ctrl+T leaves only text and Ctrl+I
 // only pictures, as the two buttons do, and typing goes to the filter, where
-// Delete is the text's again until Down. The button before those pauses the
+// Delete is the text's again until Down. Right or a right click shows the entry
+// whole, with what can be done with it. The button before those pauses the
 // history, and plays it on.
 Panel {
 	id: panel
@@ -17,6 +18,8 @@ Panel {
 	readonly property int cap: Settings.clipboard.rows
 	// Only "text" or only "picture", "" for both.
 	property string kind: ""
+	// The entry shown whole, in the list's place, null for the list.
+	property var looked: null
 	readonly property var matches: {
 		const wanted = filter.text.toLowerCase();
 		return Clipboard.shown.filter(entry => (!kind || !!entry.picture === (kind === "picture")) && `${entry.text} ${entry.subtext || ""}`.toLowerCase().includes(wanted));
@@ -35,6 +38,16 @@ Panel {
 		panel.hide();
 	}
 
+	function look(entry) {
+		looked = entry;
+	}
+
+	// Back to the list, at the row it was on.
+	function unlook() {
+		looked = null;
+		list.forceActiveFocus();
+	}
+
 	// On the row that has the keys, from the filter too.
 	function pinKey(event) {
 		if (!(event.modifiers & Qt.ControlModifier))
@@ -51,6 +64,12 @@ Panel {
 	}
 
 	align: Settings.corner("clipboard")
+	escapes: () => {
+		if (!looked)
+			return false;
+		unlook();
+		return true;
+	}
 
 	// For tests: how many, and never what.
 	onSummaryChanged: console.info("okaeri: clipboard:", summary)
@@ -58,6 +77,7 @@ Panel {
 	// At the newest row, wherever it was left, and with no idea of the pointer.
 	onPanelOpened: {
 		filter.text = "";
+		looked = null;
 		kind = "";
 		list.pointer = null;
 		list.currentIndex = list.count ? 0 : -1;
@@ -138,9 +158,29 @@ Panel {
 		font.pixelSize: Theme.fontSize - Theme.u(2)
 	}
 
+	Loader {
+		width: parent.width
+		active: !!panel.looked
+		visible: active
+
+		sourceComponent: ClipboardLook {
+			entry: panel.looked
+			room: panel.listRoom
+			focus: true
+			Component.onCompleted: forceActiveFocus()
+			onBack: panel.unlook()
+			onPicked: paste => panel.pick(panel.looked, paste !== Settings.clipboard.paste)
+			onRemoved: {
+				Clipboard.remove(panel.looked);
+				panel.unlook();
+			}
+		}
+	}
+
 	Item {
 		width: parent.width
 		height: list.count ? list.height : Theme.u(72)
+		visible: !panel.looked
 
 		Keys.onPressed: event => {
 			panel.pinKey(event);
@@ -163,6 +203,11 @@ Panel {
 			// contentHeight, which follows the height.
 			function heightOf(entry) {
 				return entry.picture ? Theme.u(52) : rowHeight;
+			}
+
+			function lookAt(index) {
+				if (usable(index))
+					panel.look(model[index]);
 			}
 
 			function togglePin(index) {
@@ -206,6 +251,7 @@ Panel {
 					filter.take();
 			}
 			Keys.onDeletePressed: removeRow(currentIndex)
+			Keys.onRightPressed: lookAt(currentIndex)
 		}
 
 		Text {

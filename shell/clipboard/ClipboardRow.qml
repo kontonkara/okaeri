@@ -83,10 +83,15 @@ Item {
 		anchors.fill: parent
 		hoverEnabled: true
 		cursorShape: Qt.PointingHandCursor
+		acceptedButtons: Qt.LeftButton | Qt.RightButton
 		// Only when it moved: a row that comes to a resting pointer isn't picked,
 		// and neither is the one a panel opened under it.
 		onPositionChanged: event => row.list.follow(row.index, mapToItem(null, event.x, event.y))
 		onClicked: event => {
+			if (event.button === Qt.RightButton) {
+				row.list.lookAt(row.index);
+				return;
+			}
 			row.list.shiftHeld = !!(event.modifiers & Qt.ShiftModifier);
 			row.list.activate(row.index);
 			row.list.shiftHeld = false;

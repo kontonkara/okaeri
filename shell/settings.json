@@ -41,7 +41,8 @@
 		"images": true,
 		"paste": false,
 		"rows": 100,
-		"keep": 750
+		"keep": 750,
+		"saveTo": ""
 	},
 	"audio": {
 		"step": 5,
