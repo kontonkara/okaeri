@@ -1,12 +1,14 @@
 import QtQuick
 import Quickshell.Networking
 import qs
+import qs.services
 import qs.ui
 
 // Wi-Fi: on or off, and the networks in reach. A click connects to a known or
 // an open one, and asks a secured one's password first. One that hides its name is
 // asked for by that, under the rest, and beside that the one it's on is shared
-// with a phone: its name, its password and the code for a phone's camera.
+// with a phone: its name, its password and the code for a phone's camera. A
+// network that asks to be signed in to has a button for that.
 Section {
 	id: section
 
@@ -89,9 +91,24 @@ Section {
 		}
 	}
 
+	// A network that asks to be signed in to first, in a page of its own: one with
+	// no https, which the network takes over to show that.
+	Button {
+		id: signIn
+
+		visible: !!Wifi.connected && Networking.connectivity === NetworkConnectivity.Portal
+		height: visible ? Theme.u(30) : 0
+		icon: "lock"
+		text: "Sign in to the network"
+		onClicked: {
+			Control.leave();
+			Env.act("wifi sign in", () => Qt.openUrlExternally("http://neverssl.com"));
+		}
+	}
+
 	Rows {
 		values: section.networks
-		room: section.roomInside - hidden.height - (shareCard.visible ? shareCard.height : 0)
+		room: section.roomInside - hidden.height - (shareCard.visible ? shareCard.height : 0) - signIn.height
 		empty: "Looking for networks..."
 		onActivated: (index, network) => section.pick(network)
 
