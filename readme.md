@@ -132,6 +132,10 @@ keeping it and closing it. Its icons grow under the pointer, an app hops as it
 starts and while it asks to be looked at, and it can have a button for the
 launcher, and stay in sight on an empty workspace where it hides.
 
+A click on a workspace that wants attention goes to the window that does, an
+app's icon on a workspace dragged onto another takes its window there, and the
+title of the window in focus has its app's icon.
+
 The month under the clock has the events of calendars of yours in it, `calendars`
 in the clock's settings and on the Bar page: `.ics` files, read again as they
 change, and addresses that give one, as a calendar's secret address in iCal

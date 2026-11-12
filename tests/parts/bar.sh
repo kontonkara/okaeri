@@ -1013,8 +1013,22 @@ niri msg action unset-window-urgent --id "$window"
 sleep 0.4
 shot pills-over
 same "after the attention" "$(color pills-over)" "$(color pills-calm)"
-kill "$wanting"
-wait "$wanting" 2>/dev/null || true
+# A click on it goes to the window that wants attention, not to the one the
+# workspace last showed.
+niri msg action focus-workspace 1
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --config NONE -o confirm_os_window_close=0 sleep 20 &
+other=$!
+sleep 1.5
+niri msg action focus-workspace 2
+niri msg action set-window-urgent --id "$window"
+sleep 0.4
+move 24 16
+click
+sleep 0.5
+same "a click on the urgent workspace" "$(niri msg --json focused-window | jq .id)" "$window"
+niri msg action unset-window-urgent --id "$window"
+kill "$wanting" "$other"
+wait "$wanting" "$other" 2>/dev/null || true
 niri msg action focus-workspace 1
 sleep 0.4
 
@@ -1410,6 +1424,23 @@ move 51 21
 click
 sleep 0.5
 same "a click on the second icon" "$(app_in_focus)" okaeri-unknown
+# Its icon dragged onto the third pill takes the window there, and the focus
+# stays.
+niri msg action focus-workspace 2
+move 300 600
+sleep 0.5
+move 51 21
+hold
+wlrctl pointer move 12 0
+sleep 0.1
+wlrctl pointer move 52 -5
+sleep 0.3
+shot pills-dragging
+let_go
+sleep 0.5
+third=$(niri msg --json workspaces | jq '.[] | select(.idx == 3) | .id')
+same "the window dragged to the third" "$(niri msg --json windows | jq '.[] | select(.app_id == "okaeri-unknown") | .workspace_id')" "$third"
+same "the workspace in focus after a drag" "$(focused)" 2
 kill "$unknown"
 wait "$unknown" 2>/dev/null || true
 niri msg action focus-workspace 2

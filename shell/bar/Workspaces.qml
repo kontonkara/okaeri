@@ -9,8 +9,10 @@ import qs.ui
 // one with a window wanting attention stands out. As Settings.workspaces has it,
 // those with windows look apart from the empty ones, which can be left out, and a
 // pill says its number or name, and has the icons of the apps on it: a click on
-// one of those goes to its window. The pointer on one says what it shows. On a
-// bar at a side they stand one under another, each as tall as it was long.
+// one of those goes to its window, and dragged onto another pill it goes to that
+// workspace. A click on one that wants attention goes to the window that does. The
+// pointer on one says what it shows. On a bar at a side they stand one under
+// another, each as tall as it was long.
 Grid {
 	id: workspaces
 
@@ -22,6 +24,10 @@ Grid {
 	// As many icons to a pill, and a count of the rest.
 	readonly property int most: 4
 	property int wheel: 0
+	// The window whose icon is dragged to another workspace, and the workspace it's
+	// over.
+	property var dragging: undefined
+	property var over: null
 
 	// By `delta` of the wheel, 120 to a notch, up being the one before.
 	function turn(delta) {
@@ -31,6 +37,11 @@ Grid {
 			return;
 		wheel -= steps * 120;
 		Niri.turn(shown, own.reverse ? -steps : steps);
+	}
+
+	// The workspace whose pill is at `point`, null between them.
+	function pillAt(point) {
+		return childAt(point.x, point.y)?.modelData ?? null;
 	}
 
 	// The apps with windows on `workspace`, by name, from its left, once each.
@@ -90,6 +101,8 @@ Grid {
 			width: workspaces.upright ? across : along
 			height: workspaces.upright ? along : across
 			radius: Theme.round(across)
+			border.width: workspaces.over?.id === modelData.id && workspaces.dragging !== undefined ? Theme.u(2) : 0
+			border.color: Theme.colors.text
 			// With those with windows marked, the empty ones fade, in case the
 			// accent is pale too. One with icons is a place for them.
 			color: modelData.is_active ? Theme.colors.accent
@@ -179,13 +192,53 @@ Grid {
 				anchors.rightMargin: anchors.leftMargin
 				anchors.topMargin: workspaces.upright ? -Theme.u(3) : -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
 				anchors.bottomMargin: anchors.topMargin
-				hoverEnabled: true
-				cursorShape: Qt.PointingHandCursor
-				onClicked: event => {
-					// On an app's icon it's that app's window.
-					const at = mapToItem(inside, event.x, event.y);
+				// The window of the icon pressed, and where: { window, x, y }.
+				property var held: null
+				property bool moved: false
+
+				// The window of the app whose icon is at `x`, `y`, if there's one.
+				function windowAt(x, y) {
+					const at = mapToItem(inside, x, y);
 					const app = inside.childAt(at.x, at.y)?.app;
-					const window = app === undefined ? undefined : workspaces.windowOf(pill.modelData, app);
+					return app === undefined ? undefined : workspaces.windowOf(pill.modelData, app);
+				}
+
+				hoverEnabled: true
+				cursorShape: workspaces.dragging !== undefined ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+				onPressed: event => {
+					const window = windowAt(event.x, event.y);
+					held = window === undefined ? null : { window, x: event.x, y: event.y };
+					moved = false;
+				}
+				onPositionChanged: event => {
+					if (!held)
+						return;
+					if (workspaces.dragging === undefined && Math.hypot(event.x - held.x, event.y - held.y) > Theme.u(8))
+						workspaces.dragging = held.window;
+					if (workspaces.dragging !== undefined)
+						workspaces.over = workspaces.pillAt(mapToItem(workspaces, event.x, event.y));
+				}
+				onReleased: {
+					if (workspaces.dragging !== undefined) {
+						if (workspaces.over && workspaces.over.id !== pill.modelData.id)
+							Niri.moveWindow(workspaces.dragging, workspaces.over.id);
+						moved = true;
+					}
+					workspaces.dragging = undefined;
+					workspaces.over = null;
+					held = null;
+				}
+				onCanceled: {
+					workspaces.dragging = undefined;
+					workspaces.over = null;
+					held = null;
+				}
+				onClicked: event => {
+					if (moved)
+						return;
+					// On an app's icon it's that app's window, and on a workspace that
+					// wants attention, the window that does.
+					const window = windowAt(event.x, event.y) ?? (pill.modelData.is_urgent ? Niri.windowsOn(pill.modelData).find(one => one.is_urgent)?.id : undefined);
 					if (window !== undefined)
 						Niri.focusWindow(window);
 					else
