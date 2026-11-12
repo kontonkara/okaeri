@@ -5,11 +5,13 @@ import qs
 import qs.launcher
 import qs.services
 
-// The dock, on every screen while Settings.dock.on: the apps it keeps,
-// Settings.dock.pinned by their ids, and after them the others that have
-// windows, in the order they came. A click on one goes to its window, to the
-// next of them if it has the focus already, or launches it; the middle button
-// launches it anew; the right one keeps it on the dock, or lets it go.
+// The dock, on every screen while Settings.dock.on, but for those
+// Settings.dock.hideOn names: the apps it keeps, Settings.dock.pinned by their
+// ids, and after them the others that have windows, in the order they came. A
+// click on one goes to its window, to the next of them if it has the focus
+// already, or launches it, and the wheel goes through its windows; the middle
+// button launches it anew; the right one opens its menu; and one that's kept
+// goes where it's dragged among those.
 Scope {
 	id: docks
 
@@ -28,19 +30,28 @@ Scope {
 		return kept.concat(others.sort((a, b) => a.windows[0].id - b.windows[0].id));
 	}
 
-	function activate(app) {
+	// To the window `by` on from the one in focus, the first if none is, or the
+	// app itself if it has none.
+	function activate(app, by) {
 		if (app.windows.length === 0) {
 			if (app.entry)
 				Apps.launch(app.entry);
 			return;
 		}
+		const count = app.windows.length;
 		const focused = app.windows.findIndex(window => window.is_focused);
-		Niri.focusWindow(app.windows[(focused + 1) % app.windows.length].id);
+		Niri.focusWindow(app.windows[(((focused < 0 ? (by > 0 ? -1 : 0) : focused) + by) % count + count) % count].id);
 	}
 
-	function pin(id, wanted) {
+	// Past the next of those kept that are on the dock, `by` 1, or the one before.
+	function move(id, by) {
+		const shown = apps.map(app => app.id).filter(other => own.pinned.includes(other));
+		const beside = shown[shown.indexOf(id) + by];
+		if (!shown.includes(id) || !beside)
+			return;
 		const rest = own.pinned.filter(other => other !== id);
-		Settings.set("dock", "pinned", wanted ? rest.concat([id]) : rest);
+		rest.splice(rest.indexOf(beside) + (by > 0 ? 1 : 0), 0, id);
+		Settings.set("dock", "pinned", rest);
 	}
 
 	IpcHandler {
@@ -52,13 +63,24 @@ Scope {
 	}
 
 	Variants {
-		model: docks.own.on ? Quickshell.screens : []
+		model: docks.own.on ? Quickshell.screens.filter(screen => !docks.own.hideOn.includes(screen.name)) : []
 
 		Dock {
+			id: one
+
 			apps: docks.apps
-			onActivated: app => docks.activate(app)
+			held: menu.shown && menu.screen === modelData
+			onActivated: app => docks.activate(app, 1)
+			onTurned: (app, by) => docks.activate(app, by)
 			onStarted: app => Apps.launch(app.entry)
-			onPinned: (app, wanted) => docks.pin(app.id, wanted)
+			onAsked: (app, along) => menu.showFor(app.id, one, along)
+			onMoved: (app, by) => docks.move(app.id, by)
 		}
+	}
+
+	DockMenu {
+		id: menu
+
+		apps: docks.apps
 	}
 }

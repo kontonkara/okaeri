@@ -5,8 +5,9 @@ import qs.ui
 
 // The clipboard's history. The list has the keys: Enter or a click puts an
 // entry back and closes, with Shift pastes it too, or the other way round by the
-// settings, Ctrl+P pins it, Delete removes it, and typing goes to the filter,
-// where Delete is the text's again until Down.
+// settings, Ctrl+P pins it, Delete removes it, Ctrl+T leaves only text and Ctrl+I
+// only pictures, as the two buttons do, and typing goes to the filter, where
+// Delete is the text's again until Down.
 Panel {
 	id: panel
 
@@ -34,10 +35,17 @@ Panel {
 
 	// On the row that has the keys, from the filter too.
 	function pinKey(event) {
-		if (event.key === Qt.Key_P && event.modifiers & Qt.ControlModifier) {
+		if (!(event.modifiers & Qt.ControlModifier))
+			return;
+		if (event.key === Qt.Key_P)
 			list.togglePin(list.currentIndex);
-			event.accepted = true;
-		}
+		else if (event.key === Qt.Key_T)
+			kind = kind === "text" ? "" : "text";
+		else if (event.key === Qt.Key_I)
+			kind = kind === "picture" ? "" : "picture";
+		else
+			return;
+		event.accepted = true;
 	}
 
 	align: Settings.corner("clipboard")
@@ -96,11 +104,13 @@ Panel {
 		Kind {
 			icon: "text"
 			shows: "text"
+			tip: "Only text · Ctrl+T"
 		}
 
 		Kind {
 			icon: "image"
 			shows: "picture"
+			tip: "Only pictures · Ctrl+I"
 		}
 	}
 

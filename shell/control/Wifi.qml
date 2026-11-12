@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Networking
 import qs.services
 
@@ -70,10 +71,33 @@ Singleton {
 		Env.act("wifi connect with a key", () => network.connectWithPsk(key));
 	}
 
+	// The try at one that doesn't say its name: whether it's going on, the name, and
+	// why the last one failed, or "".
+	readonly property bool joining: join.running
+	property string joined: ""
+	property string joinFailure: ""
+
 	// One that doesn't say its name, by that name, with its password if it has one:
 	// nmcli asks NetworkManager, as there's no network to ask here.
 	function connectHidden(name, key) {
-		Env.act("wifi connect hidden", () => Quickshell.execDetached(["nmcli", "device", "wifi", "connect", name].concat(key ? ["password", key] : [], ["hidden", "yes"])));
+		joinFailure = "";
+		joined = name;
+		Env.act("wifi connect hidden", () => {
+			join.command = ["nmcli", "device", "wifi", "connect", name].concat(key ? ["password", key] : [], ["hidden", "yes"]);
+			join.running = true;
+		});
+	}
+
+	Process {
+		id: join
+
+		stderr: StdioCollector {
+			id: joinSaid
+		}
+		onExited: code => {
+			if (code !== 0)
+				wifi.joinFailure = joinSaid.text.trim().split("\n").pop().replace(/^Error: /, "") || "Couldn't connect";
+		}
 	}
 
 	function disconnect(network) {

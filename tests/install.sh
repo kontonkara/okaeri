@@ -89,7 +89,7 @@ echo '{}' >"$home/.config/okaeri/settings.json"
 run away sh "$dest/install.sh" uninstall
 [ ! -e "$dest" ] || fail "$dest is still there"
 [ ! -e "$home/.local/bin/okaeri" ] || fail "the link is still there"
-[ ! -e "$home/.local/state/okaeri" ] || fail "the shell's state is still there"
+[ -f "$home/.local/state/okaeri/settings.json" ] || fail "what the settings window changed went unasked"
 [ -f "$home/.config/okaeri/settings.json" ] || fail "the settings went unasked"
 cmp -s "$config" "$out/config-before.kdl" || fail "niri's config isn't as it was: $(diff "$out/config-before.kdl" "$config" | head -n 5)"
 [ ! -e "$config.before-okaeri" ] || fail "the copy of the config is still there"
@@ -119,6 +119,7 @@ echo '{}' >"$home/.config/okaeri/settings.json"
 answered asked-away sh "$dest/install.sh" uninstall
 cmp -s "$config" "$out/config-before.kdl" || fail "niri's config isn't as it was after a yes: $(diff "$out/config-before.kdl" "$config" | head -n 5)"
 [ ! -e "$home/.config/okaeri" ] || fail "the settings stayed after a yes"
+[ ! -e "$home/.local/state/okaeri" ] || fail "what the settings window changed stayed after a yes"
 
 step "What's missing, and how to get it"
 # A PATH with only what install.sh itself uses, and Quickshell.

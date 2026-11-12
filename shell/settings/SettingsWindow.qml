@@ -366,6 +366,8 @@ FloatingWindow {
 			focus: true
 
 			Keys.onEscapePressed: window.visible = false
+			// Typing looks for a line at once.
+			Component.onCompleted: search.take()
 
 			// A line on the page, by its text, the first there is.
 			function line(item, text) {
@@ -533,10 +535,24 @@ FloatingWindow {
 				atStart: true
 				pad: Theme.u(10)
 				flat: true
-				text: "Back to the config"
+				// All that was set here goes with it, so it asks first: a second click
+				// while it does.
+				text: sure.running ? "Drop all that's set here?" : "Back to the config"
+				ink: sure.running ? Theme.colors.error : Theme.colors.text
 				onClicked: {
+					if (!sure.running) {
+						sure.start();
+						return;
+					}
+					sure.stop();
 					Settings.reset();
 					Theme.reset();
+				}
+
+				Timer {
+					id: sure
+
+					interval: 4000
 				}
 			}
 

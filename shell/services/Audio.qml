@@ -38,6 +38,11 @@ Singleton {
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
 
+	// change() or changeMic() left the level where it was, at an end of it: the
+	// key that asked still gets an answer.
+	signal stayed
+	signal micStayed
+
 	// What comes out of a GPU's audio goes nowhere without a screen on that GPU, and
 	// one in use stays, for the list to say where the sound is.
 	function reaches(node) {
@@ -50,10 +55,15 @@ Singleton {
 		screenCheck.running = true;
 	}
 
-	// Up to the limit, or where something else put it past that.
+	// Up to the limit, or where something else put it past that. Up is to be
+	// heard: that takes the mute off.
 	function change(by) {
 		if (ready) {
 			const level = Math.max(0, Math.min(Math.max(limit, volume), volume + by));
+			if (by > 0 && muted)
+				Env.act("mute false", () => sink.audio.muted = false);
+			if (level === volume)
+				stayed();
 			Env.act(`volume ${level}`, () => sink.audio.volume = level);
 			if (Settings.sounds.volumeChange && !muted && level !== volume)
 				Sounds.play("audio-volume-change");
@@ -93,6 +103,8 @@ Singleton {
 	function changeMic(by) {
 		if (micReady) {
 			const level = Math.max(0, Math.min(1, micVolume + by));
+			if (level === micVolume)
+				micStayed();
 			Env.act(`mic volume ${level}`, () => source.audio.volume = level);
 		}
 	}

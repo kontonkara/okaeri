@@ -109,6 +109,7 @@ Column {
 			icon: "image"
 			placeholder: "Folder"
 			text: Settings.pictures
+			keeps: true
 			onAccepted: Settings.set("wallpaper", "folder", text.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
 		}
 

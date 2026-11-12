@@ -151,6 +151,10 @@ window-rule {
 		act({ FocusWindow: { id } });
 	}
 
+	function closeWindow(id) {
+		act({ CloseWindow: { id } });
+	}
+
 	// To a window of the app that goes by one of `names`, if it has one.
 	function focusApp(names) {
 		const wanted = names.filter(name => !!name).map(name => name.toLowerCase());
@@ -161,6 +165,10 @@ window-rule {
 
 	function nextLayout() {
 		act({ SwitchLayout: { layout: "Next" } });
+	}
+
+	function previousLayout() {
+		act({ SwitchLayout: { layout: "Prev" } });
 	}
 
 	function stopCast(session) {
@@ -190,6 +198,14 @@ window-rule {
 		} else if (event.WindowFocusChanged) {
 			const id = event.WindowFocusChanged.id;
 			windows = windows.map(w => Object.assign({}, w, { is_focused: w.id === id }));
+		} else if (event.WindowUrgencyChanged) {
+			const change = event.WindowUrgencyChanged;
+			windows = windows.map(w => w.id === change.id ? Object.assign({}, w, { is_urgent: change.urgent }) : w);
+		} else if (event.WindowLayoutsChanged) {
+			// Where each is in its workspace now: [[id, layout], ...].
+			const layouts = {};
+			event.WindowLayoutsChanged.changes.forEach(change => layouts[change[0]] = change[1]);
+			windows = windows.map(w => layouts[w.id] ? Object.assign({}, w, { layout: layouts[w.id] }) : w);
 		}
 		if (event.CastsChanged) {
 			casts = event.CastsChanged.casts;

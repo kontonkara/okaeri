@@ -60,8 +60,10 @@ binds {
 }
 ```
 
-`shell/keys/Keys.qml` has the rest of what binds can call. Without the `include`
-it all runs still, but blur only has the wallpaper to show and not the windows, the
+`okaeri commands` lists all that binds and scripts can call, as the running shell
+has it: `okaeri launcher open "/emoji "` opens the launcher at the emoji, and
+`okaeri dock toggle` shows the dock or puts it away. Without the `include` it all
+runs still, but blur only has the wallpaper to show and not the windows, the
 overview has no blurred wallpaper behind it, and screencasts show the notifications.
 
 ## Settings

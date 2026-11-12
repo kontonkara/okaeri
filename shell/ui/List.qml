@@ -45,6 +45,29 @@ ListView {
 		}
 	}
 
+	// As many rows on as it shows at once, or back, `by` 1 or -1, as far as there
+	// are any to pick.
+	function page(by) {
+		let to = currentIndex;
+		for (let index = currentIndex + by, left = Math.max(1, Math.floor(height / rowHeight) - 1); index >= 0 && index < count && left > 0; index += by) {
+			if (usable(index)) {
+				to = index;
+				left -= 1;
+			}
+		}
+		currentIndex = to;
+	}
+
+	// To the last row that can be picked, or with -1 the first.
+	function end(by) {
+		for (let index = by > 0 ? count - 1 : 0; index >= 0 && index < count; index -= by) {
+			if (usable(index)) {
+				currentIndex = index;
+				return;
+			}
+		}
+	}
+
 	function activate(index) {
 		if (usable(index))
 			activated(index, entry(index));
@@ -74,6 +97,14 @@ ListView {
 			move(1);
 		else if (event.key === Qt.Key_Up)
 			move(-1);
+		else if (event.key === Qt.Key_PageDown)
+			page(1);
+		else if (event.key === Qt.Key_PageUp)
+			page(-1);
+		else if (event.key === Qt.Key_Home)
+			end(-1);
+		else if (event.key === Qt.Key_End)
+			end(1);
 		else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
 			shiftHeld = !!(event.modifiers & Qt.ShiftModifier);
 			activate(currentIndex);

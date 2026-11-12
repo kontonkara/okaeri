@@ -307,8 +307,9 @@ Flickable {
 
 						TextField {
 							width: parent.width
-							placeholder: "Only when it says this, or /a pattern/, Enter to keep"
+							placeholder: "Only when it says this, or /a pattern/"
 							text: line.held.text ?? ""
+							keeps: true
 							onAccepted: page.change(line.modelData, "text", text || undefined)
 						}
 

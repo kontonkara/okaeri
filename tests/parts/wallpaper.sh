@@ -132,4 +132,33 @@ for _ in $(seq 30); do
 done
 [ "$(pixel color 700 600)" != 339966 ] || fail "any other of the folder is the same one"
 
+# By itself with `every`, and not before its time: that's counted from the last
+# one, kept in a file, so a day's picture comes on a machine that was off too.
+sleep 0.6
+shot settled
+last=$(pixel settled 700 600)
+printf '{ "wallpaper": { "path": "%s", "folder": "%s", "fade": 200, "every": 60 } }\n' "$work/pictures/a.png" "$work/pictures" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 1.5
+shot early
+[ "$(pixel early 700 600)" = "$last" ] || fail "another picture before its time"
+# The shell starts two hours after the last one, as on a machine that was off.
+kill "$qs_pid"
+wait "$qs_pid" 2>/dev/null || true
+echo "$((($(date +%s) - 7200) * 1000))" >"$XDG_STATE_HOME/okaeri/wallpaper-turned"
+quickshell -p "$work/shell" >>"$out/qs.log" 2>&1 &
+qs_pid=$!
+sleep 2
+for _ in $(seq 40); do
+	shot color
+	[ "$(pixel color 700 600)" != "$last" ] && break
+	sleep 0.1
+done
+[ "$(pixel color 700 600)" != "$last" ] || fail "no other picture two hours after the last, with one an hour"
+sleep 0.6
+shot turned
+case $(pixel turned 700 600) in
+336699 | 996633 | 339966) ;;
+*) fail "what came two hours after the last isn't a picture of the folder: $(pixel turned 700 600)" ;;
+esac
+
 echo "wallpaper: all good" >&2

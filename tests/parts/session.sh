@@ -62,7 +62,17 @@ rows="$rows logout reboot"
 ! can CanRebootToFirmwareSetup || rows="$rows firmware"
 rows="$rows poweroff"
 
-# Each row: nothing happens on picking it, and Enter doesn't wait.
+# The first row that waits, from the top: logging out.
+waits_at=$(($(echo "$rows" | tr ' ' '\n' | grep -n '^logout$' | cut -d: -f1) - 1))
+pick_waiting() {
+	for _ in $(seq "$waits_at"); do
+		key Down
+	done
+	key Return
+}
+
+# Each row: locking and suspending are done at once, and for the rest nothing
+# happens on picking it, and Enter doesn't wait.
 downs=0
 for row in $rows; do
 	open
@@ -71,10 +81,15 @@ for row in $rows; do
 		key Down
 	done
 	key Return
-	sleep 0.2
-	silent "$row didn't wait"
-	[ "$downs" != 0 ] || shot counting
-	key Return
+	case $row in
+	lock | suspend) ;;
+	*)
+		sleep 0.2
+		silent "$row didn't wait"
+		[ "$row" != logout ] || shot counting
+		key Return
+		;;
+	esac
 	said "session $row"
 	wait_gone "$row left it open"
 	downs=$((downs + 1))
@@ -82,7 +97,7 @@ done
 
 # Escape takes it back to the list, and the next one closes.
 open
-key Return
+pick_waiting
 key Escape
 up || fail "Escape on a countdown closed it"
 key Escape
@@ -91,7 +106,7 @@ silent "after Escape"
 
 # The buttons: Cancel, then Now.
 open
-key Return
+pick_waiting
 key Tab
 key Return
 up || fail "Cancel closed it"
@@ -100,19 +115,19 @@ key Return
 key Tab
 key Tab
 key Return
-said "session lock"
+said "session logout"
 wait_gone "Now left it open"
 
 # It runs out by itself.
 countdown 1
 open
-key Return
-said "session lock"
+pick_waiting
+said "session logout"
 wait_gone "the countdown left it open"
 
 # Closing it takes the action back.
 open
-key Return
+pick_waiting
 ipc session toggle
 wait_gone "toggle left it open"
 sleep 1.4

@@ -250,6 +250,9 @@ binds {
     XF86AudioPlay allow-when-locked=true { spawn "$okaeri" "media" "toggle"; }
     XF86AudioNext allow-when-locked=true { spawn "$okaeri" "media" "next"; }
     XF86AudioPrev allow-when-locked=true { spawn "$okaeri" "media" "previous"; }
+    XF86AudioStop allow-when-locked=true { spawn "$okaeri" "media" "stop"; }
+    XF86KbdBrightnessUp allow-when-locked=true { spawn "$okaeri" "keylight" "up" "10"; }
+    XF86KbdBrightnessDown allow-when-locked=true { spawn "$okaeri" "keylight" "down" "10"; }
 }
 KDL
 }
@@ -363,12 +366,16 @@ uninstall_okaeri() {
 	elif [ -e "$dest" ]; then
 		say "$dest isn't from install.sh: it stays."
 	fi
-	rm -rf "$state"
-	if [ -d "$settings" ]; then
-		if ask "Your settings too, $settings?" no; then
-			rm -rf "$settings"
+	# What the shell wrote for niri goes. What was set in its window, the apps
+	# kept and the clipboard's history are in $state, and are yours as much as
+	# the files in $settings.
+	rm -f "$state/niri.kdl"
+	rmdir "$state" 2>/dev/null || true
+	if [ -d "$settings" ] || [ -d "$state" ]; then
+		if ask "Your settings and the clipboard's history too, in $settings and $state?" no; then
+			rm -rf "$settings" "$state"
 		else
-			say "Your settings stay in $settings."
+			say "Your settings stay in $settings, and what the settings window changed and the clipboard kept in $state."
 		fi
 	fi
 	[ ! -e "$niri_config.before-okaeri" ] || rm "$niri_config.before-okaeri"

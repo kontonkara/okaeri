@@ -40,6 +40,7 @@ Scope {
 	// Another of the folder's for everyone: `by` along it, by name, round to the
 	// first again, or any other with 0. The folder is read for it first.
 	function turn(by) {
+		mark();
 		stepping = by;
 		wanted = true;
 		reading = true;
@@ -83,11 +84,55 @@ Scope {
 		}
 	}
 
+	// When another last went up, in milliseconds, kept in a file: one a day comes
+	// about on a machine that's off at night too.
+	property double turned: 0
+	property bool recalled: false
+
+	function mark() {
+		turned = Date.now();
+		turnedFile.setText(String(turned));
+	}
+
+	// Another one if it's time for it, at a start as well, and a look again when
+	// it will be: within a minute, as a sleep stops the count.
+	function due() {
+		waiter.stop();
+		if (!recalled || own.every <= 0)
+			return;
+		const left = turned + own.every * 60000 - Date.now();
+		if (turned === 0)
+			mark();
+		else if (left <= 0)
+			turn(own.random ? 0 : 1);
+		waiter.interval = Math.max(1000, Math.min(60000, turned + own.every * 60000 - Date.now()));
+		waiter.start();
+	}
+
+	readonly property int every: own.every
+
+	onEveryChanged: due()
+
 	Timer {
-		interval: Math.max(1, wallpaper.own.every) * 60000
-		running: wallpaper.own.every > 0
-		repeat: true
-		onTriggered: wallpaper.turn(wallpaper.own.random ? 0 : 1)
+		id: waiter
+
+		onTriggered: wallpaper.due()
+	}
+
+	FileView {
+		id: turnedFile
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/wallpaper-turned`
+		printErrors: false
+		onLoaded: {
+			wallpaper.turned = Number(text()) || 0;
+			wallpaper.recalled = true;
+			wallpaper.due();
+		}
+		onLoadFailed: {
+			wallpaper.recalled = true;
+			wallpaper.due();
+		}
 	}
 
 	IpcHandler {
@@ -208,8 +253,12 @@ Scope {
 				property string kind
 				readonly property int time: kind ? wallpaper.own.fade : 0
 
-				// What's under it is seen no more, and needn't take the memory.
-				onFinished: window.next.source = ""
+				// What's under it is seen no more, and needn't take the memory: unless
+				// that's the one after, asked for while this one came.
+				onFinished: {
+					if (window.next.source.toString() !== Settings.url(window.path))
+						window.next.source = "";
+				}
 
 				NumberAnimation {
 					target: window.shown

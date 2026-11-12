@@ -122,7 +122,7 @@ Flickable {
 			Text {
 				width: parent.width
 				wrapMode: Text.WordWrap
-				text: "Run when that happens, Enter to keep. What it's about is in the command's environment: OKAERI_CHARGE, OKAERI_LIGHT, OKAERI_PALETTE and OKAERI_COLOR_ACCENT with the other colors, OKAERI_WALLPAPER."
+				text: "Run when that happens. What it's about is in the command's environment: OKAERI_CHARGE, OKAERI_LIGHT, OKAERI_PALETTE and OKAERI_COLOR_ACCENT with the other colors, OKAERI_WALLPAPER."
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)

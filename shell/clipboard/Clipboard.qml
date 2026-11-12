@@ -27,8 +27,10 @@ Singleton {
 	// Those pinned, as that and { pinned, file }: the file has what was copied.
 	readonly property string pinFolder: database.replace(/[^/]*$/, "pins")
 	property var pins: []
-	// All there is to show: what's pinned first, and only there.
-	readonly property var shown: pins.concat(entries.filter(entry => !pins.some(pin => pin.text === entry.text && pin.subtext === entry.subtext)))
+	// All there is to show: what's pinned first, and only there. Text is the same
+	// thing where it reads the same; a picture only says its kind and size, as
+	// many do, so that goes by the entry it was pinned from.
+	readonly property var shown: pins.concat(entries.filter(entry => !pins.some(pin => pin.from === entry.id || (!entry.picture && !pin.picture && pin.text === entry.text))))
 	// How long the history gets, which goes to the watchers.
 	readonly property int keep: Settings.clipboard.keep
 	property bool started: false
@@ -36,6 +38,9 @@ Singleton {
 	property var chores: []
 	// Pictures of rows that went, for the sweeper.
 	property var discarded: []
+	// The pinned picture that was last put back, by id: the history gets it as a
+	// new entry, and the pin is that one's from then on.
+	property string awaited: ""
 
 	signal toggleRequested
 
@@ -75,6 +80,11 @@ Singleton {
 	// decodes goes there: an id is gone once the same thing was copied again.
 	// What it is, wl-copy tells from the bytes; the list's preview can be wrong.
 	function restore(entry) {
+		awaited = entry.pinned && entry.picture ? entry.id : "";
+		if (awaited) {
+			adopting.looks = 0;
+			adopting.restart();
+		}
 		if (entry.pinned)
 			run(["sh", "-c", 'wl-copy <"$1"', "sh", entry.file]);
 		else
@@ -97,8 +107,21 @@ Singleton {
 		if (pinner.running)
 			return;
 		const name = String(Date.now());
-		pinner.entry = { id: `pin-${name}`, text: entry.text, subtext: entry.subtext, picture: entry.picture, pinned: true, file: `${pinFolder}/${name}` };
+		pinner.entry = { id: `pin-${name}`, from: entry.id, text: entry.text, subtext: entry.subtext, picture: entry.picture, pinned: true, file: `${pinFolder}/${name}` };
 		pinner.exec(["sh", "-c", 'mkdir -p "${3%/*}" && cliphist -db-path "$1" decode "$2" >"$3"', "sh", database, entry.id, pinner.entry.file]);
+	}
+
+	// The history has `entries` where it had `before`: the oldest new picture that
+	// says of itself what the pinned one put back does is that one, and the pin
+	// has it from here on.
+	function adopt(entries, before) {
+		const pin = pins.find(other => other.id === awaited);
+		const found = pin ? entries.filter(entry => entry.picture && entry.subtext === pin.subtext && !before.some(other => other.id === entry.id)).pop() : null;
+		if (!found)
+			return;
+		awaited = "";
+		pins = pins.map(other => other === pin ? Object.assign({}, pin, { from: found.id }) : other);
+		savePins();
 	}
 
 	function savePins() {
@@ -189,8 +212,30 @@ Singleton {
 				return;
 			const entries = listing.text.split("\n").filter(line => /^\d+\t/.test(line)).map(clipboard.parse);
 			// The same list keeps its rows, and their previews.
-			if (JSON.stringify(entries) !== JSON.stringify(clipboard.entries))
-				clipboard.entries = entries;
+			if (JSON.stringify(entries) === JSON.stringify(clipboard.entries))
+				return;
+			clipboard.adopt(entries, clipboard.entries);
+			clipboard.entries = entries;
+		}
+	}
+
+	// The watcher stores what was put back a moment after: a few looks for it, and
+	// a picture that comes later is another.
+	Timer {
+		id: adopting
+
+		property int looks: 0
+
+		interval: 500
+		repeat: true
+		onTriggered: {
+			looks += 1;
+			if (clipboard.awaited === "" || looks > 4) {
+				clipboard.awaited = "";
+				stop();
+			} else {
+				clipboard.load();
+			}
 		}
 	}
 

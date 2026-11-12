@@ -5,8 +5,11 @@ import Quickshell
 import qs
 
 // The weather where Settings.weather puts you, from open-meteo.com, which asks
-// for no key: now, and the next few days. It asks every half hour while it's on,
-// and as the place or the units change. locate() finds a place by its name.
+// for no key: now, the hours ahead, and the next few days. It asks every half
+// hour while it's on, by the clock, so the first minute after a sleep too, and as
+// the place or the units change; an answer that didn't come is asked for again
+// in two minutes. locate() finds a
+// place by its name.
 Singleton {
 	id: weather
 
@@ -14,13 +17,24 @@ Singleton {
 	readonly property bool on: own.on && own.place !== ""
 	readonly property string api: Quickshell.env("OKAERI_WEATHER_URL") || "https://api.open-meteo.com"
 	readonly property string places: Quickshell.env("OKAERI_PLACES_URL") || "https://geocoding-api.open-meteo.com"
-	// { temperature, code, day }, or null before it's known.
+	// { temperature, code, day, feels, humidity, wind }, or null before it's known:
+	// the last three only if it said them.
 	property var current: null
+	// [{ time, code, temperature, rain, day }], from the hour after this one: `rain`
+	// is how likely any is, of a hundred.
+	property var hours: []
 	// [{ date, code, high, low }], today first.
 	property var days: []
 	// What went wrong the last time it asked, or "".
 	property string trouble: ""
+	// When it last asked, and when it last got an answer, in milliseconds.
+	property double tried: 0
+	property double known: 0
+	property double clock: Date.now()
+	// What it says is over an hour old: the time of it then, or "".
+	readonly property string asOf: current && clock - known > 60 * 60 * 1000 ? Qt.formatDateTime(new Date(known), Settings.clock.hours12 ? "h:mm AP" : "HH:mm") : ""
 	readonly property string unit: own.units === "fahrenheit" ? "°F" : "°C"
+	readonly property string speed: own.units === "fahrenheit" ? "mph" : "km/h"
 	// What it asks by: a change of any other setting doesn't ask again.
 	readonly property string query: on ? `${own.latitude},${own.longitude},${own.units}` : ""
 
@@ -47,21 +61,39 @@ Singleton {
 		request.send();
 	}
 
+	// A number it said, whole, or null for one it left out.
+	function whole(value) {
+		return typeof value === "number" ? Math.round(value) : null;
+	}
+
 	function fetch() {
 		if (!on)
 			return;
-		const url = `${api}/v1/forecast?latitude=${own.latitude}&longitude=${own.longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4${own.units === "fahrenheit" ? "&temperature_unit=fahrenheit" : ""}`;
+		tried = Date.now();
+		const url = `${api}/v1/forecast?latitude=${own.latitude}&longitude=${own.longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,relative_humidity_2m,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability,is_day&forecast_hours=13&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4${own.units === "fahrenheit" ? "&temperature_unit=fahrenheit&wind_speed_unit=mph" : ""}`;
 		get(url, (answer, why) => {
 			if (!answer?.current || !answer?.daily) {
 				trouble = why || "It said something else";
 				return;
 			}
 			trouble = "";
+			known = Date.now();
 			current = {
 				temperature: Math.round(answer.current.temperature_2m),
 				code: answer.current.weather_code,
-				day: answer.current.is_day === 1
+				day: answer.current.is_day === 1,
+				feels: whole(answer.current.apparent_temperature),
+				humidity: whole(answer.current.relative_humidity_2m),
+				wind: whole(answer.current.wind_speed_10m)
 			};
+			// The first is the hour that's on.
+			hours = (answer.hourly?.time ?? []).map((time, index) => ({
+				time: new Date(`${time}:00`),
+				code: answer.hourly.weather_code[index],
+				temperature: Math.round(answer.hourly.temperature_2m[index]),
+				rain: whole(answer.hourly.precipitation_probability?.[index]),
+				day: answer.hourly.is_day?.[index] !== 0
+			})).slice(1);
 			days = answer.daily.time.map((date, index) => ({
 				date: new Date(`${date}T12:00:00`),
 				code: answer.daily.weather_code[index],
@@ -123,14 +155,20 @@ Singleton {
 
 	onQueryChanged: {
 		current = null;
+		hours = [];
 		days = [];
 		fetch();
 	}
 
+	// By the clock: a timer of half an hour would stand still through a sleep.
 	Timer {
 		running: weather.on
-		interval: 30 * 60 * 1000
+		interval: 60 * 1000
 		repeat: true
-		onTriggered: weather.fetch()
+		onTriggered: {
+			weather.clock = Date.now();
+			if (weather.clock - weather.tried >= (weather.trouble ? 2 : 30) * 60 * 1000)
+				weather.fetch();
+		}
 	}
 }

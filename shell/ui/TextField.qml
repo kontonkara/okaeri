@@ -3,7 +3,9 @@ import qs
 
 // A line of text. `icon` goes in front of it; `secret` hides what's typed,
 // with an eye to show it. Enter is accepted(), and with `shifted` Shift+Enter
-// is shiftAccepted().
+// is shiftAccepted(). With `keeps`, as a setting's field has it, leaving it
+// with something else in it than it came with is accepted() too, and Escape
+// puts that back first; `wrong` marks what can't be kept.
 Rectangle {
 	id: field
 
@@ -13,6 +15,10 @@ Rectangle {
 	property bool secret: false
 	property bool revealed: false
 	property bool shifted: false
+	property bool keeps: false
+	property bool wrong: false
+	// What was in it as the keys came to it, or as it was last accepted.
+	property string cameWith
 
 	signal accepted
 	signal shiftAccepted
@@ -32,7 +38,7 @@ Rectangle {
 	radius: Theme.round(height)
 	color: Theme.surface
 	border.width: Math.max(1, Theme.u(input.activeFocus ? 2 : 1))
-	border.color: input.activeFocus ? Theme.colors.accent : Theme.border
+	border.color: wrong ? Theme.colors.error : input.activeFocus ? Theme.colors.accent : Theme.border
 	opacity: enabled ? 1 : 0.5
 
 	Row {
@@ -66,9 +72,25 @@ Rectangle {
 		selectedTextColor: Theme.colors.background
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize
-		onAccepted: field.accepted()
+		onAccepted: {
+			field.cameWith = text;
+			field.accepted();
+		}
+		onActiveFocusChanged: {
+			if (activeFocus) {
+				field.cameWith = text;
+			} else if (field.keeps && text !== field.cameWith) {
+				field.cameWith = text;
+				field.accepted();
+			}
+		}
 
 		Keys.onPressed: event => {
+			if (field.keeps && event.key === Qt.Key_Escape && text !== field.cameWith) {
+				text = field.cameWith;
+				event.accepted = true;
+				return;
+			}
 			if (field.shifted && event.modifiers & Qt.ShiftModifier && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
 				field.shiftAccepted();
 				event.accepted = true;

@@ -133,6 +133,30 @@ PanelWindow {
 		}
 	}
 
+	// A key at the end of what it changes moves nothing, and still gets its card.
+	Connections {
+		target: Audio
+
+		function onStayed() {
+			if (osd.wants("volume"))
+				osd.showVolume();
+		}
+
+		function onMicStayed() {
+			if (osd.wants("mic"))
+				osd.showMic();
+		}
+	}
+
+	Connections {
+		target: Brightness
+
+		function onStayed() {
+			if (osd.wants("brightness"))
+				osd.show("brightness", Brightness.level);
+		}
+	}
+
 	Watch {
 		value: KeyboardLight.level
 		ready: KeyboardLight.available

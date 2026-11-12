@@ -348,7 +348,7 @@ Flickable {
 
 					Field {
 						text: "What it's called"
-						subtext: tile.refused ? "A tile goes by that name" : "On the tile, Enter to keep"
+						subtext: tile.refused ? "A tile goes by that name" : "On the tile"
 						value: tile.modelData
 						onKept: value => tile.refused = !page.rename(tile.modelData, value)
 					}

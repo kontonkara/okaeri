@@ -596,7 +596,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: "In Qt's letters, Enter to keep: ddd d MMM is Sat 7 Nov"
+						text: "In Qt's letters: ddd d MMM is Sat 7 Nov"
 						color: Theme.colors.subtext
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -613,6 +613,7 @@ Flickable {
 					implicitHeight: Theme.u(32)
 					placeholder: "ddd d MMM"
 					text: Settings.clock.dateFormat
+					keeps: true
 					onAccepted: Settings.set("clock", "dateFormat", text.trim())
 				}
 			}
@@ -1064,7 +1065,7 @@ Flickable {
 
 					Field {
 						text: "Its command"
-						subtext: "For sh, Enter to keep"
+						subtext: "For sh"
 						placeholder: "date +%A"
 						value: script.own.command ?? ""
 						onKept: value => page.changeScript(script.modelData, "command", value)
