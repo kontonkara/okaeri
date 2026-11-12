@@ -59,5 +59,15 @@ Column {
 			checked: Settings.clipboard.images
 			onToggled: wanted => Settings.set("clipboard", "images", wanted)
 		}
+
+		Field {
+			holds: "clipboard.saveTo"
+			text: "Pictures saved to"
+			subtext: "From an entry's own view, by a right click on it"
+			placeholder: "~/Pictures"
+			fieldWidth: Theme.u(200)
+			value: Settings.clipboard.saveTo
+			onKept: value => Settings.set("clipboard", "saveTo", value.trim())
+		}
 	}
 }

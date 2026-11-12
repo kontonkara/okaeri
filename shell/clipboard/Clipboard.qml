@@ -35,6 +35,8 @@ Singleton {
 	readonly property int keep: Settings.clipboard.keep
 	// Whether pictures go into it too: without them their watcher doesn't run.
 	readonly property bool images: Settings.clipboard.images
+	// Where a picture of it is saved: Settings.clipboard.saveTo, or the Pictures folder.
+	readonly property string saveFolder: (Settings.clipboard.saveTo || "~/Pictures").replace(/^~(?=\/|$)/, Quickshell.env("HOME"))
 	// Nothing copied is kept while this is on, a password say, till it's off or
 	// the shell starts again. The watchers go on all the same and drop what comes
 	// while the file `pauseFile` is there: one that started again would store

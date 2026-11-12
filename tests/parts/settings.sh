@@ -791,6 +791,23 @@ sleep 0.8
 same "the page of a line on another leaf" "$(ipc settings shown)" Wallpaper
 shot search-leaf
 [ "$(magick "$out/search-leaf.png" -crop 400x20+520+429 +repage -format '%k' info:)" -gt 1 ] || fail "the wallpaper's page didn't turn to the line"
+# A line by its key, and by words of its own.
+search saveto
+key Return
+sleep 0.8
+same "the page of a line by its key" "$(ipc settings shown)" Clipboard
+same "a folder for pictures" "$(ipc settings set clipboard.saveTo '~/Shots')" ""
+sleep 0.4
+shot clipboard-marked
+# The dot of a line set here takes it back to the files.
+move 521 433
+click
+sleep 0.3
+same "a line's own back to the files" "$(value .clipboard.saveTo)" null
+search slideshow
+key Return
+sleep 0.8
+same "the page of a line by its words" "$(ipc settings shown)" Wallpaper
 # Escape empties the field first, and leaves the window there.
 search nothing-of-the-kind
 shot search-nothing
