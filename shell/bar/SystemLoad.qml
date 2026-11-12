@@ -7,7 +7,7 @@ import qs.ui
 // is and how fast the network goes, each as Settings.system says, in red when
 // it's hot. The pointer on it says it in full, with the swap and the disk, and a
 // click shows how each has gone over the last while.
-Button {
+BarButton {
 	id: button
 
 	readonly property var own: Settings.system
@@ -24,14 +24,9 @@ Button {
 		return (bytes / 1073741824).toFixed(1);
 	}
 
-	height: Theme.u(28)
 	visible: wanted
-	flat: true
-	pad: Theme.u(6)
-	iconSize: Theme.barIcon
-	activeFocusOnTab: false
 	icon: "chip"
-	text: parts.join("  ")
+	text: parts.join(stacked ? "\n" : "  ")
 	ink: hot ? Theme.colors.error : Theme.colors.text
 	tip: [
 		System.cpu >= 0 ? `Processor ${System.cpu}%` : "",

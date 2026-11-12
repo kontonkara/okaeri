@@ -5,7 +5,7 @@ import qs.ui
 
 // The laptop's battery, when there is one: always, on battery or when it's low,
 // as Settings.battery.show says, and beside it the percent, the time left or
-// nothing. The pointer on it says how it's doing.
+// nothing, under it on a bar at a side. The pointer on it says how it's doing.
 Item {
 	id: battery
 
@@ -24,13 +24,15 @@ Item {
 	visible: wanted
 
 	// The tip covers it all, and in a row it would be one of the things in it.
-	Row {
+	Grid {
 		id: row
 
-		spacing: Theme.u(6)
+		columns: Settings.barSide ? 1 : 1000
+		horizontalItemAlignment: Grid.AlignHCenter
+		verticalItemAlignment: Grid.AlignVCenter
+		spacing: Theme.u(Settings.barSide ? 3 : 6)
 
 		Icon {
-			anchors.verticalCenter: parent.verticalCenter
 			visible: battery.charging
 			name: "bolt"
 			size: Theme.u(13)
@@ -38,7 +40,6 @@ Item {
 		}
 
 		Item {
-			anchors.verticalCenter: parent.verticalCenter
 			width: Theme.u(24)
 			height: Theme.u(12)
 
@@ -75,12 +76,15 @@ Item {
 		}
 
 		Text {
-			anchors.verticalCenter: parent.verticalCenter
 			visible: battery.own.label !== "none"
-			text: battery.own.label === "time" && Power.timeLeft > 0 ? Power.clock(Power.timeLeft) : `${battery.level}%`
+			// An even width under the cell, which is one: on half a pixel the letters
+			// would smear.
+			width: Settings.barSide ? 2 * Math.ceil(implicitWidth / 2) : implicitWidth
+			horizontalAlignment: Text.AlignHCenter
+			text: battery.own.label === "time" && Power.timeLeft > 0 ? Power.clock(Power.timeLeft) : Settings.barSide ? `${battery.level}` : `${battery.level}%`
 			color: battery.tint
 			font.family: Theme.font
-			font.pixelSize: Theme.fontSize
+			font.pixelSize: Settings.barSide ? Theme.fontSize - Theme.u(4) : Theme.fontSize
 			font.weight: Theme.fontWeight
 			font.features: {
 				"tnum": 1

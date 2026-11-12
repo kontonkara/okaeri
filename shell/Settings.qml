@@ -93,17 +93,32 @@ Singleton {
 		return !screen || !bar.hideOn.includes(screen.name);
 	}
 
-	// Whether the bars are at the bottom of their screens.
-	readonly property bool barBelow: bar.position === "bottom"
+	// Where the bars are on their screens: "top", "bottom", "left" or "right".
+	readonly property string barAt: ["bottom", "left", "right"].includes(bar.position) ? bar.position : "top"
+	readonly property bool barBelow: barAt === "bottom"
+	// At a side, where it's narrow and its parts stand one over another.
+	readonly property bool barSide: barAt === "left" || barAt === "right"
 
-	// How far what opens on `screen` stays from its top, and from its bottom: clear
-	// of its bar on the side that has it, and off the edge on the other.
+	// How far what opens on `screen` stays from each of its edges: clear of its
+	// bar on the side that has it, and off the edge on the others.
+	function inset(screen, side) {
+		return barOn(screen) && barAt === side ? Theme.below : Theme.edge;
+	}
+
 	function top(screen) {
-		return barOn(screen) && !barBelow ? Theme.below : Theme.edge;
+		return inset(screen, "top");
 	}
 
 	function bottom(screen) {
-		return barOn(screen) && barBelow ? Theme.below : Theme.edge;
+		return inset(screen, "bottom");
+	}
+
+	function left(screen) {
+		return inset(screen, "left");
+	}
+
+	function right(screen) {
+		return inset(screen, "right");
 	}
 
 	// `path` as a URL, with what would mean something else in one kept as a name.

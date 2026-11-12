@@ -60,9 +60,9 @@ Flickable {
 		tray: "Tray"
 	})
 	readonly property var lanes: [
-		{ name: "left", text: "Left" },
+		{ name: "left", text: Settings.barSide ? "Top" : "Left" },
 		{ name: "center", text: "Middle" },
-		{ name: "right", text: "Right" },
+		{ name: "right", text: Settings.barSide ? "Bottom" : "Right" },
 		{ name: "off", text: "Not on the bar" }
 	]
 	readonly property var settled: {
@@ -485,10 +485,12 @@ Flickable {
 
 			Pick {
 				text: "It's at"
-				subtext: "And its panels with it"
+				subtext: Settings.barSide ? "Upright, its parts one under another" : "And its panels with it"
 				options: [
 					{ value: "top", text: "The top" },
-					{ value: "bottom", text: "The bottom" }
+					{ value: "bottom", text: "The bottom" },
+					{ value: "left", text: "The left" },
+					{ value: "right", text: "The right" }
 				]
 				value: Settings.bar.position
 				onChosen: value => Settings.set("bar", "position", value)

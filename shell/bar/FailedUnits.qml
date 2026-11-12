@@ -5,17 +5,12 @@ import qs.services
 import qs.ui
 
 // When systemd units failed: how many, and a click says which.
-Button {
+BarButton {
 	id: button
 
 	readonly property bool wanted: Units.failed.length > 0
 
-	height: Theme.u(28)
 	visible: wanted
-	flat: true
-	pad: Theme.u(6)
-	iconSize: Theme.barIcon
-	activeFocusOnTab: false
 	icon: "alert"
 	text: `${Units.failed.length}`
 	tip: Units.failed.length === 1 ? "A unit failed" : `${Units.failed.length} units failed`

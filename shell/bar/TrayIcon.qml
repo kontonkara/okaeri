@@ -7,7 +7,7 @@ import qs.ui
 // An app's icon. A click activates it, or opens its menu when that's all it
 // has; a right click opens the menu, in okaeri's look. `done` says the app got
 // the click.
-Button {
+BarButton {
 	id: entry
 
 	required property var modelData
@@ -15,9 +15,6 @@ Button {
 
 	signal done
 
-	height: Theme.u(28)
-	flat: true
-	activeFocusOnTab: false
 	takesWheel: true
 	tip: modelData.tooltipTitle || modelData.title || modelData.id
 	onClicked: {

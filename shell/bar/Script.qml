@@ -11,7 +11,7 @@ import qs.ui
 // "critical". The command runs every so many seconds, or once with `every` 0, and
 // then each line it prints, for as long as it runs, is the next thing to show.
 // With nothing to show the part isn't there.
-Button {
+BarButton {
 	id: part
 
 	required property string name
@@ -75,12 +75,8 @@ Button {
 			process.running = true;
 	}
 
-	height: Theme.u(28)
 	visible: wanted
-	flat: true
-	pad: Theme.u(6)
 	longest: Theme.u(240)
-	activeFocusOnTab: false
 	text: said
 	tip: hint
 	ink: critical ? Theme.colors.error : Theme.colors.text

@@ -4,11 +4,7 @@ import qs.clipboard
 import qs.ui
 
 // The clipboard history's button on the bar.
-Button {
-	height: Theme.u(28)
-	flat: true
-	iconSize: Theme.barIcon
-	activeFocusOnTab: false
+BarButton {
 	icon: "clipboard"
 	tip: "Clipboard"
 	onClicked: Clipboard.toggle()

@@ -8,6 +8,8 @@ import qs.ui
 // with less the date goes, and then the time, and the weather after it if
 // Settings.weather.bar says so. The pointer on it says the whole date, and a click
 // shows the month, under the weather if that's on and the time in other places.
+// On a bar at a side it's upright: the hours over the minutes, with the day and
+// the month over those or under them.
 Text {
 	id: time
 
@@ -16,12 +18,23 @@ Text {
 	readonly property string timeFormat: (own.hours12 ? "h:mm" : "HH:mm") + (own.seconds ? ":ss" : "") + (own.hours12 ? " AP" : "")
 	readonly property var formats: own.date === "none" || !own.dateFormat ? [timeFormat] : own.date === "after" ? [timeFormat, own.dateFormat] : [own.dateFormat, timeFormat]
 	readonly property string outside: Weather.on && Settings.weather.bar && Weather.current ? `  ${Weather.current.temperature}°` : ""
+	// On a bar at a side: a line for each part of the time, and the date in two
+	// more, as Settings.clock.date has it.
+	readonly property bool upright: Settings.barSide
+	readonly property string stood: {
+		const hours = Qt.formatDateTime(clock.date, own.hours12 ? "h AP" : "HH").split(" ");
+		const lines = [hours[0], Qt.formatDateTime(clock.date, "mm")].concat(own.seconds ? [Qt.formatDateTime(clock.date, "ss")] : [], hours.slice(1));
+		const date = [Qt.formatDateTime(clock.date, "d"), Qt.formatDateTime(clock.date, "MMM")];
+		return (own.date === "before" ? date.concat(lines) : own.date === "after" ? lines.concat(date) : lines).join("\n");
+	}
 
-	visible: width <= room
-	text: (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside
+	visible: upright || width <= room
+	text: upright ? stood : (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside
+	horizontalAlignment: Text.AlignHCenter
+	lineHeight: upright ? 0.95 : 1
 	color: Theme.colors.text
 	font.family: Theme.font
-	font.pixelSize: Theme.fontSize
+	font.pixelSize: upright ? Theme.fontSize - Theme.u(1) : Theme.fontSize
 	font.weight: Theme.fontWeight
 	font.features: {
 		"tnum": 1

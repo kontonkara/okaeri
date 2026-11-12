@@ -5,14 +5,9 @@ import qs.ui
 
 // Keeping awake, from the bar: lit while it's on, a click turns it on or off,
 // and the wheel on it gives it half an hour more or less.
-Button {
+BarButton {
 	readonly property bool wanted: true
 
-	height: Theme.u(28)
-	flat: true
-	pad: Theme.u(6)
-	iconSize: Theme.barIcon
-	activeFocusOnTab: false
 	takesWheel: true
 	icon: "coffee"
 	tip: !Awake.on ? "Keep awake" : Awake.label ? `Kept awake for ${Awake.label}` : "Kept awake"

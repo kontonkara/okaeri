@@ -59,7 +59,8 @@ PanelWindow {
 	readonly property real offset: Math.max(0, Math.min(Math.round(shift), (screen?.width ?? Infinity) - implicitWidth - Theme.edge))
 	margins.left: inMiddle ? Math.round(((screen?.width ?? 0) - implicitWidth) / 2) : atLeft ? offset : 0
 	margins.right: atLeft || inMiddle ? 0 : offset
-	implicitWidth: list.width + (inMiddle ? 0 : Theme.edge)
+	// Clear of a bar at their side.
+	implicitWidth: list.width + (inMiddle ? 0 : atLeft ? Settings.left(screen) : Settings.right(screen))
 	visible: false
 	color: "transparent"
 	exclusionMode: ExclusionMode.Ignore
@@ -113,7 +114,7 @@ PanelWindow {
 	ListView {
 		id: list
 
-		x: window.atLeft ? Theme.edge : 0
+		x: window.atLeft ? Settings.left(window.screen) : 0
 		y: window.atBottom ? 0 : Settings.top(window.screen)
 		width: Math.round(Theme.u(380))
 		height: parent.height - y - (window.atBottom ? Settings.bottom(window.screen) : 0)
