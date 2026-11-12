@@ -15,6 +15,7 @@ FloatingWindow {
 
 	readonly property var pages: [
 		{ text: "Bar", icon: "bar", page: barPage },
+		{ text: "Dock", icon: "apps", page: dockPage },
 		{ text: "Tray", icon: "tray", page: trayPage },
 		{ text: "Control center", icon: "sliders", page: controlPage },
 		{ text: "Launcher", icon: "search", page: launcherPage },
@@ -284,6 +285,12 @@ FloatingWindow {
 	}
 
 	Component {
+		id: dockPage
+
+		DockPage {}
+	}
+
+	Component {
 		id: trayPage
 
 		TrayPage {}
@@ -473,29 +480,46 @@ FloatingWindow {
 				}
 			}
 
-			Column {
+			// The pages, in a list that scrolls where the window is too short for
+			// them all.
+			Flickable {
 				id: menu
 
 				anchors.top: search.bottom
 				anchors.topMargin: Theme.u(8)
+				anchors.bottom: back.top
+				anchors.bottomMargin: Theme.u(4)
 				width: Theme.u(170)
 				visible: window.query === ""
-				spacing: Theme.u(4)
+				contentHeight: listed.height
+				clip: true
+				boundsBehavior: Flickable.StopAtBounds
 
-				Repeater {
-					model: window.pages
+				Glide {
+					view: menu
+				}
 
-					Button {
-						required property int index
-						required property var modelData
+				Column {
+					id: listed
 
-						width: parent.width
-						atStart: true
-						pad: Theme.u(10)
-						flat: index !== window.page
-						icon: modelData.icon
-						text: modelData.text
-						onClicked: window.page = index
+					width: parent.width
+					spacing: Theme.u(2)
+
+					Repeater {
+						model: window.pages
+
+						Button {
+							required property int index
+							required property var modelData
+
+							width: parent.width
+							atStart: true
+							pad: Theme.u(10)
+							flat: index !== window.page
+							icon: modelData.icon
+							text: modelData.text
+							onClicked: window.page = index
+						}
 					}
 				}
 			}

@@ -155,6 +155,7 @@ Panel {
 	// What else `entry` can do.
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
+		const docked = Settings.dock.pinned.includes(entry.id);
 		return [{ back: true, text: "Back", subtext: entry.name, icon: "back" }].concat(Array.from(entry.actions).map(action => ({
 			action,
 			text: action.name,
@@ -162,7 +163,8 @@ Panel {
 			icon: "apps"
 		})), [
 			{ pin: !pinned, pinning: true, text: pinned ? "Unpin" : "Pin to the top", icon: "pin" },
-			{ hiding: true, text: "Hide from the launcher", icon: "eyeOff" }
+			{ hiding: true, text: "Hide from the launcher", icon: "eyeOff" },
+			{ dock: !docked, docking: true, text: docked ? "Take off the dock" : "Keep on the dock", icon: "apps" }
 		]);
 	}
 
@@ -447,9 +449,11 @@ Panel {
 					field.text = `/${row.mode} `;
 					return;
 				}
-				if (row.back || row.pinning || row.hiding) {
+				if (row.back || row.pinning || row.hiding || row.docking) {
 					if (row.pinning)
 						Apps.pin(launcher.menuOf.id, row.pin);
+					else if (row.docking)
+						Apps.dock(launcher.menuOf.id, row.dock);
 					else if (row.hiding)
 						Apps.hide(launcher.menuOf.id, true);
 					launcher.closeMenu();
