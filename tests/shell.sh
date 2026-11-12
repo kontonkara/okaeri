@@ -557,6 +557,20 @@ fi
 theme '{}'
 printf '{}' >"$config"
 
+step "The launcher from the dock"
+# A dock with nothing kept and no windows on it, but its button for the
+# launcher, which opens that.
+printf '{ "dock": { "on": true, "launcher": "start", "windows": "pinned" } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 1
+move 700 865
+click
+wait_up panel 1 "the launcher from the dock's button"
+key Escape
+wait_up panel 0 "the launcher from the dock, closed"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+move 300 400
+
 step "Panels of the bar by a call"
 # The month under the clock and the load of the machine, for keys: on the bar
 # of the screen in focus, and the same call again puts it away. With no load on

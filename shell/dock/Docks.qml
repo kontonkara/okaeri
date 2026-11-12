@@ -45,12 +45,40 @@ Scope {
 	function activate(app, by) {
 		if (app.windows.length === 0) {
 			if (app.entry)
-				Apps.launch(app.entry);
+				docks.launch(app);
 			return;
 		}
 		const count = app.windows.length;
 		const focused = app.windows.findIndex(window => window.is_focused);
 		Niri.focusWindow(app.windows[(((focused < 0 ? (by > 0 ? -1 : 0) : focused) + by) % count + count) % count].id);
+	}
+
+	// What starts from it now: { id, count, at }, the windows it had then and when.
+	// It's starting until it has more, or for eight seconds at most.
+	property var starting: []
+	readonly property var launching: starting.map(one => one.id)
+
+	function launch(app) {
+		Apps.launch(app.entry);
+		starting = starting.filter(one => one.id !== app.id).concat([{ id: app.id, count: app.windows.length, at: Date.now() }]);
+		// For tests: what hops.
+		console.info("okaeri: dock: launching", app.id);
+	}
+
+	function settle() {
+		const now = Date.now();
+		const left = starting.filter(one => now - one.at < 8000 && (apps.find(app => app.id === one.id)?.windows.length ?? 0) <= one.count);
+		if (left.length !== starting.length)
+			starting = left;
+	}
+
+	onAppsChanged: settle()
+
+	Timer {
+		interval: 1000
+		running: docks.starting.length > 0
+		repeat: true
+		onTriggered: docks.settle()
 	}
 
 	// Past the next of those kept that are on the dock, `by` 1, or the one before.
@@ -91,7 +119,8 @@ Scope {
 			held: menu.shown && menu.screen === modelData
 			onActivated: app => docks.activate(app, 1)
 			onTurned: (app, by) => docks.activate(app, by)
-			onStarted: app => Apps.launch(app.entry)
+			launching: docks.launching
+			onStarted: app => docks.launch(app)
 			onAsked: (app, along) => menu.showFor(app.id, one, along)
 			onMoved: (app, by) => docks.move(app.id, by)
 		}

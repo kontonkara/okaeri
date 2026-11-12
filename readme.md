@@ -118,7 +118,9 @@ place, and a right click on the volume or the microphone opens its page, where
 each app playing or listening has a volume of its own. The dock has the apps it
 keeps and those with windows, all of them or only its screen's, and a right click
 on one has its windows, what else it can start, bringing its windows here,
-keeping it and closing it.
+keeping it and closing it. Its icons grow under the pointer, an app hops as it
+starts and while it asks to be looked at, and it can have a button for the
+launcher, and stay in sight on an empty workspace where it hides.
 
 The month under the clock has the events of calendars of yours in it, `calendars`
 in the clock's settings and on the Bar page: `.ics` files, read again as they
