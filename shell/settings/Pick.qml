@@ -6,7 +6,8 @@ import qs.ui
 // A line to pick one of `options`, { value, text }, by the arrows or the wheel:
 // `text`, and `subtext` and `image` if it has them. It shows `value`, and says
 // chosen(value), as Choice does for numbers. With an arrow in focus, Left and
-// Right step too, and Home and End go to the first and the last.
+// Right step too, and Home and End go to the first and the last. An option with
+// `colors` shows them as dots under its name.
 Item {
 	id: pick
 
@@ -22,6 +23,7 @@ Item {
 	// How wide what it shows gets.
 	property real valueWidth: Theme.u(100)
 	readonly property int at: options.findIndex(option => option.value === value)
+	readonly property bool dotted: options.some(option => !!option.colors)
 
 	signal chosen(var value)
 
@@ -43,7 +45,7 @@ Item {
 	}
 
 	width: parent.width
-	height: Theme.u(subtext ? 40 : 30)
+	height: Theme.u(subtext || dotted ? 40 : 30)
 
 	Keys.onPressed: event => {
 		if (event.key === Qt.Key_Left)
@@ -134,14 +136,42 @@ Item {
 			onClicked: pick.step(-1)
 		}
 
-		Text {
+		Column {
 			anchors.verticalCenter: parent.verticalCenter
 			width: pick.valueWidth
-			horizontalAlignment: Text.AlignHCenter
-			text: pick.options[pick.at]?.text ?? ""
-			color: Theme.colors.text
-			font.family: Theme.font
-			font.pixelSize: Theme.fontSize
+			spacing: Theme.u(3)
+
+			Text {
+				width: parent.width
+				horizontalAlignment: Text.AlignHCenter
+				text: pick.options[pick.at]?.text ?? ""
+				color: Theme.colors.text
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+			}
+
+			Row {
+				anchors.horizontalCenter: parent.horizontalCenter
+				visible: dots.count > 0
+				spacing: Theme.u(3)
+
+				Repeater {
+					id: dots
+
+					model: pick.options[pick.at]?.colors ?? []
+
+					Rectangle {
+						required property var modelData
+
+						width: Theme.u(10)
+						height: width
+						radius: Theme.round(height)
+						color: modelData
+						border.width: 1
+						border.color: Qt.alpha(Theme.colors.text, 0.3)
+					}
+				}
+			}
 		}
 
 		Button {

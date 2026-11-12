@@ -246,7 +246,21 @@ Flickable {
 			id: colors
 
 			// The palettes by the names they show under.
-			readonly property var palettes: Theme.palettes.map(name => ({ value: name, text: name.split("-").map(word => word[0].toUpperCase() + word.slice(1)).join(" ") }))
+			readonly property var palettes: Theme.palettes.map(name => ({ value: name, text: name.split("-").map(word => word[0].toUpperCase() + word.slice(1)).join(" "), colors: dots(name) }))
+			// An accent of one's own, as one of these or any other.
+			readonly property var swatches: ["#e06c75", "#f0a35e", "#e5c07b", "#98c379", "#56b6c2", "#61afef", "#a98bf0", "#f28cbf"]
+
+			// What a palette looks like, as dots under its name.
+			function dots(name) {
+				const all = Theme.colorsOf(name);
+				return ["background", "surface", "text", "accent", "error"].map(key => all[key]);
+			}
+
+			function paint(accent) {
+				Theme.set("accent", accent || undefined);
+				if (accent && Theme.values.wallpaperAccent)
+					Theme.set("wallpaperAccent", false);
+			}
 			readonly property var hours: Array.from({ length: 24 }, (hour, at) => ({ value: `${String(at).padStart(2, "0")}:00`, text: `${String(at).padStart(2, "0")}:00` }))
 
 			width: parent.width
@@ -259,7 +273,7 @@ Flickable {
 				subtext: Theme.own.extends ? "" : "With your own colors, where the file has them"
 				visible: !Theme.timed
 				valueWidth: Theme.u(150)
-				options: [{ value: "", text: "As the file says" }].concat(colors.palettes)
+				options: [{ value: "", text: "As the file says", colors: colors.dots("") }].concat(colors.palettes)
 				value: Theme.own.extends ?? ""
 				onChosen: value => Theme.set("extends", value || undefined)
 			}
@@ -317,6 +331,102 @@ Flickable {
 				options: colors.hours
 				value: Theme.values.nightFrom
 				onChosen: value => Theme.set("nightFrom", value)
+			}
+
+			// The palette's own first, then those of the list: a click on one has it,
+			// over any palette, the wallpaper's too.
+			Item {
+				// For the search and the mark, as a line has them.
+				readonly property string text: "Accent"
+				readonly property string subtext: "Of your own"
+				readonly property string words: "colour highlight swatch"
+				readonly property string holds: "theme.accent"
+
+				width: parent.width
+				height: Theme.u(40)
+
+				Mark {
+					holds: parent.holds
+				}
+
+				Column {
+					anchors.left: parent.left
+					anchors.right: swatches.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+
+					Text {
+						width: parent.width
+						text: "Accent"
+						color: Theme.colors.text
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize
+					}
+
+					Text {
+						width: parent.width
+						text: Theme.values.wallpaperAccent && Theme.vivid ? "The wallpaper's, as below" : Theme.accent ? "Your own, over the palette's" : "The palette's"
+						color: Theme.colors.subtext
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize - Theme.u(2)
+					}
+				}
+
+				Row {
+					id: swatches
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					spacing: Theme.u(6)
+
+					Repeater {
+						model: [""].concat(colors.swatches)
+
+						Rectangle {
+							required property string modelData
+							readonly property bool on: Theme.accent === modelData
+
+							objectName: `swatch-${modelData || "palette"}`
+							width: Theme.u(22)
+							height: width
+							radius: Theme.round(height)
+							color: modelData || Theme.palette.accent
+							border.width: on ? Theme.u(2.5) : 1
+							border.color: on ? Theme.colors.text : Qt.alpha(Theme.colors.text, 0.3)
+
+							// The palette's own has a line through it.
+							Rectangle {
+								anchors.centerIn: parent
+								visible: parent.modelData === ""
+								width: parent.width * 0.8
+								height: Math.max(1, Theme.u(1.5))
+								rotation: -45
+								color: Theme.colors.background
+							}
+
+							MouseArea {
+								anchors.fill: parent
+								cursorShape: Qt.PointingHandCursor
+								onClicked: colors.paint(parent.modelData)
+							}
+						}
+					}
+				}
+			}
+
+			Field {
+				text: "Or any other"
+				subtext: "As #rrggbb; empty for the palette's"
+				placeholder: "#rrggbb"
+				fieldWidth: Theme.u(120)
+				value: Theme.accent
+				onKept: value => {
+					const wanted = value.trim().replace(/^([0-9a-fA-F]{6})$/, "#$1");
+					if (wanted === "" || /^#[0-9a-fA-F]{6}$/.test(wanted))
+						colors.paint(wanted.toLowerCase());
+				}
 			}
 
 			Setting {

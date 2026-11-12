@@ -1014,22 +1014,22 @@ same "the window before" "$(bright look-colors)" 0
 # The palette's line is a little shorter with one chosen, and the view may take
 # what's above it back down to its foot or not: these are between where the
 # lines are either way.
-arrow "$higher_x" 604
-arrow "$higher_x" 604
+arrow "$higher_x" 505
+arrow "$higher_x" 505
 sleep 0.4
 same "the palette" "$(jq -c .extends "$theme_own")" '"light"'
 shot look-light
 same "the window in a light palette" "$(bright look-light)" 1
-arrow "$wide_lower_x" 604
-arrow "$wide_lower_x" 604
+arrow "$wide_lower_x" 505
+arrow "$wide_lower_x" 505
 sleep 0.4
 same "the config's palette again" "$(jq -c .extends "$theme_own")" null
-arrow "$higher_x" 659
+arrow "$higher_x" 557
 sleep 0.4
 same "another by day" "$(jq -c .auto "$theme_own")" '"time"'
 shot look-timed
 # The palette's line went, and this one is where that was.
-arrow "$wide_lower_x" 604
+arrow "$wide_lower_x" 505
 sleep 0.4
 same "one all day again" "$(jq -c .auto "$theme_own")" '"off"'
 # To the foot again: the page has moved with what came and went.
@@ -1042,10 +1042,26 @@ sleep 0.3
 same "the accent from the wallpaper" "$(jq -c .wallpaperAccent "$theme_own")" true
 click
 sleep 0.3
+# An accent of its own, by a swatch, by what's typed, and the palette's again.
+move 987 607
+click
+sleep 0.3
+same "a swatch's accent" "$(jq -c .accent "$theme_own")" '"#61afef"'
+move 993 657
+click
+wtype -M ctrl a -m ctrl
+wtype '123ABC'
+key Return
+sleep 0.3
+same "a typed accent" "$(jq -c .accent "$theme_own")" '"#123abc"'
+move 819 607
+click
+sleep 0.3
+same "the palette's accent" "$(jq -c .accent "$theme_own")" null
 # The wheel over a line's arrows is the line's, not the page's: a notch up is the
 # next palette, and one down the config's again. The page moved a while ago, so
 # it's no wheel that rolls it on.
-move "$higher_x" 604
+move "$higher_x" 505
 wheel 1
 sleep 0.4
 same "the palette, by the wheel" "$(jq -c .extends "$theme_own")" '"dark"'
@@ -1103,7 +1119,7 @@ same "one all day" "$(jq -c .auto "$theme_own")" '"off"'
 ipc theme toggle
 sleep 0.3
 same "the night's" "$(jq -c .extends "$theme_own")" '"dark"'
-same "what it says" "$(ipc theme state | jq -c .)" '{"palette":"dark","light":false,"auto":"off"}'
+same "what it says" "$(ipc theme state | jq -c .)" '{"palette":"dark","light":false,"auto":"off","accent":"#ffffff"}'
 ipc theme next
 sleep 0.3
 same "the next" "$(jq -c .extends "$theme_own")" '"light"'
@@ -1115,6 +1131,64 @@ before=$(jq -c . "$theme_own")
 ipc theme palette nope
 wait_log 'okaeri: no palette "nope", it'"'"'s one of dark, light'
 same "a palette that isn't" "$(jq -c . "$theme_own")" "$before"
+# An accent of its own, over any palette, and back to the palette's; one that
+# isn't a color changes nothing.
+ipc theme accent "#3366CC"
+sleep 0.3
+same "an accent of its own" "$(jq -c .accent "$theme_own")" '"#3366cc"'
+same "its accent" "$(ipc theme state | jq -r .accent)" "#3366cc"
+ipc theme next
+sleep 0.3
+same "its accent on another palette" "$(ipc theme state | jq -r .accent)" "#3366cc"
+ipc theme accent nope
+wait_log 'okaeri: no accent "nope"'
+same "an accent that isn't" "$(jq -c .accent "$theme_own")" '"#3366cc"'
+ipc theme accent ""
+sleep 0.3
+same "the palette's accent" "$(jq -c .accent "$theme_own")" null
+# The colors of the user's file go with the palette it extends, chosen here too,
+# and not with another.
+user_theme=$XDG_CONFIG_HOME/okaeri/theme.json
+kept_theme=$(cat "$user_theme" 2>/dev/null || true)
+printf '{"extends":"light","colors":{"accent":"#123456"}}' >"$user_theme"
+sleep 0.5
+ipc theme palette light
+sleep 0.3
+same "the file's accent on its palette" "$(ipc theme state | jq -r .accent)" "#123456"
+ipc theme palette dark
+sleep 0.3
+same "the palette's accent on another" "$(ipc theme state | jq -r .accent)" "#ffffff"
+if [ -n "$kept_theme" ]; then printf '%s' "$kept_theme" >"$user_theme"; else rm "$user_theme"; fi
+sleep 0.5
+
+step "One setting by a call"
+# Read, set over the files as the window would, told when it's not one or not of
+# its kind, and back to the files; the look's the same way.
+same "a setting, as the Dock page set it" "$(ipc settings get dock.magnify)" 160
+same "setting it" "$(ipc settings set dock.magnify 180)" ""
+same "what's set" "$(value .dock.magnify)" 180
+same "one of another kind" "$(ipc settings set dock.magnify big)" "dock.magnify takes a number, not big"
+same "one that isn't" "$(ipc settings get dock.nothing | cut -c1-22)" 'dock has no "nothing":'
+same "a name" "$(ipc settings set dock.launcher start)" ""
+same "the name set" "$(value .dock.launcher)" '"start"'
+same "the look's" "$(ipc settings set theme.accent '#abcdef')" ""
+same "the look's set" "$(jq -c .accent "$theme_own")" '"#abcdef"'
+# All of it, as Nix and as JSON, by a call and by the button beside Back to the
+# config.
+ipc settings config nix | grep -qF 'magnify = 180;' || fail "no magnify in the Nix"
+ipc settings config json | jq -e '."settings.json".dock.magnify == 180 and ."theme.json".accent == "#abcdef"' >/dev/null || fail "not all in the JSON"
+move 483 "$back_y"
+click
+sleep 0.3
+shot copy-asks
+move "$this_x" "$back_y"
+click
+wait_log "okaeri: settings: copied as json"
+sleep 0.3
+wl-paste -n | jq -e '."settings.json".dock.launcher == "start"' >/dev/null || fail "the JSON isn't on the clipboard"
+same "back to the files" "$(ipc settings reset dock.magnify)" ""
+same "what's set now" "$(value .dock.magnify)" null
+same "the files' again" "$(ipc settings get dock.magnify)" 140
 
 step "Back to the config"
 # It asks first: one click leaves all as it is, and the half for all of it goes
