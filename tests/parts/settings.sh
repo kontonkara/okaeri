@@ -555,6 +555,9 @@ same "the dock's icons" "$(value .dock.size)" 48
 arrow "$higher_x" 423
 sleep 0.3
 same "the apps with windows on it" "$(value .dock.windows)" '"screen"'
+arrow "$higher_x" 473
+sleep 0.3
+same "how large the icons grow" "$(value .dock.magnify)" 160
 move "$switch_x" 233
 click
 sleep 0.3

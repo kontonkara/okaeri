@@ -165,6 +165,9 @@ Singleton {
 		Settings.set(where, "pinned", pinned);
 	}
 
+	// The dock's button for the launcher: the launcher opens.
+	signal launcherWanted
+
 	// On the dock, or off it.
 	function dock(id, wanted) {
 		const others = Settings.dock.pinned.filter(other => other !== id);

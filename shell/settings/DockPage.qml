@@ -89,6 +89,49 @@ Flickable {
 				value: page.own.windows
 				onChosen: value => Settings.set("dock", "windows", value)
 			}
+
+			Choice {
+				text: "Icons grow under the pointer"
+				subtext: "To this much, and those beside them make room"
+				values: [0, 120, 140, 160, 180, 200]
+				value: page.own.magnify
+				none: "No"
+				unit: "%"
+				onChosen: value => Settings.set("dock", "magnify", value)
+			}
+
+			Setting {
+				text: "Apps hop"
+				subtext: "As one starts, until its window comes, and while it asks to be looked at"
+				checked: page.own.bounce
+				onToggled: wanted => Settings.set("dock", "bounce", wanted)
+			}
+
+			Setting {
+				text: "How many windows"
+				subtext: "A number on an app with more than one"
+				checked: page.own.count
+				onToggled: wanted => Settings.set("dock", "count", wanted)
+			}
+
+			Pick {
+				text: "A button for the launcher"
+				options: [
+					{ value: "none", text: "No" },
+					{ value: "start", text: "First" },
+					{ value: "end", text: "Last" }
+				]
+				value: page.own.launcher
+				onChosen: value => Settings.set("dock", "launcher", value)
+			}
+
+			Setting {
+				text: "In sight on an empty workspace"
+				subtext: "Where it hides: over no windows there's nothing to hide it for"
+				enabled: page.own.autoHide
+				checked: page.own.smartHide
+				onToggled: wanted => Settings.set("dock", "smartHide", wanted)
+			}
 		}
 
 		Card {

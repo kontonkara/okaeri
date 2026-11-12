@@ -131,7 +131,12 @@
 		"size": 40,
 		"pinned": [],
 		"hideOn": [],
-		"windows": "all"
+		"windows": "all",
+		"magnify": 140,
+		"bounce": true,
+		"count": true,
+		"launcher": "none",
+		"smartHide": false
 	},
 	"hooks": {
 		"charger": "",

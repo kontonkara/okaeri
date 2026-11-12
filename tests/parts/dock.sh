@@ -57,6 +57,11 @@ move "$middle" 862
 click
 sleep 0.4
 [ "$(launched)" = kitty ] || fail "a click on a kept app launched \"$(launched)\""
+# Under the pointer its icon grows out of the dock, away from the edge, and as
+# it starts it hops.
+wait_log "okaeri: dock: launching kitty"
+shot grown
+[ "$(magick "$out/grown.png" "$out/kept.png" -compose difference -composite -crop 40x14+$((middle - 20))+818 +repage -format '%[fx:maxima > 0.1]' info:)" = 1 ] || fail "the icon under the pointer doesn't grow out of the dock"
 
 # A window of it marks it, and another app's window puts that app beside it: the
 # dock gets longer.
@@ -217,6 +222,19 @@ niri msg action toggle-overview
 sleep 1.2
 shot overview-gone
 there overview-gone && fail "a dock that hides stays after the overview"
+# With smartHide it's in sight on an empty workspace, and hides again over a
+# window.
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "autoHide": true, "smartHide": true } }'
+niri msg action focus-workspace 2
+move 700 400
+sleep 1.2
+shot bare
+there bare || fail "a dock that hides is out of sight on an empty workspace"
+niri msg action focus-workspace 1
+sleep 1.4
+shot not-bare
+there not-bare && fail "a dock that hides stays in sight over a window"
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "autoHide": true } }'
 
 # Kept by a call, and let go by one, as a script would.
 ipc dock pin okaeri-test

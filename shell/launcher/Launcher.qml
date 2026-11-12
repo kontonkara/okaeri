@@ -334,6 +334,10 @@ Panel {
 			if (launcher.shown && !launcher.menuOf)
 				launcher.refresh();
 		}
+
+		function onLauncherWanted() {
+			launcher.toggle();
+		}
 	}
 
 	// What was copied is read as /clip asks for it, and comes a moment later.
