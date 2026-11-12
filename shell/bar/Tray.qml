@@ -7,14 +7,17 @@ import qs.ui
 // The apps' icons, but for those Settings.tray.hidden names by id, and the quiet
 // ones unless Settings.tray.passive: on the bar, or with Settings.tray.drawer
 // behind a button that shows them in a panel, all but those Settings.tray.pinned
-// keeps on the bar.
-Row {
+// keeps on the bar. One under another on a bar at a side.
+Grid {
 	id: tray
 
 	readonly property var shown: SystemTray.items.values.filter(item => (Settings.tray.passive || item.status !== Status.Passive) && !Settings.tray.hidden.includes(item.id))
 	readonly property var drawn: Settings.tray.drawer ? shown.filter(item => !Settings.tray.pinned.includes(item.id)) : []
 	readonly property bool wanted: shown.length > 0
 
+	columns: Settings.barSide ? 1 : 1000
+	horizontalItemAlignment: Grid.AlignHCenter
+	verticalItemAlignment: Grid.AlignVCenter
 	spacing: Theme.u(4)
 
 	TrayMenu {
@@ -28,17 +31,12 @@ Row {
 		trayMenu: menu
 	}
 
-	Button {
+	BarButton {
 		id: opener
 
-		anchors.verticalCenter: parent.verticalCenter
-		height: Theme.u(28)
 		visible: tray.drawn.length > 0
-		flat: true
-		activeFocusOnTab: false
 		icon: "tray"
 		tip: "Tray"
-		iconSize: Theme.barIcon
 		onClicked: drawer.showUnder(opener)
 	}
 
@@ -48,7 +46,6 @@ Row {
 		}
 
 		TrayIcon {
-			anchors.verticalCenter: parent.verticalCenter
 			trayMenu: menu
 		}
 	}

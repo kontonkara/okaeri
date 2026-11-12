@@ -9,14 +9,16 @@ import qs.ui
 // one with a window wanting attention stands out. As Settings.workspaces has it,
 // those with windows look apart from the empty ones, which can be left out, and a
 // pill says its number or name, and has the icons of the apps on it: a click on
-// one of those goes to its window. The pointer on one says what it shows.
-Row {
+// one of those goes to its window. The pointer on one says what it shows. On a
+// bar at a side they stand one under another, each as tall as it was long.
+Grid {
 	id: workspaces
 
 	required property string output
 	readonly property var own: Settings.workspaces
 	readonly property var shown: own.empty ? Niri.on(output) : Niri.busyOn(output)
 	readonly property bool labeled: own.labels !== "none"
+	readonly property bool upright: Settings.barSide
 	// As many icons to a pill, and a count of the rest.
 	readonly property int most: 4
 	property int wheel: 0
@@ -56,6 +58,9 @@ Row {
 		return !name ? "" : name.startsWith("/") ? Settings.url(name) : Quickshell.iconPath(name, true);
 	}
 
+	columns: upright ? 1 : 1000
+	horizontalItemAlignment: Grid.AlignHCenter
+	verticalItemAlignment: Grid.AlignVCenter
 	spacing: Theme.u(6)
 
 	Repeater {
@@ -76,12 +81,15 @@ Row {
 			readonly property var apps: workspaces.own.apps ? workspaces.appsOn(modelData) : []
 			readonly property bool holding: apps.length > 0
 
-			anchors.verticalCenter: parent.verticalCenter
-			width: holding ? Math.ceil(inside.implicitWidth + Theme.u(10))
-				: workspaces.labeled ? Math.max(Theme.u(modelData.is_active ? 28 : 18), Math.ceil(label.implicitWidth + Theme.u(12)))
+			// How far along the bar it reaches, and how far across it.
+			property real along: holding ? Math.ceil((workspaces.upright ? inside.implicitHeight : inside.implicitWidth) + Theme.u(10))
+				: workspaces.labeled ? Math.max(Theme.u(modelData.is_active ? 28 : 18), Math.ceil((workspaces.upright ? label.implicitHeight : label.implicitWidth) + Theme.u(workspaces.upright ? 6 : 12)))
 				: Theme.u(modelData.is_active ? 28 : 12)
-			height: Theme.u(holding ? 22 : workspaces.labeled ? 18 : 12)
-			radius: Theme.round(height)
+			readonly property real across: Theme.u(holding ? 22 : workspaces.labeled ? 18 : 12)
+
+			width: workspaces.upright ? across : along
+			height: workspaces.upright ? along : across
+			radius: Theme.round(across)
 			// With those with windows marked, the empty ones fade, in case the
 			// accent is pale too. One with icons is a place for them.
 			color: modelData.is_active ? Theme.colors.accent
@@ -91,7 +99,7 @@ Row {
 				: Niri.holds(modelData) ? Qt.alpha(Theme.colors.accent, 0.6)
 				: Qt.alpha(Theme.colors.text, 0.25)
 
-			Behavior on width {
+			Behavior on along {
 				enabled: Theme.animate
 
 				NumberAnimation {
@@ -100,16 +108,18 @@ Row {
 				}
 			}
 
-			Row {
+			Grid {
 				id: inside
 
 				anchors.centerIn: parent
+				columns: workspaces.upright ? 1 : 1000
+				horizontalItemAlignment: Grid.AlignHCenter
+				verticalItemAlignment: Grid.AlignVCenter
 				spacing: Theme.u(4)
 
 				Text {
 					id: label
 
-					anchors.verticalCenter: parent.verticalCenter
 					visible: workspaces.labeled
 					// A long name would take the bar.
 					text: (workspaces.own.labels === "name" ? pill.name : `${pill.modelData.idx}`).slice(0, 12)
@@ -132,7 +142,6 @@ Row {
 						readonly property string app: modelData
 						readonly property string picture: workspaces.icon(modelData)
 
-						anchors.verticalCenter: parent.verticalCenter
 						width: Theme.u(16)
 						height: width
 
@@ -154,7 +163,6 @@ Row {
 				}
 
 				Text {
-					anchors.verticalCenter: parent.verticalCenter
 					visible: pill.apps.length > workspaces.most
 					text: `+${pill.apps.length - workspaces.most}`
 					color: pill.ink
@@ -166,10 +174,11 @@ Row {
 
 			MouseArea {
 				anchors.fill: parent
-				anchors.leftMargin: -Theme.u(3)
-				anchors.rightMargin: -Theme.u(3)
-				anchors.topMargin: -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
-				anchors.bottomMargin: -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
+				// Out to the bar's edges, across it, and halfway to the next along it.
+				anchors.leftMargin: workspaces.upright ? -(Theme.barHeight - parent.width) / 2 + Theme.u(2) : -Theme.u(3)
+				anchors.rightMargin: anchors.leftMargin
+				anchors.topMargin: workspaces.upright ? -Theme.u(3) : -(Theme.barHeight - parent.height) / 2 + Theme.u(2)
+				anchors.bottomMargin: anchors.topMargin
 				hoverEnabled: true
 				cursorShape: Qt.PointingHandCursor
 				onClicked: event => {

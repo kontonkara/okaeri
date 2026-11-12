@@ -1831,3 +1831,66 @@ same "the bar at the bottom, back" "$(pixel bottom-back 900 878)" "$(pixel botto
 move 300 600
 settings '{}'
 sleep 0.6
+
+step "A bar at a side"
+# Upright at the left: nothing of it at the top, its parts one under another,
+# what it opens beside it and its tips too. Then the same at the right.
+move 700 500
+shot side-not
+settings '{ "bar": { "position": "left" } }'
+sleep 0.8
+shot side-left
+same "the bar at the left" "$(pixel side-left 20 600)" "$(pixel side-not 900 20)"
+same "the top without it" "$(pixel side-left 900 20)" "$(pixel side-not 900 600)"
+# How many things the left edge has, top to bottom, more than a few rows apart.
+upright() {
+	magick "$out/$1.png" -crop "18x880+$2+10" +repage -colorspace Gray -scale '1x880!' txt:- |
+		awk '
+			NR == 1 { next }
+			/gray\(0\)|#000000/ { gap++; next }
+			{
+				if (gap >= 6 || !count)
+					count++
+				gap = 0
+			}
+			END { print count + 0 }
+		'
+}
+[ "$(upright side-left 12)" -ge 8 ] || fail "the bar at the left has $(upright side-left 12) things on it, one under another"
+# The clock in the middle: more lines than one.
+[ "$(magick "$out/side-left.png" -crop 30x80+6+410 +repage -format '%[fx:maxima > 0.5]' info:)" = 1 ] || fail "no clock in the middle of a bar at the left"
+ipc control toggle
+sleep 0.6
+shot side-left-panel
+[ "$(pixel side-left-panel 200 800)" != "$(pixel side-left 200 800)" ] || fail "no panel beside a bar at the left"
+same "the right with a panel at the left" "$(pixel side-left-panel 1200 800)" "$(pixel side-left 1200 800)"
+ipc control toggle
+sleep 0.6
+move 20 450
+sleep 1.2
+shot side-left-tip
+[ "$(magick "$out/side-left-tip.png" "$out/side-left.png" -compose difference -composite -crop 200x60+50+420 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip beside a bar at the left"
+move 700 500
+settings '{ "bar": { "position": "right" } }'
+sleep 0.8
+shot side-right
+same "the bar at the right" "$(pixel side-right 1380 600)" "$(pixel side-not 900 20)"
+same "the left without it" "$(pixel side-right 20 600)" "$(pixel side-not 900 600)"
+ipc control toggle
+sleep 0.6
+shot side-right-panel
+[ "$(pixel side-right-panel 1200 800)" != "$(pixel side-right 1200 800)" ] || fail "no panel beside a bar at the right"
+ipc control toggle
+sleep 0.6
+# And it hides to its side, with that edge of the screen to bring it back.
+settings '{ "bar": { "position": "right", "autoHide": true } }'
+sleep 1.2
+shot side-hidden
+same "the bar at the right, hidden" "$(pixel side-hidden 1380 600)" "$(pixel side-not 900 600)"
+move 1399 300
+sleep 0.8
+shot side-back
+same "the bar at the right, back" "$(pixel side-back 1380 600)" "$(pixel side-right 1380 600)"
+move 700 500
+settings '{}'
+sleep 0.6

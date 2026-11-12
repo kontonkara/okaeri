@@ -6,18 +6,13 @@ import qs.ui
 
 // The power profile, where there's more than one: which it is, and a click or
 // the wheel goes on to the next.
-Button {
+BarButton {
 	readonly property bool wanted: Power.choices.length > 1
 
-	height: Theme.u(28)
 	visible: wanted
-	flat: true
-	pad: Theme.u(6)
-	iconSize: Theme.barIcon
-	activeFocusOnTab: false
 	takesWheel: true
 	icon: "bolt"
-	text: Settings.profile.label === "name" ? Power.profileName : ""
+	text: Settings.profile.label === "name" && !stacked ? Power.profileName : ""
 	tip: `Power profile: ${Power.profileName}`
 	ink: Power.profile === PowerProfile.Balanced ? Theme.colors.subtext : Power.profile === PowerProfile.Performance ? Theme.colors.text : Theme.colors.accent
 	onClicked: Power.turn(1)

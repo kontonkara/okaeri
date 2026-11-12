@@ -3,7 +3,9 @@ import qs
 
 // A button: `text`, `icon` (one of Theme.icons), both, or what's put in it,
 // after those; without text it's square. `filled` for the main action, `flat`
-// for one that shows only under the pointer. Tab gets to it; Enter and Space
+// for one that shows only under the pointer. `stacked`, for a narrow place, has
+// the text small under the icon, in the button's width. Tab gets to it; Enter
+// and Space
 // press it.
 Rectangle {
 	id: button
@@ -23,6 +25,8 @@ Rectangle {
 	property bool atStart: false
 	// With this the wheel on it says scrolled(steps), and goes no further.
 	property bool takesWheel: false
+	// In a narrow place: as wide as it's made, and the text under what's on it.
+	property bool stacked: false
 	// What Tip says of it.
 	property string tip
 	property color ink: filled ? Theme.colors.background : Theme.colors.text
@@ -35,7 +39,7 @@ Rectangle {
 	signal scrolled(int steps)
 
 	implicitWidth: text ? row.implicitWidth + pad * 2 : height
-	implicitHeight: Theme.u(34)
+	implicitHeight: stacked ? Math.ceil(row.implicitHeight + (text ? under.implicitHeight + (row.implicitHeight > 0 ? Theme.u(2) : 0) : 0) + Theme.u(12)) : Theme.u(34)
 	radius: Theme.round(height)
 	color: filled ? Theme.colors.accent : flat ? "transparent" : Qt.alpha(Theme.colors.text, 0.1)
 	opacity: enabled ? 1 : 0.5
@@ -69,6 +73,7 @@ Rectangle {
 		anchors.left: button.atStart ? parent.left : undefined
 		anchors.leftMargin: button.pad
 		anchors.verticalCenter: button.atStart ? parent.verticalCenter : undefined
+		anchors.verticalCenterOffset: button.stacked && button.text ? -(under.implicitHeight + Theme.u(2)) / 2 : 0
 		spacing: Theme.u(6)
 
 		Icon {
@@ -87,7 +92,7 @@ Rectangle {
 			readonly property bool sliding: button.scrolls && over > 0 && pointer.containsMouse && Theme.animate
 
 			anchors.verticalCenter: parent.verticalCenter
-			visible: button.text !== ""
+			visible: button.text !== "" && !button.stacked
 			width: button.longest > 0 ? Math.min(words.implicitWidth, button.longest) : words.implicitWidth
 			height: words.implicitHeight
 			clip: true
@@ -141,6 +146,30 @@ Rectangle {
 					easing.type: Easing.OutCubic
 				}
 			}
+		}
+	}
+
+	// The text of a stacked one: a few short lines at most.
+	Text {
+		id: under
+
+		anchors.horizontalCenter: parent.horizontalCenter
+		anchors.bottom: parent.bottom
+		anchors.bottomMargin: Theme.u(6)
+		width: parent.width - Theme.u(2)
+		visible: button.stacked && button.text !== ""
+		horizontalAlignment: Text.AlignHCenter
+		text: button.text
+		textFormat: Text.PlainText
+		wrapMode: Text.Wrap
+		maximumLineCount: 4
+		elide: Text.ElideRight
+		color: button.ink
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(4)
+		font.weight: Theme.fontWeight
+		font.features: {
+			"tnum": 1
 		}
 	}
 

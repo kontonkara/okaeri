@@ -12,16 +12,16 @@ Item {
 	readonly property bool num: Locks.ready && Locks.num && Settings.locks.show === "both"
 	readonly property bool wanted: caps || num
 
-	implicitWidth: row.implicitWidth
-	implicitHeight: row.implicitHeight
+	implicitWidth: grid.implicitWidth
+	implicitHeight: grid.implicitHeight
 	visible: wanted
 
-	// The tip covers it all, and in a row it would be one of the things in it.
-	Row {
-		id: row
+	// The tip covers it all, and among the signs it would be one of them.
+	Grid {
+		id: grid
 
-		leftPadding: Theme.u(6)
-		rightPadding: Theme.u(6)
+		columns: Settings.barSide ? 1 : 1000
+		padding: Theme.u(6)
 		spacing: Theme.u(6)
 
 		Icon {

@@ -14,8 +14,9 @@ import qs.ui
 // right, middle, up, down }, in place of what the part does. The wheel on what
 // doesn't use it does what Settings.bar.wheel says: "split" changes the brightness
 // on its left half and the volume on its right, or it's "volume", "brightness",
-// "workspaces" or "none". It's at the top of the screen, or at the bottom with
-// Settings.bar.position. With Settings.bar.autoHide it's out of sight, and
+// "workspaces" or "none". It's at the top of the screen, or at the bottom or a side
+// with Settings.bar.position: at a side the lanes run down it and its parts stand
+// upright. With Settings.bar.autoHide it's out of sight, and
 // windows have the whole screen, until the pointer rests at that edge of the screen
 // or a panel opens there.
 PanelWindow {
@@ -44,9 +45,12 @@ PanelWindow {
 		awake,
 		night
 	})
-	// Under all of it, for Tip, or over it when it's at the bottom.
+	// Where it is, and whether that's a side, where it stands upright.
+	readonly property string at: Settings.barAt
+	readonly property bool upright: Settings.barSide
+	// How far its tips are from the screen's edge, and on which side of it, for Tip.
 	readonly property real tipsFrom: Theme.barHeight + Theme.u(6)
-	readonly property bool tipsAbove: Settings.barBelow
+	readonly property string tipsAt: ({ top: "below", bottom: "above", left: "right", right: "left" })[at]
 	// With no gap around it, it's against the screen's edges: square there.
 	readonly property real corners: Theme.edge > 0 ? Theme.cardRadius : 0
 	readonly property bool hides: Settings.bar.autoHide
@@ -55,7 +59,7 @@ PanelWindow {
 	readonly property bool pointed: sensor.containsMouse || over.hovered
 	readonly property bool called: Panels.open.some(panel => panel.screen === bar.screen)
 	property bool down: true
-	// How far up it goes to be out of sight.
+	// How far it goes to be out of sight.
 	readonly property real away: Theme.edge + Theme.barHeight
 	// Whether a frame of it has been on the screen.
 	property bool seen: false
@@ -88,17 +92,18 @@ PanelWindow {
 	}
 
 	anchors {
-		top: !Settings.barBelow
-		bottom: Settings.barBelow
-		left: true
-		right: true
+		top: at !== "bottom"
+		bottom: at !== "top"
+		left: at !== "right"
+		right: at !== "left"
 	}
 	margins {
-		top: Settings.barBelow ? 0 : Theme.edge
-		bottom: Settings.barBelow ? Theme.edge : 0
-		left: Theme.edge
-		right: Theme.edge
+		top: at === "bottom" ? 0 : Theme.edge
+		bottom: at === "top" ? 0 : Theme.edge
+		left: at === "right" ? 0 : Theme.edge
+		right: at === "left" ? 0 : Theme.edge
 	}
+	implicitWidth: Theme.barHeight
 	implicitHeight: Theme.barHeight
 	// Windows keep out from under it, unless Settings.bar.reserve says otherwise,
 	// or it hides.
@@ -140,11 +145,12 @@ PanelWindow {
 		screen: bar.screen
 		visible: bar.hides && (Theme.edge > 0 || !bar.visible)
 		anchors {
-			top: !Settings.barBelow
-			bottom: Settings.barBelow
-			left: true
-			right: true
+			top: bar.at !== "bottom"
+			bottom: bar.at !== "top"
+			left: bar.at !== "right"
+			right: bar.at !== "left"
 		}
+		implicitWidth: bar.visible ? Math.max(1, Theme.edge) : 1
 		implicitHeight: bar.visible ? Math.max(1, Theme.edge) : 1
 		exclusionMode: ExclusionMode.Ignore
 		color: "transparent"
@@ -163,21 +169,25 @@ PanelWindow {
 	Region {
 		id: glass
 
-		x: 1
+		x: Math.round(body.x) + 1
 		y: Math.round(body.y) + 1
 		width: bar.width - 2
 		height: bar.height - 2
 		radius: bar.corners
 	}
 
-	component Lane: Row {
+	// What a lane has, one beside another, or one under another on a bar at a side:
+	// in a row with room for more than there ever are, or in a column.
+	component Lane: Grid {
 		id: lane
 
 		required property var names
 		// What the clock can take, if it's here.
 		property real room: Infinity
 
-		anchors.verticalCenter: parent.verticalCenter
+		columns: bar.upright ? 1 : 1000
+		horizontalItemAlignment: Grid.AlignHCenter
+		verticalItemAlignment: Grid.AlignVCenter
 		spacing: Theme.u(4)
 
 		Repeater {
@@ -192,7 +202,6 @@ PanelWindow {
 				// The tray's icons are apps, with clicks of their own.
 				readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
 
-				anchors.verticalCenter: parent.verticalCenter
 				visible: item?.wanted ?? true
 				sourceComponent: bar.parts[modelData] ?? (Settings.bar.scripts.some(own => own.name === modelData) ? script : null)
 
@@ -237,8 +246,8 @@ PanelWindow {
 		id: battery
 
 		Battery {
-			leftPadding: Theme.u(6)
-			rightPadding: Theme.u(6)
+			leftPadding: Settings.barSide ? 0 : Theme.u(6)
+			rightPadding: Settings.barSide ? 0 : Theme.u(6)
 		}
 	}
 
@@ -374,20 +383,25 @@ PanelWindow {
 		}
 	}
 
-	// All of it, which goes up out of sight with a bar that hides.
+	// All of it, which goes out of sight with a bar that hides.
 	Item {
 		id: body
 
 		width: parent.width
 		height: parent.height
-		y: bar.down ? 0 : Settings.barBelow ? bar.away : -bar.away
+		// How far out of its place it is, 0 in sight and `away` out of it: up, down
+		// or to its side, as the edge it's at is.
+		property real out: bar.down ? 0 : bar.away
 
-		onYChanged: {
-			if (Math.abs(y) === bar.away && !bar.down)
+		x: bar.at === "left" ? -out : bar.at === "right" ? out : 0
+		y: bar.at === "top" ? -out : bar.at === "bottom" ? out : 0
+
+		onOutChanged: {
+			if (out === bar.away && !bar.down)
 				bar.visible = false;
 		}
 
-		Behavior on y {
+		Behavior on out {
 			enabled: Theme.animate
 
 			NumberAnimation {
@@ -433,38 +447,43 @@ PanelWindow {
 				const does = Settings.bar.wheel;
 				if (does === "workspaces")
 					Niri.turn(Settings.workspaces.empty ? Niri.on(bar.screen.name) : Niri.busyOn(bar.screen.name), Settings.workspaces.reverse ? -steps : steps);
-				else if (does === "brightness" || (does === "split" && event.x < width / 2))
+				else if (does === "brightness" || (does === "split" && (bar.upright ? event.y < height / 2 : event.x < width / 2)))
 					Brightness.change(steps * 0.05);
 				else if (does === "volume" || does === "split")
 					Audio.change(steps * 0.05);
 			}
 		}
 
+		// The lanes along the bar, from its left or its top, each in its middle the
+		// other way.
 		Lane {
 			id: left
 
-			anchors.left: parent.left
-			anchors.leftMargin: Theme.u(14)
+			x: bar.upright ? Math.round((parent.width - width) / 2) : Theme.u(14)
+			y: bar.upright ? Theme.u(14) : (parent.height - height) / 2
 			names: Settings.bar.left
 		}
 
-		// In the middle, or beside the right side on a narrow screen.
+		// In the middle, or beside the last one on a narrow screen.
 		Lane {
 			id: center
 
-			readonly property real from: left.x + left.width + Theme.u(12)
-			readonly property real to: right.x - Theme.u(12)
+			readonly property real from: (bar.upright ? left.y + left.height : left.x + left.width) + Theme.u(12)
+			readonly property real to: (bar.upright ? right.y : right.x) - Theme.u(12)
+			readonly property real length: bar.upright ? height : width
+			readonly property real along: Math.round(Math.max(from, Math.min(((bar.upright ? parent.height : parent.width) - length) / 2, to - length)))
 
-			x: Math.round(Math.max(from, Math.min((parent.width - width) / 2, to - width)))
+			x: bar.upright ? Math.round((parent.width - width) / 2) : along
+			y: bar.upright ? along : (parent.height - height) / 2
 			names: Settings.bar.center
-			room: to - from
+			room: bar.upright ? Infinity : to - from
 		}
 
 		Lane {
 			id: right
 
-			anchors.right: parent.right
-			anchors.rightMargin: Theme.u(8)
+			x: bar.upright ? Math.round((parent.width - width) / 2) : parent.width - width - Theme.u(8)
+			y: bar.upright ? parent.height - height - Theme.u(8) : (parent.height - height) / 2
 			names: Settings.bar.right
 		}
 	}
