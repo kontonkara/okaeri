@@ -147,6 +147,10 @@ phones to get online through, and its page has the code for it; its name, the
 machine's unless you give it another, and its password, made up the first time
 where you don't, are with its width on the Control page, a click on its tile there.
 
+The bell beside an app's name in the notifications' history keeps it quiet for
+an hour, eight or until you say, and the Notifications page lists those that
+are; a screenshot's toast opens its folder, copies it or deletes it.
+
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by
 name. The settings window picks one too, or two, for the day and for the night,

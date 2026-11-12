@@ -27,8 +27,11 @@ Singleton {
 	property alias dndUntil: kept.dndUntil
 	readonly property alias dndLabel: timer.label
 	// The apps kept quiet for a while, as Do Not Disturb keeps them all: when
-	// that's over for each, by its name.
+	// that's over for each, by its name: `always` for until it's let speak again.
 	readonly property var quietApps: JSON.parse(kept.quiet)
+	readonly property real always: 8640000000000000
+	// The app whose quiet button asks for how long, "" for none.
+	property string quietAsked: ""
 
 	// How many toasts show, and how many the history holds: past that the oldest go.
 	readonly property int cap: Settings.notifications.cap
@@ -85,6 +88,7 @@ Singleton {
 	onServerChanged: restore()
 
 	onPanelShownChanged: {
+		quietAsked = "";
 		if (panelShown) {
 			takeDown(n => !critical(n));
 			past.forEach(n => n.unread = false);
@@ -298,6 +302,26 @@ Singleton {
 			panel.hide();
 	}
 
+	// A screenshot's: the folder it's in, the picture on the clipboard, or away with
+	// it, to the trash where there's one. Each is done with it, as a click on it is.
+	function openFolder(notification, file) {
+		const folder = file.replace(/\/[^/]*$/, "") || "/";
+		Env.act(`notification folder ${folder}`, () => Niri.spawn(["xdg-open", folder]));
+		notification.dismiss();
+		if (panel)
+			panel.hide();
+	}
+
+	function copyFile(notification, file) {
+		Env.act(`notification copy ${file}`, () => Quickshell.execDetached(["sh", "-c", 'wl-copy --type image/png <"$1"', "sh", file]));
+		notification.dismiss();
+	}
+
+	function deleteFile(notification, file) {
+		Env.act(`notification delete ${file}`, () => Quickshell.execDetached(["sh", "-c", 'gio trash -- "$1" 2>/dev/null || rm -f -- "$1"', "sh", file]));
+		notification.dismiss();
+	}
+
 	function clear() {
 		const gone = all;
 		clearing = true;
@@ -391,15 +415,26 @@ Singleton {
 			takeDown(n => n.appName === app && !critical(n));
 	}
 
-	// For an hour, or no longer if it is.
-	function toggleQuiet(app) {
-		setQuiet(app, quietApps[app] ? 0 : Date.now() + 3600000);
+	// By its button: no longer if it is, else the choice of how long, or away again.
+	function askQuiet(app) {
+		if (quietApps[app]) {
+			setQuiet(app, 0);
+			quietAsked = "";
+		} else {
+			quietAsked = quietAsked === app ? "" : app;
+		}
+	}
+
+	// For `span` milliseconds from now, or with 0 until it's let speak again.
+	function quietFor(app, span) {
+		setQuiet(app, span > 0 ? Date.now() + span : always);
+		quietAsked = "";
 	}
 
 	// How long `app` still keeps quiet, in words, "" if it doesn't.
 	function quietLabel(app) {
 		const end = quietApps[app] ?? 0;
-		return end > 0 ? `${Power.span(Math.max(0, end - quieting.now) / 1000)} · until ${Qt.formatDateTime(new Date(end), "HH:mm")}` : "";
+		return end >= always ? "until you say" : end > 0 ? `${Power.span(Math.max(0, end - quieting.now) / 1000)} · until ${Qt.formatDateTime(new Date(end), "HH:mm")}` : "";
 	}
 
 	function togglePanel() {

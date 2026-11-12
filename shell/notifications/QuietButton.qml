@@ -3,8 +3,9 @@ import qs
 import qs.ui
 
 // For an app's toasts to wait a while, beside its name in the history, where
-// they all still come: a click keeps `app` quiet for an hour, and another lets it
-// speak again. Critical ones show all the same.
+// they all still come: a click asks for how long `app` keeps quiet, an hour, eight
+// or until it's let speak again, and another click lets it speak again. Critical
+// ones show all the same.
 Button {
 	id: button
 
@@ -18,6 +19,6 @@ Button {
 	icon: "bellOff"
 	iconSize: Theme.u(14)
 	ink: span ? Theme.colors.accent : Theme.colors.subtext
-	tip: span ? `No toasts from it for ${span}` : "No toasts from it for an hour"
-	onClicked: NotificationStore.toggleQuiet(app)
+	tip: span.startsWith("until") ? `No toasts from it ${span}` : span ? `No toasts from it for ${span}` : "No toasts from it for a while"
+	onClicked: NotificationStore.askQuiet(app)
 }

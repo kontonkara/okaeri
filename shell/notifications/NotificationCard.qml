@@ -351,6 +351,39 @@ Card {
 					}
 				}
 			}
+
+			// What's done with a screenshot most: its folder, the picture on the
+			// clipboard, or away with it.
+			Flow {
+				width: parent.width
+				topPadding: Theme.u(6)
+				visible: card.shot
+				spacing: Theme.u(6)
+
+				Button {
+					height: Theme.u(28)
+					activeFocusOnTab: false
+					icon: "file"
+					text: "Folder"
+					onClicked: NotificationStore.openFolder(card.notification, card.file)
+				}
+
+				Button {
+					height: Theme.u(28)
+					activeFocusOnTab: false
+					icon: "copy"
+					text: "Copy"
+					onClicked: NotificationStore.copyFile(card.notification, card.file)
+				}
+
+				Button {
+					height: Theme.u(28)
+					activeFocusOnTab: false
+					icon: "trash"
+					text: "Delete"
+					onClicked: NotificationStore.deleteFile(card.notification, card.file)
+				}
+			}
 		}
 
 		// Beside its app's name, where no heading has that: not made for a toast.
@@ -401,5 +434,12 @@ Card {
 			ink: Theme.colors.subtext
 			onClicked: card.notification.dismiss()
 		}
+	}
+
+	// For how long its app keeps quiet, as the button beside its name asks.
+	QuietChoices {
+		width: parent.width
+		allowed: card.inHistory && card.showsApp
+		app: card.notification.appName
 	}
 }
