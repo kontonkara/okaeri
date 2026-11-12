@@ -96,7 +96,7 @@ Flickable {
 			Pick {
 				holds: "idle.suspendOn"
 				text: "Sleep when"
-				visible: Settings.idle.suspend > 0
+				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
 				options: [
 					{ value: "always", text: "Always" },
 					{ value: "battery", text: "On battery" }
@@ -105,11 +105,27 @@ Flickable {
 				onChosen: value => Settings.set("idle", "suspendOn", value)
 			}
 
+			Pick {
+				holds: "idle.sleepAs"
+				words: "hibernate"
+				text: "It sleeps as"
+				subtext: Settings.idle.sleepAs === "suspend-then-hibernate" ? (Session.canSuspendThenHibernate ? "Suspended, and hibernated after a while, as logind is set" : "Which logind says this machine can't now: it suspends") : Settings.idle.sleepAs === "hibernate" && !Session.canHibernate ? "Which logind says this machine can't now: it suspends" : ""
+				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
+				valueWidth: Theme.u(150)
+				options: [
+					{ value: "suspend", text: "Suspended" },
+					{ value: "suspend-then-hibernate", text: "Then hibernated" },
+					{ value: "hibernate", text: "Hibernated" }
+				]
+				value: Settings.idle.sleepAs
+				onChosen: value => Settings.set("idle", "sleepAs", value)
+			}
+
 			Setting {
 				holds: "idle.playingHolds"
 				text: "Not while something plays"
 				subtext: "Music keeps it up, with the screens off"
-				visible: Settings.idle.suspend > 0
+				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
 				checked: Settings.idle.playingHolds
 				onToggled: wanted => Settings.set("idle", "playingHolds", wanted)
 			}
@@ -365,6 +381,16 @@ Flickable {
 				value: Settings.idle.batteryScreenOff
 				none: "The same"
 				onChosen: value => Settings.set("idle", "batteryScreenOff", value)
+			}
+
+			Choice {
+				holds: "idle.batterySuspend"
+				text: "On it, sleep after"
+				subtext: "Even where it doesn't sleep on the charger"
+				values: page.waits
+				value: Settings.idle.batterySuspend
+				none: "The same"
+				onChosen: value => Settings.set("idle", "batterySuspend", value)
 			}
 		}
 	}

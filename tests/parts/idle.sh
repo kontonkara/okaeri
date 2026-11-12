@@ -118,6 +118,11 @@ IpcHandler {
 	function draining(on: bool): void {
 		Power.draining = on;
 	}
+
+	// Whether logind says it can suspend and then hibernate.
+	function later(can: bool): void {
+		Session.canSuspendThenHibernate = can;
+	}
 }
 QML
 sed 's/^\tIdle {}$/\tIdle {}\n\n\tProbe {}/' "$work/shell/shell.qml" >"$work/shell.qml"
@@ -151,6 +156,24 @@ ipc probe draining false
 wake
 sleep 3.5
 silent "the lock on the charger, at the time for the battery"
+# It sleeps on battery after a time of its own, where it doesn't on the charger.
+settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 0, "batterySuspend": 2 } }'
+wake
+sleep 3.5
+silent "sleep on the charger, at the time for the battery"
+ipc probe draining true
+wake
+said "session suspend" 40
+ipc probe draining false
+wake
+# Suspended and then hibernated, where logind can; else only suspended.
+settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 2, "sleepAs": "suspend-then-hibernate" } }'
+ipc probe later true
+wake
+said "session suspend-then-hibernate" 40
+ipc probe later false
+wake
+said "session suspend" 40
 settings '{ "idle": { "lock": 0, "screenOff": 0, "suspend": 2 } }'
 wake
 sleep 1.5

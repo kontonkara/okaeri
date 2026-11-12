@@ -7,8 +7,9 @@ import qs.services
 
 // With no input for a while the session locks, and later the screens go off,
 // each after a slow fade to warn of it, and the machine can be put to sleep, on
-// battery or always, as Settings.idle.suspendOn says, though not while something
-// plays. Apps that keep the machine
+// battery or always, as Settings.idle.suspendOn says, sooner on battery, and
+// suspended, hibernated or both, as Settings.idle.sleepAs says, though not while
+// something plays. Apps that keep the machine
 // awake hold all of it off, and so does Awake. Once the session is locked, by this or
 // anything else, the screens can go off sooner, after
 // Settings.idle.lockedScreenOff, as logind's LockedHint says it is.
@@ -19,7 +20,12 @@ Scope {
 	// On battery each comes sooner, where Settings.idle has a time for that.
 	readonly property real lockAfter: Power.draining && Settings.idle.batteryLock > 0 ? Settings.idle.batteryLock : Settings.idle.lock
 	readonly property real offAfter: Power.draining && Settings.idle.batteryScreenOff > 0 ? Settings.idle.batteryScreenOff : Settings.idle.screenOff
-	readonly property real sleepAfter: Settings.idle.suspend
+	readonly property real sleepAfter: Power.draining && Settings.idle.batterySuspend > 0 ? Settings.idle.batterySuspend : Settings.idle.suspend
+	// How it sleeps, as Settings.idle.sleepAs says, where logind says it can: else
+	// it suspends.
+	readonly property string sleepAs: Settings.idle.sleepAs === "hibernate" && Session.canHibernate ? "hibernate"
+		: Settings.idle.sleepAs === "suspend-then-hibernate" && Session.canSuspendThenHibernate ? "suspend-then-hibernate"
+		: "suspend"
 	// Whether the session is locked, looked up every few seconds while that's
 	// wanted, by `lockedHint`, which a test has its own of.
 	property bool locked: false
@@ -31,9 +37,12 @@ Scope {
 	// stops, it sleeps.
 	readonly property bool sleeping: sleep.isIdle && (Settings.idle.suspendOn !== "battery" || Power.draining) && !(Settings.idle.playingHolds && Media.playing)
 
+	// Whether it can hibernate, for `sleepAs`.
+	Component.onCompleted: Session.check()
+
 	onSleepingChanged: {
 		if (sleeping)
-			Session.run("suspend");
+			Session.run(sleepAs);
 	}
 
 	component Stage: IdleMonitor {

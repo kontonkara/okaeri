@@ -20,12 +20,14 @@ Singleton {
 		lock: Settings.session.lock ? ["sh", "-c", Settings.session.lock] : ["loginctl", "lock-session"],
 		suspend: power.concat(["suspend"]),
 		hibernate: power.concat(["hibernate"]),
+		"suspend-then-hibernate": power.concat(["suspend-then-hibernate"]),
 		reboot: power.concat(["reboot"]),
 		firmware: power.concat(["reboot", "--firmware-setup"]),
 		poweroff: power.concat(["poweroff"])
 	})
 	property bool canSuspend: false
 	property bool canHibernate: false
+	property bool canSuspendThenHibernate: false
 	property bool canFirmware: false
 	// Each there is, whether this machine can do it, and whether it waits out
 	// Settings.session.countdown first.
@@ -50,6 +52,7 @@ Singleton {
 	function check() {
 		suspendCheck.running = true;
 		hibernateCheck.running = true;
+		laterCheck.running = true;
 		firmwareCheck.running = true;
 	}
 
@@ -61,7 +64,7 @@ Singleton {
 			console.info(`okaeri: guest: session ${action}`);
 			return;
 		}
-		if ((action === "suspend" || action === "hibernate") && Settings.session.lockFirst) {
+		if ((action === "suspend" || action === "hibernate" || action === "suspend-then-hibernate") && Settings.session.lockFirst) {
 			run("lock");
 			sleepAfterLock.action = action;
 			sleepAfterLock.restart();
@@ -140,6 +143,13 @@ Singleton {
 
 		method: "CanHibernate"
 		onAnswered: can => session.canHibernate = can
+	}
+
+	Check {
+		id: laterCheck
+
+		method: "CanSuspendThenHibernate"
+		onAnswered: can => session.canSuspendThenHibernate = can
 	}
 
 	Check {

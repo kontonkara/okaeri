@@ -205,6 +205,11 @@ A `from` that isn't a whole path is one that comes with okaeri, in
 `~/.config/gtk-4.0/gtk.css`, and `fuzzel.ini`. Each says at its top what to put in
 the app's own config to take it in.
 
+With nothing done for a while the session locks, the screens go off and the
+machine can sleep, each sooner on battery where the Session page says so, and it
+sleeps suspended, hibernated, or suspended and later hibernated as logind is set
+for that.
+
 ## Working on it
 
 `./try` opens it in a niri of its own, in a window, next to the desktop you
