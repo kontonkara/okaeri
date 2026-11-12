@@ -130,6 +130,21 @@ Singleton {
 		Settings.set("launcher", "hidden", wanted ? others.concat([id]) : others);
 	}
 
+	// The app a window is of, by the id the window gives: an entry's own, in any
+	// case, or what the entries make of it.
+	function entryOf(id) {
+		if (!id)
+			return null;
+		const own = known.find(app => app.entry.id.toLowerCase() === id.toLowerCase());
+		return own ? own.entry : DesktopEntries.heuristicLookup(id);
+	}
+
+	// On the dock, or off it.
+	function dock(id, wanted) {
+		const others = Settings.dock.pinned.filter(other => other !== id);
+		Settings.set("dock", "pinned", wanted ? others.concat([id]) : others);
+	}
+
 	// The picture of the app with this id in a window, "" if there's none.
 	function imageOf(id) {
 		const app = known.find(app => app.entry.id.toLowerCase() === (id || "").toLowerCase());

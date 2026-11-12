@@ -115,6 +115,13 @@
 		"units": "celsius",
 		"bar": false
 	},
+	"dock": {
+		"on": false,
+		"position": "bottom",
+		"autoHide": false,
+		"size": 40,
+		"pinned": []
+	},
 	"hooks": {
 		"charger": "",
 		"battery": "",

@@ -19,17 +19,18 @@ config=$XDG_CONFIG_HOME/okaeri/settings.json
 menu_x=420
 search_y=216
 bar_y=257
-tray_y=295
-control_y=333
-launcher_y=371
-clipboard_y=409
-notifications_y=447
-sounds_y=485
-osd_y=523
-display_y=561
-wallpaper_y=599
-look_y=637
-session_y=675
+dock_y=293
+tray_y=329
+control_y=365
+launcher_y=401
+clipboard_y=437
+notifications_y=473
+sounds_y=509
+osd_y=545
+display_y=581
+wallpaper_y=617
+look_y=653
+session_y=689
 back_y=722
 switch_x=1034
 drawer_y=233
@@ -516,6 +517,28 @@ same "the lock on battery" "$(value .idle.batteryLock)" 60
 # Over the battery's card, the commands for when things happen: the last of them.
 field 934 473 'true'
 same "what a new wallpaper runs" "$(value .hooks.wallpaper)" '"true"'
+
+step "The dock's page"
+page "$dock_y"
+shot dock-page
+move "$switch_x" 233
+click
+sleep 0.3
+same "a dock" "$(value .dock.on)" true
+arrow "$higher_x" 283
+sleep 0.3
+same "where the dock is" "$(value .dock.position)" '"left"'
+move "$switch_x" 333
+click
+sleep 0.3
+same "a dock that hides" "$(value .dock.autoHide)" true
+arrow "$higher_x" 378
+sleep 0.3
+same "the dock's icons" "$(value .dock.size)" 48
+move "$switch_x" 233
+click
+sleep 0.3
+same "no dock" "$(value .dock.on)" false
 
 step "The control center's page"
 page "$control_y"

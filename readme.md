@@ -6,9 +6,10 @@
 screen. It goes with [yokoso](https://github.com/kontonkara/yokoso), the
 greeter and lock screen.
 
-Work in progress, and in daily use: the bar, the launcher, the control center,
-notifications, the clipboard's history, the on-screen display, the polkit dialog,
-the session menu, idling, the wallpaper and a settings window for all of that.
+Work in progress, and in daily use: the bar, at any edge of the screen, a dock,
+the launcher, the control center, notifications, the clipboard's history, the
+on-screen display, the polkit dialog, the session menu, idling, the wallpaper
+and a settings window for all of that.
 
 ## Installing it
 
