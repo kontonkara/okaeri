@@ -33,6 +33,11 @@ end="// okaeri: end"
 off="// okaeri turned this off: "
 # Bars and shells niri may start that would show beside it.
 others="waybar|ironbar|eww|ags|astal|hyprpanel|nwg-panel|yambar|sfwbar|qs|quickshell|noctalia-shell|dms|caelestia"
+# Daemons that do what okaeri does: notifications, idling, polkit's agent, the
+# wallpaper and the night light. Two of a kind would fight over it.
+daemons="mako|dunst|swaync|fnott|swayidle|hypridle|polkit-gnome-authentication-agent-1|polkit-kde-authentication-agent-1|lxpolkit|hyprpolkitagent|xfce-polkit|swaybg|swww-daemon|hyprpaper|wpaperd|wlsunset|gammastep"
+# Those of them that start as services of the user's, by their names there.
+units="mako dunst swaync swayidle hypridle hyprpolkitagent plasma-polkit-agent polkit-gnome-authentication-agent-1 swaybg swww hyprpaper wpaperd wlsunset gammastep"
 
 say() {
 	printf '%s\n' "$*"
@@ -283,11 +288,26 @@ mark_niri() {
 	turn_off_others
 }
 
-# Another bar that niri starts, off by a mark, if you say so.
+# What starts as a service of the user's and does what okaeri does: said, with
+# how to stop it, as a service is the user's to keep or not.
+services() {
+	has systemctl || return 0
+	found=
+	for unit in $units; do
+		[ "$(systemctl --user is-enabled "$unit.service" 2>/dev/null)" = enabled ] && found="$found $unit.service"
+	done
+	[ -n "$found" ] || return 0
+	say "These start with the session and do what okaeri does:$found"
+	say "To stop them for good: systemctl --user disable --now$found"
+}
+
+# Another bar that niri starts, and what does what okaeri does, off by a mark, if
+# you say so; and what starts as a service, said.
 turn_off_others() {
-	lines=$(grep -nE "^[[:space:]]*spawn-at-startup[[:space:]]+\"($others)\"" "$niri_config" | cut -d: -f1 || true)
+	services
+	lines=$(grep -nE "^[[:space:]]*spawn(-sh)?-at-startup[[:space:]]+\"([^\"]*/)?($others|$daemons)([[:space:]\"])" "$niri_config" | cut -d: -f1 || true)
 	[ -n "$lines" ] || return 0
-	say "niri starts another bar as well:"
+	say "niri starts another bar, or what does what okaeri does, as well:"
 	for line in $lines; do
 		say "  $(sed -n "${line}p" "$niri_config")"
 	done
