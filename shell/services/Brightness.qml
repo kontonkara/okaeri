@@ -18,10 +18,15 @@ Singleton {
 	// Never dark enough to leave nothing to see by.
 	readonly property real lowest: 0.01
 
+	// change() left it where it was, at an end of it.
+	signal stayed
+
 	function change(by) {
 		if (!available)
 			return;
 		const value = Math.round(Math.max(lowest, Math.min(1, level + by)) * maximum);
+		if (value === current)
+			stayed();
 		Env.act(`brightness ${value}`, () => {
 			// Shown at once; the file follows.
 			current = value;

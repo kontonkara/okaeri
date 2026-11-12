@@ -8,7 +8,8 @@ import qs.services
 // "top-left", "top" (by the bar, wherever Settings.bar.position has it: under the
 // screen's top, over its bottom, or beside one of its sides, where the first is
 // at the bar's top, the second by `middle` and the third at its bottom) or
-// "center". What's put in it goes on a
+// "center". With `edge` and `off` it's by something else than the bar. What's
+// put in it goes on a
 // card `panelWidth` wide, as tall as it needs. show(), hide() and toggle();
 // Escape, a click elsewhere and another panel opening in the same place close
 // it, unless it's `modal`, which is for whoever owns it to close. It takes the
@@ -25,7 +26,12 @@ PanelWindow {
 	property string align: "top-right"
 	// For "top": where along the bar the card has its middle, across the screen
 	// or, by a bar at a side, down it.
-	property real middle: Settings.barSide ? (screen ? screen.height : height) / 2 : across / 2
+	property real middle: upright ? (screen ? screen.height : height) / 2 : across / 2
+	// The edge of the screen it stands by, and how far off that: the bar's, unless
+	// it's a panel of something else there.
+	property string edge: Settings.barAt
+	property real off: Settings.inset(screen, edge)
+	readonly property bool upright: edge === "left" || edge === "right"
 	property real panelWidth: Theme.u(380)
 	property real padding: Theme.u(12)
 	property bool modal: false
@@ -34,13 +40,13 @@ PanelWindow {
 	property bool shown: false
 	// How tall what's put in it can get: the screen, without the bar and the
 	// card's own edges.
-	readonly property real room: height - Settings.top(screen) - Settings.bottom(screen) - padding * 2
+	readonly property real room: height - (edge === "top" ? off : Settings.top(screen)) - (edge === "bottom" ? off : Settings.bottom(screen)) - padding * 2
 	// By a bar at the bottom it stands on that, and grows up out of it.
-	readonly property bool low: Settings.barBelow && align !== "center"
+	readonly property bool low: edge === "bottom" && align !== "center"
 	// By one at a side it stands beside that.
-	readonly property bool beside: Settings.barSide && align !== "center"
+	readonly property bool beside: upright && align !== "center"
 	// Where on the screen that puts it, for what else is there.
-	readonly property string place: beside ? `${align === "top-left" ? "top" : align === "top-right" ? "bottom" : "middle"}-${Settings.barAt}`
+	readonly property string place: beside ? `${align === "top-left" ? "top" : align === "top-right" ? "bottom" : "middle"}-${edge}`
 		: low ? align.replace("top", "bottom") : align
 	// The screen's width: the window's own isn't known yet as it first opens.
 	readonly property real across: screen ? screen.width : width
@@ -146,7 +152,7 @@ PanelWindow {
 			bottom: true
 		}
 		// In whole pixels, or its edges would smear.
-		margins.left: panel.beside ? (Settings.barAt === "left" ? Settings.left(panel.screen) : panel.across - implicitWidth - Settings.right(panel.screen))
+		margins.left: panel.beside ? (panel.edge === "left" ? Math.round(panel.off) : Math.round(panel.across - implicitWidth - panel.off))
 			: panel.align === "top-right" ? panel.across - implicitWidth - Theme.edge
 			: panel.align === "top-left" ? Theme.edge
 			: Math.round(Math.max(Theme.edge, Math.min(panel.middle - implicitWidth / 2, panel.across - implicitWidth - Theme.edge)))
@@ -169,7 +175,7 @@ PanelWindow {
 			id: scope
 
 			// Where in it transformOrigin is.
-			readonly property real originX: panel.beside ? (Settings.barAt === "left" ? 0 : width) : panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
+			readonly property real originX: panel.beside ? (panel.edge === "left" ? 0 : width) : panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
 			readonly property real originY: panel.align === "center" ? height / 2
 				: panel.beside ? (panel.align === "top-left" ? 0 : panel.align === "top-right" ? height : height / 2)
 				: panel.low ? height : 0
@@ -178,8 +184,8 @@ PanelWindow {
 				: panel.beside ? (panel.align === "top-left" ? Theme.edge
 					: panel.align === "top-right" ? parent.height - Theme.edge - height
 					: Math.round(Math.max(Theme.edge, Math.min(panel.middle - height / 2, parent.height - Theme.edge - height))))
-				: panel.low ? parent.height - Settings.bottom(panel.screen) - height
-				: Settings.top(panel.screen)
+				: panel.low ? Math.round(parent.height - panel.off - height)
+				: panel.edge === "top" ? Math.round(panel.off) : Settings.top(panel.screen)
 			width: parent.width
 			height: card.height
 			focus: true
@@ -187,7 +193,7 @@ PanelWindow {
 			scale: 0.94
 			// It grows out of where it belongs.
 			transformOrigin: panel.align === "center" ? Item.Center
-				: panel.beside ? [[Item.TopLeft, Item.Left, Item.BottomLeft], [Item.TopRight, Item.Right, Item.BottomRight]][Settings.barAt === "left" ? 0 : 1][panel.align === "top-left" ? 0 : panel.align === "top-right" ? 2 : 1]
+				: panel.beside ? [[Item.TopLeft, Item.Left, Item.BottomLeft], [Item.TopRight, Item.Right, Item.BottomRight]][panel.edge === "left" ? 0 : 1][panel.align === "top-left" ? 0 : panel.align === "top-right" ? 2 : 1]
 				: panel.align === "top-right" ? (panel.low ? Item.BottomRight : Item.TopRight)
 				: panel.align === "top-left" ? (panel.low ? Item.BottomLeft : Item.TopLeft)
 				: panel.low ? Item.Bottom : Item.Top

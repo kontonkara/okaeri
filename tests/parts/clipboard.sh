@@ -610,6 +610,12 @@ sleep 0.5
 wl-paste --type image/png >"$files/pasted.png"
 cmp "$files/pinned.png" "$files/pasted.png" || fail "the pinned picture came back changed"
 
+# Another picture as large as the pinned one says the same of itself, and is
+# there all the same; the pinned one, put back just now, is there once.
+magick -size 64x48 xc:'#993366' "$files/other.png"
+wl-copy --type image/png <"$files/other.png"
+sleep 0.5
+
 # Only text or only pictures, by the two buttons beside the filter.
 copy 'some more text' 'some more text'
 mark
@@ -617,10 +623,22 @@ open_panel
 move 1321 73
 click
 wait_new "2 entries"
+# The same button again lets the rest back: as many pictures as text here.
+mark
+click
+wait_new "4 entries"
+mark
 move 1365 73
 click
-wait_new "1 entry"
+wait_new "2 entries"
 shot only-pictures
+# By the keys too: Ctrl+I lets the rest back, and Ctrl+T leaves only the text.
+mark
+wtype -M ctrl -k i -m ctrl
+wait_new "4 entries"
+mark
+wtype -M ctrl -k t -m ctrl
+wait_new "2 entries"
 close_panel
 
 # Unpinned by the key: gone with its file.

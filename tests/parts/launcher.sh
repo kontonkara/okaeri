@@ -633,6 +633,28 @@ nothing_launched
 key Escape
 is_closed "after hiding"
 
+# Kept on the dock from the same menu, and let go from it.
+dock() {
+	open
+	type "$1"
+	shifted_enter
+	press Down 4
+	key Return
+	sleep 0.3
+	key Escape
+	is_closed "the dock's row for $1"
+}
+dock "icon none"
+[ "$(jq -c .dock.pinned "$own")" = '["icon.none"]' ] || fail "kept on the dock: $(jq -c .dock.pinned "$own")"
+dock "icon none"
+[ "$(jq -c .dock.pinned "$own")" = '[]' ] || fail "let go from the dock: $(jq -c .dock.pinned "$own")"
+
+# Open by a call, with something typed already.
+ipc launcher open "icon file"
+sleep 0.5
+key Return
+launched icon.file
+
 # A / says what it can ask for, Enter takes it, and it narrows down as it's typed.
 open
 type /

@@ -6,6 +6,7 @@
 #                         toggle`, `okaeri volume up 10`
 #   okaeri dmenu [prompt] shows the lines of standard input to pick one of, and
 #                         prints it, as dmenu does for scripts
+#   okaeri commands       lists what can be called, each target with its calls
 set -eu
 
 shell=${OKAERI_SHELL_DIR:-$(dirname "$(readlink -f "$0")")/../shell}
@@ -22,6 +23,11 @@ if [ "${1:-}" = dmenu ]; then
 	[ -n "$picked" ] || exit 1
 	printf '%s\n' "$picked"
 	exit 0
+fi
+
+# All there is to call, as the running shell has it.
+if [ "${1:-}" = commands ]; then
+	exec quickshell ipc -p "$shell" show
 fi
 
 [ "$#" -eq 0 ] || exec quickshell ipc -p "$shell" call -- "$@"

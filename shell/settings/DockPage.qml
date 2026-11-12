@@ -1,15 +1,30 @@
 import QtQuick
+import Quickshell
 import qs
 import qs.launcher
 import qs.ui
 
-// The dock: whether there's one, where, how large, whether it hides, and the
-// apps it keeps, which the launcher's menu of an app and a right click on the
-// dock put there.
+// The dock: whether there's one, where, how large, whether it hides, the screens
+// it's on if there are more than one, and the apps it keeps, which an app's menu
+// puts there, in the launcher or on the dock.
 Flickable {
 	id: page
 
 	readonly property var own: Settings.dock
+	// The screens there are, and those left without a dock that aren't there now.
+	readonly property var screens: {
+		const there = Quickshell.screens.map(screen => ({
+			name: screen.name,
+			about: [screen.model, `${screen.width}×${screen.height}`].filter(part => !!part).join(" · ")
+		}));
+		const gone = own.hideOn.filter(name => !there.some(screen => screen.name === name)).map(name => ({ name, about: "Not connected" }));
+		return there.concat(gone);
+	}
+
+	function showOn(name, wanted) {
+		const others = own.hideOn.filter(other => other !== name);
+		Settings.set("dock", "hideOn", wanted ? others : others.concat([name]));
+	}
 
 	contentHeight: column.height
 	clip: true
@@ -66,13 +81,32 @@ Flickable {
 
 		Card {
 			width: parent.width
+			title: "Screens"
+			visible: page.screens.length > 1
+
+			Repeater {
+				model: page.screens
+
+				Setting {
+					required property var modelData
+
+					text: modelData.name
+					subtext: modelData.about
+					checked: !page.own.hideOn.includes(modelData.name)
+					onToggled: wanted => page.showOn(modelData.name, wanted)
+				}
+			}
+		}
+
+		Card {
+			width: parent.width
 			title: "Kept on it"
 
 			Text {
 				width: parent.width
 				visible: page.own.pinned.length === 0
 				wrapMode: Text.WordWrap
-				text: "None yet: a right click on an app in the dock keeps it there, and so does its menu in the launcher."
+				text: "None yet: a right click on an app in the dock has a menu that keeps it there, and so does its menu in the launcher. One that's kept goes where it's dragged along the dock."
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)

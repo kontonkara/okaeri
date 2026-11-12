@@ -44,10 +44,13 @@ Panel {
 	property var files: []
 	readonly property string home: Quickshell.env("HOME")
 
+	// What was found for less stays until what's asked now is: an empty list at
+	// every letter would flicker.
 	onFilingChanged: {
-		files = [];
 		if (filing.length > 1)
 			looking.restart();
+		else
+			files = [];
 	}
 
 	// A script's lines to pick from, and the pipe that takes the answer: null with
@@ -293,6 +296,13 @@ Panel {
 			launcher.toggle();
 		}
 
+		// Open with `text` typed already: `okaeri launcher open "/emoji "` for a key
+		// that goes straight to the emoji.
+		function open(text: string): void {
+			launcher.show();
+			field.text = text;
+		}
+
 		// A script's lines to pick one of: the file that has them, and the pipe
 		// the answer goes to. `okaeri dmenu` is how it's called.
 		function menu(file: string, pipe: string, prompt: string): void {
@@ -386,6 +396,22 @@ Panel {
 		onShiftAccepted: launcher.openMenu(list.entry(list.currentIndex))
 		Keys.onUpPressed: list.move(-1)
 		Keys.onDownPressed: list.move(1)
+		// A screenful of the rows at once, and Ctrl with N and P as the arrows, as
+		// other launchers have them.
+		Keys.onPressed: event => {
+			const ctrl = !!(event.modifiers & Qt.ControlModifier);
+			if (event.key === Qt.Key_PageDown)
+				list.page(1);
+			else if (event.key === Qt.Key_PageUp)
+				list.page(-1);
+			else if (ctrl && event.key === Qt.Key_N)
+				list.move(1);
+			else if (ctrl && event.key === Qt.Key_P)
+				list.move(-1);
+			else
+				return;
+			event.accepted = true;
+		}
 		Keys.onEscapePressed: event => {
 			if (launcher.menuOf)
 				launcher.closeMenu();
@@ -490,7 +516,9 @@ Panel {
 		Text {
 			anchors.centerIn: parent
 			visible: list.count === 0
-			text: "Nothing found"
+			text: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
+				: launcher.filing.length < 2 ? "Two letters of a file's name, or more"
+				: looking.running || finder.running ? "Looking..." : "Nothing found"
 			color: Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize

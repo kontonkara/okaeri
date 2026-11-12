@@ -1456,6 +1456,22 @@ sleep 0.5
 shot weather-month
 key Escape
 wait_up 0
+# With the hours ahead in the answer, and what now feels like, the card has those
+# too: it asks again as the units change, and the server says the same in any.
+cat >"$work/weather/v1/forecast" <<'JSON'
+{"current":{"temperature_2m":12.4,"weather_code":3,"is_day":1,"apparent_temperature":9.6,"relative_humidity_2m":71,"wind_speed_10m":18.2},"hourly":{"time":["2026-11-09T10:00","2026-11-09T11:00","2026-11-09T12:00","2026-11-09T13:00","2026-11-09T14:00","2026-11-09T15:00","2026-11-09T16:00","2026-11-09T17:00","2026-11-09T18:00","2026-11-09T19:00","2026-11-09T20:00","2026-11-09T21:00","2026-11-09T22:00"],"weather_code":[3,3,61,61,61,3,2,1,0,0,0,0,0],"temperature_2m":[12.4,13.0,13.6,14.1,13.8,13.0,12.1,11.0,10.2,9.4,8.8,8.1,7.5],"precipitation_probability":[5,10,60,80,45,15,5,0,0,0,0,0,0],"is_day":[1,1,1,1,1,1,1,0,0,0,0,0,0]},"daily":{"time":["2026-11-09","2026-11-10","2026-11-11","2026-11-12"],"weather_code":[3,61,71,0],"temperature_2m_max":[14.1,11.2,3.9,8.0],"temperature_2m_min":[6.2,5.0,-1.3,2.4]}}
+JSON
+settings '{ "weather": { "on": true, "bar": true, "units": "fahrenheit" } }'
+sleep 1
+move 700 16
+click
+wait_up 1
+sleep 0.5
+shot weather-hours
+key Escape
+wait_up 0
+[ "$(magick "$out/weather-month.png" "$out/weather-hours.png" -compose difference -composite \
+	-crop 320x300+540+50 +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no hours ahead in the weather"
 settings '{ "weather": { "on": false } }'
 move 700 16
 click

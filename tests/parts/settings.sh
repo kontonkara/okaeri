@@ -965,7 +965,11 @@ sleep 0.3
 page "$tray_y"
 
 step "Back to the config"
+# It asks first: one click leaves all as it is, and the next goes ahead.
 move "$menu_x" "$back_y"
+click
+sleep 0.3
+[ "$(value .)" != '{}' ] || fail "one click took all that was set"
 click
 sleep 0.3
 same "the shell's file" "$(value .)" '{}'

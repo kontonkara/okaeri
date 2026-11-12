@@ -81,17 +81,78 @@ click
 sleep 0.5
 [ "$(focused)" = kitty ] || fail "a click on an app with a window went to $(focused)"
 [ "$(launched)" = kitty ] || fail "a click on an app with a window launched something"
-# A right click on the other keeps it, and one more lets it go.
+# The wheel on the other goes to its window.
+move $((right - one / 2)) 862
+wheel 1
+sleep 0.5
+[ "$(focused)" = okaeri-other ] || fail "the wheel on an app went to $(focused)"
+# A right click on it opens its menu, over its icon. It's not an app this
+# machine knows, so the menu has keeping it and closing it, and no more.
+kept() {
+	jq -c .dock.pinned "$own"
+}
+shot before-menu
+click right
+sleep 0.6
+shot menu
+[ "$(pixel menu $((right - one / 2)) 760)" != "$(pixel before-menu $((right - one / 2)) 760)" ] || fail "no menu over the app a right click was on"
+key Down
+key Return
+sleep 0.4
+[ "$(kept)" = '["kitty","okaeri-other"]' ] || fail "the menu's first row kept $(kept)"
+shot menu-gone
+[ "$(pixel menu-gone $((right - one / 2)) 760)" = "$(pixel before-menu $((right - one / 2)) 760)" ] || fail "the menu stays after a row of it was picked"
+# The first, dragged past the other, has its place, and isn't gone to for that.
+move $((left + one / 2)) 862
+hold
+wlrctl pointer move 20 0
+sleep 0.1
+wlrctl pointer move 50 0
+sleep 0.3
+let_go
+sleep 0.3
+[ "$(kept)" = '["okaeri-other","kitty"]' ] || fail "an app dragged past another left $(kept)"
+[ "$(focused)" = okaeri-other ] || fail "an app that was dragged was gone to: $(focused)"
+# The menu lets it go again, and then it's after the one that's kept.
+move $((left + one / 2)) 862
+click right
+sleep 0.6
+key Down
+key Return
+sleep 0.4
+[ "$(kept)" = '["kitty"]' ] || fail "the menu of an app that's kept left $(kept)"
+# Its last row closes its window.
 move $((right - one / 2)) 862
 click right
-sleep 0.4
-[ "$(jq -c .dock.pinned "$own")" = '["kitty","okaeri-other"]' ] || fail "a right click kept $(jq -c .dock.pinned "$own")"
-click right
-sleep 0.4
-[ "$(jq -c .dock.pinned "$own")" = '["kitty"]' ] || fail "another right click left $(jq -c .dock.pinned "$own")"
-kill "$second"
+sleep 0.6
+key Down
+key Down
+key Return
+for _ in $(seq 30); do
+	kill -0 "$second" 2>/dev/null || break
+	sleep 0.1
+done
+if kill -0 "$second" 2>/dev/null; then
+	kill "$second"
+	fail "the menu's last row didn't close the app's window"
+fi
 wait "$second" 2>/dev/null || true
+# An app the machine knows has a new window in its menu too, first.
+launches() {
+	log | grep -c 'okaeri: dry: launch kitty$'
+}
+before=$(launches)
+# Alone on the dock again, in its middle.
 sleep 0.8
+move "$middle" 862
+click right
+sleep 0.6
+key Down
+key Return
+sleep 0.4
+[ "$(launches)" = $((before + 1)) ] || fail "the menu of an app with a window didn't open another: $(launches) launches after $before"
+sleep 0.4
+move 700 400
 shot one-again
 set -- $(ends one-again)
 [ $(($2 - $1)) -lt $((one + 10)) ] || fail "an app that went is still on the dock: $1 to $2"
@@ -121,6 +182,29 @@ move 700 899
 sleep 0.8
 shot back
 there back || fail "the edge of the screen doesn't bring the dock"
+# Out of sight it takes no clicks from the window that's there: with another
+# window beside the first, a click where the dock was goes to the one under it.
+move 700 400
+sleep 1.2
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-other --config NONE -o confirm_os_window_close=0 sleep 60 &
+second=$!
+sleep 1.5
+[ "$(focused)" = okaeri-other ] || fail "the window beside the first isn't in focus: $(focused)"
+move 670 870
+click
+sleep 0.5
+[ "$(focused)" = kitty ] || fail "a dock out of sight took a click meant for the window under it"
+kill "$second"
+wait "$second" 2>/dev/null || true
+move 700 400
+sleep 0.5
+
+# A screen that's to have none has none.
+screen=$(niri msg --json outputs | jq -r 'keys[0]')
+settings "{ \"dock\": { \"on\": true, \"pinned\": [\"kitty\"], \"hideOn\": [\"$screen\"] } }"
+wait_layers 0 "on a screen that's to have none"
+settings '{ "dock": { "on": true, "pinned": ["kitty"] } }'
+wait_layers 1 "back on its screen"
 
 kill "$first"
 wait "$first" 2>/dev/null || true

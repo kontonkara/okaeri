@@ -21,15 +21,16 @@ Singleton {
 	property bool canSuspend: false
 	property bool canHibernate: false
 	property bool canFirmware: false
-	// Each there is, and whether this machine can do it.
+	// Each there is, whether this machine can do it, and whether it waits out
+	// Settings.session.countdown first.
 	readonly property var known: [
 		{ action: "lock", text: "Lock", icon: "lock", doing: "Locking", can: true },
 		{ action: "suspend", text: "Suspend", icon: "moon", doing: "Suspending", can: canSuspend },
-		{ action: "hibernate", text: "Hibernate", icon: "hibernate", doing: "Hibernating", can: canHibernate },
-		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out", can: true },
-		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting", can: true },
-		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", can: canFirmware },
-		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down", can: true }
+		{ action: "hibernate", text: "Hibernate", icon: "hibernate", doing: "Hibernating", can: canHibernate, waits: true },
+		{ action: "logout", text: "Log out", icon: "logout", doing: "Logging out", can: true, waits: true },
+		{ action: "reboot", text: "Reboot", icon: "refresh", doing: "Rebooting", can: true, waits: true },
+		{ action: "firmware", text: "Reboot to firmware", icon: "chip", doing: "Rebooting to firmware", can: canFirmware, waits: true },
+		{ action: "poweroff", text: "Shut down", icon: "power", doing: "Shutting down", can: true, waits: true }
 	]
 	// What can be asked for, in the menu and the launcher alike.
 	readonly property var actions: known.filter(row => row.can && !Settings.session.hidden.includes(row.action))

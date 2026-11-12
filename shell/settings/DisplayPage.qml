@@ -71,6 +71,8 @@ Flickable {
 			implicitWidth: Theme.u(field.wide ? 220 : 120)
 			implicitHeight: Theme.u(32)
 			placeholder: field.placeholder
+			keeps: true
+			wrong: !field.valid(text.trim())
 			onAccepted: {
 				if (field.valid(text.trim()))
 					field.kept(text.trim());
@@ -122,7 +124,7 @@ Flickable {
 			Field {
 				visible: page.own.mode === "schedule"
 				text: "From"
-				subtext: "As 24-hour time, Enter to keep"
+				subtext: "As 24-hour time"
 				placeholder: "20:00"
 				value: page.own.from
 				valid: value => /^([01]?\d|2[0-3]):[0-5]\d$/.test(value)
@@ -132,7 +134,7 @@ Flickable {
 			Field {
 				visible: page.own.mode === "schedule"
 				text: "Until"
-				subtext: "As 24-hour time, Enter to keep"
+				subtext: "As 24-hour time"
 				placeholder: "07:00"
 				value: page.own.until
 				valid: value => /^([01]?\d|2[0-3]):[0-5]\d$/.test(value)
@@ -142,7 +144,7 @@ Flickable {
 			Field {
 				visible: page.own.mode === "sun"
 				text: "Latitude"
-				subtext: "North is above 0, Enter to keep"
+				subtext: "North is above 0"
 				placeholder: "52.5"
 				value: String(page.own.latitude)
 				valid: value => value !== "" && !isNaN(Number(value)) && Math.abs(Number(value)) <= 90
@@ -152,7 +154,7 @@ Flickable {
 			Field {
 				visible: page.own.mode === "sun"
 				text: "Longitude"
-				subtext: "East is above 0, Enter to keep"
+				subtext: "East is above 0"
 				placeholder: "13.4"
 				value: String(page.own.longitude)
 				valid: value => value !== "" && !isNaN(Number(value)) && Math.abs(Number(value)) <= 180
@@ -211,7 +213,7 @@ Flickable {
 
 			Field {
 				text: "Where the videos go"
-				subtext: "A folder, Enter to keep: empty is Videos"
+				subtext: "A folder: empty is Videos"
 				placeholder: "~/Videos"
 				wide: true
 				value: Settings.recording.folder

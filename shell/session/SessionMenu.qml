@@ -4,8 +4,9 @@ import qs
 import qs.services
 import qs.ui
 
-// Lock, log out, reboot and the rest. What's picked counts down first, to take
-// a wrong key back: Escape does, and Enter doesn't wait.
+// Lock, log out, reboot and the rest. What ends the session or takes a while to
+// come back from counts down first, to take a wrong key back: Escape does, and
+// Enter doesn't wait. Locking and suspending are undone by a key, and don't.
 Panel {
 	id: menu
 
@@ -14,7 +15,7 @@ Panel {
 	property int left: 0
 
 	function pick(row) {
-		left = Settings.session.countdown;
+		left = row.waits ? Settings.session.countdown : 0;
 		if (left > 0) {
 			pending = row;
 			waiting.forceActiveFocus();

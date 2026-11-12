@@ -7,7 +7,9 @@ import qs.launcher
 import qs.ui
 
 // The dock of a screen: `apps`, each by its icon, with a mark under one that
-// has windows, longer under the one in focus. It's at the bottom of the screen,
+// has windows, longer under the one in focus and in the color of an error under
+// one that asks to be looked at. The wheel on one goes through its windows, and
+// one the dock keeps can be dragged to another place among those. It's at the bottom of the screen,
 // or where Settings.dock.position says, in its middle, and windows keep out of
 // its way; with Settings.dock.autoHide it's out of sight, over them, until the
 // pointer rests at its edge of the screen.
@@ -30,12 +32,26 @@ PanelWindow {
 	readonly property real tipsFrom: thick + Theme.u(6)
 	readonly property string tipsAt: ({ top: "below", bottom: "above", left: "right", right: "left" })[at]
 	// In sight: always, unless it hides; then with the pointer at its edge or on it.
-	readonly property bool pointed: sensor.containsMouse || over.hovered
+	// Its menu is open: that keeps it in sight too.
+	property bool held: false
+	readonly property bool pointed: sensor.containsMouse || over.hovered || held
 	property bool down: true
 
 	signal activated(var app)
 	signal started(var app)
-	signal pinned(var app, bool wanted)
+	// A step through its windows, 1 for the next.
+	signal turned(var app, int by)
+	// Its menu, where `along` this edge of the screen its icon has its middle.
+	signal asked(var app, real along)
+	// One place on among those kept, or with -1 one back.
+	signal moved(var app, int by)
+
+	// Where along its edge of the screen `item` of it has its middle: the dock is
+	// in the middle of that edge.
+	function alongOf(item) {
+		const at = item.mapToItem(null, item.width / 2, item.height / 2);
+		return upright ? (modelData.height - height) / 2 + at.y : (modelData.width - width) / 2 + at.x;
+	}
 
 	function settle() {
 		coming.stop();
@@ -67,6 +83,14 @@ PanelWindow {
 	exclusionMode: hides ? ExclusionMode.Ignore : ExclusionMode.Auto
 	color: "transparent"
 	WlrLayershell.namespace: "okaeri-dock"
+	// Only where it shows: out of sight it's still over the windows, and the clicks
+	// there are theirs.
+	mask: Region {
+		x: Math.round(body.x)
+		y: Math.round(body.y)
+		width: dock.width
+		height: dock.height
+	}
 	BackgroundEffect.blurRegion: Theme.barBlur ? glass : null
 
 	onHidesChanged: settle()
@@ -183,6 +207,8 @@ PanelWindow {
 					required property var modelData
 					readonly property bool running: modelData.windows.length > 0
 					readonly property bool focused: modelData.windows.some(window => window.is_focused)
+					readonly property bool urgent: modelData.windows.some(window => window.is_urgent)
+					readonly property bool kept: dock.own.pinned.includes(modelData.id)
 					readonly property string image: modelData.entry ? Apps.image(modelData.entry.icon) : Apps.imageOf(modelData.id)
 
 					width: dock.upright ? dock.thick - Theme.u(12) : dock.size + Theme.u(4)
@@ -226,7 +252,7 @@ PanelWindow {
 						height: dock.upright ? long : short
 						radius: Theme.round(short)
 						visible: app.running
-						color: app.focused ? Theme.colors.accent : Theme.colors.subtext
+						color: app.urgent ? Theme.colors.error : app.focused ? Theme.colors.accent : Theme.colors.subtext
 
 						Behavior on long {
 							enabled: Theme.animate
@@ -244,22 +270,76 @@ PanelWindow {
 						anchors.fill: parent
 						hoverEnabled: true
 						acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-						cursorShape: Qt.PointingHandCursor
+						// Where along the dock the button went down, and whether the pointer
+						// went far enough from there since to be dragging the app.
+						property real from: 0
+						property bool dragging: false
+						property int notches: 0
+
+						function along(event) {
+							const at = mapToItem(row, event.x, event.y);
+							return dock.upright ? at.y : at.x;
+						}
+
+						cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+						onPressed: event => {
+							dragging = false;
+							from = along(event);
+						}
+						// Into the place of the one beside it, and that one takes this
+						// one's: the pointer is over its own app again.
+						onPositionChanged: event => {
+							if (!(pressedButtons & Qt.LeftButton) || !app.kept)
+								return;
+							const at = along(event);
+							if (!dragging && Math.abs(at - from) < Theme.u(8))
+								return;
+							dragging = true;
+							const long = dock.upright ? app.height : app.width;
+							const middle = (dock.upright ? app.y : app.x) + long / 2;
+							const reach = long / 2 + row.spacing;
+							if (at > middle + reach)
+								dock.moved(app.modelData, 1);
+							else if (at < middle - reach)
+								dock.moved(app.modelData, -1);
+						}
+						onReleased: letGo.restart()
+						onCanceled: dragging = false
 						onClicked: event => {
+							if (dragging)
+								return;
 							if (event.button === Qt.RightButton)
-								dock.pinned(app.modelData, !dock.own.pinned.includes(app.modelData.id));
+								dock.asked(app.modelData, dock.alongOf(app));
 							else if (event.button === Qt.MiddleButton && app.modelData.entry)
 								dock.started(app.modelData);
 							else if (event.button === Qt.LeftButton)
 								dock.activated(app.modelData);
 						}
+						// 120 to a notch, down being the next window.
+						onWheel: event => {
+							notches += event.angleDelta.y;
+							const steps = Math.trunc(notches / 120);
+							if (steps === 0)
+								return;
+							notches -= steps * 120;
+							if (app.running)
+								dock.turned(app.modelData, -steps);
+						}
+
+						// The click that ends a drag comes after the release.
+						Timer {
+							id: letGo
+
+							interval: 0
+							onTriggered: pointer.dragging = false
+						}
 					}
 
 					Tip {
 						listens: false
-						hovered: pointer.containsMouse
+						hovered: pointer.containsMouse && !dock.held
 						pressed: pointer.pressed
-						text: [app.modelData.entry?.name ?? app.modelData.id, app.modelData.windows.length > 1 ? `${app.modelData.windows.length} windows` : "", dock.own.pinned.includes(app.modelData.id) ? "kept" : ""].filter(part => part !== "").join(" · ")
+						text: [app.modelData.entry?.name ?? app.modelData.id, app.modelData.windows.length > 1 ? `${app.modelData.windows.length} windows` : "", app.kept ? "kept" : ""].filter(part => part !== "").join(" · ")
 					}
 				}
 			}

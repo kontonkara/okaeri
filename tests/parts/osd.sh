@@ -106,6 +106,9 @@ Singleton {
 	property real micVolume: 0.6
 	property bool micMuted: false
 
+	signal stayed
+	signal micStayed
+
 	function change(by) {}
 	function toggleMute() {}
 	function toggleMicMute() {}
@@ -121,6 +124,8 @@ Singleton {
 	property string device: "first"
 	property bool available: true
 	property real level: 0.25
+
+	signal stayed
 
 	function change(by) {}
 }
@@ -172,6 +177,14 @@ ShellRoot {
 
 		function limit(limit: real): void {
 			Audio.limit = limit;
+		}
+
+		// A key at an end of the volume, or of the brightness.
+		function stay(what: string): void {
+			if (what === "volume")
+				Audio.stayed();
+			else
+				Brightness.stayed();
 		}
 
 		function brightness(level: real): void {
@@ -301,6 +314,15 @@ sleep 0.1
 shot back
 card back 000000 ffffff 120
 between "left after the fade's call" "$(leaves "$since")" 1450 2300
+
+# A key at an end of the volume or of the brightness moves neither, and still
+# gets its card.
+ipc poke stay volume
+comes_up "no card for a volume key at its end"
+leaves "$(now)" >/dev/null
+ipc poke stay brightness
+comes_up "no card for a brightness key at its end"
+leaves "$(now)" >/dev/null
 
 # Each theme by its own colors.
 theme '{"extends":"light"}'

@@ -46,13 +46,26 @@ Singleton {
 		listing.running = true;
 	}
 
+	// What's asked of them and not begun, in turn: [{ id, wanted }].
+	property var asked: []
+
 	function set(connection, wanted) {
 		failure = "";
-		failedId = connection.id;
 		Env.act(`vpn ${wanted ? "up" : "down"}`, () => {
-			changing.command = [tool, "connection", wanted ? "up" : "down", "uuid", connection.id];
-			changing.running = true;
+			asked = asked.concat([{ id: connection.id, wanted }]);
+			next();
 		});
+	}
+
+	// One at a time: nmcli says why only of its own.
+	function next() {
+		if (changing.running || asked.length === 0)
+			return;
+		const request = asked[0];
+		asked = asked.slice(1);
+		failedId = request.id;
+		changing.command = [tool, "connection", request.wanted ? "up" : "down", "uuid", request.id];
+		changing.running = true;
 	}
 
 	// The switch: all that's up goes down, or the preferred one comes up.
@@ -74,7 +87,7 @@ Singleton {
 		}
 	}
 
-	// One at a time: what it says when it fails is why.
+	// What it says when it fails is why.
 	Process {
 		id: changing
 
@@ -85,6 +98,7 @@ Singleton {
 			if (code !== 0)
 				vpn.failure = said.text.trim().split("\n").pop().replace(/^Error: /, "") || "Couldn't connect";
 			vpn.look();
+			vpn.next();
 		}
 	}
 

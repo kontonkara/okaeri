@@ -3,7 +3,8 @@ import qs
 import qs.ui
 
 // A line with a field: `text`, `subtext` if it has one, and `value` in the
-// field to start from. Enter keeps what's typed: kept(value).
+// field to start from. Enter keeps what's typed, and so does leaving the field:
+// kept(value). Escape puts back what it had.
 Item {
 	id: field
 
@@ -54,6 +55,7 @@ Item {
 		implicitHeight: Theme.u(32)
 		placeholder: field.placeholder
 		text: field.value
+		keeps: true
 		onAccepted: field.kept(text.trim())
 	}
 }

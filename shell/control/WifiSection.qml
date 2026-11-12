@@ -115,8 +115,11 @@ Section {
 			visible: !hidden.asking
 			height: Theme.u(30)
 			flat: true
-			text: "One that hides its name"
-			ink: Theme.colors.subtext
+			// How the last try at one went is here too: it has no row to say it on.
+			longest: hidden.width - Theme.u(24)
+			enabled: !Wifi.joining
+			text: Wifi.joining ? `Connecting to ${Wifi.joined}...` : Wifi.joinFailure ? `${Wifi.joined}: ${Wifi.joinFailure}` : "One that hides its name"
+			ink: Wifi.joinFailure && !Wifi.joining ? Theme.colors.error : Theme.colors.subtext
 			onClicked: hidden.asking = true
 		}
 
