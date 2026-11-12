@@ -30,5 +30,6 @@
   "night": "dark",
   "dayFrom": "07:00",
   "nightFrom": "19:00",
+  "accent": "",
   "wallpaperAccent": false
 }

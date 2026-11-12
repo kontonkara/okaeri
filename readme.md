@@ -150,7 +150,9 @@ where you don't, are with its width on the Control page, a click on its tile the
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by
 name. The settings window picks one too, or two, for the day and for the night,
-and can take the accent from the wallpaper. `okaeri wallpaper next` puts up
+showing each by its colors, and can take the accent from the wallpaper or have
+one of your own over any palette's, `accent` in `theme.json` as `#rrggbb`, or
+`okaeri theme accent '#3366cc'` for a script. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri wallpaper set <file>` that
 one, and a right click on one in the settings makes it one screen's own or the
 light colors'. `okaeri record toggle`

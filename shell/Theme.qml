@@ -91,8 +91,12 @@ Singleton {
 	// Those come a moment after the start: until then this is the built-in theme.
 	readonly property bool ready: userRead && ownRead
 
+	// Undefined takes the key away: what the files say again.
 	function set(key, value) {
-		own = Object.assign({}, own, { [key]: value });
+		const next = Object.assign({}, own, { [key]: value });
+		if (value === undefined)
+			delete next[key];
+		own = next;
 		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
 	}
 
@@ -144,12 +148,15 @@ Singleton {
 	}
 	// The palette that's on: the hour's, the one the settings window chose, or
 	// the one the user's file extends. One chosen here or by the hour is all of
-	// the colors: the user's own would be those of one palette on another.
+	// the colors: the user's own would be those of one palette on another, unless
+	// it's the one their file extends.
 	readonly property bool chosen: timed || !!own.extends
 	readonly property string named: timed ? (day ? plain.day : plain.night) : own.extends || user.extends || ""
 	readonly property var parent: builtIn[named] || {}
-	readonly property var palette: Object.assign({}, builtIn.dark.colors, parent.colors, chosen ? {} : user.colors)
+	readonly property var palette: Object.assign({}, builtIn.dark.colors, parent.colors, chosen && named !== (user.extends || "dark") ? {} : user.colors)
 	readonly property bool light: Qt.color(palette.background).hslLightness > 0.5
+	// An accent of one's own, `accent` as "#rrggbb", over any palette's.
+	readonly property string accent: /^#[0-9a-fA-F]{6}$/.test(plain.accent ?? "") ? plain.accent : ""
 	// Everyone's wallpaper as it is now: the one for a light palette while that's on.
 	readonly property string picture: (light && Settings.wallpaper.light) || Settings.wallpaper.path
 
@@ -174,8 +181,14 @@ Singleton {
 		return best ? Qt.hsla(best.hslHue, Math.min(best.hslSaturation, 0.7), light ? 0.38 : 0.74, 1) : null;
 	}
 	readonly property var values: Object.assign({}, plain, {
-		colors: Object.assign({}, palette, plain.wallpaperAccent && vivid ? { accent: vivid } : {})
+		colors: Object.assign({}, palette, accent ? { accent } : {}, plain.wallpaperAccent && vivid ? { accent: vivid } : {})
 	})
+
+	// The colors of the palette `name`, as they'd be on: "" for what the files say.
+	function colorsOf(name) {
+		const file = user.extends || "dark";
+		return Object.assign({}, builtIn.dark.colors, (builtIn[name || file] || {}).colors, (name || file) === file ? user.colors : {});
+	}
 
 	// "07:30" in minutes of the day.
 	function minutes(text) {
@@ -323,8 +336,17 @@ Singleton {
 			calls.palette(theme.palettes[(at + theme.palettes.length - 1) % theme.palettes.length]);
 		}
 
+		// An accent of one's own over any palette's, as #rrggbb, or "" for the palette's.
+		function accent(color: string): void {
+			if (color !== "" && !/^#[0-9a-fA-F]{6}$/.test(color)) {
+				console.info(`okaeri: no accent "${color}", it's #rrggbb or nothing`);
+				return;
+			}
+			theme.set("accent", color.toLowerCase() || undefined);
+		}
+
 		function state(): string {
-			return JSON.stringify({ palette: theme.named, light: theme.light, auto: theme.plain.auto });
+			return JSON.stringify({ palette: theme.named, light: theme.light, auto: theme.plain.auto, accent: String(theme.values.colors.accent) });
 		}
 	}
 
