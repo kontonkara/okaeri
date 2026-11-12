@@ -179,6 +179,15 @@ Scope {
 			Settings.save();
 		}
 
+		// The charge over the last day, as busctl would print it: so many hours ago,
+		// that percent, as "20=90;10=40".
+		function history(points: string): int {
+			const now = Date.now() / 1000;
+			const data = points ? points.split(";").map(point => [now - Number(point.split("=")[0]) * 3600, Number(point.split("=")[1]), 2]) : [];
+			Power.readHistory(JSON.stringify({ type: "a(udu)", data: [data] }), now);
+			return Power.history.length;
+		}
+
 		// As if from the machine's battery.
 		function battery(charge: int, draining: bool, left: int): void {
 			Power.charge = charge;
@@ -1451,6 +1460,24 @@ right_end() {
 }
 [ "$(right_end battery-on)" != "$(right_end battery-time)" ] || fail "the time left looks like the percent"
 [ "$(right_end battery-time)" != "$(right_end battery-bare)" ] || fail "nothing beside it looks like the time"
+# A click on it shows it in full, with the charge over the last day: none known,
+# no line; three points, one, from the first of them on.
+settings '{ "bar": { "right": ["battery", "control"] } }'
+sleep 1
+shot battery-alone
+move "$(lane battery-alone | head -n 1)" 16
+click
+wait_up 1
+same "quarters with nothing known" "$(ipc probe history "")" 0
+sleep 0.4
+shot battery-card
+same "quarters since the first known" "$(ipc probe history "20=90;10=40;2=70")" 81
+sleep 0.4
+shot battery-chart
+[ "$(magick "$out/battery-chart.png" "$out/battery-card.png" -compose difference -composite -crop 340x300+1000+40 +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "no line of the charge on the battery's card"
+key Escape
+wait_up 0
+move 300 600
 settings '{}'
 ipc probe battery 100 false 0
 

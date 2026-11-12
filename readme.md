@@ -76,7 +76,8 @@ has it: `okaeri launcher open "/emoji "` opens the launcher at the emoji, and
 `okaeri dock toggle` shows the dock or puts it away, `okaeri dock pin firefox`
 keeps an app on it and `unpin` lets it go, `okaeri session run lock` does what
 the session menu would, `okaeri calendar toggle`,
-`okaeri media card` and `okaeri load toggle` open those cards of the bar, and
+`okaeri media card`, `okaeri battery toggle` and `okaeri load toggle` open those
+cards of the bar, and
 `okaeri volume set 40`, and `set` of `mic`, `brightness` and `keylight` the same
 way, puts a level at once; `okaeri night warmth 3000` makes the night light that
 warm.
@@ -128,6 +129,9 @@ in the clock's settings and on the Bar page: `.ics` files, read again as they
 change, and addresses that give one, as a calendar's secret address in iCal
 format does, asked again every half hour. A dot is under each day with something
 on it, and a click on a day says what.
+
+A click on the battery shows it in full: how the charge went over the last day,
+the power going in or out, the energy in it and how worn it is.
 
 The Wi-Fi page shares the network it's on with a phone: its name, its password
 and a code the phone's camera reads. The hotspot's tile makes the machine one for

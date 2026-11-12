@@ -1,11 +1,13 @@
 import QtQuick
+import Quickshell
 import qs
 import qs.services
 import qs.ui
 
 // The laptop's battery, when there is one: always, on battery or when it's low,
 // as Settings.battery.show says, and beside it the percent, the time left or
-// nothing, under it on a bar at a side. The pointer on it says how it's doing.
+// nothing, under it on a bar at a side. The pointer on it says how it's doing,
+// and a click shows it in full, with how the charge went over the last day.
 Item {
 	id: battery
 
@@ -22,6 +24,38 @@ Item {
 	implicitWidth: row.implicitWidth
 	implicitHeight: row.implicitHeight
 	visible: wanted
+
+	// On this bar's screen, not the one in focus: a click can come from another.
+	function flip() {
+		card.middle = Panels.middleOf(battery);
+		if (card.shown)
+			card.hide();
+		else
+			card.show(battery.QsWindow.window.screen);
+	}
+
+	// `okaeri battery toggle`, for a key.
+	Connections {
+		target: Panels
+
+		function onPartWanted(name, screen) {
+			if (name !== "battery" || !battery.visible || Panels.answered || (screen !== "" && screen !== battery.QsWindow.window?.screen?.name))
+				return;
+			Panels.answered = true;
+			battery.flip();
+		}
+	}
+
+	// As tall as a button of the bar, under it and the pointer.
+	Rectangle {
+		id: back
+
+		anchors.centerIn: parent
+		width: parent.width + (Settings.barSide ? Theme.u(4) : 0)
+		height: Settings.barSide ? parent.height + Theme.u(10) : Theme.u(28)
+		radius: Theme.round(Math.min(width, height))
+		color: pointer.pressed ? Qt.alpha(Theme.colors.text, 0.16) : pointer.containsMouse ? Qt.alpha(Theme.colors.text, 0.08) : "transparent"
+	}
 
 	// The tip covers it all, and in a row it would be one of the things in it.
 	Grid {
@@ -92,7 +126,35 @@ Item {
 		}
 	}
 
+	MouseArea {
+		id: pointer
+
+		anchors.fill: back
+		hoverEnabled: true
+		cursorShape: Qt.PointingHandCursor
+		onClicked: battery.flip()
+	}
+
 	Tip {
+		listens: false
+		hovered: pointer.containsMouse
+		pressed: pointer.pressed
 		text: [`${battery.level}%`, Power.batteryLine, Power.othersLine].filter(part => part !== "").join(" · ")
+	}
+
+	Panel {
+		id: card
+
+		align: "top"
+		panelWidth: Theme.u(320)
+
+		Loader {
+			width: parent.width
+			active: card.visible
+
+			sourceComponent: BatteryCard {
+				onClosed: card.hide()
+			}
+		}
 	}
 }

@@ -151,6 +151,15 @@ Scope {
 		}
 	}
 
+	// The battery's card, on the bar of the screen in focus.
+	IpcHandler {
+		target: "battery"
+
+		function toggle(): void {
+			Panels.ask("battery", Niri.focusedScreen?.name ?? "");
+		}
+	}
+
 	// The keyboard's own light, where it has one.
 	IpcHandler {
 		target: "keylight"

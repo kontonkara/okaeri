@@ -572,13 +572,17 @@ sleep 0.5
 move 300 400
 
 step "Panels of the bar by a call"
-# The month under the clock and the load of the machine, for keys: on the bar
-# of the screen in focus, and the same call again puts it away. With no load on
-# the bar, its call says so.
+# The month under the clock, the battery and the load of the machine, for keys:
+# on the bar of the screen in focus, and the same call again puts it away. With
+# no load on the bar, its call says so.
 ipc calendar toggle
 wait_up panel 1 "the month by a call"
 ipc calendar toggle
 wait_up panel 0 "the month put away by a call"
+ipc battery toggle
+wait_up panel 1 "the battery's card by a call"
+ipc battery toggle
+wait_up panel 0 "the battery's card put away by a call"
 ipc load toggle
 wait_log "okaeri: no load on a bar to open"
 wait_up panel 0 "a call for what isn't on the bar"
