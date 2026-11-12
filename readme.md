@@ -98,6 +98,14 @@ and the night's palettes, for a key. A choice in the window takes the wheel and 
 arrow keys, and the Notifications page has one to show, to see how they come. The
 on-screen display says what plays after a key of the player's, too.
 
+A dot left of a line of the settings window says the window set it, and a click
+on the dot takes that back; the button beside "Back to the config" copies all
+that's set, the files' and the window's, as JSON or as Nix for the Home Manager
+module. The search finds a line by its key too, as `saveTo`. `okaeri settings
+get dock.magnify`, `okaeri settings set dock.magnify 160` and `reset` read and
+change one setting, `theme.accent` and the like the look's, and `okaeri settings
+config nix` prints it all.
+
 The bar takes parts of your own, made on its page of the settings: a command, and
 what it prints is on the bar. The first line shows and the second is what the
 pointer on it says, or it's a line of JSON as waybar's scripts print, with `text`,

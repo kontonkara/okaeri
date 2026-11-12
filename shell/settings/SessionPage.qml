@@ -58,6 +58,8 @@ Flickable {
 			title: "With nothing going on"
 
 			Choice {
+				holds: "idle.lock"
+				words: "locker screen lock"
 				text: "Lock the session"
 				values: page.waits
 				value: Settings.idle.lock
@@ -65,6 +67,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.screenOff"
 				text: "Turn the screens off"
 				values: page.waits
 				value: Settings.idle.screenOff
@@ -72,6 +75,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.fade"
 				text: "Fade out before that"
 				values: [0, 3, 5, 10, 15, 30]
 				value: Settings.idle.fade
@@ -80,6 +84,8 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.suspend"
+				words: "sleep"
 				text: "Put the machine to sleep"
 				subtext: Session.canSuspend ? "Suspend, from when nothing went on" : "Suspend, which logind says this machine can't now"
 				values: page.waits
@@ -88,6 +94,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "idle.suspendOn"
 				text: "Sleep when"
 				visible: Settings.idle.suspend > 0
 				options: [
@@ -99,6 +106,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "idle.playingHolds"
 				text: "Not while something plays"
 				subtext: "Music keeps it up, with the screens off"
 				visible: Settings.idle.suspend > 0
@@ -112,6 +120,7 @@ Flickable {
 			title: "Session menu"
 
 			Choice {
+				holds: "session.countdown"
 				text: "Wait before going ahead"
 				subtext: "Time to cancel a shutdown or a logout"
 				values: [0, 3, 5, 10, 15, 30]
@@ -135,6 +144,7 @@ Flickable {
 			}
 
 			Field {
+				holds: "session.lock"
 				text: "Locking is"
 				subtext: "A command, where the lock screen doesn't listen to the session"
 				placeholder: "loginctl lock-session"
@@ -143,6 +153,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "session.lockFirst"
 				text: "Lock before sleeping"
 				subtext: "When the session menu, the launcher or idle puts it to sleep"
 				checked: Settings.session.lockFirst
@@ -150,6 +161,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.lockedScreenOff"
 				text: "Screens off once it's locked"
 				subtext: "With nothing going on for that long, by any lock screen that says so"
 				values: [0, 10, 30, 60, 120]
@@ -320,6 +332,7 @@ Flickable {
 			title: "Battery"
 
 			Choice {
+				holds: "battery.warning"
 				text: "Warn when it's down to"
 				subtext: "And again at 5%, to stay on screen"
 				values: [0, 5, 10, 15, 20, 25, 30, 40, 50]
@@ -329,6 +342,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "battery.saver"
 				text: "Save power from then on"
 				subtext: "The saver profile, until the charger is in"
 				checked: Settings.battery.saver
@@ -336,6 +350,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.batteryLock"
 				text: "On it, lock after"
 				values: page.waits
 				value: Settings.idle.batteryLock
@@ -344,6 +359,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "idle.batteryScreenOff"
 				text: "On it, screens off after"
 				values: page.waits
 				value: Settings.idle.batteryScreenOff

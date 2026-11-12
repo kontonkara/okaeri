@@ -10,6 +10,7 @@ Column {
 		width: parent.width
 
 		Choice {
+			holds: "audio.max"
 			text: "The volume goes up to"
 			subtext: "Past 100% the sound is made louder, and can crackle"
 			values: [100, 125, 150]
@@ -23,6 +24,7 @@ Column {
 		width: parent.width
 
 		Choice {
+			holds: "sounds.volume"
 			text: "Volume of the sounds"
 			subtext: "They go through the sound theme, freedesktop's"
 			values: [0, 10, 15, 20, 25, 30, 40, 50, 75, 100]
@@ -38,24 +40,28 @@ Column {
 		title: "What has one"
 
 		Setting {
+			holds: "sounds.notifications"
 			text: "Notifications"
 			checked: Settings.sounds.notifications
 			onToggled: wanted => Settings.set("sounds", "notifications", wanted)
 		}
 
 		Setting {
+			holds: "sounds.volumeChange"
 			text: "Changing the volume"
 			checked: Settings.sounds.volumeChange
 			onToggled: wanted => Settings.set("sounds", "volumeChange", wanted)
 		}
 
 		Setting {
+			holds: "sounds.power"
 			text: "The charger going in or out"
 			checked: Settings.sounds.power
 			onToggled: wanted => Settings.set("sounds", "power", wanted)
 		}
 
 		Setting {
+			holds: "sounds.screenshots"
 			text: "Screenshots"
 			checked: Settings.sounds.screenshots
 			onToggled: wanted => Settings.set("sounds", "screenshots", wanted)

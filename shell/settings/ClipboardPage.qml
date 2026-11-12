@@ -24,6 +24,7 @@ Column {
 		}
 
 		Setting {
+			holds: "clipboard.paste"
 			text: "Enter pastes"
 			subtext: "Into the window in focus, and Shift+Enter copies. Off it's the other way round"
 			checked: Settings.clipboard.paste
@@ -31,6 +32,7 @@ Column {
 		}
 
 		Choice {
+			holds: "clipboard.rows"
 			text: "Rows in the panel"
 			subtext: "The rest can be found with the filter"
 			values: [50, 100, 200, 500]
@@ -40,6 +42,8 @@ Column {
 		}
 
 		Choice {
+			holds: "clipboard.keep"
+			words: "size limit"
 			text: "Entries in the history"
 			subtext: "Past that the oldest go, but for what's pinned"
 			values: [100, 250, 500, 750, 1000, 2000]
@@ -49,6 +53,7 @@ Column {
 		}
 
 		Setting {
+			holds: "clipboard.images"
 			text: "Keep pictures"
 			subtext: "Screenshots and copied images; they take room"
 			checked: Settings.clipboard.images

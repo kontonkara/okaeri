@@ -13,6 +13,10 @@ Item {
 	id: choice
 
 	required property string text
+	// What it sets, "section.key" or "theme.key", for its mark; and more words
+	// the search finds it by.
+	property string holds
+	property string words
 	property string subtext
 	required property var values
 	property real value: 0
@@ -149,5 +153,9 @@ Item {
 			icon: "chevron"
 			onClicked: choice.step(1)
 		}
+	}
+
+	Mark {
+		holds: choice.holds
 	}
 }

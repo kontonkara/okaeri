@@ -35,6 +35,7 @@ Flickable {
 			width: parent.width
 
 			Setting {
+				holds: "launcher.usage"
 				text: "Frequent apps first"
 				subtext: "What's launched often comes up sooner"
 				checked: Settings.launcher.usage
@@ -42,6 +43,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "launcher.sums"
 				text: "Keep the last sums"
 				subtext: "They're under /calc, turning this off forgets them"
 				checked: Settings.launcher.sums
@@ -53,6 +55,7 @@ Flickable {
 			}
 
 			Field {
+				holds: "launcher.files"
 				text: "Files are looked for in"
 				subtext: "Under /file: a folder, empty for your home"
 				placeholder: "~"
@@ -61,6 +64,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "launcher.actions"
 				text: "Apps' own actions in the search"
 				subtext: "New private window and such, by their names"
 				checked: Settings.launcher.actions

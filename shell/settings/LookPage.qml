@@ -26,6 +26,7 @@ Flickable {
 			title: "Glass"
 
 			Setting {
+				holds: "theme.blur"
 				text: "Blur behind panels"
 				subtext: "And behind this window and the on-screen display"
 				checked: Theme.blur
@@ -33,6 +34,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "theme.toastBlur"
 				text: "Blur behind notifications"
 				subtext: "The ones that pop up"
 				checked: Theme.toastBlur
@@ -40,6 +42,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "theme.barBlur"
 				text: "Blur behind the bar"
 				subtext: "The wallpaper's, which costs next to nothing"
 				checked: Theme.barBlur
@@ -47,6 +50,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "theme.realBlur"
 				text: "Windows in the blur too"
 				subtext: "Not only the wallpaper: costs more, and takes a line in niri's config"
 				checked: Theme.realBlur
@@ -54,6 +58,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "theme.opacity"
 				text: "How solid it stays"
 				values: [30, 40, 50, 60, 70, 80, 90]
 				value: Theme.values.opacity
@@ -67,6 +72,8 @@ Flickable {
 			title: "Motion"
 
 			Setting {
+				holds: "theme.animations"
+				words: "motion effects transitions"
 				text: "Animations"
 				subtext: "Panels, and lists gliding on after the wheel and the fingers"
 				checked: Theme.animate
@@ -74,6 +81,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.speed"
 				text: "Speed"
 				subtext: "Of all that moves"
 				enabled: Theme.animate
@@ -87,6 +95,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.panelMotion"
 				text: "Panels come"
 				subtext: "As they open, and go the same way"
 				enabled: Theme.animate
@@ -100,6 +109,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.toastMotion"
 				text: "Notifications come"
 				enabled: Theme.animate
 				options: [
@@ -117,6 +127,7 @@ Flickable {
 			title: "Shape"
 
 			Choice {
+				holds: "theme.barHeight"
 				text: "Height of the bar"
 				values: [26, 28, 30, 32, 34, 36, 38, 40, 44, 48]
 				value: Theme.values.barHeight
@@ -125,6 +136,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "theme.barIcon"
 				text: "Icons on the bar"
 				values: [12, 14, 16, 18, 20, 22]
 				value: Theme.values.barIcon
@@ -133,6 +145,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "theme.barMargin"
 				text: "Gap around the bar"
 				subtext: "With none it's against the screen's top, square there"
 				values: [0, 2, 4, 6, 8, 10, 12]
@@ -143,6 +156,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "bar.look"
 				text: "The bar"
 				subtext: Settings.bar.look === "islands" ? "Each group of its parts on its own, the desktop between" : "One piece across the screen"
 				options: [
@@ -154,6 +168,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "control.size"
 				text: "Tiles of the control center"
 				subtext: Settings.control.size === "small" ? "A line each, with no summary" : "With what they're at under their names"
 				options: [
@@ -167,6 +182,8 @@ Flickable {
 			// Past the largest it's round: what's small is, all the way, and a card
 			// has the corners it has by default. That's no number in the theme.
 			Choice {
+				holds: "theme.radius"
+				words: "rounded"
 				text: "Corners"
 				values: [0, 4, 6, 8, 10, 12, 14, 16, 20, 1000]
 				value: Theme.values.radius ?? 1000
@@ -177,6 +194,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "theme.fontSize"
 				text: "Size of the text"
 				values: [11, 12, 13, 14, 15, 16, 18]
 				value: Theme.values.fontSize
@@ -185,6 +203,8 @@ Flickable {
 			}
 
 			Choice {
+				holds: "theme.scale"
+				words: "zoom dpi bigger smaller"
 				text: "Size of everything"
 				values: [80, 90, 100, 110, 125, 150, 175, 200]
 				value: Math.round(Theme.values.scale * 100)
@@ -198,6 +218,8 @@ Flickable {
 			title: "Text"
 
 			Field {
+				holds: "theme.font"
+				words: "typeface"
 				text: "Font"
 				subtext: "A family by its name, as the system has it: empty is the system's own"
 				placeholder: Qt.application.font.family
@@ -206,6 +228,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.fontWeight"
 				text: "Weight"
 				subtext: "Of what stands out: the clock, a title"
 				options: [
@@ -230,6 +253,8 @@ Flickable {
 			title: "Colors"
 
 			Pick {
+				holds: "theme.extends"
+				words: "theme dark light mode colours scheme"
 				text: "Palette"
 				subtext: Theme.own.extends ? "" : "With your own colors, where the file has them"
 				visible: !Theme.timed
@@ -240,6 +265,8 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.auto"
+				words: "dark mode light mode automatic schedule"
 				text: "Another by day"
 				subtext: Theme.values.auto === "sun" ? "From sunrise to sunset, where the night light or the weather is set for" : Theme.timed ? "" : "Or by a key: okaeri theme toggle"
 				valueWidth: Theme.u(150)
@@ -253,6 +280,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.day"
 				text: "By day"
 				visible: Theme.timed
 				valueWidth: Theme.u(150)
@@ -262,6 +290,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.night"
 				text: "By night"
 				visible: Theme.timed
 				valueWidth: Theme.u(150)
@@ -271,6 +300,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.dayFrom"
 				text: "Day is from"
 				visible: Theme.values.auto === "time"
 				valueWidth: Theme.u(150)
@@ -280,6 +310,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "theme.nightFrom"
 				text: "Night is from"
 				visible: Theme.values.auto === "time"
 				valueWidth: Theme.u(150)
@@ -289,6 +320,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "theme.wallpaperAccent"
 				text: "The accent from the wallpaper"
 				subtext: "Its most vivid color, where it has one to speak of"
 				checked: !!Theme.values.wallpaperAccent
