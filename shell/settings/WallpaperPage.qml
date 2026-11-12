@@ -3,13 +3,15 @@ import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Widgets
 import qs
+import qs.services
 import qs.ui
 
 // The wallpaper, on two leaves: the pictures of a folder to pick it from,
 // Settings.wallpaper.folder, or where the wallpaper is, read only as they come
 // into view; and how one is shown, and when another takes its place. With more
 // screens than one a picture can be one screen's own, and one can be for light
-// colors only.
+// colors only. A right click on a picture has those choices at hand, and opening
+// it or copying where it is.
 Column {
 	id: page
 
@@ -220,10 +222,93 @@ Column {
 
 					anchors.fill: parent
 					hoverEnabled: true
+					acceptedButtons: Qt.LeftButton | Qt.RightButton
 					cursorShape: Qt.PointingHandCursor
-					onClicked: {
+					onClicked: event => {
 						grid.currentIndex = tile.index;
-						page.pick(tile.filePath);
+						if (event.button === Qt.RightButton)
+							options.open(tile.filePath, tile.mapToItem(grid, event.x, event.y));
+						else
+							page.pick(tile.filePath);
+					}
+				}
+			}
+
+			// What else a picture can be, by a right click on it: over the pictures, and
+			// gone with a click anywhere else or the wheel.
+			Item {
+				id: options
+
+				property string path: ""
+				property point at
+				readonly property var rows: !path ? [] : [{ text: "For every screen", does: path => Settings.set("wallpaper", "path", path) }].concat(page.screens.length > 1 ? page.screens.map(name => ({ text: `Only on ${name}`, does: path => Settings.set("wallpaper", "screens", Object.assign({}, page.own.screens, { [name]: path })) })) : [], [
+						{ text: "With light colors", does: path => Settings.set("wallpaper", "light", path) },
+						{ text: "Open it", does: path => Env.act("open file", () => Niri.spawn(["xdg-open", path])) },
+						{ text: "Copy where it is", does: path => Env.act("copy path", () => Quickshell.execDetached(["wl-copy", "--", path])) }
+					])
+
+				function open(path, point) {
+					options.path = path;
+					at = point;
+				}
+
+				// Closed first: what the row does changes the settings, and the rows come
+				// anew with them, the one clicked too.
+				function choose(row) {
+					const chosen = path;
+					path = "";
+					row.does(chosen);
+				}
+
+				parent: grid
+				anchors.fill: parent
+				z: 2
+				visible: path !== ""
+
+				MouseArea {
+					anchors.fill: parent
+					acceptedButtons: Qt.AllButtons
+					onPressed: options.path = ""
+					onWheel: options.path = ""
+				}
+
+				Rectangle {
+					x: Math.max(0, Math.min(options.at.x, options.width - width - Theme.u(4)))
+					y: Math.max(0, Math.min(options.at.y, options.height - height - Theme.u(4)))
+					width: Theme.u(220)
+					height: choices.height + Theme.u(12)
+					radius: Theme.cardRadius
+					color: Theme.panel
+					border.width: 1
+					border.color: Theme.border
+
+					// A click on it isn't one elsewhere.
+					MouseArea {
+						anchors.fill: parent
+						acceptedButtons: Qt.AllButtons
+					}
+
+					Column {
+						id: choices
+
+						x: Theme.u(6)
+						y: Theme.u(6)
+						width: parent.width - Theme.u(12)
+
+						Repeater {
+							model: options.rows
+
+							Button {
+								required property var modelData
+
+								width: parent.width
+								height: Theme.u(32)
+								flat: true
+								atStart: true
+								text: modelData.text
+								onClicked: options.choose(modelData)
+							}
+						}
 					}
 				}
 			}

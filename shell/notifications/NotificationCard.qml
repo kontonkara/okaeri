@@ -83,7 +83,7 @@ Card {
 		const pressable = [];
 		for (let i = 0; i < actions.count; i++)
 			pressable.push(actions.itemAt(i));
-		return (defaultAction ? [card] : []).concat(pressable, [close]);
+		return (defaultAction ? [card] : []).concat(more.visible ? [more] : [], pressable, [close]);
 	}
 
 	// Text from an app is never markup here.
@@ -99,8 +99,12 @@ Card {
 
 	border.width: 0
 
+	// Delete, on it or on any of its stops, is its close button.
 	Keys.onPressed: event => {
-		if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+		if (event.key === Qt.Key_Delete && closable) {
+			notification.dismiss();
+			event.accepted = true;
+		} else if (activeFocus && defaultAction && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)) {
 			NotificationStore.invoke(notification, defaultAction);
 			event.accepted = true;
 		}
@@ -233,6 +237,8 @@ Card {
 			}
 
 			Button {
+				id: more
+
 				height: Theme.u(24)
 				visible: body.truncated || card.expanded
 				flat: true

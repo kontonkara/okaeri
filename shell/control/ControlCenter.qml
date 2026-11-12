@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
 import qs
@@ -7,11 +8,11 @@ import qs.ui
 
 // The battery, with the way to the settings and the session menu; the volume,
 // the brightness and the microphone; and tiles for Wi-Fi, Bluetooth, the night
-// light, keeping awake, the power profile, airplane mode, VPN and recording the
-// screen, and the user's own. An arrow on a tile or a level opens its page in
-// the panel's place: the networks, the devices, the VPNs, where the sound goes
-// and what plays, the microphones. Escape there goes back, and a closing panel
-// too. What's in it is there only while it shows, so what's typed in it goes
+// light, keeping awake, the power profile, airplane mode, VPN, recording the
+// screen and a hotspot, and the user's own. An arrow on a tile or a level opens
+// its page in the panel's place: the networks, the devices, the VPNs, how a
+// phone joins the hotspot, where the sound goes and what plays, the microphones.
+// A right click on a tile opens what else it can do. Escape there goes back, and a closing panel too. What's in it is there only while it shows, so what's typed in it goes
 // with it.
 Panel {
 	id: controlCenter
@@ -41,6 +42,10 @@ Panel {
 			if (!controlCenter.shown)
 				controlCenter.show();
 		}
+
+		function onLeave() {
+			controlCenter.hide();
+		}
 	}
 
 	// Once the panel is out of sight.
@@ -58,9 +63,16 @@ Panel {
 			controlCenter.toggle();
 		}
 
-		// Open at a page: wifi, bluetooth, vpn, sound or mic.
+		// Open at a page: wifi, bluetooth, vpn, hotspot, sound or mic.
 		function page(name: string): void {
 			Control.show(name);
+		}
+
+		// Open at what else tile `name` can do, as a right click on it does.
+		function options(name: string): void {
+			Control.options = name;
+			Control.keyed = true;
+			Control.show("options");
 		}
 	}
 
@@ -84,7 +96,7 @@ Panel {
 				enabled: Theme.animate
 
 				NumberAnimation {
-					duration: 200
+					duration: Theme.ms(200)
 					easing.type: Easing.OutCubic
 				}
 			}
@@ -93,7 +105,7 @@ Panel {
 				id: column
 
 				// A page in the place of the rest.
-				readonly property bool paging: [wifi, bluetooth, vpn, sound, mic].some(page => page.visible)
+				readonly property bool paging: [wifi, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
@@ -123,7 +135,7 @@ Panel {
 						target: sliding
 						property: "x"
 						to: 0
-						duration: 220
+						duration: Theme.ms(220)
 						easing.type: Easing.OutCubic
 					}
 
@@ -131,7 +143,7 @@ Panel {
 						target: column
 						property: "opacity"
 						to: 1
-						duration: 180
+						duration: Theme.ms(180)
 						easing.type: Easing.OutCubic
 					}
 				}
@@ -199,15 +211,20 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
 					visible: !column.paging
 					spacing: Theme.u(8)
+					onShownChanged: Control.shown = shown
+					Component.onCompleted: Control.shown = shown
 
+					// By name: a tile that moves keeps what it is doing, a drag too.
 					Repeater {
-						model: tiles.shown
+						model: ScriptModel {
+							values: tiles.shown
+						}
 
 						Loader {
 							required property string modelData
@@ -221,7 +238,8 @@ Panel {
 									record: recordTile,
 									night: nightTile,
 									awake: awakeTile,
-									power: powerTile
+									power: powerTile,
+									hotspot: hotspotTile
 								})[modelData] ?? customTile
 						}
 					}
@@ -324,7 +342,7 @@ Panel {
 							name: "night"
 							icon: "sunset"
 							title: "Night light"
-							summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : "Off"
+							summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : NightLight.paused ? NightLight.pauseLabel : "Off"
 							checked: NightLight.on && NightLight.available
 							canSwitch: NightLight.available
 							takesWheel: true
@@ -356,12 +374,28 @@ Panel {
 							wanted: Power.choices.length > 1
 							icon: "bolt"
 							title: "Power"
-							summary: Power.profileName
+							summary: [Power.profileName, Power.profileWhy].filter(part => part !== "").join(" · ")
 							checked: Power.profile !== PowerProfile.Balanced
 							switches: false
 							takesWheel: true
 							onClicked: Power.turn(1)
 							onScrolled: steps => Power.turn(-steps)
+						}
+					}
+
+					Component {
+						id: hotspotTile
+
+						Tile {
+							name: "hotspot"
+							wanted: !!Wifi.device
+							icon: "hotspot"
+							title: "Hotspot"
+							summary: Hotspot.summary
+							checked: Hotspot.on
+							canSwitch: !Wifi.blocked && Wifi.hasTool
+							opens: "hotspot"
+							onToggled: wanted => Hotspot.set(wanted)
 						}
 					}
 				}
@@ -384,6 +418,12 @@ Panel {
 					room: controlCenter.room
 				}
 
+				HotspotSection {
+					id: hotspot
+
+					room: controlCenter.room
+				}
+
 				SoundSection {
 					id: sound
 
@@ -392,6 +432,12 @@ Panel {
 
 				MicSection {
 					id: mic
+
+					room: controlCenter.room
+				}
+
+				TileOptions {
+					id: tileOptions
 
 					room: controlCenter.room
 				}

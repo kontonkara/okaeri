@@ -90,6 +90,13 @@ cat "$work/failed-\$scope" 2>/dev/null || echo '[]'
 SH
 chmod +x "$work/systemctl"
 sed -i "s|\"systemctl\"|\"$work/systemctl\"|" "$work/shell/services/Units.qml"
+# And what their journals say: two lines for any.
+cat >"$work/journalctl" <<'SH'
+#!/bin/sh
+printf 'It started\nIt failed\n'
+SH
+chmod +x "$work/journalctl"
+sed -i "s|\"journalctl\"|\"$work/journalctl\"|" "$work/shell/services/Units.qml"
 # The lights here are files a test can write to, not the keyboard's: one that wants
 # a keyboard that lights up puts that there too.
 mkdir -p "$work/leds/input9::capslock" "$work/leds/input9::numlock"
@@ -111,17 +118,38 @@ sed -i -e "s|^\treadonly property string drm: .*|\treadonly property string drm:
 # So do the machine's outputs and inputs: a test that wants some puts its own.
 sed -i -e 's/^\treadonly property var outputs: .*/\tproperty var outputs: []/' \
 	-e 's/^\treadonly property var inputs: .*/\tproperty var inputs: []/' "$work/shell/services/Audio.qml"
+# And its sound cards: what pw-dump would print of them is in $work/cards.
+cat >"$work/pw-dump" <<'SH'
+#!/bin/sh
+cat "${0%/*}/cards" 2>/dev/null || echo "[]"
+SH
+chmod +x "$work/pw-dump"
+sed -i "s|^\treadonly property string dump: .*|\treadonly property string dump: \"$work/pw-dump\"|" "$work/shell/services/Audio.qml"
 # The VPNs are what a test puts in $work/vpns, as nmcli would list them, and
-# what's asked of them goes to $work/nmcli.log.
+# what's asked of them goes to $work/nmcli.log. The password of the network
+# it's on is what a test puts in $work/secret, as nmcli would show it.
 cat >"$work/nmcli" <<SH
 #!/bin/sh
 case "\$*" in
 *"connection show"*) cat "$work/vpns" 2>/dev/null ;;
+*show-password*) cat "$work/secret" 2>/dev/null || { echo "Error: no network to show." >&2; exit 10; } ;;
 *) echo "\$*" >>"$work/nmcli.log" ;;
 esac
 SH
 chmod +x "$work/nmcli"
-sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/nmcli\"|" "$work/shell/control/Vpn.qml"
+sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/nmcli\"|" "$work/shell/control/Vpn.qml" "$work/shell/control/Wifi.qml"
+# A code for a phone is a blank picture, and what it would say goes to $work/qr.
+cat >"$work/qrencode" <<'SH'
+#!/bin/sh
+cat >"${0%/*}/qr"
+while [ "$#" -gt 1 ]; do
+	[ "$1" != -o ] || picture=$2
+	shift
+done
+exec magick -size 25x25 xc:white "png:$picture"
+SH
+chmod +x "$work/qrencode"
+sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/qrencode\"|" "$work/shell/control/Qr.qml"
 # And who listens and watches: an app on the machine with the microphone would
 # be one more thing on the bar.
 sed -i -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' \

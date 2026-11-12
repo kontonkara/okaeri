@@ -32,6 +32,9 @@ wallpaper_y=617
 look_y=653
 session_y=689
 back_y=722
+# The halves the button under the pages asks with: the page that shows, and all.
+this_x=373
+all_x=460
 switch_x=1034
 drawer_y=233
 left_y=251
@@ -42,7 +45,7 @@ off_y=620
 off_gap_y=660
 # The part made here: in the last lane, on its third line, and on the left once
 # it's there.
-script_x=882
+script_x=961
 script_y=691
 script_on_x=796
 field_y=257
@@ -198,32 +201,35 @@ choose() {
 }
 choose 745 "$left_y"
 shot part-clock
-move "$switch_x" 520
+# The card's foot is the field for a calendar, a row of 40 under the weather's
+# switch, and the card comes up with its foot at the page's: the rest of it is
+# that row and its spacing higher.
+move "$switch_x" 470
 click
 sleep 0.3
 same "seconds" "$(value .clock.seconds)" true
-move "$higher_x" 374
+move "$higher_x" 324
 click
 sleep 0.3
 same "the date" "$(value .clock.date)" '"after"'
-move 968 424
+move 968 374
 click
 wtype -M ctrl a -m ctrl
 type 'yyyy'
 key Return
 sleep 0.3
 same "how the date's written" "$(value .clock.dateFormat)" '"yyyy"'
-move "$higher_x" 564
+move "$higher_x" 514
 click
 sleep 0.3
 same "the first day of a week" "$(value .clock.weekStart)" '"monday"'
-move "$switch_x" 609
+move "$switch_x" 559
 click
 sleep 0.3
 same "week numbers" "$(value .clock.weekNumbers)" true
-field 934 659 'UTC, Asia/Tokyo'
+field 934 609 'UTC, Asia/Tokyo'
 same "the other places" "$(value .clock.zones)" '["UTC","Asia/Tokyo"]'
-move "$switch_x" 709
+move "$switch_x" 659
 click
 sleep 0.3
 same "the weather" "$(value .weather.on)" true
@@ -429,6 +435,17 @@ sleep 0.3
 shot picked
 same "its ring" "$(pixel picked 703 "$picture_y")" FFFFFF
 same "another's edge" "$(pixel picked 887 "$picture_y")" 339966
+# A right click on one has what else it can be: the first, for every screen.
+move 974 "$picture_y"
+click right
+sleep 0.4
+shot picture-options
+move 1000 $((picture_y + 20))
+click
+sleep 0.3
+same "the wallpaper by its menu" "$(value .wallpaper.path)" "\"$work/pictures/green.PNG\""
+move 300 800
+sleep 0.3
 
 step "A folder that isn't there"
 folder "~/no such folder"
@@ -535,6 +552,9 @@ same "a dock that hides" "$(value .dock.autoHide)" true
 arrow "$higher_x" 378
 sleep 0.3
 same "the dock's icons" "$(value .dock.size)" 48
+arrow "$higher_x" 423
+sleep 0.3
+same "the apps with windows on it" "$(value .dock.windows)" '"screen"'
 move "$switch_x" 233
 click
 sleep 0.3
@@ -546,20 +566,21 @@ shot control-page
 # Wi-Fi, the first tile, to Hidden; the rest move up a place.
 drag 656 254 600 480
 same "what's left out" "$(value .control.hidden)" '["wifi"]'
-same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","record","wifi"]'
-# Bluetooth, now first, to a whole row, which takes Hidden a row down.
+same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi"]'
+# Bluetooth, now first, to a whole row, which takes Hidden a row down: the
+# hotspot's tile is left alone in a row of its own.
 move 656 254
 click
 sleep 0.3
 arrow "$higher_x" 652
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
-drag 594 480 530 254
+drag 594 524 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
-same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn","record"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn","record","hotspot"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
-move 1007 579
+move 1007 623
 click
 sleep 0.5
 same "a tile made" "$(value .control.custom)" '[{"name":"Mine","command":"","check":"","icon":"play"}]'
@@ -581,7 +602,7 @@ move 575 710
 click
 sleep 0.4
 same "the tiles of one's own with it removed" "$(value .control.custom)" '[]'
-same "the order without it" "$(value '.control.tiles | last')" '"record"'
+same "the order without it" "$(value '.control.tiles | last')" '"hotspot"'
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"
@@ -590,8 +611,8 @@ mv "$config.new" "$config"
 sleep 0.5
 page "$launcher_y"
 shot launcher-page
-# The first switch, then the second, the folder for files, and the switches of the
-# two lists.
+# The first switch, then the second, the folder for files, the apps' own actions,
+# and the switches of the two lists.
 move "$switch_x" 234
 click
 sleep 0.3
@@ -603,13 +624,17 @@ same "the last sums" "$(value .launcher.sums)" false
 same "the sums are gone" "$(cat "$XDG_STATE_HOME/okaeri/sums.json")" '[]'
 field 934 334 '~/documents'
 same "where files are looked for" "$(value .launcher.files)" "\"$HOME/documents\""
-move "$switch_x" 422
+move "$switch_x" 384
+click
+sleep 0.3
+same "the apps' own actions" "$(value .launcher.actions)" false
+move "$switch_x" 472
 click
 sleep 0.3
 same "the pinned" "$(value .launcher.pinned)" '[]'
 # With the list empty a line says how, about as tall as the row was.
 shot launcher-page-unpinned
-move "$switch_x" 513
+move "$switch_x" 563
 click
 sleep 0.3
 same "the hidden" "$(value .launcher.hidden)" '[]'
@@ -635,6 +660,10 @@ arrow "$lower_x" 284
 same "the rows past that" "$(value .clipboard.rows)" 50
 arrow "$lower_x" 334
 same "the history" "$(value .clipboard.keep)" 500
+move "$switch_x" 384
+click
+sleep 0.3
+same "keep pictures" "$(value .clipboard.images)" false
 
 step "The notifications' page"
 printf '{ "tray": { "drawer": true }, "notifications": { "rules": [{ "app": "Spam", "toast": false }] } }\n' >"$config.new"
@@ -664,6 +693,17 @@ move "$switch_x" 598
 click
 sleep 0.3
 same "its sound" "$(value '.notifications.rules[0].sound')" false
+# A toast to see them on, at the foot of the toasts' card: up to the top, and two
+# notches down that's in the middle of the window.
+move 700 400
+notch -30
+sleep 0.6
+notch 2
+sleep 0.6
+shot notifications-sample
+move 1020 573
+click
+wait_log "okaeri: dry: notify test"
 
 printf '{ "tray": { "drawer": true } }\n' >"$config.new"
 mv "$config.new" "$config"
@@ -820,6 +860,29 @@ move "$switch_x" 622
 click
 sleep 0.3
 same "what has none" "$(value .osd.hidden)" '["locks"]'
+# By the keys: Tab on from the search to the first arrow there is, the line's
+# back one, where Right goes on. At an end the other arrow has the focus, so the
+# keys still work: Left, Home and End.
+move "$menu_x" "$search_y"
+click
+for _ in $(seq 20); do
+	[ "$(value .osd.position)" = '"top"' ] && break
+	key Tab
+	key Right
+	sleep 0.3
+done
+same "where it shows, by the keys" "$(value .osd.position)" '"top"'
+key Right
+key Left
+sleep 0.3
+same "where it shows, a key back" "$(value .osd.position)" '"middle"'
+key Home
+sleep 0.3
+same "where it shows, the first" "$(value .osd.position)" '"bottom"'
+key End
+sleep 0.3
+same "where it shows, the last" "$(value .osd.position)" '"top"'
+same "for how long, untouched" "$(value .osd.duration)" 2
 
 step "How the screen is recorded"
 page "$display_y"
@@ -916,7 +979,18 @@ same "the veil after that" "$(ipc settings veiled)" 0
 wait_up 1
 page "$look_y"
 shot look-before
-arrow "$higher_x" 655
+# Further down than the window shows: found by its name, it comes up to the
+# window's top, and the search is emptied after.
+search "Height of the bar"
+key Return
+sleep 0.8
+shot look-found
+arrow "$higher_x" 231
+move "$menu_x" "$search_y"
+click
+wtype -M ctrl a -m ctrl
+key BackSpace
+sleep 0.3
 same "the bar's height" "$(jq -c .barHeight "$theme_own")" 36
 sleep 0.3
 shot look-changed
@@ -934,14 +1008,17 @@ bright() {
 	magick "$out/$1.png" -format '%[fx:u.p{507,480}.r > 0.7]' info:
 }
 same "the window before" "$(bright look-colors)" 0
-arrow "$higher_x" 614
-arrow "$higher_x" 614
+# The palette's line is a little shorter with one chosen, and the view may take
+# what's above it back down to its foot or not: these are between where the
+# lines are either way.
+arrow "$higher_x" 604
+arrow "$higher_x" 604
 sleep 0.4
 same "the palette" "$(jq -c .extends "$theme_own")" '"light"'
 shot look-light
 same "the window in a light palette" "$(bright look-light)" 1
-arrow "$wide_lower_x" 614
-arrow "$wide_lower_x" 614
+arrow "$wide_lower_x" 604
+arrow "$wide_lower_x" 604
 sleep 0.4
 same "the config's palette again" "$(jq -c .extends "$theme_own")" null
 arrow "$higher_x" 659
@@ -949,7 +1026,7 @@ sleep 0.4
 same "another by day" "$(jq -c .auto "$theme_own")" '"time"'
 shot look-timed
 # The palette's line went, and this one is where that was.
-arrow "$wide_lower_x" 609
+arrow "$wide_lower_x" 604
 sleep 0.4
 same "one all day again" "$(jq -c .auto "$theme_own")" '"off"'
 # To the foot again: the page has moved with what came and went.
@@ -962,14 +1039,88 @@ sleep 0.3
 same "the accent from the wallpaper" "$(jq -c .wallpaperAccent "$theme_own")" true
 click
 sleep 0.3
+# The wheel over a line's arrows is the line's, not the page's: a notch up is the
+# next palette, and one down the config's again. The page moved a while ago, so
+# it's no wheel that rolls it on.
+move "$higher_x" 604
+wheel 1
+sleep 0.4
+same "the palette, by the wheel" "$(jq -c .extends "$theme_own")" '"dark"'
+wheel -1
+sleep 0.4
+same "the config's palette, by the wheel" "$(jq -c .extends "$theme_own")" null
 page "$tray_y"
 
+step "What each page takes back"
+# A page goes back to the config for what the window's list of pages says it
+# sets: every section and key a page sets is on its line there, or it would stay.
+window=$work/shell/settings/SettingsWindow.qml
+for file in "$work"/shell/settings/*Page.qml; do
+	name=$(basename "$file" .qml)
+	id=$(printf %s "$name" | cut -c1 | tr '[:upper:]' '[:lower:]')${name#?}
+	entry=$(grep -F "page: $id," "$window") || fail "$name isn't in the window's list of pages"
+	# Only what follows the page: its icon may be named as a section is.
+	entry=${entry#*"page: $id,"}
+	for what in $(grep -oE 'Settings\.set\("[a-zA-Z]+", "[a-zA-Z]+"' "$file" | sed -E 's/.*\("([a-zA-Z]+)", "([a-zA-Z]+)"/\1.\2/' | sort -u) \
+		$(grep -oE 'Settings\.set\("[a-zA-Z]+", [^" ]' "$file" | sed -E 's/.*\("([a-zA-Z]+)".*/\1/' | sort -u) \
+		$(grep -oE 'Theme\.set\("[a-zA-Z]+"' "$file" | sed -E 's/.*"([a-zA-Z]+)"/\1/' | sort -u); do
+		case $entry in
+		*"\"$what\""* | *"\"${what%%.*}\""*) ;;
+		*) fail "$name sets $what, which its page wouldn't take back" ;;
+		esac
+	done
+done
+
+step "Back to the config, for one page"
+# On the Session page: what it set goes, the battery's warning with it, and the
+# rest stays as it was, the battery's line on the bar too, and the look's file.
+page "$session_y"
+[ "$(value .idle)" != null ] || fail "nothing set on the Session page"
+others=$(value 'del(.idle, .session, .hooks, .battery)')
+look=$(jq -c . "$theme_own")
+move "$menu_x" "$back_y"
+click
+sleep 0.3
+shot back-asks
+move "$this_x" "$back_y"
+click
+sleep 0.3
+same "the Session page's" "$(value '[.idle, .session, .hooks]')" '[null,null,null]'
+same "the battery's" "$(value .battery)" '{"show":"battery"}'
+same "the other pages'" "$(value 'del(.idle, .session, .hooks, .battery)')" "$others"
+same "the look's file, with one page back" "$(jq -c . "$theme_own")" "$look"
+page "$tray_y"
+
+step "The palette by a call"
+# As a key would have it: the day's and back to the night's, one all day.
+ipc theme toggle
+sleep 0.3
+same "the day's" "$(jq -c .extends "$theme_own")" '"light"'
+same "one all day" "$(jq -c .auto "$theme_own")" '"off"'
+ipc theme toggle
+sleep 0.3
+same "the night's" "$(jq -c .extends "$theme_own")" '"dark"'
+same "what it says" "$(ipc theme state | jq -c .)" '{"palette":"dark","light":false,"auto":"off"}'
+ipc theme next
+sleep 0.3
+same "the next" "$(jq -c .extends "$theme_own")" '"light"'
+ipc theme previous
+sleep 0.3
+same "the one before" "$(jq -c .extends "$theme_own")" '"dark"'
+# One that isn't there changes nothing, and says what there is.
+before=$(jq -c . "$theme_own")
+ipc theme palette nope
+wait_log 'okaeri: no palette "nope", it'"'"'s one of dark, light'
+same "a palette that isn't" "$(jq -c . "$theme_own")" "$before"
+
 step "Back to the config"
-# It asks first: one click leaves all as it is, and the next goes ahead.
+# It asks first: one click leaves all as it is, and the half for all of it goes
+# ahead.
 move "$menu_x" "$back_y"
 click
 sleep 0.3
 [ "$(value .)" != '{}' ] || fail "one click took all that was set"
+move "$all_x" "$back_y"
 click
 sleep 0.3
 same "the shell's file" "$(value .)" '{}'

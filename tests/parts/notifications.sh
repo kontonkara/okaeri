@@ -535,6 +535,20 @@ wait_state panel false
 [ "$(log | grep -c 'notification action default')" = "$((actions + 1))" ]
 stop_sender
 reset
+# Delete is the close button of the one the keys are on.
+send -a Mail "To go" "Delete closes it."
+wait_state toasts 1
+ipc notifications toggle
+wait_state panel true
+settle
+is history 1
+key Tab
+key Tab
+key Delete
+wait_state history 0
+key Escape
+wait_state panel false
+reset
 
 step "A long history"
 for n in $(seq 1 12); do
@@ -767,6 +781,15 @@ click right
 wait_state toasts 0
 ! log | grep -q "notification action default.*Mail" || fail "a right click took the action"
 stop_sender
+reset
+# By a call, for a key: the newest one, as a click on it.
+focuses=$(log | grep -c "okaeri: dry: notification focus Editor")
+send -a Editor "To its app, by a key" "No default action."
+wait_state toasts 1
+settle
+ipc notifications activate
+wait_state toasts 0
+[ "$(log | grep -c "okaeri: dry: notification focus Editor")" = "$((focuses + 1))" ] || fail "a call for the newest one didn't go to its app"
 reset
 
 step "A screenshot"

@@ -1,0 +1,29 @@
+# okaeri's colors for Alacritty, written anew as they change. With this written
+# to ~/.config/alacritty/okaeri.toml, in alacritty.toml:
+#
+#   [general]
+#   import = ["~/.config/alacritty/okaeri.toml"]
+#
+# where an Alacritty older than 0.14 has `import` at the top instead. It reads
+# its config again by itself as that changes, so it takes them at once. The
+# palette has no greens or blues, so most of the sixteen terminal colors stay
+# Alacritty's own: red is the palette's error, and bright black its dim.
+
+[colors.primary]
+foreground = "{{text}}"
+background = "{{background}}"
+
+[colors.cursor]
+text = "{{background}}"
+cursor = "{{accent}}"
+
+[colors.selection]
+text = "{{background}}"
+background = "{{accent}}"
+
+[colors.normal]
+red = "{{error}}"
+
+[colors.bright]
+black = "{{dim}}"
+red = "{{error}}"

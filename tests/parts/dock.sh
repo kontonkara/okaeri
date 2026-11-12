@@ -165,6 +165,15 @@ shot at-left
 [ "$(pixel at-left 30 450)" != "$desk" ] || fail "no dock at the left"
 # Under the window, which has the bottom of the screen now.
 [ "$(pixel at-left 700 893)" = "$desk" ] || fail "the dock at the left is at the bottom too"
+# Its menu is beside it there, by the app.
+move 30 450
+click right
+sleep 0.6
+shot left-menu
+[ "$(magick "$out/left-menu.png" "$out/at-left.png" -compose difference -composite -crop 240x130+80+390 +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "no menu beside the dock at the left"
+key Escape
+sleep 0.4
+move 700 400
 
 # One that hides is out of sight, over the window that has its place now, and
 # comes with the pointer at its edge. Whether shot $1 has the app's icon, which
@@ -198,6 +207,24 @@ kill "$second"
 wait "$second" 2>/dev/null || true
 move 700 400
 sleep 0.5
+# niri's overview brings it too, and takes it away again.
+sleep 0.8
+niri msg action toggle-overview
+sleep 0.8
+shot overview
+there overview || fail "the overview doesn't bring a dock that hides"
+niri msg action toggle-overview
+sleep 1.2
+shot overview-gone
+there overview-gone && fail "a dock that hides stays after the overview"
+
+# Kept by a call, and let go by one, as a script would.
+ipc dock pin okaeri-test
+sleep 0.3
+[ "$(jq -c .dock.pinned "$own")" = '["kitty","okaeri-test"]' ] || fail "kept by a call: $(jq -c .dock.pinned "$own")"
+ipc dock unpin okaeri-test
+sleep 0.3
+[ "$(jq -c .dock.pinned "$own")" = '["kitty"]' ] || fail "let go by a call: $(jq -c .dock.pinned "$own")"
 
 # A screen that's to have none has none.
 screen=$(niri msg --json outputs | jq -r 'keys[0]')
@@ -205,6 +232,48 @@ settings "{ \"dock\": { \"on\": true, \"pinned\": [\"kitty\"], \"hideOn\": [\"$s
 wait_layers 0 "on a screen that's to have none"
 settings '{ "dock": { "on": true, "pinned": ["kitty"] } }'
 wait_layers 1 "back on its screen"
+
+# With only the apps it keeps, another app's window leaves it as it is, and with
+# all of them it's there again.
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-other --config NONE -o confirm_os_window_close=0 sleep 60 &
+second=$!
+sleep 1.5
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "windows": "pinned" } }'
+sleep 0.8
+move 700 400
+shot only-kept
+set -- $(ends only-kept)
+[ $(($2 - $1)) -lt $((one + 10)) ] || fail "an app it doesn't keep is on a dock for those it keeps: $1 to $2"
+settings '{ "dock": { "on": true, "pinned": ["kitty"] } }'
+sleep 0.8
+shot all-again
+set -- $(ends all-again)
+[ $(($2 - $1)) -gt $((one + 30)) ] || fail "another app's window isn't on a dock for all of them: $1 to $2"
+kill "$second"
+wait "$second" 2>/dev/null || true
+
+# An app's window on another workspace comes to this one from its menu, the
+# first row there for an app this machine doesn't know.
+niri msg action focus-workspace 2
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-away --config NONE -o confirm_os_window_close=0 sleep 60 &
+away=$!
+sleep 1.5
+niri msg action focus-workspace 1
+sleep 0.8
+move 700 400
+shot away
+set -- $(ends away)
+move $(($2 - one / 2)) 862
+click right
+sleep 0.6
+key Down
+key Return
+sleep 0.6
+here=$(niri msg --json workspaces | jq '.[] | select(.is_focused) | .id')
+[ "$(niri msg --json windows | jq '.[] | select(.app_id == "okaeri-away") | .workspace_id')" = "$here" ] || fail "a window on another workspace wasn't brought here"
+kill "$away"
+wait "$away" 2>/dev/null || true
+sleep 0.5
 
 kill "$first"
 wait "$first" 2>/dev/null || true

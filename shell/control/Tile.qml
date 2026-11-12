@@ -5,7 +5,9 @@ import qs.ui
 // A tile of the control center: `icon`, `title` and `summary`, filled while
 // `checked`. A click says toggled(wanted), or clicked() for one that isn't a
 // switch; with `opens`, a page by that name, its arrow opens it. The wheel on it
-// says scrolled(steps) with `takesWheel`. It shows while `wanted`, unless the
+// says scrolled(steps) with `takesWheel`. A right click on it, or the Menu key,
+// opens the page of what else it can do and how it sits among the others, and
+// dragged onto another tile it takes that one's place. It shows while `wanted`, unless the
 // settings leave it out by its `name`.
 Rectangle {
 	id: tile
@@ -21,6 +23,8 @@ Rectangle {
 	property string opens
 	property bool takesWheel: false
 	readonly property color ink: checked ? Theme.colors.background : Theme.colors.text
+	// Small, as Settings.control.size has them: a line, with no summary under it.
+	readonly property bool small: Settings.control.size === "small"
 
 	signal toggled(bool wanted)
 	signal clicked
@@ -36,7 +40,7 @@ Rectangle {
 		}
 	}
 
-	implicitHeight: Theme.u(58)
+	implicitHeight: Theme.u(small ? 44 : 58)
 	radius: Math.max(0, Theme.cardRadius - Theme.u(2))
 	color: checked ? Theme.colors.accent : Qt.alpha(Theme.colors.text, 0.08)
 	opacity: switches && !canSwitch ? 0.5 : 1
@@ -47,13 +51,17 @@ Rectangle {
 		enabled: Theme.animate
 
 		ColorAnimation {
-			duration: 120
+			duration: Theme.ms(120)
 		}
 	}
 
 	Keys.onPressed: event => {
 		if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
 			tile.press();
+			event.accepted = true;
+		} else if (event.key === Qt.Key_Menu) {
+			Control.keyed = true;
+			Control.showOptions(tile.name);
 			event.accepted = true;
 		} else if (event.key === Qt.Key_Right && tile.opens !== "") {
 			Control.keyed = true;
@@ -74,10 +82,52 @@ Rectangle {
 
 		property int wheel: 0
 
+		// Where the button went down, and whether the pointer went far enough from
+		// there since to be dragging the tile: over another, it takes that one's place.
+		property point from
+		property bool dragging: false
+
 		anchors.fill: parent
 		hoverEnabled: true
-		cursorShape: Qt.PointingHandCursor
-		onClicked: tile.press()
+		acceptedButtons: Qt.LeftButton | Qt.RightButton
+		cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+		onPressed: event => {
+			dragging = false;
+			from = Qt.point(event.x, event.y);
+		}
+		onPositionChanged: event => {
+			if (!(pressedButtons & Qt.LeftButton))
+				return;
+			if (!dragging && Math.hypot(event.x - from.x, event.y - from.y) < Theme.u(10))
+				return;
+			dragging = true;
+			// The tiles' Flow, past the Loader each is in.
+			const flow = tile.parent?.parent;
+			if (!flow)
+				return;
+			const at = mapToItem(flow, event.x, event.y);
+			const over = flow.childAt(at.x, at.y);
+			if (over?.modelData && over.modelData !== tile.name)
+				Control.moveTileTo(tile.name, over.modelData);
+		}
+		onReleased: letGo.restart()
+		onCanceled: dragging = false
+		onClicked: event => {
+			if (dragging)
+				return;
+			if (event.button === Qt.RightButton)
+				Control.showOptions(tile.name);
+			else
+				tile.press();
+		}
+
+		// The click that ends a drag comes after the release.
+		Timer {
+			id: letGo
+
+			interval: 0
+			onTriggered: main.dragging = false
+		}
 		onWheel: event => {
 			if (!tile.takesWheel) {
 				event.accepted = false;
@@ -121,7 +171,7 @@ Rectangle {
 		// It can be a name, which anyone nearby picks.
 		Text {
 			width: parent.width
-			visible: text !== ""
+			visible: text !== "" && !tile.small
 			text: tile.summary
 			textFormat: Text.PlainText
 			maximumLineCount: 1
@@ -169,8 +219,14 @@ Rectangle {
 
 			anchors.fill: parent
 			hoverEnabled: true
+			acceptedButtons: Qt.LeftButton | Qt.RightButton
 			cursorShape: Qt.PointingHandCursor
-			onClicked: Control.unfolded = tile.opens
+			onClicked: event => {
+				if (event.button === Qt.RightButton)
+					Control.showOptions(tile.name);
+				else
+					Control.unfolded = tile.opens;
+			}
 		}
 	}
 

@@ -25,9 +25,27 @@ BarButton {
 	text: own.label === "none" || stacked ? "" : own.label === "both" && player?.trackArtist ? `${player.trackArtist} — ${title}` : title
 	tip: [player?.trackArtist ?? "", player?.trackTitle ?? ""].filter(part => part !== "").join(" — ")
 	ink: player?.isPlaying ? Theme.colors.text : Theme.colors.subtext
-	onClicked: {
+	onClicked: flip()
+
+	// On this bar's screen, not the one in focus: a click can come from another.
+	function flip() {
 		card.middle = Panels.middleOf(button);
-		card.toggle();
+		if (card.shown)
+			card.hide();
+		else
+			card.show(button.QsWindow.window.screen);
+	}
+
+	// `okaeri media card`, for a key.
+	Connections {
+		target: Panels
+
+		function onPartWanted(name, screen) {
+			if (name !== "media" || !button.wanted || Panels.answered || (screen !== "" && screen !== button.QsWindow.window?.screen?.name))
+				return;
+			Panels.answered = true;
+			button.flip();
+		}
 	}
 	onMiddleClicked: Media.toggle()
 	onScrolled: steps => steps > 0 ? Media.previous() : Media.next()

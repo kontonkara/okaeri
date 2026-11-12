@@ -30,6 +30,16 @@ Scope {
 		return kept.concat(others.sort((a, b) => a.windows[0].id - b.windows[0].id));
 	}
 
+	// What's on the dock of screen `output`: as `apps`, with only the windows
+	// Settings.dock.windows has it show, "all" of them, those on its "screen", or
+	// with "pinned" none of other apps than those it keeps.
+	function appsOn(output) {
+		if (own.windows !== "screen" && own.windows !== "pinned")
+			return apps;
+		const here = own.windows === "screen" ? Niri.on(output).map(workspace => workspace.id) : null;
+		return apps.map(app => here ? Object.assign({}, app, { windows: app.windows.filter(window => here.includes(window.workspace_id)) }) : app).filter(app => own.pinned.includes(app.id) || (own.windows === "screen" && app.windows.length > 0));
+	}
+
 	// To the window `by` on from the one in focus, the first if none is, or the
 	// app itself if it has none.
 	function activate(app, by) {
@@ -60,6 +70,15 @@ Scope {
 		function toggle(): void {
 			Settings.set("dock", "on", !docks.own.on);
 		}
+
+		// Keep an app on it, by its id as its desktop file has it, or let it go.
+		function pin(id: string): void {
+			Apps.dock(id, true);
+		}
+
+		function unpin(id: string): void {
+			Apps.dock(id, false);
+		}
 	}
 
 	Variants {
@@ -68,7 +87,7 @@ Scope {
 		Dock {
 			id: one
 
-			apps: docks.apps
+			apps: docks.appsOn(modelData.name)
 			held: menu.shown && menu.screen === modelData
 			onActivated: app => docks.activate(app, 1)
 			onTurned: (app, by) => docks.activate(app, by)

@@ -2,17 +2,25 @@ import QtQuick
 import qs
 import qs.ui
 
-// A level: what's put in it in front, a slider, and the percentage, and with
-// `opens`, a page by that name, an arrow to it.
+// A level: what's put in it in front, a slider, and the percentage, or the
+// step for one of `steps`, and with `opens`, a page by that name, an arrow to
+// it, and a right click anywhere on it opens it too, as one on a tile opens what
+// else the tile can do.
 Item {
 	id: level
 
 	property alias value: slider.value
+	// How far the wheel and the arrows take it.
+	property alias step: slider.step
 	// What the full slider is, for the percentage: past 1 for a volume that goes
 	// further.
 	property real full: 1
 	// Over the slider, for one that needs saying what it is.
 	property string label: ""
+	// How many steps it has, for one of only a few, like a keyboard's light: it
+	// then says which of them it's at, or "Off", as a percentage would make it
+	// look finer than it is. 0 for a percentage.
+	property int steps: 0
 	property string opens
 	default property alias front: front.data
 
@@ -62,7 +70,13 @@ Item {
 		anchors.verticalCenter: parent.verticalCenter
 		width: Theme.u(36)
 		horizontalAlignment: Text.AlignRight
-		text: `${Math.round(slider.value * level.full * 100)}%`
+		text: {
+			if (level.steps > 0 && level.steps <= 5) {
+				const at = Math.round(slider.value * level.steps);
+				return at === 0 ? "Off" : `${at}/${level.steps}`;
+			}
+			return `${Math.round(slider.value * level.full * 100)}%`;
+		}
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize
@@ -82,5 +96,11 @@ Item {
 		icon: "chevron"
 		iconSize: Theme.u(16)
 		onClicked: Control.unfolded = level.opens
+	}
+
+	TapHandler {
+		acceptedButtons: Qt.RightButton
+		enabled: level.opens !== ""
+		onTapped: Control.unfolded = level.opens
 	}
 }

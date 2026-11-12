@@ -9,7 +9,8 @@ import qs
 // Settings.display.ddc says so. Only screens that are connected are asked, and
 // only on a GPU that's awake: asking one that sleeps would wake it. Each in
 // `displays` is { name, bus, level, max }; a change goes out once the slider
-// rests.
+// rests. take() is a step of the brightness keys or of the wheel, for the
+// screen they're on, and reread() asks for the levels again.
 Singleton {
 	id: ddc
 
@@ -29,11 +30,36 @@ Singleton {
 			displays = [];
 	}
 
+	// The levels again, of what's already found: a monitor's own buttons may
+	// have moved them. The connectors are looked at again first, as that's what
+	// keeps a GPU that went to sleep since then from being asked: it's sysfs, and
+	// quick. Those still there keep their levels meanwhile.
+	function reread() {
+		if (on && available && displays.length > 0 && !finder.running && !asking.running)
+			finder.running = true;
+	}
+
 	function change(display, level) {
 		const value = Math.round(Math.max(0, Math.min(1, level)) * display.max);
 		displays = displays.map(other => other.bus === display.bus ? Object.assign({}, other, { level: value }) : other);
 		wanted = Object.assign({}, wanted, { [display.bus]: value });
 		resting.restart();
+	}
+
+	// take() moved one of them to `level`, 0 to 1.
+	signal stepped(real level)
+
+	// `by` more or less on `screen`, if that's one of these: whether it was. On a
+	// machine with no backlight of its own the first of them takes it for any.
+	function take(screen, by) {
+		const known = displays.filter(display => display.level >= 0);
+		const display = known.find(other => other.name === screen?.name) ?? (Brightness.available ? null : known[0]);
+		if (!display)
+			return false;
+		const level = Math.max(0, Math.min(1, display.level / display.max + by));
+		change(display, level);
+		stepped(level);
+		return true;
 	}
 
 	onOnChanged: find()
@@ -54,9 +80,11 @@ Singleton {
 
 		stdout: StdioCollector {
 			onStreamFinished: {
+				const known = ddc.displays;
 				ddc.displays = text.trim().split("\n").filter(line => line !== "").map(line => {
 					const [name, bus] = line.split(" ");
-					return { name, bus, level: -1, max: 100 };
+					const before = known.find(display => display.bus === bus);
+					return before ? Object.assign({}, before, { name }) : { name, bus, level: -1, max: 100 };
 				});
 				asking.next(0);
 			}
@@ -82,7 +110,8 @@ Singleton {
 				// "VCP 10 C 50 100": what it is, and how high it goes.
 				const found = text.match(/VCP 10 C (\d+) (\d+)/);
 				const index = asking.index;
-				if (found)
+				// One about to be changed keeps what it's to be.
+				if (found && !(ddc.displays[index]?.bus in ddc.wanted))
 					ddc.displays = ddc.displays.map((display, at) => at === index ? Object.assign({}, display, { level: Number(found[1]), max: Number(found[2]) || 100 }) : display);
 				asking.next(index + 1);
 			}

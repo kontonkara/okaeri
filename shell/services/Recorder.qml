@@ -22,14 +22,25 @@ Singleton {
 	property bool known: false
 	property bool waiting: false
 	readonly property bool recording: process.running
+	// While slurp waits for a part of the screen to be dragged out.
+	readonly property bool choosing: picking.running
 	// The file it goes to, and for how many seconds so far.
 	property string file
 	property int elapsed: 0
 	readonly property string folder: own.folder || `${Quickshell.env("HOME")}/Videos`
+	// What the one that runs takes in, in words, as it was asked to start.
+	property string about
 
 	// 75 as 1:15.
 	function clock(seconds) {
 		return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+	}
+
+	// A recording of screen `screen`, "" for a part of one, with sound `audio`
+	// as Settings.recording.audio has it, into `into`, in words.
+	function told(screen, audio, into) {
+		const sound = audio === "system" ? "with what plays" : audio === "mic" ? "with the mic" : "no sound";
+		return `${screen || "A part of the screen"}, ${sound}, into ${into.replace(Quickshell.env("HOME"), "~")}`;
 	}
 
 	function toggle() {
@@ -64,6 +75,7 @@ Singleton {
 		Env.act(`record start ${part ? "part" : "screen"} ${own.audio}`, () => {
 			file = name;
 			elapsed = 0;
+			about = told(part ? "" : where[1] || "The screen", own.audio, folder);
 			process.command = ["sh", "-c", 'mkdir -p "$1" && shift && exec "$@"', "sh", folder, tool, "-f", name].concat(where, sound);
 			process.running = true;
 		});

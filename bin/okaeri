@@ -4,21 +4,60 @@
 #   okaeri                runs it, in a Wayland session
 #   okaeri <target> ...   calls it, as a compositor's binds do: `okaeri launcher
 #                         toggle`, `okaeri volume up 10`
-#   okaeri dmenu [prompt] shows the lines of standard input to pick one of, and
-#                         prints it, as dmenu does for scripts
+#   okaeri dmenu [-p PROMPT] [--password] [--index] [--only-match] [--select LINE]
+#                         shows the lines of standard input to pick one of, and
+#                         prints it, as dmenu does for scripts. -p puts PROMPT
+#                         in the field, as a last word alone does too;
+#                         --password hides what's typed; --index prints where
+#                         the line picked was among all of them, from 0;
+#                         --only-match has only a line be the answer, never
+#                         what's typed; --select starts on LINE
 #   okaeri commands       lists what can be called, each target with its calls
 set -eu
 
 shell=${OKAERI_SHELL_DIR:-$(dirname "$(readlink -f "$0")")/../shell}
 
 # A list to pick from, a line each on standard input: the launcher shows it, the
-# line picked is printed, and with none picked it ends in 1.
+# line picked is printed, and with none picked it ends in 1. The prompt and the
+# line to start on go to it in files: they can have anything in them, and the
+# call's arguments can't have commas.
 if [ "${1:-}" = dmenu ]; then
+	shift
+	prompt=
+	select=
+	options=
+	while [ "$#" -gt 0 ]; do
+		case $1 in
+		-p | --select)
+			[ "$#" -ge 2 ] || {
+				echo "okaeri dmenu: $1 wants a value after it" >&2
+				exit 2
+			}
+			if [ "$1" = -p ]; then
+				prompt=$2
+			else
+				select=$2
+			fi
+			shift
+			;;
+		--password) options="$options password" ;;
+		--index) options="$options index" ;;
+		--only-match) options="$options only-match" ;;
+		-*)
+			echo "okaeri dmenu: there's no $1" >&2
+			exit 2
+			;;
+		*) prompt=$1 ;;
+		esac
+		shift
+	done
 	dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/okaeri-dmenu.XXXXXX")
 	trap 'rm -rf "$dir"' EXIT
 	cat >"$dir/lines"
+	printf '%s' "$prompt" >"$dir/prompt"
+	printf '%s' "$select" >"$dir/select"
 	mkfifo "$dir/answer"
-	quickshell ipc -p "$shell" call -- launcher menu "$dir/lines" "$dir/answer" "${2:-}" >/dev/null || exit 1
+	quickshell ipc -p "$shell" call -- launcher menuWith "$dir/lines" "$dir/answer" "${options# }" >/dev/null || exit 1
 	picked=$(cat "$dir/answer")
 	[ -n "$picked" ] || exit 1
 	printf '%s\n' "$picked"

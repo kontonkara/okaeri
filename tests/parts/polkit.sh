@@ -260,6 +260,22 @@ key Return
 wait_count 'okaeri: cancelled' 5
 closed
 
+# With Caps Lock on, the line under a hidden field says so, and not as an error;
+# off again, the line is empty again.
+open_demo
+park
+shot dark-caps-off
+echo 1 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+shot dark-caps-on
+different dark-caps-off dark-caps-on "$note"
+[ "$(pixels dark-caps-on "$note" "#ee6666")" -eq 0 ] || fail "Caps Lock in the error color"
+echo 0 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+shot dark-caps-back
+same dark-caps-off dark-caps-back "$note"
+finish
+
 # Two identities: a note up front, the first one chosen, the other a click away.
 open_demo demoIdentities
 park

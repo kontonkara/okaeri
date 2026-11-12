@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import qs
 import qs.launcher
+import qs.services
 import qs.ui
 
 // The dock of a screen: `apps`, each by its icon, with a mark under one that
@@ -32,9 +33,9 @@ PanelWindow {
 	readonly property real tipsFrom: thick + Theme.u(6)
 	readonly property string tipsAt: ({ top: "below", bottom: "above", left: "right", right: "left" })[at]
 	// In sight: always, unless it hides; then with the pointer at its edge or on it.
-	// Its menu is open: that keeps it in sight too.
+	// Its menu is open: that keeps it in sight too, and so does niri's overview.
 	property bool held: false
-	readonly property bool pointed: sensor.containsMouse || over.hovered || held
+	readonly property bool pointed: sensor.containsMouse || over.hovered || held || Niri.overview
 	property bool down: true
 
 	signal activated(var app)
@@ -164,7 +165,7 @@ PanelWindow {
 			enabled: Theme.animate
 
 			NumberAnimation {
-				duration: 180
+				duration: Theme.ms(180)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -258,7 +259,7 @@ PanelWindow {
 							enabled: Theme.animate
 
 							NumberAnimation {
-								duration: 140
+								duration: Theme.ms(140)
 								easing.type: Easing.OutCubic
 							}
 						}

@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs
 import qs.services
+import qs.ui
 
 // What the keyboard's keys are bound to, from the compositor's binds, and what else
 // a script may want of the shell:
@@ -18,6 +19,11 @@ Scope {
 
 		function down(percent: int): void {
 			Audio.change(-percent / 100);
+		}
+
+		// To `percent` at once, for a script.
+		function set(percent: int): void {
+			Audio.change(percent / 100 - Audio.volume);
 		}
 
 		function mute(): void {
@@ -36,6 +42,11 @@ Scope {
 			Audio.changeMic(-percent / 100);
 		}
 
+		// To `percent` at once, for a script.
+		function set(percent: int): void {
+			Audio.changeMic(percent / 100 - Audio.micVolume);
+		}
+
 		function mute(): void {
 			Audio.toggleMicMute();
 		}
@@ -44,12 +55,20 @@ Scope {
 	IpcHandler {
 		target: "brightness"
 
+		// Of the screen in focus: an external one by DDC, where that's on.
 		function up(percent: int): void {
-			Brightness.change(percent / 100);
+			if (!Ddc.take(Niri.focusedScreen, percent / 100))
+				Brightness.change(percent / 100);
 		}
 
 		function down(percent: int): void {
-			Brightness.change(-percent / 100);
+			if (!Ddc.take(Niri.focusedScreen, -percent / 100))
+				Brightness.change(-percent / 100);
+		}
+
+		// The laptop's own panel to `percent` at once, for a script.
+		function set(percent: int): void {
+			Brightness.change(percent / 100 - Brightness.level);
 		}
 	}
 
@@ -62,6 +81,11 @@ Scope {
 
 		function stop(): void {
 			Media.stop();
+		}
+
+		// The card of what plays, on the bar of the screen in focus.
+		function card(): void {
+			Panels.ask("media", Niri.focusedScreen?.name ?? "");
 		}
 
 		function previous(): void {
@@ -105,6 +129,24 @@ Scope {
 		}
 	}
 
+	// The month under the clock, and the load of the machine, on the bar of the
+	// screen in focus or of the first that has them.
+	IpcHandler {
+		target: "calendar"
+
+		function toggle(): void {
+			Panels.ask("calendar", Niri.focusedScreen?.name ?? "");
+		}
+	}
+
+	IpcHandler {
+		target: "load"
+
+		function toggle(): void {
+			Panels.ask("load", Niri.focusedScreen?.name ?? "");
+		}
+	}
+
 	// The keyboard's own light, where it has one.
 	IpcHandler {
 		target: "keylight"
@@ -115,6 +157,11 @@ Scope {
 
 		function down(percent: int): void {
 			KeyboardLight.change(-percent / 100);
+		}
+
+		// To `percent` of its light at once, the step nearest that.
+		function set(percent: int): void {
+			KeyboardLight.set(percent / 100);
 		}
 	}
 

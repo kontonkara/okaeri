@@ -460,6 +460,10 @@ sleep 0.4
 shot layout
 niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-osd" and .keyboard_interactivity == "None")' >/dev/null ||
 	fail "the layout's card took the keyboard"
+# By its whole name, Russian, and not RU: a card of two letters would be about 75
+# pixels across its middle.
+wide=$(magick "$out/layout.png" -depth 8 -crop "1400x1+0+$middle" +repage txt:- | grep -vci "#$desk" || true)
+[ "$wide" -gt 90 ] || fail "the layout's card is $wide pixels wide, as for two letters"
 leaves "$(now)" >/dev/null
 
 # The lock keys, by their lights: a card as one changes, saying which and how.

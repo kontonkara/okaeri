@@ -5,8 +5,10 @@ import qs.ui
 // A line to pick a number out of `values`, from low to high, by the
 // arrows or the wheel: `text`, and `subtext` if it has one. It shows `value`, which
 // can be one that's not among them, as a config can say anything, and says
-// chosen(value), as Setting does. 0 reads as `none`, and with a `unit` it's not
-// seconds but numbers of that.
+// chosen(value), as Setting does. 0 reads as `none`, the last of them as `most`
+// if that's given, and with a `unit` it's not seconds but numbers of that. With
+// an arrow in focus, Left and Right step too, and Home and End go to the lowest
+// and the highest.
 Item {
 	id: choice
 
@@ -15,6 +17,7 @@ Item {
 	required property var values
 	property real value: 0
 	property string none: "Never"
+	property string most
 	property string unit
 	readonly property real lower: values.filter(other => other < value).pop() ?? -1
 	readonly property real higher: values.find(other => other > value) ?? -1
@@ -28,12 +31,37 @@ Item {
 			const found = steps > 0 ? values.find(other => other > next) : values.filter(other => other < next).pop();
 			next = found ?? next;
 		}
-		if (next !== value)
-			chosen(next);
+		go(next);
+	}
+
+	// To `next`, one of `values`. An arrow in focus that would go out at an end
+	// hands the focus to the other first, so the keys still work.
+	function go(next) {
+		if (next === undefined || next === value)
+			return;
+		if (next <= values[0] && backward.activeFocus)
+			forward.forceActiveFocus();
+		else if (next >= values[values.length - 1] && forward.activeFocus)
+			backward.forceActiveFocus();
+		chosen(next);
 	}
 
 	width: parent.width
 	height: Theme.u(subtext ? 40 : 30)
+
+	Keys.onPressed: event => {
+		if (event.key === Qt.Key_Left)
+			step(-1);
+		else if (event.key === Qt.Key_Right)
+			step(1);
+		else if (event.key === Qt.Key_Home)
+			go(values[0]);
+		else if (event.key === Qt.Key_End)
+			go(values[values.length - 1]);
+		else
+			return;
+		event.accepted = true;
+	}
 
 	MouseArea {
 		property int wheel: 0
@@ -82,10 +110,16 @@ Item {
 	Row {
 		id: picker
 
+		// On a page that scrolls, the wheel over these is still the line's: Glide
+		// lets it through.
+		readonly property bool takesWheel: true
+
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 
 		Button {
+			id: backward
+
 			height: Theme.u(28)
 			flat: true
 			enabled: choice.lower >= 0
@@ -97,7 +131,7 @@ Item {
 			anchors.verticalCenter: parent.verticalCenter
 			width: Theme.u(64)
 			horizontalAlignment: Text.AlignHCenter
-			text: choice.value === 0 ? choice.none : choice.unit ? `${choice.value}${choice.unit}` : choice.value < 60 ? `${choice.value} s` : `${Math.round(choice.value / 60)} min`
+			text: choice.value === 0 ? choice.none : choice.most && choice.value === choice.values[choice.values.length - 1] ? choice.most : choice.unit ? `${choice.value}${choice.unit}` : choice.value < 60 ? `${choice.value} s` : `${Math.round(choice.value / 60)} min`
 			color: Theme.colors.text
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
@@ -107,6 +141,8 @@ Item {
 		}
 
 		Button {
+			id: forward
+
 			height: Theme.u(28)
 			flat: true
 			enabled: choice.higher >= 0

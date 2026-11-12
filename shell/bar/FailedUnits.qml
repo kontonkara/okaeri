@@ -4,7 +4,9 @@ import qs
 import qs.services
 import qs.ui
 
-// When systemd units failed: how many, and a click says which.
+// When systemd units failed: how many, and a click says which, each with a way
+// to start it again, to take its failure off the list and to see what its
+// journal said last, and with more than one a way to take them all off.
 BarButton {
 	id: button
 
@@ -42,7 +44,11 @@ BarButton {
 			model: Units.failed
 
 			Column {
+				id: failure
+
 				required property var modelData
+				// Its journal's last lines, shown under it.
+				property bool why: false
 
 				width: parent.width
 				spacing: Theme.u(2)
@@ -59,7 +65,70 @@ BarButton {
 					color: Theme.colors.subtext
 					font.pixelSize: Theme.fontSize - Theme.u(1)
 				}
+
+				Line {
+					visible: Units.trouble?.unit === modelData.unit
+					text: Units.trouble?.text ?? ""
+					color: Theme.colors.error
+					font.pixelSize: Theme.fontSize - Theme.u(1)
+				}
+
+				Row {
+					spacing: Theme.u(6)
+
+					Button {
+						height: Theme.u(26)
+						pad: Theme.u(10)
+						text: "Restart"
+						onClicked: Units.act(modelData, "restart")
+					}
+
+					Button {
+						height: Theme.u(26)
+						pad: Theme.u(10)
+						flat: true
+						text: "Clear"
+						tip: "Off this list, as it is"
+						onClicked: Units.act(modelData, "clear")
+					}
+
+					Button {
+						height: Theme.u(26)
+						pad: Theme.u(10)
+						flat: true
+						text: failure.why ? "Less" : "Why"
+						tip: "What its journal said last"
+						onClicked: {
+							failure.why = !failure.why;
+							if (failure.why)
+								Units.explain(failure.modelData);
+						}
+					}
+				}
+
+				// As the journal has it: what the unit printed, a line each.
+				Text {
+					width: parent.width
+					visible: failure.why
+					text: Units.told[failure.modelData.unit] ?? "Reading its journal..."
+					textFormat: Text.PlainText
+					wrapMode: Text.WrapAnywhere
+					maximumLineCount: 8
+					elide: Text.ElideRight
+					color: Theme.colors.subtext
+					font.family: "monospace"
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+				}
 			}
+		}
+
+		// With more than one, all of them off the list at once.
+		Button {
+			visible: Units.failed.length > 1
+			height: Theme.u(28)
+			flat: true
+			text: "Clear all"
+			onClicked: Units.failed.forEach(unit => Units.act(unit, "clear"))
 		}
 	}
 }

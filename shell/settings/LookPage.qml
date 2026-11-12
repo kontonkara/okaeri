@@ -72,6 +72,44 @@ Flickable {
 				checked: Theme.animate
 				onToggled: wanted => Theme.set("animations", wanted)
 			}
+
+			Pick {
+				text: "Speed"
+				subtext: "Of all that moves"
+				enabled: Theme.animate
+				options: [
+					{ value: "quick", text: "Quick" },
+					{ value: "normal", text: "As it is" },
+					{ value: "slow", text: "Slow" }
+				]
+				value: Theme.values.speed ?? "normal"
+				onChosen: value => Theme.set("speed", value)
+			}
+
+			Pick {
+				text: "Panels come"
+				subtext: "As they open, and go the same way"
+				enabled: Theme.animate
+				options: [
+					{ value: "grow", text: "Growing" },
+					{ value: "fade", text: "Fading in" },
+					{ value: "slide", text: "Sliding in" }
+				]
+				value: Theme.panelMotion
+				onChosen: value => Theme.set("panelMotion", value)
+			}
+
+			Pick {
+				text: "Notifications come"
+				enabled: Theme.animate
+				options: [
+					{ value: "slide", text: "Sliding in" },
+					{ value: "fade", text: "Fading in" },
+					{ value: "grow", text: "Growing" }
+				]
+				value: Theme.toastMotion
+				onChosen: value => Theme.set("toastMotion", value)
+			}
 		}
 
 		Card {
@@ -104,13 +142,38 @@ Flickable {
 				onChosen: value => Theme.set("barMargin", value)
 			}
 
+			Pick {
+				text: "The bar"
+				subtext: Settings.bar.look === "islands" ? "Each group of its parts on its own, the desktop between" : "One piece across the screen"
+				options: [
+					{ value: "whole", text: "Whole" },
+					{ value: "islands", text: "Islands" }
+				]
+				value: Settings.bar.look
+				onChosen: value => Settings.set("bar", "look", value)
+			}
+
+			Pick {
+				text: "Tiles of the control center"
+				subtext: Settings.control.size === "small" ? "A line each, with no summary" : "With what they're at under their names"
+				options: [
+					{ value: "large", text: "Large" },
+					{ value: "small", text: "Small" }
+				]
+				value: Settings.control.size
+				onChosen: value => Settings.set("control", "size", value)
+			}
+
+			// Past the largest it's round: what's small is, all the way, and a card
+			// has the corners it has by default. That's no number in the theme.
 			Choice {
 				text: "Corners"
-				values: [0, 4, 6, 8, 10, 12, 14, 16, 20]
-				value: Theme.values.radius ?? 14
+				values: [0, 4, 6, 8, 10, 12, 14, 16, 20, 1000]
+				value: Theme.values.radius ?? 1000
 				none: "Square"
+				most: "Round"
 				unit: " px"
-				onChosen: value => Theme.set("radius", value)
+				onChosen: value => Theme.set("radius", value === 1000 ? null : value)
 			}
 
 			Choice {
@@ -127,6 +190,32 @@ Flickable {
 				value: Math.round(Theme.values.scale * 100)
 				unit: "%"
 				onChosen: value => Theme.set("scale", value / 100)
+			}
+		}
+
+		Card {
+			width: parent.width
+			title: "Text"
+
+			Field {
+				text: "Font"
+				subtext: "A family by its name, as the system has it: empty is the system's own"
+				placeholder: Qt.application.font.family
+				value: Theme.values.font || ""
+				onKept: value => Theme.set("font", value)
+			}
+
+			Pick {
+				text: "Weight"
+				subtext: "Of what stands out: the clock, a title"
+				options: [
+					{ value: 400, text: "Regular" },
+					{ value: 500, text: "Medium" },
+					{ value: 600, text: "Semibold" },
+					{ value: 700, text: "Bold" }
+				]
+				value: Theme.values.fontWeight
+				onChosen: value => Theme.set("fontWeight", value)
 			}
 		}
 
@@ -152,7 +241,7 @@ Flickable {
 
 			Pick {
 				text: "Another by day"
-				subtext: Theme.values.auto === "sun" ? "From sunrise to sunset, where the night light or the weather is set for" : ""
+				subtext: Theme.values.auto === "sun" ? "From sunrise to sunset, where the night light or the weather is set for" : Theme.timed ? "" : "Or by a key: okaeri theme toggle"
 				valueWidth: Theme.u(150)
 				options: [
 					{ value: "off", text: "No" },

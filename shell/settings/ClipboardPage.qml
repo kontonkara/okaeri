@@ -1,13 +1,27 @@
 import QtQuick
 import qs
+import qs.services
 import qs.ui
 
-// What Enter does with an entry, and how much there is of the history.
+// What Enter does with an entry, what goes into the history and how much there
+// is of it. Pausing it is the panel's, by its button: that ends with the shell.
 Column {
 	spacing: Math.round(Theme.u(10))
 
 	Card {
 		width: parent.width
+
+		Text {
+			readonly property var lacking: [["cliphist", "cliphist"], ["wl-paste", "wl-clipboard"], ["wtype", "wtype, to paste,"]].filter(tool => Env.lacks(tool[0])).map(tool => tool[1])
+
+			width: parent.width
+			visible: lacking.length > 0
+			wrapMode: Text.WordWrap
+			text: `It needs ${lacking.join(" and ")}, which ${lacking.length > 1 ? "aren't" : "isn't"} here.`
+			color: Theme.colors.error
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize - Theme.u(1)
+		}
 
 		Setting {
 			text: "Enter pastes"
@@ -32,6 +46,13 @@ Column {
 			value: Settings.clipboard.keep
 			unit: " "
 			onChosen: value => Settings.set("clipboard", "keep", value)
+		}
+
+		Setting {
+			text: "Keep pictures"
+			subtext: "Screenshots and copied images; they take room"
+			checked: Settings.clipboard.images
+			onToggled: wanted => Settings.set("clipboard", "images", wanted)
 		}
 	}
 }

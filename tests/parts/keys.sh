@@ -48,6 +48,8 @@ reach() {
 reach volume up 10
 
 ipc volume up 10
+# Up is to be heard: on a machine that's muted, the mute comes off first.
+! wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED || seen=$((seen + 1))
 said "volume "
 up=$got
 ipc volume down 10
@@ -56,6 +58,13 @@ down=$got
 [ "${up#volume }" != "${down#volume }" ] || fail "up and down are both $up"
 awk -v u="${up#volume }" -v d="${down#volume }" 'BEGIN { exit !(u > d) }' || fail "$up isn't over $down"
 wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED || log | grep -q 'dry: sound audio-volume-change' || fail "a change of the volume has no sound"
+# Or to a level at once, for a script: from the machine's, which a dry run
+# leaves as it is.
+ipc volume set 40
+sleep 0.5
+got=$(lines | grep '^volume ' | tail -n 1)
+seen=$(lines | wc -l)
+awk -v v="${got#volume }" 'BEGIN { exit !(v > 0.39 && v < 0.41) }' || fail "the volume set to 40 is $got"
 ipc volume mute
 said "mute "
 
@@ -69,6 +78,9 @@ if wpctl inspect @DEFAULT_AUDIO_SOURCE@ >/dev/null 2>&1; then
 	ipc mic down 10
 	said "mic volume "
 	awk -v u="${up#mic volume }" -v d="${got#mic volume }" 'BEGIN { exit !(u > d) }' || fail "$up isn't over $got"
+	ipc mic set 40
+	said "mic volume "
+	awk -v v="${got#mic volume }" 'BEGIN { exit !(v > 0.39 && v < 0.41) }' || fail "the microphone set to 40 is $got"
 else
 	silent "a microphone out of nowhere"
 fi
@@ -80,6 +92,31 @@ up=$got
 ipc brightness down 10
 said "brightness "
 [ "${up#brightness }" -gt "${got#brightness }" ] || fail "$up isn't over $got"
+ipc brightness set 70
+said "brightness "
+high=$got
+ipc brightness set 30
+said "brightness "
+[ "${high#brightness }" -gt "${got#brightness }" ] || fail "the brightness set to 70, $high, isn't over 30, $got"
+
+# With DDC on, the keys are the screen's in focus where that's an external one:
+# here the stand's own, made to look like one, at 40 of 100.
+screen=$(niri msg --json outputs | jq -r 'keys[0]')
+mkdir -p "$work/drm/card1/device/power" "$work/drm/card1-$screen"
+echo connected >"$work/drm/card1-$screen/status"
+ln -s "../../i2c-7" "$work/drm/card1-$screen/ddc"
+echo active >"$work/drm/card1/device/power/runtime_status"
+printf '{ "display": { "ddc": true } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 30); do
+	grep -q 'getvcp' "$work/ddcutil.log" 2>/dev/null && break
+	sleep 0.1
+done
+sleep 0.3
+ipc brightness up 10
+said "ddc $screen 50"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+rm -r "$work/drm/card1" "$work/drm/card1-$screen"
+sleep 0.5
 
 # No player, nothing to tell.
 ipc media toggle
@@ -194,6 +231,8 @@ reach keylight up 30
 [ "$(lines | tail -n 1)" = "keyboard light 2" ] || fail "the keyboard's light up: $(lines | tail -n 1)"
 ipc keylight down 30
 said "keyboard light 0"
+ipc keylight set 100
+said "keyboard light 3"
 
 # The bar hides, or stays, as its setting then says.
 hides() {

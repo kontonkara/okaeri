@@ -160,6 +160,34 @@ move $left_tile_x $tiles_y2
 when 'dry: night light -t 3750 -T 3751' wheel 1
 shot night
 ipc night toggle
+# By a schedule, off is for tonight only: the schedule stays, and on again is on.
+night() {
+	ipc night state | jq -c '[.on, .paused]'
+}
+printf '{ "nightLight": { "mode": "schedule" } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc night toggle
+sleep 0.2
+[ "$(night)" = '[true,false]' ] || fail "the night light by a schedule isn't on: $(night)"
+ipc night toggle
+sleep 0.2
+[ "$(night)" = '[false,true]' ] || fail "off by a schedule isn't for tonight: $(night)"
+[ "$(jq -r .nightLight.on "$XDG_STATE_HOME/okaeri/settings.json")" = true ] || fail "off for tonight took the schedule away"
+ipc night toggle
+sleep 0.2
+[ "$(night)" = '[true,false]' ] || fail "on again after tonight's off isn't on: $(night)"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc night toggle
+sleep 0.2
+[ "$(night)" = '[false,false]' ] || fail "off all the time isn't off: $(night)"
+# How warm, by a call: kept, and no warmer than the warmest.
+ipc night warmth 3000
+sleep 0.2
+[ "$(jq -r .nightLight.temperature "$XDG_STATE_HOME/okaeri/settings.json")" = 3000 ] || fail "the warmth by a call isn't kept"
+ipc night warmth 1000
+sleep 0.2
+[ "$(jq -r .nightLight.temperature "$XDG_STATE_HOME/okaeri/settings.json")" = 2500 ] || fail "a warmth past the warmest isn't the warmest"
 # Keeping awake: the wheel gives it half an hour, and takes it back.
 awake() {
 	ipc awake state | jq -r .on
@@ -172,6 +200,55 @@ shot awake-wheel
 wheel -1
 sleep 0.3
 [ "$(awake)" = false ] || fail_awake "the wheel didn't turn it off"
+
+# A right click on a tile opens what else it can do in the panel's place, and
+# Escape goes back to the tiles.
+shot before-options
+move $right_tile_x $tiles_y2
+click right
+sleep 0.5
+shot awake-options
+[ "$(magick "$out/awake-options.png" "$out/before-options.png" -compose difference -composite -crop 360x200+1010+190 +repage -format '%[fx:maxima > 0.1]' info:)" = 1 ] || fail "a right click on a tile opened nothing"
+key Escape
+sleep 0.5
+shot after-options
+[ "$(magick "$out/after-options.png" "$out/before-options.png" -compose difference -composite -crop 170x120+1030+256 +repage -format '%[fx:maxima > 0.1]' info:)" = 0 ] || fail "Escape didn't go back to the tiles from a tile's options"
+# By a call, for the recording: its first row picks the screen.
+ipc control options record
+sleep 0.6
+shot record-options
+at 1200 152
+sleep 0.3
+[ "$(jq -r '.recording.area' "$XDG_STATE_HOME/okaeri/settings.json")" = screen ] || fail "the first row of the recording's options didn't pick the screen: $(cat "$XDG_STATE_HOME/okaeri/settings.json")"
+key Escape
+sleep 0.4
+# A tile dragged onto another takes its place, and back again.
+tiles() {
+	jq -c '.control.tiles // [] | map(select(. == "night" or . == "awake"))' "$XDG_STATE_HOME/okaeri/settings.json"
+}
+drag_left() {
+	move $right_tile_x $tiles_y2
+	hold
+	wlrctl pointer move -20 0
+	sleep 0.1
+	wlrctl pointer move -170 0
+	sleep 0.4
+	let_go
+	sleep 0.4
+}
+drag_left
+[ "$(tiles)" = '["awake","night"]' ] || fail "a tile dragged onto another didn't take its place: $(tiles)"
+drag_left
+[ "$(tiles)" = '["night","awake"]' ] || fail "the tile dragged back isn't where it was: $(tiles)"
+# A right click on the volume opens its page, as the arrow at its end does.
+shot before-level
+move $((slider_left + slider_width / 2)) $volume_y
+click right
+sleep 0.5
+shot level-page
+[ "$(magick "$out/level-page.png" "$out/before-level.png" -compose difference -composite -crop 170x120+1030+256 +repage -format '%[fx:maxima > 0.1]' info:)" = 1 ] || fail "a right click on the volume opened no page"
+key Escape
+sleep 0.5
 
 when 'dry: mute' at $mute_x $volume_y
 when 'dry: brightness' at $((slider_left + slider_width / 4)) $brightness_y
@@ -278,7 +355,9 @@ Scope {
 		id: wifiCard
 
 		readonly property int type: DeviceType.Wifi
+		readonly property string name: "wlan9"
 		property bool scannerEnabled: false
+		property int mode: WifiDeviceMode.Station
 		readonly property QtObject networks: QtObject {
 			property var values: probe.networks
 		}
@@ -335,6 +414,11 @@ Scope {
 
 		function wifi(on: bool): void {
 			Wifi.enabled = on;
+		}
+
+		// As NetworkManager has the device while a hotspot is up.
+		function hotspot(on: bool): void {
+			wifiCard.mode = on ? WifiDeviceMode.AccessPoint : WifiDeviceMode.Station;
 		}
 
 		function bluetooth(on: bool): void {
@@ -737,6 +821,14 @@ asking '{"kind":"accept","code":""}'
 shot bt-accept
 when 'dry: bluetooth answer accept no' at 1286 160
 asking null
+# One that's pairing can be stopped from its row, at one click, and not only
+# when BlueZ gives up: then it's not ours any more, and the adapter is as it
+# was. Its button is about as wide as Forget's.
+pairables=$(seen 'dry: bluetooth pairable false')
+when 'dry: bluetooth cancel' at $forget_x "$(bt_row 3)"
+[ "$(seen 'dry: bluetooth pairable false')" -gt "$pairables" ] || fail "a pairing that was stopped left the adapter pairable"
+never 'dry: bluetooth trust and connect' ipc probe paired Watch true
+ipc probe paired Watch false
 ipc probe pairing Watch true
 ipc probe pairing Watch false
 sleep 3.2
@@ -790,16 +882,49 @@ sleep 0.4
 sleep 3.5
 [ "$(ipc probe vpns)" = '' ] || fail "the VPNs that went are still $(ipc probe vpns)"
 
-# A tile of one's own, beside the recording's: it's on while its check ends well,
-# looked at every few seconds, and a click runs its command.
+# The hotspot, beside the recording's tile now. The first time it goes on, its
+# password is made up and kept in the settings, out of the log; after that it's
+# the one kept. With the device an access point it's on, and the tile takes it
+# down.
+printf '{ "hotspot": { "name": "Den, by the door" } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+when 'dry: hotspot on' at $right_tile_x $tiles_y4
+made=$(jq -r .hotspot.password "$XDG_STATE_HOME/okaeri/settings.json")
+[ "${#made}" = 12 ] || fail "no password made up for the hotspot"
+[ "$(seen "$made")" = 0 ] || fail "the hotspot's password is in the log"
+when 'dry: hotspot on' at $right_tile_x $tiles_y4
+[ "$(jq -r .hotspot.password "$XDG_STATE_HOME/okaeri/settings.json")" = "$made" ] || fail "the hotspot's password was made up again"
+ipc probe hotspot true
+sleep 0.3
+shot hotspot-on
+when 'dry: hotspot off' at $right_tile_x $tiles_y4
+ipc probe hotspot false
+# Its page has the code a phone joins it by, with what would end a field in it
+# taken as text, and the picture goes as the page does.
+page hotspot
+for _ in $(seq 30); do
+	[ -s "$XDG_RUNTIME_DIR/okaeri/share-hotspot.png" ] && break
+	sleep 0.1
+done
+sleep 0.2
+shot hotspot-page
+[ -s "$XDG_RUNTIME_DIR/okaeri/share-hotspot.png" ] || fail "no code drawn for the hotspot"
+[ "$(cat "$work/qr")" = "WIFI:T:WPA;S:Den\\, by the door;P:$made;;" ] || fail "the hotspot's code isn't what it should be"
+at $back_x $page_y
+sleep 0.4
+[ ! -e "$XDG_RUNTIME_DIR/okaeri/share-hotspot.png" ] || fail "the hotspot's code stays after its page went"
+
+# A tile of one's own, under the hotspot's, alone in its row: it's on while its
+# check ends well, looked at every few seconds, and a click runs its command.
+tiles_y5=$((tiles_y4 + 66))
 printf '{ "control": { "custom": [{ "name": "Mine", "command": "touch %s", "check": "test -e %s" }] } }\n' "$work/flag" "$work/flag" >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.8
 shot own-off
 touch "$work/flag"
 sleep 3.5
 shot own-on
-[ "$(differ own-off own-on 170x50+1210+390)" != 0 ] || fail "a tile of one's own doesn't follow its check"
-when 'dry: tile run' at $right_tile_x $tiles_y4
+[ "$(differ own-off own-on "170x50+1210+$((tiles_y5 - 25))")" != 0 ] || fail "a tile of one's own doesn't follow its check"
+when 'dry: tile run' at $right_tile_x $tiles_y5
 rm "$work/flag"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
@@ -871,6 +996,24 @@ ipc probe fail Office 5
 sleep 0.4
 shot light-password
 key Escape
+# The network it's on, for a phone, by the button beside that: its password as
+# nmcli has it, and the code drawn of that, with what would end a field in it
+# taken as text. The picture goes as the page does.
+share_x=1340
+printf 'SSID: Home\nSecurity: WPA\nPassword: %s\n' 'hunter2;:,"\x' >"$work/secret"
+at $share_x 351
+for _ in $(seq 30); do
+	[ -s "$XDG_RUNTIME_DIR/okaeri/share-wifi.png" ] && break
+	sleep 0.1
+done
+sleep 0.2
+shot light-share
+[ -s "$XDG_RUNTIME_DIR/okaeri/share-wifi.png" ] || fail "no code drawn for the network"
+[ "$(cat "$work/qr")" = 'WIFI:T:WPA;S:Home;P:hunter2\;\:\,\"\\x;;' ] || fail "the network's code isn't what it should be"
+[ "$(seen 'hunter2;')" = 0 ] || fail "the network's password is in the log"
+key Escape
+sleep 0.4
+[ ! -e "$XDG_RUNTIME_DIR/okaeri/share-wifi.png" ] || fail "the network's code stays after the page went"
 page bluetooth
 shot light-bluetooth
 toggle
@@ -930,8 +1073,10 @@ sleep 1
 toggle
 sleep 0.4
 shot app-volume
-# The microphone's level under the brightness, with its mute.
-mic_y=189
+# The microphone's level under the brightness, with its mute. With two outputs
+# and two microphones, the volume and the microphone say which is in use over
+# their sliders, and they're taller for it.
+mic_y=211
 when 'dry: mic volume' at $((slider_left + slider_width / 2)) $mic_y
 when 'dry: mic mute' at $mute_x $mic_y
 # The sound's page: two outputs, a click on one moves the sound there, and what
@@ -945,6 +1090,27 @@ when 'dry: app mute true' at $mute_x 263
 shot playback
 at $back_x $page_y
 sleep 0.3
+# A sound card that can work in three ways, as pw-dump has it, off and one that
+# can't be now not counted: a click on it shows them under it, a row of 38 px
+# each, and a click on one of them changes to it. The one it's in changes
+# nothing, and folds them: a click there again would land on the third one
+# only if they had stayed.
+cat >"$work/cards" <<'JSON'
+[{"id":57,"type":"PipeWire:Interface:Device","info":{"props":{"media.class":"Audio/Device","device.description":"A card"},"params":{"Profile":[{"index":1,"name":"duplex"}],"EnumProfile":[{"index":0,"name":"off","description":"Off","available":"yes"},{"index":1,"name":"duplex","description":"Analog Stereo Duplex","available":"yes"},{"index":2,"name":"out","description":"Analog Stereo Output","available":"yes"},{"index":3,"name":"in","description":"Analog Stereo Input","available":"no"},{"index":4,"name":"pro","description":"Pro Audio","available":"yes"}]}}}]
+JSON
+at $sound_x $volume_y
+sleep 0.6
+shot cards
+card_y=248
+never 'dry: card profile' at 1200 $card_y
+shot card-ways
+never 'dry: card profile' at 1200 $((card_y + 38))
+at 1200 $card_y
+sleep 0.3
+when 'dry: card profile 4' at 1200 $((card_y + 3 * 38))
+at $back_x $page_y
+sleep 0.3
+rm "$work/cards"
 # The microphone's page: two microphones, the same way.
 at $sound_x $mic_y
 sleep 0.4
@@ -988,16 +1154,48 @@ for _ in $(seq 30); do
 done
 grep -qF -- '--bus 7 --brief getvcp 10' "$work/ddcutil.log" || fail "the monitor wasn't asked: $(cat "$work/ddcutil.log" 2>/dev/null)"
 ! grep -qF -- '--bus 8' "$work/ddcutil.log" || fail "a monitor on a sleeping GPU was asked"
+# Its level is asked for again as the panel opens, as its own buttons may have
+# moved it, and still not the sleeping one's.
+sleep 0.3
+asked=$(grep -c getvcp "$work/ddcutil.log")
 toggle
+for _ in $(seq 30); do
+	[ "$(grep -c getvcp "$work/ddcutil.log")" -gt "$asked" ] && break
+	sleep 0.1
+done
+[ "$(grep -c getvcp "$work/ddcutil.log")" -gt "$asked" ] || fail "the monitor's level wasn't asked for again as the panel opened"
+! grep -qF -- '--bus 8' "$work/ddcutil.log" || fail "a monitor on a sleeping GPU was asked as the panel opened"
 sleep 0.4
 shot ddc
-# Its slider, under the brightness: what it's moved to goes out once it rests.
-when 'dry: ddc DP-1' at 1200 202
+# Its slider, under the brightness, which says it's the built-in one, both with
+# a name over them, as the volume has: what it's moved to goes out once it
+# rests.
+when 'dry: ddc DP-1' at 1200 221
+key Escape
+sleep 0.4
+
+# A keyboard that lights up, in three steps, one of them on, which the shell
+# finds as it starts again: a notch of the wheel on its slider, under the
+# brightness, is a whole step. The keys' part has no panel to test it in.
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+mkdir "$work/leds/platform::kbd_backlight"
+echo 1 >"$work/leds/platform::kbd_backlight/brightness"
+echo 3 >"$work/leds/platform::kbd_backlight/max_brightness"
+reloads=$(seen "Reloading configuration")
+printf '\n' >>"$work/shell/shell.qml"
+for _ in $(seq 50); do
+	[ "$(seen "Reloading configuration")" -gt "$reloads" ] && break
+	sleep 0.1
+done
+sleep 1
+toggle
+move $((slider_left + slider_width / 2)) 198
+when 'dry: keyboard light 2' wheel 1
 key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|record start screen none|tile run|bluetooth (true|false|connect|pair|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+( -s [0-9:]+ -S [0-9:]+ -d [0-9]+)?|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|hotspot (on|off)|card profile [0-9]+|keyboard light [0-9]+|record start screen none|tile run|bluetooth (true|false|connect|pair|cancel|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

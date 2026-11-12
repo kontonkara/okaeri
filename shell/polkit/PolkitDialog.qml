@@ -25,6 +25,12 @@ Scope {
 
 	readonly property var live: {
 		const chosen = flow?.selectedIdentity;
+		const asking = !!flow?.isResponseRequired;
+		const secret = !flow?.responseVisible;
+		// PAM often says nothing about a wrong password, and what it said before
+		// stays until it says something else.
+		const said = refused && !flow?.supplementaryIsError ? "That didn't work, try again" : flow?.supplementaryMessage ?? "";
+		const only = identities.length === 1 ? identities[0] : null;
 		return {
 			message: flow?.message ?? "",
 			rows: identities.map(identity => ({
@@ -32,12 +38,14 @@ Scope {
 				subtext: identity.displayName === identity.string ? "" : identity.string,
 				check: identity.id === chosen?.id && identity.isGroup === chosen?.isGroup
 			})),
-			asking: !!flow?.isResponseRequired,
+			// With one there's nothing to pick, but it's still good to know whose
+			// password it wants.
+			who: only ? (only.id === 0 && !only.isGroup ? "root" : only.displayName || only.string) : "",
+			asking,
 			prompt: (flow?.inputPrompt ?? "").replace(/:\s*$/, ""),
-			secret: !flow?.responseVisible,
-			// PAM often says nothing about a wrong password, and what it said
-			// before stays until it says something else.
-			note: refused && !flow?.supplementaryIsError ? "That didn't work, try again" : flow?.supplementaryMessage ?? "",
+			secret,
+			// With nothing else to say, what a hidden password would be typed with.
+			note: said || (asking && secret && Locks.caps ? "Caps Lock is on" : ""),
 			error: refused || !!flow?.supplementaryIsError
 		};
 	}
@@ -212,6 +220,19 @@ Scope {
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize + Theme.u(2)
 						font.weight: Theme.fontWeight
+					}
+
+					// Whose password, on the same line, so the rest stays where it is.
+					Text {
+						anchors.verticalCenter: parent.verticalCenter
+						visible: dialog.view.who !== ""
+						width: Math.max(0, Math.min(implicitWidth, content.width - x))
+						text: `as ${dialog.view.who}`
+						textFormat: Text.PlainText
+						elide: Text.ElideRight
+						color: Theme.colors.subtext
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize
 					}
 				}
 

@@ -1,13 +1,15 @@
 import QtQuick
 import qs
 import qs.clipboard
+import qs.services
 import qs.ui
 
 // The clipboard's history. The list has the keys: Enter or a click puts an
 // entry back and closes, with Shift pastes it too, or the other way round by the
 // settings, Ctrl+P pins it, Delete removes it, Ctrl+T leaves only text and Ctrl+I
 // only pictures, as the two buttons do, and typing goes to the filter, where
-// Delete is the text's again until Down.
+// Delete is the text's again until Down. The button before those pauses the
+// history, and plays it on.
 Panel {
 	id: panel
 
@@ -22,9 +24,9 @@ Panel {
 	readonly property var rows: matches.slice(0, cap)
 	readonly property string summary: matches.length > cap ? `Newest ${cap} of ${matches.length}`
 		: matches.length === 1 ? "1 entry" : `${matches.length} entries`
-	// What the panel has for the list: all but the filter, the row under the list
-	// and the gaps between them.
-	readonly property real listRoom: room - filter.height - clear.height - Theme.u(20)
+	// What the panel has for the list: all but the filter, the row under the list,
+	// the line that says it's paused, and the gaps between them.
+	readonly property real listRoom: room - filter.height - clear.height - Theme.u(20) - (pausedLine.visible ? pausedLine.height + Math.round(Theme.u(10)) : 0)
 
 	function pick(entry, shifted) {
 		Clipboard.restore(entry);
@@ -88,7 +90,7 @@ Panel {
 		TextField {
 			id: filter
 
-			width: parent.width - (height + parent.spacing) * 2
+			width: parent.width - (height + parent.spacing) * 3
 			icon: "search"
 			placeholder: "Filter"
 			shifted: true
@@ -99,6 +101,16 @@ Panel {
 				list.move(1);
 			}
 			Keys.onPressed: event => panel.pinKey(event)
+		}
+
+		// Before the kinds, which stay where they were.
+		Button {
+			height: filter.height
+			flat: !Clipboard.paused
+			icon: Clipboard.paused ? "play" : "pause"
+			tip: Clipboard.paused ? "Keep what's copied again" : "Keep nothing copied for now"
+			activeFocusOnTab: false
+			onClicked: Clipboard.togglePause()
 		}
 
 		Kind {
@@ -112,6 +124,18 @@ Panel {
 			shows: "picture"
 			tip: "Only pictures · Ctrl+I"
 		}
+	}
+
+	Text {
+		id: pausedLine
+
+		width: parent.width
+		visible: Clipboard.paused
+		text: "Paused: nothing copied is kept"
+		color: Theme.colors.subtext
+		elide: Text.ElideRight
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(2)
 	}
 
 	Item {
@@ -187,7 +211,8 @@ Panel {
 		Text {
 			anchors.fill: parent
 			visible: list.count === 0
-			text: Clipboard.entries.length ? "Nothing matches" : "Nothing copied yet"
+			text: Env.lacks("cliphist") || Env.lacks("wl-paste") ? `The history needs ${Env.lacks("cliphist") ? "cliphist" : "wl-clipboard"}, which isn't here`
+				: Clipboard.entries.length ? "Nothing matches" : "Nothing copied yet"
 			horizontalAlignment: Text.AlignHCenter
 			verticalAlignment: Text.AlignVCenter
 			color: Theme.colors.subtext

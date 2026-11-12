@@ -11,7 +11,7 @@ BarButton {
 	visible: wanted
 	takesWheel: true
 	icon: "sunset"
-	tip: NightLight.on ? `Night light: ${NightLight.summary}` : "Night light"
+	tip: NightLight.on ? `Night light: ${NightLight.summary}` : NightLight.paused ? `Night light: ${NightLight.pauseLabel}` : "Night light"
 	ink: NightLight.on ? Theme.colors.text : Theme.colors.dim
 	onClicked: NightLight.set(!NightLight.on)
 	onScrolled: steps => NightLight.step(-steps)

@@ -149,4 +149,13 @@ key Return
 said "session $(echo "$rows" | cut -d' ' -f2)"
 wait_gone "the second row left it open"
 
+# By a call, as a script would: locking doesn't wait, and a name it doesn't have
+# says what there is.
+countdown 10
+ipc session run lock
+said "session lock"
+wait_gone "a call for the lock left it open"
+ipc session run nope
+wait_log 'okaeri: no session action "nope"'
+
 echo "session: all good" >&2

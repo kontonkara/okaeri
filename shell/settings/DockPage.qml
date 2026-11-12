@@ -65,7 +65,7 @@ Flickable {
 
 			Setting {
 				text: "It hides"
-				subtext: "Over the windows, until the pointer rests at its edge of the screen"
+				subtext: "Over the windows, until the pointer rests at its edge, or the overview opens"
 				checked: page.own.autoHide
 				onToggled: wanted => Settings.set("dock", "autoHide", wanted)
 			}
@@ -76,6 +76,18 @@ Flickable {
 				value: page.own.size
 				unit: " px"
 				onChosen: value => Settings.set("dock", "size", value)
+			}
+
+			Pick {
+				text: "Apps with windows"
+				subtext: page.own.windows === "pinned" ? "Only those it keeps, with their windows" : page.own.windows === "screen" ? "Those with a window on its screen" : "All of them, on every screen's dock"
+				options: [
+					{ value: "all", text: "All" },
+					{ value: "screen", text: "Its screen's" },
+					{ value: "pinned", text: "None" }
+				]
+				value: page.own.windows
+				onChosen: value => Settings.set("dock", "windows", value)
 			}
 		}
 
@@ -117,12 +129,15 @@ Flickable {
 
 				Setting {
 					required property string modelData
+					required property int index
 					readonly property var entry: Apps.find(modelData)
 
 					text: entry?.name ?? modelData
 					image: entry ? Apps.image(entry.icon) : ""
 					checked: true
+					movable: index > 0
 					onToggled: wanted => Apps.dock(modelData, wanted)
+					onRaised: Apps.raise("dock", modelData)
 				}
 			}
 		}

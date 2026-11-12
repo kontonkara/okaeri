@@ -59,9 +59,27 @@ Text {
 		anchors.fill: parent
 		hoverEnabled: true
 		cursorShape: Qt.PointingHandCursor
-		onClicked: {
-			month.middle = Panels.middleOf(time);
-			month.toggle();
+		onClicked: time.flip()
+	}
+
+	// On this bar's screen, not the one in focus: a click can come from another.
+	function flip() {
+		month.middle = Panels.middleOf(time);
+		if (month.shown)
+			month.hide();
+		else
+			month.show(time.QsWindow.window.screen);
+	}
+
+	// `okaeri calendar toggle`, for a key.
+	Connections {
+		target: Panels
+
+		function onPartWanted(name, screen) {
+			if (name !== "calendar" || Panels.answered || (screen !== "" && screen !== time.QsWindow.window?.screen?.name))
+				return;
+			Panels.answered = true;
+			time.flip();
 		}
 	}
 
@@ -81,6 +99,7 @@ Text {
 		Loader {
 			width: parent.width
 			active: month.visible
+			focus: true
 
 			sourceComponent: Column {
 				width: parent ? parent.width : 0
@@ -97,6 +116,7 @@ Text {
 
 				Calendar {
 					width: parent.width
+					focus: true
 					today: clock.date
 				}
 			}

@@ -61,7 +61,7 @@ Rectangle {
 			enabled: Theme.animate
 
 			ColorAnimation {
-				duration: 120
+				duration: Theme.ms(120)
 			}
 		}
 	}

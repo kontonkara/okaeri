@@ -9,11 +9,12 @@ import qs.services
 // screen's top, over its bottom, or beside one of its sides, where the first is
 // at the bar's top, the second by `middle` and the third at its bottom) or
 // "center". With `edge` and `off` it's by something else than the bar. What's
-// put in it goes on a
-// card `panelWidth` wide, as tall as it needs. show(), hide() and toggle();
-// Escape, a click elsewhere and another panel opening in the same place close
-// it, unless it's `modal`, which is for whoever owns it to close. It takes the
-// keyboard while open: give what should have the keys `focus: true`.
+// put in it goes on a card `panelWidth` wide, as tall as it needs. show(),
+// hide() and toggle(); Escape, a click elsewhere and another panel opening in the
+// same place close it, unless it's `modal`, which is for whoever owns it to
+// close. A click on the bar isn't one elsewhere: it's the bar's, so that another
+// panel is one click away, not two. It takes the keyboard while open: give what
+// should have the keys `focus: true`.
 //
 // It's two surfaces: this one, over the whole screen, is only there for a click
 // elsewhere to land on, and the card has a strip of its own, as wide as it and as
@@ -50,6 +51,9 @@ PanelWindow {
 		: low ? align.replace("top", "bottom") : align
 	// The screen's width: the window's own isn't known yet as it first opens.
 	readonly property real across: screen ? screen.width : width
+	// How deep the bar's band of the screen is, the clicks in which are the bar's:
+	// none with no bar here, and a modal panel keeps them all.
+	readonly property real band: !modal && Settings.barOn(screen) ? Theme.edge + Theme.barHeight : 0
 	default property alias content: body.data
 
 	signal panelOpened
@@ -103,12 +107,20 @@ PanelWindow {
 	WlrLayershell.layer: WlrLayer.Overlay
 	WlrLayershell.namespace: "okaeri-catcher"
 	WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-	// All but the strip: which of the two is on top isn't up to us.
+	// All but the strip, as which of the two is on top isn't up to us, and but the
+	// bar's band.
 	mask: Region {
 		x: strip.margins.left
 		width: strip.width
 		height: panel.height
 		intersection: Intersection.Xor
+
+		Region {
+			x: Settings.barAt === "right" ? panel.width - panel.band : 0
+			y: Settings.barAt === "bottom" ? panel.height - panel.band : 0
+			width: Settings.barSide ? panel.band : panel.width
+			height: Settings.barSide ? panel.height : panel.band
+		}
 	}
 
 	onShownChanged: Panels.open = shown ? Panels.open.concat([panel]) : Panels.open.filter(other => other !== panel)
@@ -119,8 +131,8 @@ PanelWindow {
 	Region {
 		id: glass
 
-		x: Math.round(scope.originX * (1 - scope.scale)) + 1
-		y: Math.round(scope.y + scope.originY * (1 - scope.scale)) + 1
+		x: Math.round(scope.shiftX + scope.originX * (1 - scope.scale)) + 1
+		y: Math.round(scope.y + scope.shiftY + scope.originY * (1 - scope.scale)) + 1
 		width: Math.round(scope.width * scope.scale) - 2
 		height: Math.round(scope.height * scope.scale) - 2
 		radius: card.radius
@@ -132,6 +144,10 @@ PanelWindow {
 		function onOpened(other) {
 			if (other !== panel && other.align === panel.align)
 				panel.dismiss();
+		}
+
+		function onAway() {
+			panel.dismiss();
 		}
 	}
 
@@ -163,6 +179,19 @@ PanelWindow {
 		WlrLayershell.namespace: "okaeri-panel"
 		WlrLayershell.keyboardFocus: panel.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 		BackgroundEffect.blurRegion: Theme.blur ? glass : null
+		// All of it but the bar's band.
+		mask: Region {
+			width: strip.width
+			height: strip.height
+
+			Region {
+				x: Settings.barAt === "right" ? panel.across - panel.band - strip.margins.left : -strip.margins.left
+				y: Settings.barAt === "bottom" ? strip.height - panel.band : 0
+				width: Settings.barSide ? panel.band : panel.across
+				height: Settings.barSide ? strip.height : panel.band
+				intersection: Intersection.Subtract
+			}
+		}
 
 		// Above and below the card it's still elsewhere.
 		MouseArea {
@@ -190,7 +219,19 @@ PanelWindow {
 			height: card.height
 			focus: true
 			opacity: 0
-			scale: 0.94
+			scale: Theme.panelMotion === "grow" ? 0.94 : 1
+			// How far it is from its place, 1 out of sight and 0 there: it slides that
+			// far in from the bar, or with no bar beside it from below, with
+			// Theme.panelMotion "slide".
+			property real away: 1
+			readonly property real lift: Theme.panelMotion === "slide" ? Theme.u(28) : 0
+			readonly property real shiftX: panel.beside ? away * lift * (panel.edge === "left" ? -1 : 1) : 0
+			readonly property real shiftY: panel.beside ? 0 : away * lift * (panel.align === "center" || panel.low ? 1 : -1)
+
+			transform: Translate {
+				x: scope.shiftX
+				y: scope.shiftY
+			}
 			// It grows out of where it belongs.
 			transformOrigin: panel.align === "center" ? Item.Center
 				: panel.beside ? [[Item.TopLeft, Item.Left, Item.BottomLeft], [Item.TopRight, Item.Right, Item.BottomRight]][panel.edge === "left" ? 0 : 1][panel.align === "top-left" ? 0 : panel.align === "top-right" ? 2 : 1]
@@ -207,6 +248,7 @@ PanelWindow {
 				PropertyChanges {
 					scope.opacity: 1
 					scope.scale: 1
+					scope.away: 0
 				}
 			}
 
@@ -217,13 +259,13 @@ PanelWindow {
 
 					NumberAnimation {
 						property: "opacity"
-						duration: 140
+						duration: Theme.ms(140)
 						easing.type: Easing.OutCubic
 					}
 
 					NumberAnimation {
-						property: "scale"
-						duration: 240
+						properties: "scale,away"
+						duration: Theme.ms(240)
 						easing.type: Easing.OutQuint
 					}
 				},
@@ -232,8 +274,8 @@ PanelWindow {
 					enabled: Theme.animate
 
 					NumberAnimation {
-						properties: "opacity,scale"
-						duration: 130
+						properties: "opacity,scale,away"
+						duration: Theme.ms(130)
 						easing.type: Easing.InCubic
 					}
 				}

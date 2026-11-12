@@ -36,7 +36,8 @@ Flickable {
 		locks: "Caps Lock",
 		profile: "Power profile",
 		awake: "Keep awake",
-		night: "Night light"
+		night: "Night light",
+		volume: "Volume"
 	})
 	// The user's own parts go by the names they have.
 	readonly property var scripts: Settings.bar.scripts
@@ -90,7 +91,9 @@ Flickable {
 			system: systemSettings,
 			bluetooth: bluetoothSettings,
 			locks: locksSettings,
-			profile: profileSettings
+			profile: profileSettings,
+			volume: volumeSettings,
+			recording: recordingSettings
 		})
 	// The screens there are, and those left without a bar that aren't there now.
 	readonly property var screens: {
@@ -204,6 +207,20 @@ Flickable {
 		runs(name, "", "");
 		Settings.set("bar", "scripts", scripts.filter(own => own.name !== name));
 		chosen = "";
+	}
+
+	// One more calendar under the month: false for what isn't a file by its whole
+	// path or an address. One that's there already stays where it is.
+	function addCalendar(source) {
+		if (!Events.takes(source))
+			return false;
+		if (!Events.sources.includes(source))
+			Settings.set("clock", "calendars", Events.sources.concat([source]));
+		return true;
+	}
+
+	function removeCalendar(source) {
+		Settings.set("clock", "calendars", Events.sources.filter(other => other !== source));
 	}
 
 	// What `button` on `part` runs from now on: nothing with no command, and with
@@ -322,7 +339,7 @@ Flickable {
 
 								NumberAnimation {
 									properties: "x,y"
-									duration: 120
+									duration: Theme.ms(120)
 									easing.type: Easing.OutCubic
 								}
 							}
@@ -750,6 +767,110 @@ Flickable {
 				checked: Settings.weather.bar
 				onToggled: wanted => Settings.set("weather", "bar", wanted)
 			}
+
+			// The calendars whose events the month has, and a field for one more. What a
+			// calendar can be is said under the field's name rather than in a note of its
+			// own, so that with none the card grows by that one row.
+			Repeater {
+				model: Events.sources
+
+				Item {
+					id: calendarRow
+
+					required property string modelData
+
+					width: parent.width
+					height: Theme.u(40)
+
+					Column {
+						anchors.left: parent.left
+						anchors.right: calendarDrop.left
+						anchors.rightMargin: Theme.u(12)
+						anchors.verticalCenter: parent.verticalCenter
+
+						Text {
+							width: parent.width
+							text: Events.title(calendarRow.modelData)
+							textFormat: Text.PlainText
+							color: Theme.colors.text
+							elide: Text.ElideMiddle
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize
+						}
+
+						Text {
+							width: parent.width
+							text: Events.about(calendarRow.modelData)
+							textFormat: Text.PlainText
+							color: Events.trouble[calendarRow.modelData] ? Theme.colors.error : Theme.colors.subtext
+							elide: Text.ElideMiddle
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize - Theme.u(2)
+						}
+					}
+
+					Button {
+						id: calendarDrop
+
+						anchors.right: parent.right
+						anchors.verticalCenter: parent.verticalCenter
+						height: Theme.u(30)
+						flat: true
+						icon: "close"
+						tip: "Remove it"
+						onClicked: page.removeCalendar(calendarRow.modelData)
+					}
+				}
+			}
+
+			Item {
+				width: parent.width
+				height: Theme.u(40)
+
+				Column {
+					anchors.left: parent.left
+					anchors.right: calendarField.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+
+					Text {
+						width: parent.width
+						text: "Add a calendar"
+						color: Theme.colors.text
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize
+					}
+
+					Text {
+						width: parent.width
+						text: calendarField.wrong ? "A file by its whole path, or an address" : "An .ics file or an iCal address, for the month"
+						color: calendarField.wrong ? Theme.colors.error : Theme.colors.subtext
+						elide: Text.ElideRight
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize - Theme.u(2)
+					}
+				}
+
+				TextField {
+					id: calendarField
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					implicitWidth: Theme.u(170)
+					implicitHeight: Theme.u(32)
+					placeholder: "~/calendar.ics"
+					onTextChanged: wrong = false
+					onAccepted: {
+						if (text.trim() === "")
+							return;
+						if (page.addCalendar(text.trim()))
+							text = "";
+						else
+							wrong = true;
+					}
+				}
+			}
 		}
 	}
 
@@ -1008,6 +1129,55 @@ Flickable {
 			]
 			value: Settings.profile.label
 			onChosen: value => Settings.set("profile", "label", value)
+		}
+	}
+
+	Component {
+		id: volumeSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Pick {
+				text: "Beside it"
+				options: [
+					{ value: "none", text: "Nothing" },
+					{ value: "percent", text: "How loud" }
+				]
+				value: Settings.audio.label
+				onChosen: value => Settings.set("audio", "label", value)
+			}
+
+			Choice {
+				text: "The wheel turns it by"
+				subtext: "Here and on the bar's own wheel"
+				values: [1, 2, 5, 10]
+				value: Settings.audio.step
+				unit: "%"
+				onChosen: value => Settings.set("audio", "step", value)
+			}
+		}
+	}
+
+	Component {
+		id: recordingSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Pick {
+				text: "It's on the bar"
+				options: [
+					{ value: "recording", text: "While it records" },
+					{ value: "always", text: "Always, to start one" }
+				]
+				value: Settings.recording.show
+				onChosen: value => Settings.set("recording", "show", value)
+			}
+
+			Note {
+				text: "A right click on it has what it records and with which sound; the rest is on the Display page."
+			}
 		}
 	}
 

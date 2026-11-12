@@ -11,7 +11,8 @@ import qs.ui
 // The bar of a screen: what Settings.bar names on its left, in its middle and
 // on its right, out of `parts` and the user's own, Settings.bar.scripts. A click
 // or the wheel on a part runs what Settings.bar.actions has for it, { left,
-// right, middle, up, down }, in place of what the part does. The wheel on what
+// right, middle, up, down }, in place of what the part does. A right click on a
+// part with none of its own opens a menu by it, PartMenu. The wheel on what
 // doesn't use it does what Settings.bar.wheel says: "split" changes the brightness
 // on its left half and the volume on its right, or it's "volume", "brightness",
 // "workspaces" or "none". It's at the top of the screen, or at the bottom or a side
@@ -43,8 +44,11 @@ PanelWindow {
 		locks,
 		profile,
 		awake,
-		night
+		night,
+		volume
 	})
+	// Those with a right click of their own: on the rest it opens the part's menu.
+	readonly property var ownRight: ["tray", "keyboard", "notifications", "volume"]
 	// Where it is, and whether that's a side, where it stands upright.
 	readonly property string at: Settings.barAt
 	readonly property bool upright: Settings.barSide
@@ -53,6 +57,9 @@ PanelWindow {
 	readonly property string tipsAt: ({ top: "below", bottom: "above", left: "right", right: "left" })[at]
 	// With no gap around it, it's against the screen's edges: square there.
 	readonly property real corners: Theme.edge > 0 ? Theme.cardRadius : 0
+	// With Settings.bar.look "islands" each lane has a fill of its own, and the
+	// desktop shows between them.
+	readonly property bool islands: Settings.bar.look === "islands"
 	readonly property bool hides: Settings.bar.autoHide
 	// What has it in sight then: the pointer at the top of the screen or on it,
 	// and a panel on its screen.
@@ -171,9 +178,42 @@ PanelWindow {
 
 		x: Math.round(body.x) + 1
 		y: Math.round(body.y) + 1
-		width: bar.width - 2
-		height: bar.height - 2
+		// As islands, only those: this one is then empty, and they go with it.
+		width: bar.islands ? 0 : bar.width - 2
+		height: bar.islands ? 0 : bar.height - 2
 		radius: bar.corners
+
+		Island {
+			lane: left
+		}
+
+		Island {
+			lane: center
+		}
+
+		Island {
+			lane: right
+		}
+	}
+
+	// The glass of a lane's island.
+	component Island: Region {
+		required property Item lane
+		readonly property var place: bar.island(lane)
+
+		x: Math.round(body.x + place.x) + 1
+		y: Math.round(body.y + place.y) + 1
+		width: bar.islands && lane.width > 0 ? place.width - 2 : 0
+		height: bar.islands && lane.width > 0 ? place.height - 2 : 0
+		radius: bar.corners
+		intersection: Intersection.Combine
+	}
+
+	// Where a lane's island is: around it along the bar, and across all of it.
+	function island(lane) {
+		const pad = Theme.u(8);
+		return upright ? { x: 0, y: Math.round(lane.y - pad), width: width, height: Math.round(lane.height + pad * 2) }
+			: { x: Math.round(lane.x - pad), y: 0, width: Math.round(lane.width + pad * 2), height: height };
 	}
 
 	// What a lane has, one beside another, or one under another on a bar at a side:
@@ -223,7 +263,10 @@ PanelWindow {
 					visible: wheeled || acceptedButtons !== Qt.NoButton
 					cursorShape: Qt.PointingHandCursor
 					acceptedButtons: (place.runs.left ? Qt.LeftButton : Qt.NoButton) | (place.runs.right ? Qt.RightButton : Qt.NoButton) | (place.runs.middle ? Qt.MiddleButton : Qt.NoButton)
-					onClicked: event => bar.run(place.runs[event.button === Qt.RightButton ? "right" : event.button === Qt.MiddleButton ? "middle" : "left"])
+					onClicked: event => {
+						bar.run(place.runs[event.button === Qt.RightButton ? "right" : event.button === Qt.MiddleButton ? "middle" : "left"]);
+						place.ran();
+					}
 					onWheel: event => {
 						if (!wheeled) {
 							event.accepted = false;
@@ -236,10 +279,39 @@ PanelWindow {
 						const command = place.runs[steps > 0 ? "up" : "down"];
 						for (let step = 0; command && step < Math.abs(steps); step++)
 							bar.run(command);
+						if (command && steps !== 0)
+							place.ran();
+					}
+				}
+
+				// A part of the user's own shows what the command changed at once.
+				function ran() {
+					if (item && item.ran)
+						item.ran();
+				}
+
+				// A right click on a part with none of its own, nor a command for
+				// it: the part's menu. Over the part, so the part's own buttons
+				// don't take it first; a handler and not a MouseArea, so the
+				// pointer keeps the part's shape, and the other buttons, the wheel
+				// and where the pointer is go through to it.
+				Item {
+					anchors.fill: parent
+					z: 2
+
+					TapHandler {
+						enabled: !place.runs.right && !bar.ownRight.includes(place.modelData)
+						acceptedButtons: Qt.RightButton
+						gesturePolicy: TapHandler.ReleaseWithinBounds
+						onTapped: partMenu.showFor(place.modelData, place, bar.screen)
 					}
 				}
 			}
 		}
+	}
+
+	PartMenu {
+		id: partMenu
 	}
 
 	Component {
@@ -376,6 +448,12 @@ PanelWindow {
 	}
 
 	Component {
+		id: volume
+
+		VolumeButton {}
+	}
+
+	Component {
 		id: script
 
 		Script {
@@ -405,7 +483,7 @@ PanelWindow {
 			enabled: Theme.animate
 
 			NumberAnimation {
-				duration: 180
+				duration: Theme.ms(180)
 				easing.type: Easing.OutCubic
 			}
 		}
@@ -419,24 +497,57 @@ PanelWindow {
 
 			anchors.fill: parent
 			radius: bar.corners
-			color: Theme.barFill
+			color: bar.islands ? "transparent" : Theme.barFill
 		}
 
 		// Over the fill, as on a panel: under the glass a border of its own would show
 		// as a light line.
 		Rectangle {
 			anchors.fill: parent
+			visible: !bar.islands
 			radius: bar.corners
 			color: "transparent"
 			border.width: 1
 			border.color: Theme.border
 		}
 
+		// Or one for each lane that has something in it.
+		Repeater {
+			model: bar.islands ? [left, center, right] : []
+
+			Item {
+				required property Item modelData
+				readonly property var place: bar.island(modelData)
+
+				x: place.x
+				y: place.y
+				width: place.width
+				height: place.height
+				visible: modelData.width > 0
+
+				Rectangle {
+					anchors.fill: parent
+					radius: bar.corners
+					color: Theme.barFill
+				}
+
+				Rectangle {
+					anchors.fill: parent
+					radius: bar.corners
+					color: "transparent"
+					border.width: 1
+					border.color: Theme.border
+				}
+			}
+		}
+
+		// Where none of its parts is: the wheel, and a click there is one elsewhere
+		// for a panel that's open.
 		MouseArea {
 			property int wheel: 0
 
 			anchors.fill: parent
-			acceptedButtons: Qt.NoButton
+			onClicked: Panels.away()
 			onWheel: event => {
 				// A touchpad comes in small parts of a notch.
 				wheel += event.angleDelta.y;
@@ -447,10 +558,12 @@ PanelWindow {
 				const does = Settings.bar.wheel;
 				if (does === "workspaces")
 					Niri.turn(Settings.workspaces.empty ? Niri.on(bar.screen.name) : Niri.busyOn(bar.screen.name), Settings.workspaces.reverse ? -steps : steps);
-				else if (does === "brightness" || (does === "split" && (bar.upright ? event.y < height / 2 : event.x < width / 2)))
-					Brightness.change(steps * 0.05);
+				else if (does === "brightness" || (does === "split" && (bar.upright ? event.y < height / 2 : event.x < width / 2))) {
+					if (!Ddc.take(bar.screen, steps * 0.05))
+						Brightness.change(steps * 0.05);
+				}
 				else if (does === "volume" || does === "split")
-					Audio.change(steps * 0.05);
+					Audio.change(steps * Settings.audio.step / 100);
 			}
 		}
 

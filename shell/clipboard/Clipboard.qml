@@ -33,6 +33,19 @@ Singleton {
 	readonly property var shown: pins.concat(entries.filter(entry => !pins.some(pin => pin.from === entry.id || (!entry.picture && !pin.picture && pin.text === entry.text))))
 	// How long the history gets, which goes to the watchers.
 	readonly property int keep: Settings.clipboard.keep
+	// Whether pictures go into it too: without them their watcher doesn't run.
+	readonly property bool images: Settings.clipboard.images
+	// Nothing copied is kept while this is on, a password say, till it's off or
+	// the shell starts again. The watchers go on all the same and drop what comes
+	// while the file `pauseFile` is there: one that started again would store
+	// what's on the clipboard then, the last thing copied while paused.
+	property bool paused: false
+	readonly property string pauseFile: `${Quickshell.env("XDG_RUNTIME_DIR")}/okaeri/${folder}-paused`
+	// What the watchers run for each thing copied. The sh in between passes
+	// CLIPBOARD_STATE on to cliphist as it becomes it, and reads what it drops,
+	// so the app that copied it isn't cut off as it writes.
+	readonly property var store: ["sh", "-c", 'if [ -e "$0" ]; then cat >/dev/null; else exec "$@"; fi', pauseFile,
+		"cliphist", "-db-path", database, "-max-items", String(keep), "-max-dedupe-search", "750", "store"]
 	property bool started: false
 	// Commands waiting for their turn.
 	property var chores: []
@@ -46,6 +59,29 @@ Singleton {
 
 	function toggle() {
 		toggleRequested();
+	}
+
+	// By the panel's button and by calls. In the queue, as the file goes and
+	// comes in the order they were asked for.
+	function pause() {
+		if (paused)
+			return;
+		paused = true;
+		run(["sh", "-c", 'mkdir -p "${1%/*}" && : >"$1"', "sh", pauseFile]);
+	}
+
+	function resume() {
+		if (!paused)
+			return;
+		paused = false;
+		run(["rm", "-f", "--", pauseFile]);
+	}
+
+	function togglePause() {
+		if (paused)
+			resume();
+		else
+			pause();
 	}
 
 	function parse(line) {
@@ -172,10 +208,18 @@ Singleton {
 		}
 	}
 
-	// What a shell that died left.
+	onImagesChanged: {
+		if (started)
+			imageWatch.running = images;
+	}
+
+	// For tests, and never what was copied.
+	onPausedChanged: console.info(`okaeri: clipboard: ${paused ? "paused" : "kept again"}`)
+
+	// What a shell that died left, a pause too: that ends with it.
 	Component.onCompleted: {
 		started = true;
-		Quickshell.execDetached(["rm", "-rf", "--", pictures]);
+		Quickshell.execDetached(["rm", "-rf", "--", pictures, pauseFile]);
 	}
 
 	Process {
@@ -257,25 +301,25 @@ Singleton {
 
 	// wl-paste tells what a password manager copied by CLIPBOARD_STATE=sensitive
 	// in the environment of the command it runs, and `cliphist store` leaves
-	// that out: keep it the command, with nothing in between. What's put back
-	// comes up from anywhere in the history, not doubled, by the dedupe search.
-	// setpriv, which becomes wl-paste, ends them with the shell, however that
-	// goes. These run under ./try too: the inner niri has a clipboard of its
+	// that out: keep it in cliphist's environment, as `store` does. What's put
+	// back comes up from anywhere in the history, not doubled, by the dedupe
+	// search. setpriv, which becomes wl-paste, ends them with the shell, however
+	// that goes. These run under ./try too: the inner niri has a clipboard of its
 	// own, so they see only that one, and unlike the notification server nothing
 	// here is for only one to hold.
 	Process {
 		id: textWatch
 
 		running: true
-		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "text", "--watch", "cliphist", "-db-path", clipboard.database, "-max-items", String(clipboard.keep), "-max-dedupe-search", "750", "store"]
+		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "text", "--watch"].concat(clipboard.store)
 		onExited: revive.restart()
 	}
 
 	Process {
 		id: imageWatch
 
-		running: true
-		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "image", "--watch", "cliphist", "-db-path", clipboard.database, "-max-items", String(clipboard.keep), "-max-dedupe-search", "750", "store"]
+		running: clipboard.images
+		command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--type", "image", "--watch"].concat(clipboard.store)
 		onExited: revive.restart()
 	}
 
@@ -283,9 +327,13 @@ Singleton {
 		id: revive
 
 		interval: 5000
+		// Not without what they run: they'd only end again.
 		onTriggered: {
+			if (Env.lacks("cliphist") || Env.lacks("wl-paste"))
+				return;
 			textWatch.running = true;
-			imageWatch.running = true;
+			if (clipboard.images)
+				imageWatch.running = true;
 		}
 	}
 
@@ -298,6 +346,15 @@ Singleton {
 
 		function clear(): void {
 			clipboard.clear();
+		}
+
+		// Nothing copied is kept from now on, till resume or the shell's next start.
+		function pause(): void {
+			clipboard.pause();
+		}
+
+		function resume(): void {
+			clipboard.resume();
 		}
 	}
 }

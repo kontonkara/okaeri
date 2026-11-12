@@ -28,7 +28,7 @@ Rectangle {
 		enabled: Theme.animate
 
 		ColorAnimation {
-			duration: 120
+			duration: Theme.ms(120)
 		}
 	}
 
@@ -46,7 +46,7 @@ Rectangle {
 			enabled: Theme.animate
 
 			NumberAnimation {
-				duration: 120
+				duration: Theme.ms(120)
 				easing.type: Easing.OutCubic
 			}
 		}
