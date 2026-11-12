@@ -43,6 +43,8 @@ Flickable {
 			width: parent.width
 
 			Pick {
+				holds: "osd.position"
+				words: "popup"
 				text: "Where"
 				subtext: "On the screen in focus"
 				options: [
@@ -55,6 +57,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "osd.duration"
 				text: "For how long"
 				subtext: "From the last change"
 				values: [1, 1.5, 2, 3, 5]
@@ -63,6 +66,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "osd.percent"
 				text: "The level in numbers"
 				subtext: "Beside the slider"
 				checked: Settings.osd.percent

@@ -44,6 +44,7 @@ Flickable {
 		width: parent.width
 
 		Setting {
+			holds: "tray.drawer"
 			text: "In a drawer"
 			subtext: "Behind a button on the bar"
 			checked: Settings.tray.drawer
@@ -51,6 +52,7 @@ Flickable {
 		}
 
 		Setting {
+			holds: "tray.passive"
 			text: "Quiet ones too"
 			subtext: "Those that say there's nothing to see now"
 			checked: Settings.tray.passive

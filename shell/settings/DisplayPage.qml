@@ -24,6 +24,8 @@ Flickable {
 		id: field
 
 		required property string text
+		property string holds
+		property string words
 		property string subtext
 		property alias value: input.text
 		property string placeholder
@@ -78,6 +80,10 @@ Flickable {
 					field.kept(text.trim());
 			}
 		}
+
+		Mark {
+			holds: field.holds
+		}
 	}
 
 	Column {
@@ -101,6 +107,8 @@ Flickable {
 			}
 
 			Pick {
+				holds: "nightLight.mode"
+				words: "blue light redshift gammastep warm"
 				text: "When"
 				subtext: "Once it's on, in the control center"
 				options: [
@@ -113,6 +121,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "nightLight.temperature"
 				text: "How warm"
 				subtext: "Lower is warmer; daylight is 6500 K"
 				values: [2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000]
@@ -123,6 +132,7 @@ Flickable {
 
 			Field {
 				visible: page.own.mode === "schedule"
+				holds: "nightLight.from"
 				text: "From"
 				subtext: "As 24-hour time"
 				placeholder: "20:00"
@@ -133,6 +143,7 @@ Flickable {
 
 			Field {
 				visible: page.own.mode === "schedule"
+				holds: "nightLight.until"
 				text: "Until"
 				subtext: "As 24-hour time"
 				placeholder: "07:00"
@@ -143,6 +154,7 @@ Flickable {
 
 			Field {
 				visible: page.own.mode === "sun"
+				holds: "nightLight.latitude"
 				text: "Latitude"
 				subtext: "North is above 0"
 				placeholder: "52.5"
@@ -153,6 +165,7 @@ Flickable {
 
 			Field {
 				visible: page.own.mode === "sun"
+				holds: "nightLight.longitude"
 				text: "Longitude"
 				subtext: "East is above 0"
 				placeholder: "13.4"
@@ -167,6 +180,7 @@ Flickable {
 			title: "External monitors"
 
 			Setting {
+				holds: "display.ddc"
 				text: "Their brightness"
 				subtext: Ddc.available ? "In the control center, by DDC/CI: it needs /dev/i2c-* to be yours" : "It needs ddcutil, which isn't here"
 				enabled: Ddc.available
@@ -190,6 +204,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "recording.area"
 				text: "What's recorded"
 				subtext: Recorder.picks ? "Started in the control center, or by `okaeri record toggle`" : "A part of it needs slurp, which isn't here"
 				options: [
@@ -201,6 +216,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "recording.audio"
 				text: "With the sound of"
 				options: [
 					{ value: "none", text: "Nothing" },
@@ -212,6 +228,7 @@ Flickable {
 			}
 
 			Field {
+				holds: "recording.folder"
 				text: "Where the videos go"
 				subtext: "A folder: empty is Videos"
 				placeholder: "~/Videos"

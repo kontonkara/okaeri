@@ -9,6 +9,10 @@ Item {
 	id: field
 
 	required property string text
+	// What it sets, "section.key" or "theme.key", for its mark; and more words
+	// the search finds it by.
+	property string holds
+	property string words
 	property string subtext
 	property string placeholder
 	property string value
@@ -57,5 +61,9 @@ Item {
 		text: field.value
 		keeps: true
 		onAccepted: field.kept(text.trim())
+	}
+
+	Mark {
+		holds: field.holds
 	}
 }

@@ -44,6 +44,7 @@ Flickable {
 			width: parent.width
 
 			Setting {
+				holds: "dock.on"
 				text: "A dock"
 				subtext: "The apps it keeps, and those with windows: a click goes to one"
 				checked: page.own.on
@@ -51,6 +52,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "dock.position"
 				text: "It's at"
 				subtext: "In the middle of that edge"
 				options: [
@@ -64,6 +66,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "dock.autoHide"
 				text: "It hides"
 				subtext: "Over the windows, until the pointer rests at its edge, or the overview opens"
 				checked: page.own.autoHide
@@ -71,6 +74,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "dock.size"
 				text: "Its icons"
 				values: [28, 32, 40, 48, 56, 64]
 				value: page.own.size
@@ -79,6 +83,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "dock.windows"
 				text: "Apps with windows"
 				subtext: page.own.windows === "pinned" ? "Only those it keeps, with their windows" : page.own.windows === "screen" ? "Those with a window on its screen" : "All of them, on every screen's dock"
 				options: [
@@ -91,6 +96,8 @@ Flickable {
 			}
 
 			Choice {
+				holds: "dock.magnify"
+				words: "zoom magnification"
 				text: "Icons grow under the pointer"
 				subtext: "To this much, and those beside them make room"
 				values: [0, 120, 140, 160, 180, 200]
@@ -101,6 +108,8 @@ Flickable {
 			}
 
 			Setting {
+				holds: "dock.bounce"
+				words: "jump launching"
 				text: "Apps hop"
 				subtext: "As one starts, until its window comes, and while it asks to be looked at"
 				checked: page.own.bounce
@@ -108,6 +117,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "dock.count"
 				text: "How many windows"
 				subtext: "A number on an app with more than one"
 				checked: page.own.count
@@ -115,6 +125,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "dock.launcher"
 				text: "A button for the launcher"
 				options: [
 					{ value: "none", text: "No" },
@@ -126,6 +137,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "dock.smartHide"
 				text: "In sight on an empty workspace"
 				subtext: "Where it hides: over no windows there's nothing to hide it for"
 				enabled: page.own.autoHide

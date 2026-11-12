@@ -10,6 +10,10 @@ Item {
 	id: setting
 
 	required property string text
+	// What it sets, "section.key" or "theme.key", for its mark; and more words
+	// the search finds it by.
+	property string holds
+	property string words
 	property string subtext
 	property string image
 	property alias checked: toggle.checked
@@ -81,5 +85,9 @@ Item {
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 		onToggled: wanted => setting.toggled(wanted)
+	}
+
+	Mark {
+		holds: setting.holds
 	}
 }

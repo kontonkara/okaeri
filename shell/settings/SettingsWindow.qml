@@ -45,15 +45,16 @@ FloatingWindow {
 	// What it was given as it opened: only another size is one to keep.
 	property size given
 	// What's looked for, and every line and card there is to find, by its page:
-	// { page, text, subtext, part }, read off the pages as the first search starts;
-	// `part` is a part of the bar whose card has it.
+	// { page, text, subtext, part, words }, read off the pages as the first search
+	// starts; `part` is a part of the bar whose card has it, and `words` are a line's
+	// own and the key it sets, in words: "wallpaper accent".
 	property string query: ""
 	property var found: []
 	readonly property var results: {
 		const words = query.trim().toLowerCase().split(/\s+/).filter(word => word !== "");
 		if (words.length === 0)
 			return [];
-		return found.filter(entry => words.every(word => `${entry.text} ${entry.subtext} ${where(entry)}`.toLowerCase().includes(word))).slice(0, 60);
+		return found.filter(entry => words.every(word => `${entry.text} ${entry.subtext} ${entry.words} ${where(entry)}`.toLowerCase().includes(word))).slice(0, 60);
 	}
 	// The line to bring into sight once its page is there, and the part of the
 	// bar to choose first for it.
@@ -98,9 +99,9 @@ FloatingWindow {
 		if (!item)
 			return;
 		if (typeof item.text === "string" && item.text !== "" && item.subtext !== undefined)
-			all.push({ page, part, text: item.text, subtext: item.subtext || "" });
+			all.push({ page, part, text: item.text, subtext: item.subtext || "", words: [item.words ?? "", item.holds ?? "", (item.holds ?? "").replace(/^theme\./, "").replace(/([a-z])([A-Z])/g, "$1 $2").replace(".", " ")].join(" ") });
 		else if (typeof item.title === "string" && item.title !== "" && item.padding !== undefined)
-			all.push({ page, part, text: item.title, subtext: "" });
+			all.push({ page, part, text: item.title, subtext: "", words: "" });
 		for (const child of item.children ?? [])
 			gather(child, page, all, part);
 	}
@@ -190,6 +191,60 @@ FloatingWindow {
 		Theme.resetKeys(pages[at].keys ?? []);
 	}
 
+	// All that's set, in the files and here, to keep for good: as JSON, the two
+	// files each under its name, or as Nix for the Home Manager module.
+	function config(kind) {
+		const settings = {};
+		Object.keys(Object.assign({}, Settings.user, Settings.own)).forEach(section => {
+			settings[section] = Object.assign({}, Settings.user[section], Settings.own[section]);
+		});
+		const theme = Object.assign({}, Theme.user, Theme.own);
+		if (kind === "nix")
+			return `programs.okaeri = {\n  settings = ${nix(settings, 1)};\n  theme = ${nix(theme, 1)};\n};\n`;
+		return JSON.stringify({ "settings.json": settings, "theme.json": theme }, null, "\t") + "\n";
+	}
+
+	function nix(value, depth) {
+		const pad = "  ".repeat(depth + 1);
+		const end = "  ".repeat(depth);
+		if (value === null || value === undefined)
+			return "null";
+		if (typeof value === "number")
+			return value < 0 ? `(${value})` : String(value);
+		if (typeof value === "boolean")
+			return String(value);
+		if (typeof value === "string")
+			return JSON.stringify(value).replace(/\$\{/g, "\\${");
+		if (Array.isArray(value))
+			return value.length ? `[\n${value.map(one => pad + nix(one, depth + 1)).join("\n")}\n${end}]` : "[ ]";
+		const keys = Object.keys(value);
+		return keys.length ? `{\n${keys.map(key => `${pad}${/^[A-Za-z_][\w'-]*$/.test(key) ? key : JSON.stringify(key)} = ${nix(value[key], depth + 1)};`).join("\n")}\n${end}}` : "{ }";
+	}
+
+	// Where a setting by its name is, "section.key" or "theme.key", and what it is
+	// now: { section, key, themed, value }, or { why } for one that isn't.
+	function place(name) {
+		const [section, key, more] = `${name}`.split(".");
+		if (!key || more !== undefined)
+			return { why: `"${name}" isn't a setting: it's section.key, or theme.key for the look` };
+		if (section === "theme") {
+			if (!(key in Theme.builtIn.dark))
+				return { why: `the look has no "${key}": it's one of ${Object.keys(Theme.builtIn.dark).join(", ")}` };
+			return { key, themed: true, value: Theme.plain[key] ?? null };
+		}
+		if (!(section in Settings.defaults))
+			return { why: `no section "${section}": it's one of ${Object.keys(Settings.defaults).join(", ")}` };
+		if (!(key in Settings.defaults[section]))
+			return { why: `${section} has no "${key}": it's one of ${Object.keys(Settings.defaults[section]).join(", ")}` };
+		return { section, key, themed: false, value: Object.assign({}, Settings.defaults[section], Settings.user[section], Settings.own[section])[key] ?? null };
+	}
+
+	function copyConfig(kind) {
+		Quickshell.execDetached(["wl-copy", "--", config(kind)]);
+		// For tests: what was copied, and never what's in it.
+		console.info("okaeri: settings: copied as", kind);
+	}
+
 	title: "Settings"
 	visible: false
 	minimumSize: least
@@ -267,6 +322,57 @@ FloatingWindow {
 		// Wallpaper`.
 		function open(name: string): void {
 			window.openPage(name);
+		}
+
+		// A setting as it is now, as JSON: `okaeri settings get dock.magnify`, and
+		// "theme.accent" for how it looks.
+		function get(name: string): string {
+			const where = window.place(name);
+			return where.why || JSON.stringify(where.value);
+		}
+
+		// A setting to `value`, as JSON or plain text for a string, over what the
+		// files say, as this window would: `okaeri settings set dock.magnify 160`.
+		// It says what went wrong, or nothing.
+		function set(name: string, value: string): string {
+			const where = window.place(name);
+			if (where.why)
+				return where.why;
+			let wanted;
+			try {
+				wanted = JSON.parse(value);
+			} catch (error) {
+				wanted = value;
+			}
+			const kind = one => one === null ? "null" : Array.isArray(one) ? "array" : typeof one;
+			const wants = kind(where.value);
+			// What reads as a number is still a name where a name is wanted.
+			if (wants === "string" && (kind(wanted) === "number" || kind(wanted) === "boolean"))
+				wanted = value;
+			if (wants !== "null" && kind(wanted) !== wants)
+				return `${name} takes ${wants === "array" ? "a list" : wants === "object" ? "an object" : `a ${wants}`}, not ${value}`;
+			if (where.themed)
+				Theme.set(where.key, wanted);
+			else
+				Settings.set(where.section, where.key, wanted);
+			return "";
+		}
+
+		// Back to what the files say, for one setting.
+		function reset(name: string): string {
+			const where = window.place(name);
+			if (where.why)
+				return where.why;
+			if (where.themed)
+				Theme.resetKeys([where.key]);
+			else
+				Settings.resetSections([name]);
+			return "";
+		}
+
+		// The whole config, as JSON or as Nix: `okaeri settings config nix`.
+		function config(kind: string): string {
+			return window.config(kind);
 		}
 
 		// For tests: how much of the veil is there.
@@ -587,8 +693,8 @@ FloatingWindow {
 				Button {
 					id: ask
 
-					width: parent.width
-					visible: !sure.running
+					width: parent.width - copy.width
+					visible: !sure.running && !copying.running
 					enabled: Object.keys(Settings.own).length + Object.keys(Theme.own).length > 0
 					atStart: true
 					pad: Theme.u(10)
@@ -646,6 +752,48 @@ FloatingWindow {
 								ask.forceActiveFocus();
 						}
 					}
+				}
+
+				// All that's set, the files' and the window's, on the clipboard: as JSON or as
+				// Nix, asked for in its place for a while as well.
+				Button {
+					id: copy
+
+					anchors.right: parent.right
+					visible: !sure.running && !copying.running
+					flat: true
+					icon: "copy"
+					tip: "Copy as config"
+					onClicked: copying.start()
+				}
+
+				Row {
+					visible: copying.running
+					spacing: Math.round(Theme.u(4))
+
+					Repeater {
+						model: [{ kind: "json", text: "As JSON" }, { kind: "nix", text: "As Nix" }]
+
+						Button {
+							required property var modelData
+
+							width: Math.floor((back.width - Math.round(Theme.u(4))) / 4) * 2
+							flat: true
+							pad: Theme.u(6)
+							longest: width - pad * 2
+							text: modelData.text
+							onClicked: {
+								copying.stop();
+								window.copyConfig(modelData.kind);
+							}
+						}
+					}
+				}
+
+				Timer {
+					id: copying
+
+					interval: 4000
 				}
 
 				Timer {

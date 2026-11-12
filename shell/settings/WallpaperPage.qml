@@ -349,6 +349,7 @@ Column {
 				title: "On the screen"
 
 				Pick {
+					holds: "wallpaper.fill"
 					text: "A picture of another shape"
 					subtext: ({
 							crop: "Fills the screen, cut at its sides",
@@ -369,6 +370,7 @@ Column {
 				}
 
 				Setting {
+					holds: "wallpaper.backdrop"
 					text: "Blurred behind the overview"
 					checked: page.own.backdrop
 					onToggled: wanted => Settings.set("wallpaper", "backdrop", wanted)
@@ -380,6 +382,7 @@ Column {
 				title: "A new one"
 
 				Pick {
+					holds: "wallpaper.transition"
 					text: "The way it comes"
 					options: [
 						{ value: "fade", text: "Fade" },
@@ -392,6 +395,7 @@ Column {
 				}
 
 				Choice {
+					holds: "wallpaper.fade"
 					text: "It takes"
 					values: [0, 300, 500, 1000, 1500, 2000, 3000]
 					value: page.own.fade
@@ -401,6 +405,8 @@ Column {
 				}
 
 				Pick {
+					holds: "wallpaper.every"
+					words: "slideshow rotate cycle"
 					text: "Another every"
 					subtext: "Out of the folder, for every screen without one of its own"
 					options: [
@@ -417,6 +423,7 @@ Column {
 				}
 
 				Setting {
+					holds: "wallpaper.random"
 					text: "Any of them"
 					subtext: "Not the next by name"
 					enabled: page.own.every > 0

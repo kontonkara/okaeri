@@ -401,6 +401,7 @@ Flickable {
 					spacing: Theme.u(10)
 
 					Field {
+						holds: "hotspot.name"
 						text: "What phones see it as"
 						subtext: "Empty is the machine's name"
 						placeholder: "The machine's name"
@@ -409,6 +410,7 @@ Flickable {
 					}
 
 					Field {
+						holds: "hotspot.password"
 						text: "Its password"
 						subtext: hotspot.password !== "" && (hotspot.password.length < 8 || hotspot.password.length > 63) ? "It takes 8 to 63 letters" : "Empty makes one up as it first goes on"
 						placeholder: "Made up"

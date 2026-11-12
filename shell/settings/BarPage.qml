@@ -501,6 +501,7 @@ Flickable {
 			title: "All of the bar"
 
 			Pick {
+				holds: "bar.position"
 				text: "It's at"
 				subtext: Settings.barSide ? "Upright, its parts one under another" : "And its panels with it"
 				options: [
@@ -514,6 +515,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "bar.wheel"
 				text: "The wheel on it"
 				subtext: Settings.bar.wheel === "split" ? "Brightness on the left half, volume on the right" : "Where no part takes it"
 				options: [
@@ -528,6 +530,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "bar.tips"
 				text: "Tips"
 				subtext: "What a part is or says, under the pointer"
 				checked: Settings.bar.tips
@@ -535,6 +538,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "bar.autoHide"
 				text: "It hides"
 				subtext: "Until the pointer rests at the top of the screen, or a panel opens"
 				checked: Settings.bar.autoHide
@@ -542,6 +546,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "bar.reserve"
 				text: "Windows keep out from under it"
 				subtext: "Off, they take the whole screen, and the bar is over them"
 				checked: Settings.bar.reserve
@@ -580,6 +585,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "clock.date"
 				text: "The date"
 				subtext: "Beside the time"
 				options: [
@@ -636,6 +642,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "clock.hours12"
 				text: "12-hour time"
 				subtext: "With AM and PM"
 				checked: Settings.clock.hours12
@@ -643,12 +650,14 @@ Flickable {
 			}
 
 			Setting {
+				holds: "clock.seconds"
 				text: "Seconds"
 				checked: Settings.clock.seconds
 				onToggled: wanted => Settings.set("clock", "seconds", wanted)
 			}
 
 			Pick {
+				holds: "clock.weekStart"
 				text: "Weeks start on"
 				subtext: "In the month a click on it shows"
 				options: [
@@ -661,12 +670,14 @@ Flickable {
 			}
 
 			Setting {
+				holds: "clock.weekNumbers"
 				text: "Week numbers"
 				checked: Settings.clock.weekNumbers
 				onToggled: wanted => Settings.set("clock", "weekNumbers", wanted)
 			}
 
 			Field {
+				holds: "clock.zones"
 				text: "Other places"
 				subtext: "Their time, over the month: Europe/Berlin, Asia/Tokyo"
 				placeholder: "Zones, with commas"
@@ -675,6 +686,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "weather.on"
 				text: "The weather"
 				subtext: "Over the month, from open-meteo.com"
 				checked: Settings.weather.on
@@ -750,6 +762,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "weather.units"
 				text: "In"
 				visible: Settings.weather.on
 				options: [
@@ -761,6 +774,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "weather.bar"
 				text: "Beside the time"
 				subtext: "How warm it is"
 				visible: Settings.weather.on
@@ -881,6 +895,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "workspaces.labels"
 				text: "On each"
 				subtext: "A name is niri's, where its config gives one"
 				options: [
@@ -893,6 +908,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "workspaces.apps"
 				text: "The apps on each"
 				subtext: "Their icons: a click on one goes to its window"
 				checked: Settings.workspaces.apps
@@ -900,12 +916,14 @@ Flickable {
 			}
 
 			Setting {
+				holds: "workspaces.occupied"
 				text: "Those with windows stand out"
 				checked: Settings.workspaces.occupied
 				onToggled: wanted => Settings.set("workspaces", "occupied", wanted)
 			}
 
 			Setting {
+				holds: "workspaces.empty"
 				text: "Empty ones too"
 				subtext: "Off, only those with windows and the one you're on"
 				checked: Settings.workspaces.empty
@@ -913,6 +931,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "workspaces.reverse"
 				text: "The wheel the other way"
 				subtext: "Up goes to the next one"
 				checked: Settings.workspaces.reverse
@@ -928,6 +947,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "battery.show"
 				text: "It shows"
 				subtext: "How low is low is on the Session page"
 				options: [
@@ -940,6 +960,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "battery.label"
 				text: "Beside it"
 				subtext: "The time, where it's known"
 				options: [
@@ -960,6 +981,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "media.show"
 				text: "It shows"
 				options: [
 					{ value: "player", text: "With a player" },
@@ -970,6 +992,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "media.label"
 				text: "On it"
 				options: [
 					{ value: "title", text: "The title" },
@@ -981,6 +1004,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "media.width"
 				text: "Widest"
 				subtext: "Past that the title is cut"
 				visible: Settings.media.label !== "none"
@@ -991,6 +1015,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "media.scroll"
 				text: "What's cut slides by"
 				subtext: "Under the pointer, to its end and back"
 				visible: Settings.media.label !== "none"
@@ -1025,6 +1050,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Setting {
+				holds: "system.cpu"
 				text: "The processor"
 				subtext: "How busy it is"
 				checked: Settings.system.cpu
@@ -1032,6 +1058,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "system.memory"
 				text: "Memory"
 				subtext: "How much is in use"
 				checked: Settings.system.memory
@@ -1039,6 +1066,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "system.temperature"
 				text: "Temperature"
 				subtext: "The processor's, where it has a sensor"
 				checked: Settings.system.temperature
@@ -1046,6 +1074,7 @@ Flickable {
 			}
 
 			Setting {
+				holds: "system.network"
 				text: "The network"
 				subtext: "How fast it comes in and goes out"
 				checked: Settings.system.network
@@ -1053,6 +1082,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "system.interval"
 				text: "Read every"
 				values: [1, 2, 5, 10]
 				value: Settings.system.interval
@@ -1065,6 +1095,7 @@ Flickable {
 		id: networkSettings
 
 		Pick {
+			holds: "network.label"
 			text: "Beside it"
 			options: [
 				{ value: "none", text: "Nothing" },
@@ -1082,6 +1113,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "bluetooth.show"
 				text: "It shows"
 				options: [
 					{ value: "connected", text: "With a device" },
@@ -1092,6 +1124,7 @@ Flickable {
 			}
 
 			Pick {
+				holds: "bluetooth.label"
 				text: "Beside it"
 				options: [
 					{ value: "none", text: "Nothing" },
@@ -1107,6 +1140,7 @@ Flickable {
 		id: locksSettings
 
 		Pick {
+			holds: "locks.show"
 			text: "It shows for"
 			subtext: "While that's on"
 			options: [
@@ -1122,6 +1156,7 @@ Flickable {
 		id: profileSettings
 
 		Pick {
+			holds: "profile.label"
 			text: "Beside it"
 			options: [
 				{ value: "none", text: "Nothing" },
@@ -1139,6 +1174,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "audio.label"
 				text: "Beside it"
 				options: [
 					{ value: "none", text: "Nothing" },
@@ -1149,6 +1185,7 @@ Flickable {
 			}
 
 			Choice {
+				holds: "audio.step"
 				text: "The wheel turns it by"
 				subtext: "Here and on the bar's own wheel"
 				values: [1, 2, 5, 10]
@@ -1166,6 +1203,7 @@ Flickable {
 			spacing: Theme.u(10)
 
 			Pick {
+				holds: "recording.show"
 				text: "It's on the bar"
 				options: [
 					{ value: "recording", text: "While it records" },
