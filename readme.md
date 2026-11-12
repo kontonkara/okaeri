@@ -28,7 +28,9 @@ and away again, settings too if you say so:
 It puts okaeri in `~/.local/share/okaeri`, offers to get what it needs from your
 package manager, and puts two includes at the top of niri's config, between
 `okaeri` marks: its start and its keys, which yours override, and what the shell
-needs of niri. Another bar that niri starts it offers to turn off, till okaeri goes.
+needs of niri. Another bar that niri starts, or what does what okaeri does, as mako
+or swayidle, it offers to turn off, till okaeri goes, and it says which services
+of yours do the same.
 Running it again updates it. The keys are Mod+Space for the launcher, Mod+Alt+V
 for the clipboard, Mod+Shift+Escape for the session menu and Mod+Shift+Comma for
 the settings, and the media keys.

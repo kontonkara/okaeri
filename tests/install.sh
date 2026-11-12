@@ -24,7 +24,8 @@ same() {
 	[ "$2" = "$3" ] || fail "$1: got \"$2\", not \"$3\""
 }
 
-# A config like niri's own first one: another bar, and keys of its own.
+# A config like niri's own first one: another bar, what does what okaeri does,
+# and keys of its own.
 mkdir -p "$home/.config/niri"
 cat >"$home/.config/niri/config.kdl" <<'KDL'
 input {
@@ -35,6 +36,9 @@ input {
 }
 
 spawn-at-startup "waybar"
+spawn-at-startup "/usr/bin/mako"
+spawn-sh-at-startup "swayidle -w timeout 300 'swaylock -f'"
+spawn-at-startup "swayidle-not"
 
 binds {
     Mod+T { spawn "alacritty"; }
@@ -113,6 +117,9 @@ answered() {
 }
 answered asked sh "$repo/install.sh"
 grep -qx '// okaeri turned this off: spawn-at-startup "waybar"' "$config" || fail "the other bar is still on: $(grep waybar "$config")"
+grep -qx '// okaeri turned this off: spawn-at-startup "/usr/bin/mako"' "$config" || fail "mako is still on"
+grep -qx "// okaeri turned this off: spawn-sh-at-startup \"swayidle -w timeout 300 'swaylock -f'\"" "$config" || fail "swayidle is still on"
+grep -qx 'spawn-at-startup "swayidle-not"' "$config" || fail "what only starts like swayidle went off"
 niri validate -c "$config" >/dev/null 2>&1 || ! command -v niri >/dev/null || fail "niri doesn't take the config with the bar off"
 mkdir -p "$home/.config/okaeri"
 echo '{}' >"$home/.config/okaeri/settings.json"
