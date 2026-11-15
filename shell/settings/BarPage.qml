@@ -37,7 +37,8 @@ Flickable {
 		profile: "Power profile",
 		awake: "Keep awake",
 		night: "Night light",
-		volume: "Volume"
+		volume: "Volume",
+		launcher: "Launcher"
 	})
 	// The user's own parts go by the names they have.
 	readonly property var scripts: Settings.bar.scripts
@@ -57,6 +58,7 @@ Flickable {
 	readonly property var elsewhere: ({
 		clipboard: "Clipboard",
 		control: "Control center",
+		launcher: "Launcher",
 		notifications: "Notifications",
 		tray: "Tray"
 	})

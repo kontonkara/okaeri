@@ -567,6 +567,18 @@ click
 wait_up panel 1 "the launcher from the dock's button"
 key Escape
 wait_up panel 0 "the launcher from the dock, closed"
+# And from the bar's own button, the first on it here.
+printf '{ "bar": { "left": ["launcher", "workspaces"] } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 1
+move 22 21
+click
+wait_up panel 1 "the launcher from the bar's button"
+key Escape
+wait_up panel 0 "the launcher from the bar, closed"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+move 300 400
+
 printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
 move 300 400

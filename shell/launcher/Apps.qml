@@ -165,7 +165,7 @@ Singleton {
 		Settings.set(where, "pinned", pinned);
 	}
 
-	// The dock's button for the launcher: the launcher opens.
+	// The dock's button for the launcher, or the bar's: the launcher opens.
 	signal launcherWanted
 
 	// On the dock, or off it.

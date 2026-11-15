@@ -138,6 +138,7 @@ many of its notifications are unread, and a line goes after the apps it keeps.
 A click on a workspace that wants attention goes to the window that does, an
 app's icon on a workspace dragged onto another takes its window there, and the
 title of the window in focus has its app's icon.
+The bar can have a button for the launcher, among its parts on the Bar page.
 
 The month under the clock has the events of calendars of yours in it, `calendars`
 in the clock's settings and on the Bar page: `.ics` files, read again as they

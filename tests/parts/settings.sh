@@ -43,10 +43,10 @@ right_y=497
 right2_y=533
 off_y=620
 off_gap_y=660
-# The part made here: in the last lane, on its third line, and on the left once
+# The part made here: in the last lane, on a fourth line of its own, and on the left once
 # it's there.
-script_x=961
-script_y=691
+script_x=555
+script_y=727
 script_on_x=796
 field_y=257
 picture_y=339

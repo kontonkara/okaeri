@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs
 import qs.clipboard
 import qs.control
+import qs.launcher
 import qs.notifications
 import qs.services
 import qs.ui
@@ -31,6 +32,7 @@ PanelWindow {
 		clock,
 		control,
 		keyboard,
+		launcher,
 		media,
 		network,
 		notifications,
@@ -339,6 +341,17 @@ PanelWindow {
 		id: clipboard
 
 		ClipboardButton {}
+	}
+
+	// The launcher's button, for the pointer.
+	Component {
+		id: launcher
+
+		BarButton {
+			icon: "search"
+			tip: "Apps"
+			onClicked: Apps.launcherWanted()
+		}
 	}
 
 	Component {
