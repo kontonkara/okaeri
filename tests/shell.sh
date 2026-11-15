@@ -579,6 +579,29 @@ printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
 move 300 400
 
+step "A window from the dock to a workspace"
+# Its icon carried out of the dock and let go on the second pill of the bar: the
+# window is on that workspace, and the one in focus stays.
+printf '{ "dock": { "on": true } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-carried --config NONE -o confirm_os_window_close=0 sleep 40 &
+carried=$!
+sleep 2
+move 700 865
+hold
+wlrctl pointer move 0 -60
+sleep 0.3
+wlrctl pointer move -300 -400
+sleep 0.2
+wlrctl pointer move -350 -384
+sleep 0.5
+shot carried
+let_go
+sleep 0.6
+second=$(niri msg --json workspaces | jq '.[] | select(.idx == 2) | .id')
+got=$(niri msg --json windows | jq '.[] | select(.app_id == "okaeri-carried") | .workspace_id')
+kill "$carried"
+wait "$carried" 2>/dev/null || true
+[ "$got" = "$second" ] || fail "the window carried from the dock is on workspace $got, not $second"
 printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
 move 300 400

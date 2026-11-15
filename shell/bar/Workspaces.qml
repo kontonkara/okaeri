@@ -101,7 +101,7 @@ Grid {
 			width: workspaces.upright ? across : along
 			height: workspaces.upright ? along : across
 			radius: Theme.round(across)
-			border.width: workspaces.over?.id === modelData.id && workspaces.dragging !== undefined ? Theme.u(2) : 0
+			border.width: landing.containsDrag || (workspaces.over?.id === modelData.id && workspaces.dragging !== undefined) ? Theme.u(2) : 0
 			border.color: Theme.colors.text
 			// With those with windows marked, the empty ones fade, in case the
 			// accent is pale too. One with icons is a place for them.
@@ -182,6 +182,21 @@ Grid {
 					font.family: Theme.font
 					font.pixelSize: Theme.u(11)
 					font.weight: Font.Bold
+				}
+			}
+
+			// A window carried here from the dock goes to this workspace.
+			DropArea {
+				id: landing
+
+				anchors.fill: parent
+				anchors.margins: -Theme.u(4)
+				keys: ["text/x-okaeri-window"]
+				onDropped: drop => {
+					const window = Number(drop.getDataAsString("text/x-okaeri-window"));
+					if (window > 0)
+						Niri.moveWindow(window, pill.modelData.id);
+					drop.accept(Qt.MoveAction);
 				}
 			}
 

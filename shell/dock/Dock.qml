@@ -440,6 +440,8 @@ PanelWindow {
 							}
 
 							Item {
+								id: picture
+
 								anchors.fill: parent
 								scale: app.grow
 								transformOrigin: dock.at === "top" ? Item.Top : dock.at === "left" ? Item.Left : dock.at === "right" ? Item.Right : Item.Bottom
@@ -543,6 +545,8 @@ PanelWindow {
 							// went far enough from there since to be dragging the app.
 							property real from: 0
 							property bool dragging: false
+							// Its window is on its way out of the dock, to a workspace.
+							property bool carried: false
 							property int notches: 0
 
 							function along(event) {
@@ -560,6 +564,23 @@ PanelWindow {
 							// one's: the pointer is over its own app again. By where its place
 							// is, not where it's gliding to.
 							onPositionChanged: event => {
+								// Out of the dock with a window: it's carried from here on, to a
+								// workspace on the bar that takes it.
+								if ((pressedButtons & Qt.LeftButton) && app.running && !carried) {
+									const out = mapToItem(null, event.x, event.y);
+									const reach = Theme.u(12);
+									if (dock.upright ? out.x < -reach || out.x > dock.width + reach : out.y < -reach || out.y > dock.height + reach) {
+										carried = true;
+										dragging = true;
+										picture.grabToImage(result => {
+											carrier.Drag.imageSource = result.url;
+											carrier.Drag.active = true;
+										});
+										return;
+									}
+								}
+								if (carried)
+									return;
 								if (!(pressedButtons & Qt.LeftButton) || !app.kept)
 									return;
 								const at = along(event);
@@ -574,7 +595,10 @@ PanelWindow {
 									dock.moved(app.modelData, -1);
 							}
 							onReleased: letGo.restart()
-							onCanceled: dragging = false
+							onCanceled: {
+								if (!carried)
+									dragging = false;
+							}
 							onClicked: event => {
 								if (dragging)
 									return;
@@ -604,6 +628,23 @@ PanelWindow {
 
 								interval: 0
 								onTriggered: pointer.dragging = false
+							}
+						}
+
+						// What's carried out of the dock: the window of it in focus, or its
+						// first, by its id, under its icon. A workspace on the bar takes it.
+						Item {
+							id: carrier
+
+							Drag.dragType: Drag.Automatic
+							Drag.supportedActions: Qt.MoveAction
+							Drag.hotSpot: Qt.point(dock.size / 2, dock.size / 2)
+							Drag.mimeData: ({
+									"text/x-okaeri-window": String((app.modelData.windows.find(window => window.is_focused) ?? app.modelData.windows[0])?.id ?? "")
+								})
+							Drag.onDragFinished: {
+								pointer.carried = false;
+								pointer.dragging = false;
 							}
 						}
 
