@@ -9,9 +9,13 @@ Item {
 	id: mark
 
 	required property string holds
+	// For a line that's one of many in a key, as one name of a list: whether it's
+	// not as the files have it, and what takes that one back.
+	property bool differs: true
+	property var back: null
 	readonly property bool themed: holds.startsWith("theme.")
 	readonly property string name: themed ? holds.slice(6) : holds
-	readonly property bool set: holds !== "" && (themed ? Theme.owns([name]) : Settings.owns([name]))
+	readonly property bool set: holds !== "" && differs && (themed ? Theme.owns([name]) : Settings.owns([name]))
 
 	x: -Theme.u(11)
 	anchors.verticalCenter: parent.verticalCenter
@@ -32,7 +36,9 @@ Item {
 		anchors.margins: -Theme.u(4)
 		cursorShape: Qt.PointingHandCursor
 		onClicked: {
-			if (mark.themed)
+			if (mark.back)
+				mark.back();
+			else if (mark.themed)
 				Theme.resetKeys([mark.name]);
 			else
 				Settings.resetSections([mark.name]);

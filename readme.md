@@ -102,7 +102,8 @@ on-screen display says what plays after a key of the player's, too, and as a
 track starts by itself where its page says so.
 
 A dot left of a line of the settings window says the window set it, and a click
-on the dot takes that back; the button beside "Back to the config" copies all
+on the dot takes that back; a line that's one of a list, as what has an on-screen
+display or an app's rule for notifications, has a dot of its own; the button beside "Back to the config" copies all
 that's set, the files' and the window's, as JSON or as Nix for the Home Manager
 module. The search finds a line by its key too, as `saveTo`. `okaeri settings
 get dock.magnify`, `okaeri settings set dock.magnify 160` and `reset` read and

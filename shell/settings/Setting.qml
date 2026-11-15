@@ -14,6 +14,9 @@ Item {
 	// the search finds it by.
 	property string holds
 	property string words
+	// One of many in its key: see Mark.
+	property bool differs: true
+	property var back: null
 	property string subtext
 	property string image
 	property alias checked: toggle.checked
@@ -89,5 +92,7 @@ Item {
 
 	Mark {
 		holds: setting.holds
+		differs: setting.differs
+		back: setting.back
 	}
 }

@@ -890,6 +890,16 @@ move "$switch_x" 672
 click
 sleep 0.3
 same "what has none" "$(value .osd.hidden)" '["locks"]'
+# Its dot takes that one line back, and the key with it, as the files leave none
+# out; then it's off again, for what follows.
+move 521 672
+click
+sleep 0.3
+same "one line of many, back to the files" "$(value .osd.hidden)" null
+move "$switch_x" 672
+click
+sleep 0.3
+same "what has none, again" "$(value .osd.hidden)" '["locks"]'
 # By the keys: Tab on from the search to the first arrow there is, the line's
 # back one, where Right goes on. At an end the other arrow has the focus, so the
 # keys still work: Left, Home and End.

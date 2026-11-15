@@ -172,6 +172,21 @@ Singleton {
 		save();
 	}
 
+	// What the files say for a key, without what the settings window set.
+	function inFiles(section, key) {
+		return Object.assign({}, defaults[section], user[section])[key];
+	}
+
+	// A list of names that goes by what's in it, as those of what's left out: set,
+	// unless it's what the files have, and then the window's own goes.
+	function setNames(section, key, names) {
+		const files = (inFiles(section, key) ?? []).slice().sort().join("\n");
+		if (names.slice().sort().join("\n") === files)
+			resetSections([`${section}.${key}`]);
+		else
+			set(section, key, names);
+	}
+
 	function save() {
 		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
 	}

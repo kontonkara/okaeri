@@ -15,9 +15,12 @@ Flickable {
 	// Each a template and the file it's written to: see hooks/Templates.qml.
 	readonly property var templates: Array.isArray(Settings.hooks.templates) ? Settings.hooks.templates : []
 
+	// Those the files leave out, for each line's mark.
+	readonly property var fileHidden: Settings.inFiles("session", "hidden") ?? []
+
 	function show(action, wanted) {
 		const others = Settings.session.hidden.filter(other => other !== action);
-		Settings.set("session", "hidden", wanted ? others : others.concat([action]));
+		Settings.setNames("session", "hidden", wanted ? others : others.concat([action]));
 	}
 
 	// A file is written where it's a whole path, or one in the home folder.
@@ -151,6 +154,9 @@ Flickable {
 				Setting {
 					required property var modelData
 
+					holds: "session.hidden"
+					differs: page.fileHidden.includes(modelData.action) !== Settings.session.hidden.includes(modelData.action)
+					back: () => page.show(modelData.action, !page.fileHidden.includes(modelData.action))
 					text: modelData.text
 					subtext: modelData.can ? "" : "Not on this machine"
 					enabled: modelData.can

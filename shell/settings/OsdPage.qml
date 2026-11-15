@@ -20,9 +20,12 @@ Flickable {
 		{ name: "media", text: "What plays", subtext: "After a key of the player's" }
 	]
 
+	// Those the files leave out, for each line's mark.
+	readonly property var fileHidden: Settings.inFiles("osd", "hidden") ?? []
+
 	function show(name, wanted) {
 		const others = Settings.osd.hidden.filter(other => other !== name);
-		Settings.set("osd", "hidden", wanted ? others : others.concat([name]));
+		Settings.setNames("osd", "hidden", wanted ? others : others.concat([name]));
 	}
 
 	contentHeight: column.height
@@ -93,6 +96,9 @@ Flickable {
 				Setting {
 					required property var modelData
 
+					holds: "osd.hidden"
+					differs: page.fileHidden.includes(modelData.name) !== Settings.osd.hidden.includes(modelData.name)
+					back: () => page.show(modelData.name, !page.fileHidden.includes(modelData.name))
 					text: modelData.text
 					subtext: modelData.subtext ?? ""
 					checked: !Settings.osd.hidden.includes(modelData.name)

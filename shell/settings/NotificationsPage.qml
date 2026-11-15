@@ -31,6 +31,26 @@ Flickable {
 		Settings.set("notifications", key, value);
 	}
 
+	// The rule the files have for `app`, and whether the one in force is another: for
+	// its line's mark, which takes that one back.
+	function fileRule(app) {
+		return (Settings.inFiles("notifications", "rules") ?? []).find(rule => same(rule, app)) ?? {};
+	}
+
+	function differs(app) {
+		return JSON.stringify(rule(app)) !== JSON.stringify(fileRule(app));
+	}
+
+	function restore(app) {
+		const files = Settings.inFiles("notifications", "rules") ?? [];
+		const kept = files.find(rule => same(rule, app));
+		const next = Settings.notifications.rules.filter(rule => !same(rule, app)).concat(kept ? [kept] : []).sort((a, b) => !a.app - !b.app);
+		if (JSON.stringify(next) === JSON.stringify(files))
+			Settings.resetSections(["notifications.rules"]);
+		else
+			set("rules", next);
+	}
+
 	// What says nothing new is no rule at all, and one for all apps comes last.
 	function change(app, key, wanted) {
 		const changed = Object.assign({ app }, rule(app), { [key]: wanted });
@@ -347,6 +367,13 @@ Flickable {
 					Item {
 						width: parent.width
 						height: Theme.u(30)
+
+						Mark {
+							z: 1
+							holds: "notifications.rules"
+							differs: page.differs(line.modelData)
+							back: () => page.restore(line.modelData)
+						}
 
 						MouseArea {
 							anchors.fill: parent
