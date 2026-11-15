@@ -163,6 +163,7 @@ address, its gateway, its name servers and how fast it goes.
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that
 are; a screenshot's toast opens its folder, copies it or deletes it.
+A toast under the pointer has that bell too.
 
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by

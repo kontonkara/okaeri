@@ -224,6 +224,8 @@ PanelWindow {
 			// How much of its time is left, 1 to 0, and whether a line says so:
 			// not for one that stays, nor where nothing moves.
 			property real remaining: 1
+			// Its quiet button asks for how long: it stays for the answer.
+			readonly property bool asking: NotificationStore.quietAsked === modelData.appName
 			readonly property bool timed: Settings.notifications.timeLeft && Theme.animate && life.interval > 0
 
 			onSentChanged: {
@@ -237,7 +239,11 @@ PanelWindow {
 			height: card.height
 
 			Component.onCompleted: window.cards = window.cards.concat([toast])
-			Component.onDestruction: window.cards = window.cards.filter(c => c !== toast)
+			Component.onDestruction: {
+				window.cards = window.cards.filter(c => c !== toast);
+				if (asking)
+					NotificationStore.quietAsked = null;
+			}
 
 			NotificationCard {
 				id: card
@@ -245,6 +251,7 @@ PanelWindow {
 				width: parent.width
 				notification: toast.modelData
 				closable: false
+				pointed: hover.hovered
 				says: Settings.notifications.toastText
 				color: Theme.toastFill
 			}
@@ -258,7 +265,7 @@ PanelWindow {
 				id: life
 
 				interval: NotificationStore.lifetime(toast.modelData)
-				running: interval > 0 && !hover.hovered
+				running: interval > 0 && !hover.hovered && !toast.asking
 				onTriggered: NotificationStore.takeDown(n => n === toast.modelData)
 			}
 

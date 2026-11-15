@@ -30,8 +30,9 @@ Singleton {
 	// that's over for each, by its name: `always` for until it's let speak again.
 	readonly property var quietApps: JSON.parse(kept.quiet)
 	readonly property real always: 8640000000000000
-	// The app whose quiet button asks for how long, "" for none.
-	property string quietAsked: ""
+	// The app whose quiet button asks for how long, null for none: one can have no
+	// name.
+	property var quietAsked: null
 
 	// How many toasts show, and how many the history holds: past that the oldest go.
 	readonly property int cap: Settings.notifications.cap
@@ -88,7 +89,7 @@ Singleton {
 	onServerChanged: restore()
 
 	onPanelShownChanged: {
-		quietAsked = "";
+		quietAsked = null;
 		if (panelShown) {
 			takeDown(n => !critical(n));
 			past.forEach(n => n.unread = false);
@@ -429,16 +430,16 @@ Singleton {
 	function askQuiet(app) {
 		if (quietApps[app]) {
 			setQuiet(app, 0);
-			quietAsked = "";
+			quietAsked = null;
 		} else {
-			quietAsked = quietAsked === app ? "" : app;
+			quietAsked = quietAsked === app ? null : app;
 		}
 	}
 
 	// For `span` milliseconds from now, or with 0 until it's let speak again.
 	function quietFor(app, span) {
 		setQuiet(app, span > 0 ? Date.now() + span : always);
-		quietAsked = "";
+		quietAsked = null;
 	}
 
 	// How long `app` still keeps quiet, in words, "" if it doesn't.

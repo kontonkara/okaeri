@@ -1631,6 +1631,28 @@ key Escape
 wait_state panel false
 reset
 
+# On a toast under the pointer, the same button: it asks, the toast stays for the
+# answer, and goes with it.
+send -a Chat "Loud" "Once more."
+wait_state toasts 1
+settle
+move "$toast_x" 80
+sleep 0.3
+shot toast-pointed
+move 1373 63
+click
+settle
+shot toast-asked
+quiet_is '[]'
+is toasts 1
+move 1080 130
+click
+quiet_is '["Chat"]'
+wait_state toasts 0
+ipc notifications quiet Chat 0
+move 300 600
+reset
+
 # How many of an app's are unread, as the dock has them: by its name, and none
 # once the panel showed them.
 send -a Mail "One" "A letter."

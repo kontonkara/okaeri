@@ -17,6 +17,8 @@ Card {
 	required property var notification
 	// With the close button: a toast goes by a right click.
 	property bool closable: true
+	// A toast with the pointer on it: it has the button to keep its app quiet.
+	property bool pointed: false
 	// What only the history has room for, or use.
 	readonly property bool inHistory: closable
 	property bool expanded: false
@@ -31,7 +33,7 @@ Card {
 	readonly property bool critical: NotificationStore.critical(notification)
 	readonly property real side: Theme.u(40)
 	// What the top line leaves for the close button.
-	readonly property real beside: closable ? close.width + copy.width + quieter.width + Theme.u(4) : 0
+	readonly property real beside: closable ? close.width + copy.width + quieter.width + Theme.u(4) : quieter.width
 	// How far along, 0 to 100, if it's that kind.
 	readonly property int progress: notification.hints?.value ?? -1
 
@@ -386,19 +388,26 @@ Card {
 			}
 		}
 
-		// Beside its app's name, where no heading has that: not made for a toast.
+		// Beside its app's name, where no heading has that, and on a toast under the
+		// pointer.
 		Loader {
 			id: quieter
 
 			anchors.top: parent.top
-			anchors.right: copy.left
+			anchors.right: card.closable ? copy.left : parent.right
+			anchors.rightMargin: card.closable ? 0 : -Theme.u(6)
 			anchors.topMargin: -Theme.u(6)
-			active: card.inHistory && card.showsApp
+			active: card.closable ? card.showsApp : card.pointed || NotificationStore.quietAsked === card.notification.appName
 
 			sourceComponent: QuietButton {
 				height: Theme.u(26)
 				iconSize: Theme.u(16)
 				app: card.notification.appName
+				// On a toast the right click still closes it, here too.
+				onRightClicked: {
+					if (!card.closable)
+						card.notification.dismiss();
+				}
 			}
 		}
 
@@ -439,7 +448,7 @@ Card {
 	// For how long its app keeps quiet, as the button beside its name asks.
 	QuietChoices {
 		width: parent.width
-		allowed: card.inHistory && card.showsApp
+		allowed: !card.closable || card.showsApp
 		app: card.notification.appName
 	}
 }
