@@ -84,8 +84,8 @@ Panel {
 			];
 		}
 		// The players there are: one unchecked is left out of the bar, its card and
-		// the keys.
-		if (name === "media")
+		// the keys. Not with Settings.media.menu off.
+		if (name === "media" && Settings.media.menu)
 			return Media.names.map(player => Object.assign(pick(player, !Settings.media.ignored.includes(player), () => Media.ignore(player, !Settings.media.ignored.includes(player)), Media.everyone.some(one => one.identity === player) ? "" : "Not open now"), { stays: true }));
 		if (name === "network") {
 			const label = Settings.network.label;

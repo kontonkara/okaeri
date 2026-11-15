@@ -1025,6 +1025,15 @@ Flickable {
 				onToggled: wanted => Settings.set("media", "scroll", wanted)
 			}
 
+			Setting {
+				holds: "media.menu"
+				words: "exclude ignore browser"
+				text: "A right click leaves a player out"
+				subtext: "On it on the bar, and on one in its card"
+				checked: Settings.media.menu
+				onToggled: wanted => Settings.set("media", "menu", wanted)
+			}
+
 			Note {
 				text: page.players.length > 0 ? "Players: one turned off is left out of the bar, its card and the media keys." : "Players show here as they open."
 			}

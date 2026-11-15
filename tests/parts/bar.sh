@@ -723,6 +723,17 @@ sleep 0.5
 same "the players left out, with it back" "$(ignored)" 0
 key Escape
 wait_up 0
+# With that turned off in the settings its menu has no players.
+settings '{ "media": { "menu": false } }'
+move 220 16
+click right
+wait_up 1
+sleep 0.4
+shot media-menu-off
+[ "$(magick "$out/media-menu-off.png" "$out/media-menu.png" -compose difference -composite -crop 400x200+20+40 +repage -format '%[fx:maxima > 0.1]' info:)" = 1 ] || fail "the menu of what plays still has the players"
+key Escape
+wait_up 0
+settings '{}'
 move 220 16
 sleep 0.3
 # With the player gone it goes, and the card with it.

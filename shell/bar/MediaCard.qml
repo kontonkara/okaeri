@@ -238,9 +238,12 @@ Card {
 				ink: current ? Theme.colors.text : Theme.colors.subtext
 				onClicked: Media.pick(modelData)
 				// Out of all this, by its name: the bar's part has it back, by a right
-				// click, and so do the settings.
-				tip: "A right click leaves it out"
-				onRightClicked: Media.ignore(modelData.identity, true)
+				// click, and so do the settings. Not with Settings.media.menu off.
+				tip: Settings.media.menu ? "A right click leaves it out" : ""
+				onRightClicked: {
+					if (Settings.media.menu)
+						Media.ignore(modelData.identity, true);
+				}
 			}
 		}
 	}

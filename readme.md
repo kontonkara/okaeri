@@ -145,7 +145,7 @@ title of the window in focus has its app's icon.
 The bar can have a button for the launcher, among its parts on the Bar page.
 A right click on what plays has the players there are, to leave one out of the
 bar, its card and the media keys, as a browser; so does a right click on one in
-the card, and the Bar page.
+the card, and the Bar page, where the right click for that can be turned off.
 
 The month under the clock has the events of calendars of yours in it, `calendars`
 in the clock's settings and on the Bar page: `.ics` files, read again as they

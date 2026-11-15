@@ -253,22 +253,26 @@ player=$!
 sleep 2
 choose 660 "$left_y"
 shot part-media
-move "$higher_x" 504
+move "$higher_x" 454
 click
 sleep 0.3
 same "when the media shows" "$(value .media.show)" '"playing"'
-move "$higher_x" 544
+move "$higher_x" 494
 click
 sleep 0.3
 same "what the media says" "$(value .media.label)" '"both"'
-move "$higher_x" 589
+move "$higher_x" 539
 click
 sleep 0.3
 same "how wide the media gets" "$(value .media.width)" 280
-move "$switch_x" 640
+move "$switch_x" 590
 click
 sleep 0.3
 same "sliding" "$(value .media.scroll)" false
+move "$switch_x" 640
+click
+sleep 0.3
+same "the right click for players" "$(value .media.menu)" false
 move "$switch_x" 710
 click
 sleep 0.3
