@@ -36,7 +36,11 @@ Singleton {
 			on: parts[3] === "activated",
 			busy: parts[3] === "activating" || parts[3] === "deactivating"
 		}));
-		connections = found.sort((a, b) => b.on - a.on || a.name.localeCompare(b.name));
+		// Only what changed: a list made anew has what shows it made anew, under the
+		// pointer too.
+		const sorted = found.sort((a, b) => b.on - a.on || a.name.localeCompare(b.name));
+		if (JSON.stringify(sorted) !== JSON.stringify(connections))
+			connections = sorted;
 		const active = connections.find(connection => connection.on);
 		if (active)
 			last = active.id;

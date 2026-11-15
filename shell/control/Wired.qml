@@ -42,7 +42,7 @@ Singleton {
 		});
 		state = (found["GENERAL.STATE"] ?? [""])[0];
 		const speed = (device?.linkSpeed ?? 0) > 0 ? [`${device.linkSpeed} Mb/s`] : [];
-		details = [
+		const rows = [
 			{ text: "Connection", value: found["GENERAL.CONNECTION"] },
 			{ text: "Speed", value: speed },
 			{ text: "Address", value: found["IP4.ADDRESS"] },
@@ -51,6 +51,9 @@ Singleton {
 			{ text: "IPv6", value: found["IP6.ADDRESS"] },
 			{ text: "Hardware", value: found["GENERAL.HWADDR"] }
 		].filter(row => row.value && row.value.length > 0).map(row => ({ text: row.text, value: row.value.join(", ") }));
+		// Only what changed: the page isn't made anew every few seconds.
+		if (JSON.stringify(rows) !== JSON.stringify(details))
+			details = rows;
 	}
 
 	function look() {

@@ -218,7 +218,11 @@ ipc control options record
 sleep 0.6
 shot record-options
 at 1200 152
-sleep 0.3
+# It's written a moment after the click, and a busy machine takes longer.
+for _ in $(seq 30); do
+	[ "$(jq -r '.recording.area' "$XDG_STATE_HOME/okaeri/settings.json" 2>/dev/null)" = screen ] && break
+	sleep 0.1
+done
 [ "$(jq -r '.recording.area' "$XDG_STATE_HOME/okaeri/settings.json")" = screen ] || fail "the first row of the recording's options didn't pick the screen: $(cat "$XDG_STATE_HOME/okaeri/settings.json")"
 key Escape
 sleep 0.4

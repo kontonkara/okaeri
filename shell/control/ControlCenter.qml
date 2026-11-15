@@ -217,7 +217,11 @@ Panel {
 					width: parent.width
 					visible: !column.paging
 					spacing: Theme.u(8)
-					onShownChanged: Control.shown = shown
+					// Only when it's other tiles: what reads it isn't made anew for the same.
+					onShownChanged: {
+						if (shown.join() !== Control.shown.join())
+							Control.shown = shown;
+					}
 					Component.onCompleted: Control.shown = shown
 
 					// By name: a tile that moves keeps what it is doing, a drag too.
