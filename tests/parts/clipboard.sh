@@ -760,6 +760,20 @@ sleep 0.5
 key Return
 wait_closed
 pasted_is "$files/long"
+# Its text changed first, by Ctrl+E: what's copied is what it says by then.
+copy 'mend me' 'mend me'
+open_panel
+type 'mend me'
+key Down
+key Right
+sleep 0.5
+wtype -M ctrl -k e -m ctrl
+sleep 0.3
+type ', now'
+wtype -M ctrl -k Return -m ctrl
+wait_closed
+printf 'mend me, now' >"$files/mended"
+pasted_is "$files/mended"
 # A picture's is saved, where the settings say, as it was copied.
 magick -size 40x30 xc:orange "$files/saved.png"
 cliphist -db-path "$db" store <"$files/saved.png"

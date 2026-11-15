@@ -169,7 +169,17 @@ Panel {
 			focus: true
 			Component.onCompleted: forceActiveFocus()
 			onBack: panel.unlook()
-			onPicked: paste => panel.pick(panel.looked, paste !== Settings.clipboard.paste)
+			// As it is, or as it was changed there.
+			onPicked: paste => {
+				if (!changed) {
+					panel.pick(panel.looked, paste !== Settings.clipboard.paste);
+					return;
+				}
+				Clipboard.put(words);
+				if (paste)
+					Clipboard.paste();
+				panel.hide();
+			}
 			onRemoved: {
 				Clipboard.remove(panel.looked);
 				panel.unlook();

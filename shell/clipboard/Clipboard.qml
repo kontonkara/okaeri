@@ -114,6 +114,13 @@ Singleton {
 			worker.exec(chores.shift());
 	}
 
+	// Text of its own, as an entry was changed before it's put back: an argument
+	// of its own, as the ids are, and the history has it as a new entry.
+	function put(text) {
+		if (text !== "")
+			run(["sh", "-c", 'printf %s "$1" | wl-copy', "sh", text]);
+	}
+
 	// wl-copy takes the clipboard even with nothing to put on it, so only what
 	// decodes goes there: an id is gone once the same thing was copied again.
 	// What it is, wl-copy tells from the bytes; the list's preview can be wrong.

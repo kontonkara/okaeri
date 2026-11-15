@@ -9,7 +9,8 @@ import qs.ui
 // selected, or its picture, and what can be done with it. Enter copies it and
 // Shift+Enter pastes it, or the other way round by the settings, as in the
 // list; Ctrl+O opens the first link in it, Ctrl+S saves the picture, Ctrl+P
-// pins it, Delete removes it, and Escape or Left goes back to the list.
+// pins it, Delete removes it, and Escape or Left goes back to the list. Ctrl+E
+// has its text changed first: then Ctrl+Enter copies it as it is by then.
 FocusScope {
 	id: look
 
@@ -19,6 +20,11 @@ FocusScope {
 	// What it says, to as much as is shown: an entry can be a whole file.
 	property string whole: ""
 	readonly property int most: 100000
+	// Its text can be changed before it's put back, once Edit says so: then Enter
+	// is a new line in it, and the buttons copy and paste what it says now.
+	property bool editing: false
+	readonly property string words: shown.text
+	readonly property bool changed: !picture && editing && shown.text !== whole
 	readonly property string link: whole.match(/\b(?:https?|ftp):\/\/[^\s<>"'`]+/)?.[0]?.replace(/[.,;:!?)\]}]+$/, "") ?? ""
 	// Where its picture is decoded to, for as long as it shows.
 	readonly property string file: entry.pinned ? entry.file : `${Clipboard.pictures}/look-${entry.id}-${Date.now()}`
@@ -36,6 +42,9 @@ FocusScope {
 
 	Keys.onPressed: event => {
 		const control = !!(event.modifiers & Qt.ControlModifier);
+		// While it's changed the keys are the text's: Escape and those with Ctrl stay.
+		if (editing && !control && event.key !== Qt.Key_Escape)
+			return;
 		if (event.key === Qt.Key_Escape || event.key === Qt.Key_Left || event.key === Qt.Key_Backspace)
 			look.back();
 		else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
@@ -44,6 +53,8 @@ FocusScope {
 			open();
 		else if (control && event.key === Qt.Key_S && picture)
 			save();
+		else if (control && event.key === Qt.Key_E && !picture)
+			edit();
 		else if (control && event.key === Qt.Key_P)
 			pinOrNot();
 		else if (event.key === Qt.Key_Delete)
@@ -51,6 +62,12 @@ FocusScope {
 		else
 			return;
 		event.accepted = true;
+	}
+
+	function edit() {
+		editing = true;
+		shown.forceActiveFocus();
+		shown.cursorPosition = shown.length;
 	}
 
 	function open() {
@@ -154,7 +171,7 @@ FocusScope {
 				id: shown
 
 				width: words.width
-				readOnly: true
+				readOnly: !look.editing
 				selectByMouse: true
 				textFormat: TextEdit.PlainText
 				wrapMode: TextEdit.Wrap
@@ -197,6 +214,16 @@ FocusScope {
 			icon: "clipboard"
 			text: "Paste"
 			onClicked: look.picked(true)
+		}
+
+		Button {
+			objectName: "edit"
+			visible: !look.picture && !look.editing && look.whole.length < look.most
+			height: Theme.u(30)
+			flat: true
+			icon: "text"
+			tip: "Change it before it's copied or pasted · Ctrl+E"
+			onClicked: look.edit()
 		}
 
 		Button {
