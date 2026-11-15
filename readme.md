@@ -148,7 +148,8 @@ on it, and a click on a day says what.
 
 A click on the battery shows it in full: how the charge went over the last day,
 the power going in or out, the energy in it and how worn it is.
-The load's card has what keeps the processor busiest now.
+The load's card has what keeps the processor busiest now, and two clicks on one
+end it.
 
 The Wi-Fi page shares the network it's on with a phone: its name, its password
 and a code the phone's camera reads. The hotspot's tile makes the machine one for

@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import qs
 import qs.services
@@ -11,8 +12,28 @@ import qs.ui
 Column {
 	id: card
 
-	// { name, cpu }, the busiest first.
+	// { name, cpu, pid }, the busiest first.
 	property var busiest: []
+	// The one a click asked to end, by its pid, for a moment: a second click on it
+	// does, as it's asked to leave and not killed.
+	property int armed: 0
+
+	function end(process) {
+		if (armed !== process.pid) {
+			armed = process.pid;
+			disarm.restart();
+			return;
+		}
+		armed = 0;
+		Env.act("load end a process", () => Quickshell.execDetached(["kill", String(process.pid)]));
+	}
+
+	Timer {
+		id: disarm
+
+		interval: 3000
+		onTriggered: card.armed = 0
+	}
 
 	function gib(bytes) {
 		return (bytes / 1073741824).toFixed(1);
@@ -72,7 +93,7 @@ Column {
 	}
 
 	// What keeps the processor busiest now, by top's second look: its first is the
-	// time since each started.
+	// time since each started. A click on one asks, and another ends it.
 	Column {
 		width: parent.width
 		spacing: Theme.u(2)
@@ -83,9 +104,24 @@ Column {
 
 			Item {
 				required property var modelData
-
+				readonly property bool armed: card.armed === modelData.pid
 				width: parent.width
 				height: Theme.u(18)
+
+				Rectangle {
+					anchors.fill: parent
+					radius: Theme.u(4)
+					color: pointer.containsMouse ? Theme.hover : "transparent"
+				}
+
+				MouseArea {
+					id: pointer
+
+					anchors.fill: parent
+					hoverEnabled: true
+					cursorShape: Qt.PointingHandCursor
+					onClicked: card.end(parent.modelData)
+				}
 
 				Text {
 					anchors.left: parent.left
@@ -107,8 +143,8 @@ Column {
 					anchors.right: parent.right
 					anchors.rightMargin: Theme.u(4)
 					anchors.verticalCenter: parent.verticalCenter
-					text: `${Math.round(parent.modelData.cpu)}%`
-					color: Theme.colors.subtext
+					text: parent.armed ? "End it?" : `${Math.round(parent.modelData.cpu)}%`
+					color: parent.armed ? Theme.colors.error : Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize - Theme.u(2)
 					font.features: {
@@ -123,11 +159,11 @@ Column {
 		id: looking
 
 		running: true
-		command: ["sh", "-c", 'top -b -n 2 -d 1 -o %CPU -w 512 2>/dev/null | awk \'/^ *PID/ { block++; next } block == 2 && NF >= 12 && count < 5 { sub(",", ".", $9); if ($9 + 0 >= 1) { print $9 "\t" $12; count++ } }\'']
+		command: ["sh", "-c", 'top -b -n 2 -d 1 -o %CPU -w 512 2>/dev/null | awk \'/^ *PID/ { block++; next } block == 2 && NF >= 12 && count < 5 { sub(",", ".", $9); if ($9 + 0 >= 1) { print $9 "\t" $12 "\t" $1; count++ } }\'']
 
 		stdout: StdioCollector {
 			onStreamFinished: {
-				card.busiest = text.split("\n").filter(line => line.includes("\t")).map(line => ({ cpu: Number(line.split("\t")[0]), name: line.split("\t")[1] }));
+				card.busiest = text.split("\n").filter(line => line.includes("\t")).map(line => ({ cpu: Number(line.split("\t")[0]), name: line.split("\t")[1], pid: Number(line.split("\t")[2]) }));
 				// For tests: how many, and never which.
 				console.info("okaeri: load: busiest", card.busiest.length);
 			}

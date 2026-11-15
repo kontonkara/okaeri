@@ -1613,6 +1613,14 @@ shot load-panel
 [ "$(magick "$out/load-panel.png" "$out/load-again.png" -compose difference -composite -crop 300x200+1000+60 +repage -format '%[fx:maxima > 0.3]' info:)" = 1 ] || fail "no panel under the load"
 # Under the processor, what keeps it busiest, by top.
 wait_log "okaeri: load: busiest"
+# Two clicks on the first of them end it: here that's only said. With the machine
+# at rest there may be none to click.
+if [ "$(log | sed -n 's/.*okaeri: load: busiest //p' | tail -n 1)" -gt 0 ]; then
+	move 1200 140
+	click
+	click
+	wait_log "okaeri: dry: load end a process"
+fi
 key Escape
 wait_up 0
 move 300 600
