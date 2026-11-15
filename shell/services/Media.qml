@@ -27,6 +27,23 @@ Singleton {
 			picked = null;
 	}
 
+	// Every player by its name once, those open first and then those left out that
+	// aren't: for the lists that leave one out, and take it back.
+	readonly property var names: {
+		const open = [];
+		everyone.forEach(player => {
+			if (!open.includes(player.identity))
+				open.push(player.identity);
+		});
+		return open.concat(Settings.media.ignored.filter(name => !open.includes(name)));
+	}
+
+	// Out of the bar, its card and the keys, by its name, or back in.
+	function ignore(name, wanted) {
+		const others = Settings.media.ignored.filter(other => other !== name);
+		Settings.setNames("media", "ignored", wanted ? others.concat([name]) : others);
+	}
+
 	// For the card's list and the keys: this one, until another starts playing.
 	function pick(chosen) {
 		picked = chosen;

@@ -237,6 +237,10 @@ Card {
 				text: [modelData.identity, modelData.trackTitle].filter(part => !!part).join(" · ")
 				ink: current ? Theme.colors.text : Theme.colors.subtext
 				onClicked: Media.pick(modelData)
+				// Out of all this, by its name: the bar's part has it back, by a right
+				// click, and so do the settings.
+				tip: "A right click leaves it out"
+				onRightClicked: Media.ignore(modelData.identity, true)
 			}
 		}
 	}

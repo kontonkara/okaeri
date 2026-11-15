@@ -703,6 +703,28 @@ wheel 1
 wait_log "okaeri: dry: media previous"
 wheel -1
 wait_log "okaeri: dry: media next"
+# A right click on it has the players there are: the one unchecked is left out,
+# the bar with it, and checked again it's back.
+ignored() {
+	jq -c '.media.ignored // [] | length' "$XDG_STATE_HOME/okaeri/settings.json" 2>/dev/null || echo 0
+}
+click right
+wait_up 1
+sleep 0.4
+shot media-menu
+move 220 72
+click
+sleep 0.5
+same "the players left out" "$(ignored)" 1
+shot media-ignored
+same "beside the workspaces with its player left out" "$(left_of_clock media-ignored)" 0
+click
+sleep 0.5
+same "the players left out, with it back" "$(ignored)" 0
+key Escape
+wait_up 0
+move 220 16
+sleep 0.3
 # With the player gone it goes, and the card with it.
 click
 wait_up 1

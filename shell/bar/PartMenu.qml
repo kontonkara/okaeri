@@ -8,8 +8,9 @@ import qs.ui
 // no right click of its own opens it. First what's the part's own, where it has
 // some (what a recording takes in, how warm the night light is and when, for how
 // long the machine stays awake, which power profile, what the clock shows, what's
-// beside the battery, the network or Bluetooth), then its settings in the
-// settings window, and taking it off the bar. A click on a row does what it says.
+// beside the battery, the network or Bluetooth, which players count), then its
+// settings in the settings window, and taking it off the bar. A click on a row
+// does what it says.
 Panel {
 	id: menu
 
@@ -82,6 +83,10 @@ Panel {
 				pick("Nothing beside it", label === "none", () => Settings.set("battery", "label", "none"))
 			];
 		}
+		// The players there are: one unchecked is left out of the bar, its card and
+		// the keys.
+		if (name === "media")
+			return Media.names.map(player => Object.assign(pick(player, !Settings.media.ignored.includes(player), () => Media.ignore(player, !Settings.media.ignored.includes(player)), Media.everyone.some(one => one.identity === player) ? "" : "Not open now"), { stays: true }));
 		if (name === "network") {
 			const label = Settings.network.label;
 			return [
