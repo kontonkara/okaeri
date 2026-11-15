@@ -98,7 +98,8 @@ rest. "Back to the config", under the pages, takes back what the window set: on
 the page that shows, or all of it. `okaeri theme toggle` goes between the day's
 and the night's palettes, for a key. A choice in the window takes the wheel and the
 arrow keys, and the Notifications page has one to show, to see how they come. The
-on-screen display says what plays after a key of the player's, too.
+on-screen display says what plays after a key of the player's, too, and as a
+track starts by itself where its page says so.
 
 A dot left of a line of the settings window says the window set it, and a click
 on the dot takes that back; the button beside "Back to the config" copies all

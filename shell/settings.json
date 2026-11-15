@@ -55,6 +55,7 @@
 		"position": "bottom",
 		"duration": 1.5,
 		"percent": false,
+		"tracks": false,
 		"hidden": []
 	},
 	"sounds": {

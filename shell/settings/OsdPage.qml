@@ -72,6 +72,15 @@ Flickable {
 				checked: Settings.osd.percent
 				onToggled: wanted => Settings.set("osd", "percent", wanted)
 			}
+
+			Setting {
+				holds: "osd.tracks"
+				words: "song music"
+				text: "A track as it starts"
+				subtext: "What plays, with no key pressed"
+				checked: Settings.osd.tracks
+				onToggled: wanted => Settings.set("osd", "tracks", wanted)
+			}
 		}
 
 		Card {

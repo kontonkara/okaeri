@@ -154,6 +154,16 @@ PanelWindow {
 		}
 	}
 
+	// With Settings.osd.tracks, a track that starts by itself says so too.
+	Connections {
+		target: Settings.osd.tracks ? osd.player : null
+
+		function onTrackTitleChanged() {
+			if (osd.player.trackTitle && osd.player.isPlaying)
+				osd.show("media", 1);
+		}
+	}
+
 	Connections {
 		target: osd.kind === "media" && osd.shown ? osd.player : null
 

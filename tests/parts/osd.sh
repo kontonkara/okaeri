@@ -630,3 +630,26 @@ settings '{}'
 kill "$mpv_pid"
 wait "$mpv_pid" 2>/dev/null || true
 mpv_pid=
+
+# A track that starts by itself has a card only where the settings say so: two
+# that take turns, three seconds each.
+mpv --no-config --no-terminal --ao=null --vo=null --loop-playlist=inf --length=3 \
+	--script="$OKAERI_MPV_MPRIS" av://lavfi:sine=f=440 av://lavfi:sine=f=880 >/dev/null 2>&1 &
+mpv_pid=$!
+for _ in $(seq 100); do
+	dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+		org.freedesktop.DBus.ListNames | grep -q 'org\.mpris\.MediaPlayer2\.mpv' && break
+	sleep 0.1
+done
+sleep 0.6
+stays_off 4000 "a card for a track that starts, unasked"
+settings '{ "osd": { "tracks": true } }'
+end=$(($(now) + 5000))
+until up; do
+	[ "$(now)" -lt "$end" ] || fail "no card for a track that starts"
+	sleep 0.05
+done
+settings '{}'
+kill "$mpv_pid"
+wait "$mpv_pid" 2>/dev/null || true
+mpv_pid=

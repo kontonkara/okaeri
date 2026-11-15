@@ -882,7 +882,11 @@ move "$switch_x" 332
 click
 sleep 0.3
 same "in numbers" "$(value .osd.percent)" true
-move "$switch_x" 622
+move "$switch_x" 382
+click
+sleep 0.3
+same "a track as it starts" "$(value .osd.tracks)" true
+move "$switch_x" 672
 click
 sleep 0.3
 same "what has none" "$(value .osd.hidden)" '["locks"]'
