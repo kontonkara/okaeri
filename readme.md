@@ -156,6 +156,8 @@ machine's unless you give it another, and its password, made up the first time
 where you don't, are with its width on the Control page, a click on its tile there.
 A network that asks to be signed in to first has a button on the Wi-Fi page that
 opens a page for that.
+A wired network has a tile and a page of its own once a cable is in it: its
+address, its gateway, its name servers and how fast it goes.
 
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that

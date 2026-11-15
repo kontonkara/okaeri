@@ -63,7 +63,7 @@ Panel {
 			controlCenter.toggle();
 		}
 
-		// Open at a page: wifi, bluetooth, vpn, hotspot, sound or mic.
+		// Open at a page: wifi, wired, bluetooth, vpn, hotspot, sound or mic.
 		function page(name: string): void {
 			Control.show(name);
 		}
@@ -105,7 +105,7 @@ Panel {
 				id: column
 
 				// A page in the place of the rest.
-				readonly property bool paging: [wifi, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
+				readonly property bool paging: [wifi, wired, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
@@ -211,7 +211,7 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "wired" ? Wired.plugged : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
@@ -232,6 +232,7 @@ Panel {
 							width: tiles.whole[modelData] ? tiles.width : (tiles.width - tiles.spacing) / 2
 							sourceComponent: ({
 									wifi: wifiTile,
+									wired: wiredTile,
 									bluetooth: bluetoothTile,
 									vpn: vpnTile,
 									airplane: airplaneTile,
@@ -265,6 +266,21 @@ Panel {
 							canSwitch: !Wifi.blocked
 							opens: "wifi"
 							onToggled: wanted => Wifi.setEnabled(wanted)
+						}
+					}
+
+					Component {
+						id: wiredTile
+
+						Tile {
+							name: "wired"
+							wanted: Wired.plugged
+							icon: "ethernet"
+							title: "Wired"
+							summary: wired.summary
+							checked: Wired.connected
+							opens: "wired"
+							onToggled: wanted => Wired.setEnabled(wanted)
 						}
 					}
 
@@ -402,6 +418,12 @@ Panel {
 
 				WifiSection {
 					id: wifi
+
+					room: controlCenter.room
+				}
+
+				WiredSection {
+					id: wired
 
 					room: controlCenter.room
 				}

@@ -16,6 +16,7 @@ Flickable {
 
 	readonly property var builtIn: ({
 			wifi: "Wi-Fi",
+			wired: "Wired network",
 			bluetooth: "Bluetooth",
 			night: "Night light",
 			awake: "Keep awake",

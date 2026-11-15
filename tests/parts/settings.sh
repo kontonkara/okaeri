@@ -571,21 +571,22 @@ same "no dock" "$(value .dock.on)" false
 step "The control center's page"
 page "$control_y"
 shot control-page
-# Wi-Fi, the first tile, to Hidden; the rest move up a place.
+# Wi-Fi, the first tile, to Hidden; the rest move up a place. The wired network's
+# is here whether it has a cable or not.
 drag 656 254 600 480
 same "what's left out" "$(value .control.hidden)" '["wifi"]'
-same "the order" "$(value .control.tiles)" '["bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi"]'
-# Bluetooth, now first, to a whole row, which takes Hidden a row down: the
+same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi"]'
+# Bluetooth, now second, to a whole row, which takes Hidden a row down: the
 # hotspot's tile is left alone in a row of its own.
-move 656 254
+move 926 254
 click
 sleep 0.3
-arrow "$higher_x" 652
+arrow "$higher_x" 696
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
-drag 594 524 530 254
+drag 594 568 530 254
 same "what's left out, back" "$(value .control.hidden)" '[]'
-same "the order, back" "$(value .control.tiles)" '["wifi","bluetooth","night","awake","power","airplane","vpn","record","hotspot"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
 move 1007 623

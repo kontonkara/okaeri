@@ -500,6 +500,11 @@ Scope {
 			return Vpn.connections.map(connection => `${connection.name}=${connection.kind}${connection.on ? "+" : ""}`).join(",");
 		}
 
+		// What the wired network's tile says, where it has one, and its page.
+		function wired(): string {
+			return (Wired.plugged ? Wired.summary : "none") + "|" + Wired.details.map(row => row.text + "=" + row.value).join(",");
+		}
+
 		// As if bluetoothctl, the agent, had printed it.
 		function heard(text: string): void {
 			Bt.hear(text);
@@ -882,6 +887,22 @@ sleep 0.4
 sleep 3.5
 [ "$(ipc probe vpns)" = '' ] || fail "the VPNs that went are still $(ipc probe vpns)"
 
+# The wired network, once its plug has a cable: a tile, a page with what nmcli
+# says of it, and its switch takes it up. Without the cable, no tile again.
+[ "$(ipc probe wired)" = 'none|' ] || fail "a wired network with no cable: $(ipc probe wired)"
+printf '%s\n' 'GENERAL.STATE:30 (disconnected)' 'GENERAL.HWADDR:AA\:BB\:CC\:DD\:EE\:FF' 'IP4.ADDRESS[1]:10.0.0.7/24' 'IP4.DNS[1]:10.0.0.1' 'IP4.DNS[2]:10.0.0.2' >"$work/wired"
+sleep 5.5
+[ "$(ipc probe wired)" = 'Off|Address=10.0.0.7/24,DNS=10.0.0.1, 10.0.0.2,Hardware=AA:BB:CC:DD:EE:FF' ] || fail "the wired network is $(ipc probe wired)"
+shot wired-tile
+page wired
+shot wired-page
+when 'dry: wired up' at $switch_x $page_y
+at $back_x $page_y
+sleep 0.4
+rm "$work/wired"
+sleep 5.5
+[ "$(ipc probe wired)" = 'none|' ] || fail "the wired network without its cable is still $(ipc probe wired)"
+
 # The hotspot, beside the recording's tile now. The first time it goes on, its
 # password is made up and kept in the settings, out of the log; after that it's
 # the one kept. With the device an access point it's on, and the tile takes it
@@ -1203,7 +1224,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+( -s [0-9:]+ -S [0-9:]+ -d [0-9]+)?|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|hotspot (on|off)|card profile [0-9]+|keyboard light [0-9]+|record start screen none|tile run|bluetooth (true|false|connect|pair|cancel|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+( -s [0-9:]+ -S [0-9:]+ -d [0-9]+)?|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|wired (up|down)|hotspot (on|off)|card profile [0-9]+|keyboard light [0-9]+|record start screen none|tile run|bluetooth (true|false|connect|pair|cancel|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi

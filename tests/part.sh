@@ -132,12 +132,16 @@ cat >"$work/nmcli" <<SH
 #!/bin/sh
 case "\$*" in
 *"connection show"*) cat "$work/vpns" 2>/dev/null ;;
+*"device show"*) cat "$work/wired" 2>/dev/null ;;
 *show-password*) cat "$work/secret" 2>/dev/null || { echo "Error: no network to show." >&2; exit 10; } ;;
 *) echo "\$*" >>"$work/nmcli.log" ;;
 esac
 SH
 chmod +x "$work/nmcli"
-sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/nmcli\"|" "$work/shell/control/Vpn.qml" "$work/shell/control/Wifi.qml"
+sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/nmcli\"|" "$work/shell/control/Vpn.qml" "$work/shell/control/Wifi.qml" "$work/shell/control/Wired.qml"
+# The wired network is a plug of the stand's own, and what nmcli would show of it
+# is what a test puts in $work/wired: with nothing there, it has no cable.
+sed -i 's/^\treadonly property var device: .*/\treadonly property var device: ({ name: "eth-test", connected: false, linkSpeed: 0 })/' "$work/shell/control/Wired.qml"
 # A code for a phone is a blank picture, and what it would say goes to $work/qr.
 cat >"$work/qrencode" <<'SH'
 #!/bin/sh
