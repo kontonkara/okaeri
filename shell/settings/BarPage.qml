@@ -784,6 +784,17 @@ Flickable {
 				onToggled: wanted => Settings.set("weather", "bar", wanted)
 			}
 
+			Choice {
+				holds: "clock.remind"
+				words: "reminder notification event"
+				text: "Say that an event is coming"
+				subtext: "That long before one with a time starts"
+				visible: Events.on
+				values: [0, 300, 600, 900, 1800, 3600]
+				value: Settings.clock.remind * 60
+				onChosen: value => Settings.set("clock", "remind", value / 60)
+			}
+
 			// The calendars whose events the month has, and a field for one more. What a
 			// calendar can be is said under the field's name rather than in a note of its
 			// own, so that with none the card grows by that one row.

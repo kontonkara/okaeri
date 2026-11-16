@@ -1392,6 +1392,26 @@ settings '{}'
 month_says dotted 0 "the days with a dot with no calendars"
 key Escape
 wait_up 0
+# One with a time that starts within ten minutes is said before it does, once.
+said_before=$(log | grep -c "okaeri: dry: calendar reminder" || true)
+cat >"$work/soon.ics" <<ICS
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:soon
+DTSTART:$(date -d '+5 minutes' +%Y%m%dT%H%M00)
+SUMMARY:Soon
+END:VEVENT
+END:VCALENDAR
+ICS
+settings "{ \"clock\": { \"calendars\": [\"$work/soon.ics\"] } }"
+for _ in $(seq 300); do
+	[ "$(log | grep -c "okaeri: dry: calendar reminder" || true)" -gt "$said_before" ] && break
+	sleep 0.1
+done
+sleep 21
+same "an event that's coming, said once" "$(log | grep -c "okaeri: dry: calendar reminder" || true)" "$((said_before + 1))"
+settings '{}'
 
 step "The workspaces as they're set"
 niri msg action focus-workspace 1

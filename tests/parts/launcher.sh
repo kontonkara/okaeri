@@ -1010,3 +1010,12 @@ key Escape
 is_closed "Escape without animations again"
 echo '{}' >"$XDG_CONFIG_HOME/okaeri/theme.json"
 
+
+# A timer by /timer runs for as long as it's told.
+open
+type "/timer 90s tea"
+sleep 0.2
+key Return
+wait_log "okaeri: timer: started 90"
+is_closed "a timer"
+

@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs
+import qs.services
 
 // The events of the calendars Settings.clock.calendars names, for the month under
 // the clock. A calendar is an iCalendar file, read again as it changes, or an
@@ -12,7 +13,8 @@ import qs
 // clock, as the weather is, and what came last stays while asking again goes
 // wrong. A calendar is read once as it comes; what happens on the days the month
 // asks about is worked out as it asks, and a rule that repeats an event is
-// followed into those days and no further.
+// followed into those days and no further. With Settings.clock.remind, minutes,
+// a notification says so that long before one that has a time starts.
 Singleton {
 	id: events
 
@@ -545,6 +547,46 @@ Singleton {
 			summary: event.summary
 		})));
 		return found.sort((a, b) => (b.allDay - a.allDay) || (a.start - b.start) || a.summary.localeCompare(b.summary));
+	}
+
+	// Those with a time that start within `ahead` milliseconds of `now`:
+	// [{ start, summary }].
+	function soon(now, ahead) {
+		const found = [];
+		items.forEach(event => {
+			if (event.allDay)
+				return;
+			times(event, now, now + ahead + 1).forEach(time => {
+				if (time.start > now && time.start <= now + ahead)
+					found.push({ start: time.start, summary: event.summary });
+			});
+		});
+		return found;
+	}
+
+	// Those said already, by when they start and what they are: once each.
+	property var reminded: ({})
+
+	function remind(now) {
+		const minutes = Settings.clock.remind;
+		soon(now, minutes * 60000).forEach(one => {
+			const key = `${one.start} ${one.summary}`;
+			if (reminded[key])
+				return;
+			reminded[key] = true;
+			const left = Math.max(1, Math.round((one.start - now) / 60000));
+			Env.act("calendar reminder", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=x-office-calendar", one.summary || "An event", `At ${Qt.formatTime(new Date(one.start), Settings.clock.hours12 ? "h:mm AP" : "HH:mm")}, in ${left} ${left === 1 ? "minute" : "minutes"}`]));
+		});
+		// What started long ago is forgotten.
+		Object.keys(reminded).filter(key => Number(key.split(" ")[0]) < now - oneDay).forEach(key => delete reminded[key]);
+	}
+
+	Timer {
+		running: events.on && Settings.clock.remind > 0
+		interval: 20000
+		repeat: true
+		triggeredOnStart: true
+		onTriggered: events.remind(Date.now())
 	}
 
 	// What's gone goes, and what's new is asked for.

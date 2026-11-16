@@ -249,4 +249,26 @@ ipc bar show
 sleep 0.3
 [ "$(hides)" = false ] || fail "the bar isn't back: $(hides)"
 
+# A timer says when its time is up, what isn't a length starts none, and the
+# stopwatch counts while it runs and stands after.
+ipc timer start nope
+wait_log 'okaeri: no timer for "nope"'
+[ "$(ipc timer left)" = 0 ] || fail "a timer for no length: $(ipc timer left)"
+ipc timer start 1:30
+[ "$(ipc timer left)" -ge 89 ] || fail "a timer for a minute and a half has $(ipc timer left) left"
+ipc timer stop
+[ "$(ipc timer left)" = 0 ] || fail "a timer stopped has $(ipc timer left) left"
+ipc timer start 2s
+wait_log "okaeri: timer: up"
+[ "$(lines | tail -n 1)" = "timer up" ] || fail "the timer's end: $(lines | tail -n 1)"
+ipc stopwatch toggle
+sleep 1.3
+ipc stopwatch toggle
+stood=$(ipc stopwatch seconds)
+[ "$stood" -ge 1 ] || fail "the stopwatch has $stood after a second"
+sleep 1.2
+[ "$(ipc stopwatch seconds)" = "$stood" ] || fail "the stopwatch went on as it stood"
+ipc stopwatch reset
+[ "$(ipc stopwatch seconds)" = 0 ] || fail "the stopwatch after a reset: $(ipc stopwatch seconds)"
+
 echo "keys: all good" >&2

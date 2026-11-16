@@ -14,6 +14,9 @@ import qs.services
 Scope {
 	id: hooks
 
+	// The calendars are read from the start, for what they have coming to be said.
+	readonly property bool calendars: Events.on
+
 	readonly property var own: Settings.hooks
 	// Not for how things are as the shell comes up: those aren't changes.
 	property bool ready: false

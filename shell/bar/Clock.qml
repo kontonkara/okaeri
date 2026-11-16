@@ -18,6 +18,8 @@ Text {
 	readonly property string timeFormat: (own.hours12 ? "h:mm" : "HH:mm") + (own.seconds ? ":ss" : "") + (own.hours12 ? " AP" : "")
 	readonly property var formats: own.date === "none" || !own.dateFormat ? [timeFormat] : own.date === "after" ? [timeFormat, own.dateFormat] : [own.dateFormat, timeFormat]
 	readonly property string outside: Weather.on && Settings.weather.bar && Weather.current ? `  ${Weather.current.temperature}°` : ""
+	// A timer that runs, or the stopwatch, beside it all.
+	readonly property string timing: Timers.counting ? Timers.clock(Timers.left) : Timers.watching ? Timers.clock(Timers.watched) : ""
 	// On a bar at a side: a line for each part of the time, and the date in two
 	// more, as Settings.clock.date has it.
 	readonly property bool upright: Settings.barSide
@@ -29,7 +31,7 @@ Text {
 	}
 
 	visible: upright || width <= room
-	text: upright ? stood : (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside
+	text: upright ? stood + (timing ? `\n${timing}` : "") : (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside + (timing ? `  ${timing}` : "")
 	horizontalAlignment: Text.AlignHCenter
 	lineHeight: upright ? 0.95 : 1
 	color: Theme.colors.text
@@ -118,6 +120,10 @@ Text {
 					width: parent.width
 					focus: true
 					today: clock.date
+				}
+
+				TimerRow {
+					width: parent.width
 				}
 			}
 		}

@@ -1,0 +1,49 @@
+import QtQuick
+import qs
+import qs.services
+import qs.ui
+
+// A timer and a stopwatch, in the clock's card: a timer by one of a few
+// lengths, or what's left of the one that runs and a way to stop it; the
+// stopwatch beside it starts and stands by a click, and a right click has it
+// at nothing again. `okaeri timer start 10m` and the launcher's /timer take any
+// length.
+Flow {
+	id: row
+
+	spacing: Theme.u(6)
+
+	Repeater {
+		model: Timers.counting ? [] : [5, 10, 25]
+
+		Button {
+			required property int modelData
+
+			height: Theme.u(28)
+			flat: true
+			text: `${modelData} min`
+			tip: "A timer that long"
+			onClicked: Timers.start(modelData * 60, "")
+		}
+	}
+
+	Button {
+		visible: Timers.counting
+		height: Theme.u(28)
+		icon: "close"
+		text: [Timers.clock(Timers.left), Timers.label].filter(part => part !== "").join(" · ")
+		tip: "Stop the timer"
+		longest: Theme.u(180)
+		onClicked: Timers.stop()
+	}
+
+	Button {
+		height: Theme.u(28)
+		flat: !Timers.watching && Timers.watched === 0
+		icon: Timers.watching ? "pause" : "play"
+		text: Timers.watching || Timers.watched > 0 ? Timers.clock(Timers.watched) : "Stopwatch"
+		tip: Timers.watching ? "Stand · a right click starts over" : Timers.watched > 0 ? "Go on · a right click starts over" : "Start the stopwatch"
+		onClicked: Timers.toggleWatch()
+		onRightClicked: Timers.resetWatch()
+	}
+}

@@ -111,7 +111,8 @@
 		"weekStart": "locale",
 		"weekNumbers": false,
 		"zones": [],
-		"calendars": []
+		"calendars": [],
+		"remind": 10
 	},
 	"workspaces": {
 		"labels": "none",

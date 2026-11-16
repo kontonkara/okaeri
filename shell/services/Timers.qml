@@ -1,0 +1,106 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+import qs
+
+// A timer that counts down to a notification and a sound, and a stopwatch: one
+// of each, for the clock on the bar, its card and the launcher. They end with
+// the shell.
+Singleton {
+	id: timers
+
+	// When the timer is up, in milliseconds, 0 with none, and what it's for.
+	property double until: 0
+	property string label
+	// When the stopwatch started, 0 while it stands, and what it had by then.
+	property double since: 0
+	property double banked: 0
+	property double now: Date.now()
+	readonly property bool counting: until > 0
+	readonly property bool watching: since > 0
+	// Seconds: what's left of the timer, and what the stopwatch has.
+	readonly property int left: counting ? Math.max(0, Math.ceil((until - now) / 1000)) : 0
+	readonly property int watched: Math.floor((banked + (watching ? Math.max(0, now - since) : 0)) / 1000)
+
+	// How long `text` asks for, in seconds, 0 for what isn't a time: "90", minutes;
+	// "10m", "1h30m", "45s", "1:30" as minutes and seconds.
+	function parse(text) {
+		const wanted = `${text}`.trim().toLowerCase();
+		if (/^\d+(\.\d+)?$/.test(wanted))
+			return Math.round(Number(wanted) * 60);
+		const clock = wanted.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
+		if (clock)
+			return clock[3] !== undefined ? Number(clock[1]) * 3600 + Number(clock[2]) * 60 + Number(clock[3]) : Number(clock[1]) * 60 + Number(clock[2]);
+		const parts = wanted.match(/^(?:(\d+(?:\.\d+)?)h)?(?:(\d+(?:\.\d+)?)m(?:in)?)?(?:(\d+)s)?$/);
+		if (!parts || wanted === "")
+			return 0;
+		return Math.round(Number(parts[1] ?? 0) * 3600 + Number(parts[2] ?? 0) * 60 + Number(parts[3] ?? 0));
+	}
+
+	// 9:05, or 1:02:05.
+	function clock(seconds) {
+		const whole = Math.max(0, Math.floor(seconds));
+		const hours = Math.floor(whole / 3600);
+		const minutes = Math.floor(whole / 60) % 60;
+		const rest = String(whole % 60).padStart(2, "0");
+		return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}` : `${minutes}:${rest}`;
+	}
+
+	// "10 min", "1 h 30 min", "45 s".
+	function span(seconds) {
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor(seconds / 60) % 60;
+		const rest = seconds % 60;
+		return [hours ? `${hours} h` : "", minutes ? `${minutes} min` : "", rest ? `${rest} s` : ""].filter(part => part !== "").join(" ");
+	}
+
+	function start(seconds, what) {
+		if (seconds <= 0)
+			return;
+		now = Date.now();
+		label = what ?? "";
+		until = now + seconds * 1000;
+		// For tests: that it runs, and never what for.
+		console.info("okaeri: timer: started", seconds);
+	}
+
+	function stop() {
+		until = 0;
+		label = "";
+	}
+
+	function toggleWatch() {
+		now = Date.now();
+		if (watching) {
+			banked += now - since;
+			since = 0;
+		} else {
+			since = now;
+		}
+	}
+
+	function resetWatch() {
+		since = 0;
+		banked = 0;
+	}
+
+	function done() {
+		const what = label;
+		stop();
+		console.info("okaeri: timer: up");
+		Sounds.play("alarm-clock-elapsed");
+		Env.act("timer up", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", "--urgency=critical", "Time's up", what]));
+	}
+
+	Timer {
+		interval: 250
+		running: timers.counting || timers.watching
+		repeat: true
+		onTriggered: {
+			timers.now = Date.now();
+			if (timers.counting && timers.now >= timers.until)
+				timers.done();
+		}
+	}
+}

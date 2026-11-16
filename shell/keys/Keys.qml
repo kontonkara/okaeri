@@ -143,6 +143,45 @@ Scope {
 		}
 	}
 
+	// A timer, for as long as "10m", "1h30m", "45s" or "1:30" says, a number alone
+	// being minutes, and the stopwatch.
+	IpcHandler {
+		target: "timer"
+
+		function start(length: string): void {
+			const seconds = Timers.parse(length);
+			if (seconds > 0)
+				Timers.start(seconds, "");
+			else
+				console.info(`okaeri: no timer for "${length}": it's as 10m, 1h30m, 45s or 1:30`);
+		}
+
+		function stop(): void {
+			Timers.stop();
+		}
+
+		// What's left of it, in seconds, 0 with none.
+		function left(): int {
+			return Timers.left;
+		}
+	}
+
+	IpcHandler {
+		target: "stopwatch"
+
+		function toggle(): void {
+			Timers.toggleWatch();
+		}
+
+		function reset(): void {
+			Timers.resetWatch();
+		}
+
+		function seconds(): int {
+			return Timers.watched;
+		}
+	}
+
 	IpcHandler {
 		target: "load"
 

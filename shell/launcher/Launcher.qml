@@ -28,6 +28,7 @@ Panel {
 		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
 		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
+		{ mode: "timer", text: "Timer and stopwatch", subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
 	// Whether what's typed asks for what was copied.
@@ -196,6 +197,21 @@ Panel {
 		return [{ settings: wanted, text: wanted ? `Look for "${wanted}" in the settings` : "Open the settings", subtext: "Settings", icon: "gear" }];
 	}
 
+	// A timer for as long as what's typed first says, with the rest of it as what
+	// it's for; the one that runs, to stop; and the stopwatch.
+	function timer(asked) {
+		const words = asked.trim().split(/\s+/);
+		const seconds = Timers.parse(words[0] ?? "");
+		const what = words.slice(1).join(" ");
+		const found = [];
+		if (seconds > 0)
+			found.push({ does: () => Timers.start(seconds, what), text: `A timer for ${Timers.span(seconds)}`, subtext: what || "It says when the time is up", icon: "bell" });
+		if (Timers.counting)
+			found.push({ does: () => Timers.stop(), text: "Stop the timer", subtext: `${Timers.clock(Timers.left)} left`, icon: "close" });
+		found.push({ does: () => Timers.toggleWatch(), text: Timers.watching ? "Stop the stopwatch" : "Start the stopwatch", subtext: Timers.watched > 0 ? Timers.clock(Timers.watched) : "", icon: Timers.watching ? "pause" : "play" });
+		return found;
+	}
+
 	// What else `entry` can do.
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
@@ -242,6 +258,8 @@ Panel {
 			return settings(asked[2].trim());
 		case "session":
 			return session(query);
+		case "timer":
+			return timer(asked[2]);
 		}
 		return [];
 	}
@@ -613,6 +631,11 @@ Panel {
 					Settings.sought(row.settings);
 				else if (row.emoji)
 					Emoji.put(row.emoji);
+				else if (row.does) {
+					row.does();
+					if (row.stays)
+						return;
+				}
 				else
 					Apps.launch(row.entry);
 				launcher.hide();

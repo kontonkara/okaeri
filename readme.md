@@ -152,6 +152,12 @@ in the clock's settings and on the Bar page: `.ics` files, read again as they
 change, and addresses that give one, as a calendar's secret address in iCal
 format does, asked again every half hour. A dot is under each day with something
 on it, and a click on a day says what.
+A notification says that an event with a time is coming, ten minutes before, or
+as long as the Bar page says.
+The month's card has a timer and a stopwatch, which show beside the time while
+they run; `okaeri timer start 10m`, or `1h30m`, `45s`, `1:30`, starts one of any
+length, as `/timer 10m tea` in the launcher does, and `okaeri stopwatch toggle`
+and `reset` are the stopwatch's.
 
 A click on the battery shows it in full: how the charge went over the last day,
 the power going in or out, the energy in it and how worn it is.
