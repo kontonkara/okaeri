@@ -119,6 +119,19 @@ Singleton {
 			Env.act("output", () => Pipewire.preferredDefaultAudioSink = node);
 	}
 
+	// The output after the one in use, or the one before with -1, round to the first:
+	// for a key. turned() says which, for the OSD.
+	signal turned(string name)
+
+	function turn(by) {
+		if (outputs.length < 2)
+			return;
+		const at = outputs.indexOf(sink);
+		const next = outputs[(((at < 0 ? 0 : at + by) % outputs.length) + outputs.length) % outputs.length];
+		use(next);
+		turned(next.description || next.nickname || next.name || "");
+	}
+
 	function useInput(node) {
 		if (node !== source)
 			Env.act("input", () => Pipewire.preferredDefaultAudioSource = node);

@@ -111,6 +111,7 @@ Singleton {
 
 	signal stayed
 	signal micStayed
+	signal turned(string name)
 
 	function change(by) {}
 	function toggleMute() {}
@@ -192,6 +193,11 @@ ShellRoot {
 
 		function brightness(level: real): void {
 			Brightness.level = level;
+		}
+
+		// A key for where the sound goes.
+		function output(name: string): void {
+			Audio.turned(name);
 		}
 
 		// A key of the player's.
@@ -602,6 +608,15 @@ stays_off 1300 "a card for keeping awake, with that off"
 ipc awake toggle
 stays_off 500 "a card for keeping awake, with that off"
 settings '{}'
+
+# Where the sound goes, as a key picked another output: by its name.
+ipc poke output "Headphones by the door"
+comes_up "no card for another output"
+sleep 0.4
+shot output
+[ "$(words output)" != "$(words nothing)" ] || fail "nothing of the output on its card"
+[ "$(words output)" != "$(words awake-on)" ] || fail "the output looks as keeping awake does"
+leaves "$(now)" >/dev/null
 
 # A key of the player's: with none, no card; with one, what plays, in words, and
 # not with that kind turned off.

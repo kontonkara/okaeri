@@ -79,7 +79,8 @@ has it: `okaeri launcher open "/emoji "` opens the launcher at the emoji, and
 keeps an app on it and `unpin` lets it go, `okaeri session run lock` does what
 the session menu would, `okaeri calendar toggle`,
 `okaeri media card`, `okaeri battery toggle` and `okaeri load toggle` open those
-cards of the bar, and
+cards of the bar,
+`okaeri volume output next` sends the sound to the next output there is, and
 `okaeri volume set 40`, and `set` of `mic`, `brightness` and `keylight` the same
 way, puts a level at once; `okaeri night warmth 3000` makes the night light that
 warm.

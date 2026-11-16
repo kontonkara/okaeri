@@ -32,7 +32,8 @@ PanelWindow {
 		awake: "coffee",
 		dnd: "bellOff",
 		keys: "keyboard",
-		media: "music"
+		media: "music",
+		output: "headphones"
 	})
 	// The kinds by what the settings turn off.
 	readonly property var groups: ({
@@ -49,7 +50,8 @@ PanelWindow {
 		awake: "awake",
 		dnd: "dnd",
 		keys: "keys",
-		media: "media"
+		media: "media",
+		output: "volume"
 	})
 	readonly property real rise: Theme.u(8)
 	readonly property string position: Settings.osd.position
@@ -77,7 +79,10 @@ PanelWindow {
 		: kind in switches ? `${switches[kind]} ${off ? "off" : "on"}`
 		: kind === "profile" ? Power.profileName
 		: kind === "media" ? track
+		: kind === "output" ? output
 		: ""
+	// Where the sound goes now, as a key just picked it.
+	property string output
 	property bool shown: false
 
 	function show(kind, level) {
@@ -179,6 +184,12 @@ PanelWindow {
 		function onStayed() {
 			if (osd.wants("volume"))
 				osd.showVolume();
+		}
+
+		function onTurned(name) {
+			osd.output = name;
+			if (osd.wants("volume"))
+				osd.show("output", 1);
 		}
 
 		function onMicStayed() {

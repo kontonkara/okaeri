@@ -29,6 +29,12 @@ Scope {
 		function mute(): void {
 			Audio.toggleMute();
 		}
+
+		// To the next output there is, or with "previous" the one before: speakers,
+		// headphones, a screen.
+		function output(which: string): void {
+			Audio.turn(which === "previous" ? -1 : 1);
+		}
 	}
 
 	IpcHandler {
