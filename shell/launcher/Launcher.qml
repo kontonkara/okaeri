@@ -14,8 +14,12 @@ import qs.ui
 // which there are. A right click or Shift+Enter on an app shows what else it can
 // do, in the list's place, and on a file, an emoji or something copied does the
 // other thing there is to do with it; a window it closes. `okaeri dmenu` has it
-// show a script's lines instead, to pick one of, which the script is told. The
-// field keeps the keys, Up and Down reach the list from it.
+// show a script's lines instead, to pick one of, which the script is told. A >
+// in front runs the rest as a command, and a ? looks it up on the web, at
+// Settings.launcher.search. The button in the field, or Ctrl+G, has the groups
+// apps go by in the list's place, folders of one's own and the kinds apps say
+// they are: one picked, the list and the search are within it, until Escape.
+// The field keeps the keys, Up and Down reach the list from it.
 Panel {
 	id: launcher
 
@@ -28,9 +32,44 @@ Panel {
 		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
 		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
+		{ mode: "color", text: "A color off the screen", subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
 		{ mode: "timer", text: "Timer and stopwatch", subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
+	// The group whose apps alone show, by its key, "" for all of them; and whether
+	// the groups there are show in the list's place, to pick one of.
+	property string group: ""
+	property bool grouping: false
+	readonly property var grouped: Apps.groups.find(one => one.key === group) ?? null
+
+	function groupRows() {
+		return [{ group: "", text: "All apps", subtext: "", icon: "apps" }].concat(Apps.groups.map(one => ({
+			group: one.key,
+			text: one.text,
+			subtext: one.count === 1 ? "1 app" : `${one.count} apps`,
+			icon: one.own ? "file" : "apps",
+			mark: one.key === group ? "on" : ""
+		})));
+	}
+
+	// By the button in the field and Ctrl+G: the groups, or back to the apps.
+	function toggleGroups() {
+		if (picking || Apps.groups.length === 0)
+			return;
+		menuOf = null;
+		grouping = !grouping;
+		search();
+	}
+
+	function pickGroup(key) {
+		group = key;
+		grouping = false;
+		if (field.text !== "")
+			field.text = "";
+		else
+			search();
+	}
+
 	// Whether what's typed asks for what was copied.
 	readonly property bool clipping: /^\s*\/clip\s/i.test(field.text)
 
@@ -225,7 +264,10 @@ Panel {
 			{ pin: !pinned, pinning: true, text: pinned ? "Unpin" : "Pin to the top", icon: "pin" },
 			{ hiding: true, text: "Hide from the launcher", icon: "eyeOff" },
 			{ dock: !docked, docking: true, text: docked ? "Take off the dock" : "Keep on the dock", icon: "apps" }
-		]);
+		], Apps.folders.map(folder => {
+			const inside = Array.isArray(folder.apps) && folder.apps.includes(entry.id);
+			return { folding: true, folder: folder.name, fold: !inside, text: inside ? `Out of ${folder.name}` : `Into ${folder.name}`, subtext: "A folder of yours", icon: "file" };
+		}));
 	}
 
 	// What goes by what's typed: the sum, the apps, and after them the open windows
@@ -235,9 +277,16 @@ Panel {
 		const wanted = text.trim().toLowerCase();
 		if (picking)
 			return picks(wanted);
+		// A > in front runs the rest as a command, and a ? looks it up on the web.
+		const command = text.match(/^\s*>\s*(.*)$/);
+		if (command)
+			return command[1].trim() ? [{ does: () => Env.act("run a command", () => Niri.spawn(["sh", "-c", command[1].trim()])), text: `Run ${command[1].trim()}`, subtext: "A command, by sh", icon: "play" }] : [{ stays: true, does: () => {}, text: "A command to run", subtext: "> and the command", icon: "play" }];
+		const looked = text.match(/^\s*\?\s*(.*)$/);
+		if (looked)
+			return looked[1].trim() ? [{ does: () => Env.act("web search", () => Qt.openUrlExternally(Settings.launcher.search.replace("%s", encodeURIComponent(looked[1].trim())))), text: `Look up ${looked[1].trim()}`, subtext: "On the web", icon: "search" }] : [{ stays: true, does: () => {}, text: "Something to look up on the web", subtext: "? and the words", icon: "search" }];
 		const asked = text.match(/^\s*\/(\S*)(\s+.*)?$/);
 		if (!asked)
-			return sum().concat(Apps.search(text), wanted ? windows(wanted) : [], wanted.length < 2 ? [] : session(wanted));
+			return grouped ? Apps.search(text, grouped.has) : sum().concat(Apps.search(text), wanted ? windows(wanted) : [], wanted.length < 2 ? [] : session(wanted));
 		if (asked[2] === undefined)
 			return modes.filter(row => row.mode.startsWith(asked[1].toLowerCase()));
 		const query = asked[2].trim().toLowerCase();
@@ -260,6 +309,8 @@ Panel {
 			return session(query);
 		case "timer":
 			return timer(asked[2]);
+		case "color":
+			return [{ does: () => colorSoon.restart(), text: "Pick a color off the screen", subtext: "A click on it copies it as #rrggbb", icon: "eye" }];
 		}
 		return [];
 	}
@@ -267,7 +318,7 @@ Panel {
 	function rows() {
 		// What tells rows apart, so one that stays from a search to the next moves
 		// instead of being made anew: all that shows on it.
-		return (menuOf ? menu(menuOf) : typed()).map(row => Object.assign({
+		return (menuOf ? menu(menuOf) : grouping ? groupRows() : typed()).map(row => Object.assign({
 			key: [row.text, row.subtext, row.entry?.id, row.action?.id, row.window, row.session?.text, row.mark].join("|")
 		}, row));
 	}
@@ -336,6 +387,8 @@ Panel {
 	onPanelOpened: {
 		Session.check();
 		menuOf = null;
+		group = "";
+		grouping = false;
 		field.text = "";
 		hiding = false;
 		field.revealed = false;
@@ -345,6 +398,14 @@ Panel {
 	}
 
 	// This also has Apps start now, and read the apps before the first opening.
+	// Once the launcher is out of the way: it's not what's to be picked from.
+	Timer {
+		id: colorSoon
+
+		interval: 300
+		onTriggered: Env.act("color pick", () => Niri.pickColor())
+	}
+
 	Connections {
 		target: Apps
 
@@ -497,13 +558,15 @@ Panel {
 		width: parent.width
 		focus: true
 		icon: "search"
-		placeholder: launcher.picking ? launcher.picking.prompt || "Pick one" : "Search, or / for more"
+		placeholder: launcher.picking ? launcher.picking.prompt || "Pick one" : launcher.grouped ? `Search in ${launcher.grouped.text}` : "Search, or / for more"
 		secret: launcher.hiding
 		shifted: true
+		trailing: folders.visible ? folders.width + Theme.u(2) : 0
 		// No sums of what a script is told, a password least of all.
 		onTextChanged: {
 			Calculator.ask(launcher.picking ? "" : text);
 			launcher.menuOf = null;
+			launcher.grouping = false;
 			launcher.search();
 		}
 		// With nothing found for a script, what's typed is the answer, but for one
@@ -531,6 +594,8 @@ Panel {
 				list.move(1);
 			else if (ctrl && event.key === Qt.Key_P)
 				list.move(-1);
+			else if (ctrl && event.key === Qt.Key_G)
+				launcher.toggleGroups();
 			else
 				return;
 			event.accepted = true;
@@ -538,8 +603,31 @@ Panel {
 		Keys.onEscapePressed: event => {
 			if (launcher.menuOf)
 				launcher.closeMenu();
+			else if (launcher.grouping) {
+				launcher.grouping = false;
+				launcher.search();
+			} else if (launcher.group !== "")
+				launcher.pickGroup("");
 			else
 				event.accepted = false;
+		}
+
+		// The groups apps go by, in the list's place: the one that's on says so here.
+		Button {
+			id: folders
+
+			anchors.right: parent.right
+			anchors.rightMargin: Theme.u(4)
+			anchors.verticalCenter: parent.verticalCenter
+			height: parent.height - Theme.u(8)
+			visible: !launcher.picking && Apps.groups.length > 0
+			flat: !launcher.grouped && !launcher.grouping
+			activeFocusOnTab: false
+			icon: "apps"
+			text: launcher.grouped ? launcher.grouped.text : ""
+			longest: Theme.u(120)
+			tip: "Groups · Ctrl+G"
+			onClicked: launcher.toggleGroups()
 		}
 	}
 
@@ -598,8 +686,14 @@ Panel {
 					field.text = `/${row.mode} `;
 					return;
 				}
-				if (row.back || row.pinning || row.hiding || row.docking) {
-					if (row.pinning)
+				if (row.group !== undefined) {
+					launcher.pickGroup(row.group);
+					return;
+				}
+				if (row.back || row.pinning || row.hiding || row.docking || row.folding) {
+					if (row.folding)
+						Apps.fold(launcher.menuOf.id, row.folder, row.fold);
+					else if (row.pinning)
 						Apps.pin(launcher.menuOf.id, row.pin);
 					else if (row.docking)
 						Apps.dock(launcher.menuOf.id, row.dock);

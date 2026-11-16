@@ -149,6 +149,24 @@ Scope {
 		}
 	}
 
+	// A color off the screen, by a click on it: copied as #rrggbb, and said.
+	IpcHandler {
+		target: "color"
+
+		function pick(): void {
+			Env.act("color pick", () => Niri.pickColor());
+		}
+	}
+
+	Connections {
+		target: Niri
+
+		function onColorPicked(color) {
+			Quickshell.execDetached(["wl-copy", "--", color]);
+			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=color-select-symbolic", color, "Copied"]);
+		}
+	}
+
 	// A timer, for as long as "10m", "1h30m", "45s" or "1:30" says, a number alone
 	// being minutes, and the stopwatch.
 	IpcHandler {

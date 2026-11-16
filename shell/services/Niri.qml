@@ -193,6 +193,30 @@ window-rule {
 		act({ Quit: { skip_confirmation: true } });
 	}
 
+	// A color off the screen, by a click on it, as niri picks it: colorPicked() says
+	// which, as #rrggbb, or nothing if the click was taken back.
+	signal colorPicked(string color)
+
+	function pickColor() {
+		picker.running = true;
+	}
+
+	Process {
+		id: picker
+
+		command: ["niri", "msg", "--json", "pick-color"]
+		stdout: StdioCollector {
+			onStreamFinished: {
+				let parts = null;
+				try {
+					parts = JSON.parse(text)?.rgb ?? null;
+				} catch (error) {}
+				if (Array.isArray(parts) && parts.length === 3)
+					niri.colorPicked("#" + parts.map(part => Math.round(Math.max(0, Math.min(1, part)) * 255).toString(16).padStart(2, "0")).join(""));
+			}
+		}
+	}
+
 	function handle(event) {
 		if (event.KeyboardLayoutsChanged) {
 			layouts = event.KeyboardLayoutsChanged.keyboard_layouts.names;

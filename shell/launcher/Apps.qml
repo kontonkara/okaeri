@@ -96,11 +96,14 @@ Singleton {
 	// under the app with the same fit: that one is what's more often meant. Only
 	// what starts a word counts for them, or most queries would bring up every
 	// app's New Window.
-	function search(query) {
+	// With `fits`, only the apps it says yes to: those of a group.
+	function search(query, fits) {
 		const wanted = query.trim().toLowerCase();
 		const { pinned, hidden, usage, actions } = Settings.launcher;
 		const found = [];
 		for (const app of known) {
+			if (fits && !fits(app.entry))
+				continue;
 			const points = hidden.includes(app.entry.id) ? 0 : wanted ? score(wanted, app) : 1;
 			if (points) {
 				const times = usage ? launches[app.entry.id] || 0 : 0;
@@ -134,6 +137,50 @@ Singleton {
 	// The app with this id, if it's still there.
 	function find(id) {
 		return known.find(app => app.entry.id === id)?.entry ?? null;
+	}
+
+	// The groups apps go by. The kinds are what desktop files say of themselves,
+	// shown with Settings.launcher.categories where any app is of one; before them,
+	// the folders of one's own, Settings.launcher.folders, each { name, apps } with
+	// the apps by their ids. Each is { key, text, own, has(entry) }.
+	readonly property var kinds: [
+		{ key: "games", text: "Games", categories: ["Game"] },
+		{ key: "code", text: "Programming", categories: ["Development"] },
+		{ key: "design", text: "Design", categories: ["Graphics"] },
+		{ key: "media", text: "Sound and video", categories: ["AudioVideo", "Audio", "Video"] },
+		{ key: "office", text: "Office", categories: ["Office", "Education", "Science"] },
+		{ key: "net", text: "Internet", categories: ["Network"] },
+		{ key: "tools", text: "Tools", categories: ["Utility", "System", "Settings"] }
+	]
+	readonly property var folders: Array.isArray(Settings.launcher.folders) ? Settings.launcher.folders.filter(folder => folder && typeof folder.name === "string" && folder.name !== "") : []
+	readonly property var groups: {
+		const hidden = Settings.launcher.hidden;
+		const shown = known.filter(app => !hidden.includes(app.entry.id)).map(app => app.entry);
+		const own = folders.map(folder => {
+			const ids = Array.isArray(folder.apps) ? folder.apps : [];
+			return { key: `folder:${folder.name}`, text: folder.name, own: true, has: entry => ids.includes(entry.id) };
+		});
+		const byKind = !Settings.launcher.categories ? [] : kinds.map(kind => ({ key: kind.key, text: kind.text, own: false, has: entry => kind.categories.some(category => Array.from(entry.categories ?? []).includes(category)) }));
+		return own.concat(byKind).map(group => Object.assign({ count: shown.filter(group.has).length }, group)).filter(group => group.own || group.count > 0);
+	}
+
+	function addFolder(name) {
+		if (name && !folders.some(folder => folder.name === name))
+			Settings.set("launcher", "folders", folders.concat([{ name, apps: [] }]));
+	}
+
+	function dropFolder(name) {
+		Settings.set("launcher", "folders", folders.filter(folder => folder.name !== name));
+	}
+
+	// App `id` into the folder `name`, or out of it.
+	function fold(id, name, wanted) {
+		Settings.set("launcher", "folders", folders.map(folder => {
+			if (folder.name !== name)
+				return folder;
+			const others = (Array.isArray(folder.apps) ? folder.apps : []).filter(other => other !== id);
+			return { name, apps: wanted ? others.concat([id]) : others };
+		}));
 	}
 
 	function pin(id, wanted) {

@@ -37,7 +37,10 @@
 		"hidden": [],
 		"usage": true,
 		"sums": true,
-		"files": ""
+		"files": "",
+		"search": "https://duckduckgo.com/?q=%s",
+		"categories": true,
+		"folders": []
 	},
 	"clipboard": {
 		"images": true,

@@ -123,5 +123,99 @@ Flickable {
 				}
 			}
 		}
+
+		// The groups apps go by in the launcher: the kinds they say they are, and
+		// folders of one's own, which an app goes into from its menu there.
+		Card {
+			width: parent.width
+			title: "Groups"
+
+			Setting {
+				holds: "launcher.categories"
+				words: "category folder sort games programming design"
+				text: "Apps by their kind"
+				subtext: "Games, Programming, Design and the like, by the button in its field or Ctrl+G"
+				checked: Settings.launcher.categories
+				onToggled: wanted => Settings.set("launcher", "categories", wanted)
+			}
+
+			Field {
+				text: "A folder of your own"
+				subtext: "By a name; an app goes into it from its menu in the launcher"
+				words: "group category"
+				placeholder: "Work"
+				fieldWidth: Theme.u(160)
+				value: ""
+				onKept: value => Apps.addFolder(value.trim())
+			}
+
+			Repeater {
+				model: Apps.folders
+
+				Item {
+					required property var modelData
+					readonly property int apps: Array.isArray(modelData.apps) ? modelData.apps.length : 0
+
+					width: parent.width
+					height: Theme.u(40)
+
+					Column {
+						anchors.left: parent.left
+						anchors.right: drop.left
+						anchors.rightMargin: Theme.u(12)
+						anchors.verticalCenter: parent.verticalCenter
+
+						Text {
+							width: parent.width
+							text: parent.parent.modelData.name
+							textFormat: Text.PlainText
+							elide: Text.ElideRight
+							color: Theme.colors.text
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize
+						}
+
+						Text {
+							width: parent.width
+							text: parent.parent.apps === 1 ? "1 app" : `${parent.parent.apps} apps`
+							color: Theme.colors.subtext
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize - Theme.u(2)
+						}
+					}
+
+					Button {
+						id: drop
+
+						anchors.right: parent.right
+						anchors.verticalCenter: parent.verticalCenter
+						height: Theme.u(28)
+						flat: true
+						icon: "trash"
+						tip: "Away with the folder; its apps stay"
+						onClicked: Apps.dropFolder(parent.modelData.name)
+					}
+				}
+			}
+		}
+
+		// Where a ? in front looks things up.
+		Card {
+			width: parent.width
+			title: "The web"
+
+			Field {
+				holds: "launcher.search"
+				words: "web engine google duckduckgo"
+				text: "A ? looks things up at"
+				subtext: "An address with %s for the words; > runs a command"
+				fieldWidth: Theme.u(260)
+				value: Settings.launcher.search
+				onKept: value => {
+					if (value.includes("%s"))
+						Settings.set("launcher", "search", value.trim());
+				}
+			}
+		}
 	}
 }

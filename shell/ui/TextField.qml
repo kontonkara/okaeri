@@ -17,6 +17,8 @@ Rectangle {
 	property bool shifted: false
 	property bool keeps: false
 	property bool wrong: false
+	// Room kept at its end for what's put there, a button say.
+	property real trailing: 0
 	// What was in it as the keys came to it, or as it was last accepted.
 	property string cameWith
 
@@ -61,7 +63,7 @@ Rectangle {
 		anchors.left: leading.right
 		anchors.leftMargin: field.icon !== "" ? Theme.u(8) : 0
 		anchors.right: eye.visible ? eye.left : parent.right
-		anchors.rightMargin: eye.visible ? Theme.u(4) : Theme.u(12)
+		anchors.rightMargin: (eye.visible ? Theme.u(4) : Theme.u(12)) + field.trailing
 		anchors.verticalCenter: parent.verticalCenter
 		activeFocusOnTab: field.enabled
 		clip: true

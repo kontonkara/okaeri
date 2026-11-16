@@ -185,6 +185,27 @@ kill "$first_window" "$second_window"
 wait "$first_window" "$second_window" 2>/dev/null || true
 sleep 0.4
 
+# The groups, by Ctrl+G, in the list's place: a folder of one's own is the first
+# after all the apps, and a search is within it from then on.
+printf '{ "launcher": { "categories": false, "folders": [{ "name": "Mine", "apps": ["kitty"] }] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+open
+wtype -M ctrl -k g -m ctrl
+sleep 0.3
+shot groups
+key Down
+key Return
+sleep 0.3
+type qqzz
+key Return
+nothing_launched
+press BackSpace 4
+type ki
+key Return
+launched kitty
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+
 # Apps stay apps, and a sum that won't end doesn't hold up the next.
 no_sum 2048
 no_sum "99999999!" 1.4
@@ -1019,3 +1040,23 @@ key Return
 wait_log "okaeri: timer: started 90"
 is_closed "a timer"
 
+# A > in front runs the rest as a command, and a ? looks it up on the web: here
+# both are only said, and so is a color to pick off the screen.
+open
+type "> true"
+sleep 0.2
+key Return
+wait_log "okaeri: dry: run a command"
+is_closed "a command"
+open
+type "? cats"
+sleep 0.2
+key Return
+wait_log "okaeri: dry: web search"
+is_closed "something looked up"
+open
+type "/color "
+sleep 0.2
+key Return
+wait_log "okaeri: dry: color pick"
+is_closed "a color to pick"
