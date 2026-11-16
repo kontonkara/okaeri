@@ -25,7 +25,8 @@ Section {
 			airplane: { title: "Airplane mode", icon: "plane" },
 			vpn: { title: "VPN", icon: "shield" },
 			record: { title: "Record", icon: "video" },
-			hotspot: { title: "Hotspot", icon: "hotspot" }
+			hotspot: { title: "Hotspot", icon: "hotspot" },
+			game: { title: "Game mode", icon: "gamepad" }
 		})[tile] ?? { title: tile, icon: own && own.icon in Theme.icons ? own.icon : "play" }
 	// The groups of rows: { title, rows: [{ text, subtext, icon, check, enabled,
 	// does }] }, `does` being what a click on the row does.

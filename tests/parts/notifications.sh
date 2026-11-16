@@ -1668,6 +1668,54 @@ wait_state panel false
 [ "$(ipc notifications unread Mail)" = 0 ] || fail "unread after the panel: $(ipc notifications unread Mail)"
 reset
 
+step "Quiet hours"
+# By the clock, every day, as Do Not Disturb: the history has it, no toast does,
+# and a critical one shows.
+printf '{ "notifications": { "quietFrom": "00:00", "quietUntil": "23:59" } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.6
+send -a Mail "At night" "It waits."
+wait_state history 1
+sleep 0.4
+is toasts 0
+send -a Battery -u critical "Low" "It shows."
+wait_state toasts 1
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.6
+reset
+send -a Mail "By day" "It shows."
+wait_state toasts 1
+reset
+
+step "The mode for games"
+# Toasts wait while it's on, by hand or by gamemode having a game; turned off by
+# hand it stays off, until gamemode has none and then one again.
+gaming() {
+	ipc game state | jq -c .on
+}
+ipc game on
+sleep 0.3
+[ "$(gaming)" = true ] || fail "the mode for games isn't on"
+send -a Mail "While playing" "It waits."
+wait_state history 1
+sleep 0.4
+is toasts 0
+ipc game off
+sleep 0.3
+reset
+ipc game heard 1
+sleep 0.3
+[ "$(gaming)" = true ] || fail "gamemode's game didn't turn it on"
+ipc game off
+sleep 0.3
+[ "$(gaming)" = false ] || fail "it didn't go off by hand under gamemode"
+ipc game heard 0
+ipc game heard 2
+sleep 0.3
+[ "$(gaming)" = true ] || fail "gamemode's next game didn't turn it on"
+ipc game heard 0
+sleep 0.3
+[ "$(gaming)" = false ] || fail "it stayed on after gamemode's games"
+
 step "What a toast says"
 # All of it, or only its title, or only who it's from, for others who may see:
 # without its text a toast is shorter, and the history has it all the same.

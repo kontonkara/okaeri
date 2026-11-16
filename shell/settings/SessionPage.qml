@@ -193,6 +193,45 @@ Flickable {
 			}
 		}
 
+		// The mode for games: what it turns off, and whether gamemode has it on.
+		Card {
+			width: parent.width
+			title: "Game mode"
+
+			Setting {
+				holds: "game.follow"
+				words: "gamemode feral gaming"
+				text: "On while gamemode has a game"
+				subtext: "As gamemoderun starts one; its tile and okaeri game toggle have it on by hand"
+				checked: Settings.game.follow
+				onToggled: wanted => Settings.set("game", "follow", wanted)
+			}
+
+			Setting {
+				holds: "game.plain"
+				text: "Nothing moves or is blurred"
+				subtext: "While it's on"
+				checked: Settings.game.plain
+				onToggled: wanted => Settings.set("game", "plain", wanted)
+			}
+
+			Setting {
+				holds: "game.quiet"
+				text: "Notifications wait"
+				subtext: "As with Do Not Disturb: critical ones still show"
+				checked: Settings.game.quiet
+				onToggled: wanted => Settings.set("game", "quiet", wanted)
+			}
+
+			Setting {
+				holds: "game.awake"
+				text: "The machine stays awake"
+				subtext: "No lock, no screens off, no sleep"
+				checked: Settings.game.awake
+				onToggled: wanted => Settings.set("game", "awake", wanted)
+			}
+		}
+
 		// Over the commands, which can have the apps read them again.
 		Card {
 			width: parent.width

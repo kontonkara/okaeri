@@ -179,6 +179,8 @@ The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that
 are; a screenshot's toast opens its folder, copies it or deletes it.
 A toast under the pointer has that bell too.
+Toasts wait every day between two times too, as with Do Not Disturb on: the
+quiet hours, on the Notifications page.
 
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by
@@ -240,6 +242,11 @@ With nothing done for a while the session locks, the screens go off and the
 machine can sleep, each sooner on battery where the Session page says so, and it
 sleeps suspended, hibernated, or suspended and later hibernated as logind is set
 for that.
+
+A mode for games has nothing move or blur, toasts wait and the machine stay
+awake, each as the Session page says: by its tile in the control center, which
+is among those left out at first, by `okaeri game toggle`, and by itself while
+gamemode has a game, as `gamemoderun` starts one.
 
 ## Working on it
 

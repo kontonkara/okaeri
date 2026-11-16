@@ -24,7 +24,8 @@ Flickable {
 			airplane: "Airplane mode",
 			vpn: "VPN",
 			record: "Screen recording",
-			hotspot: "Hotspot"
+			hotspot: "Hotspot",
+			game: "Game mode"
 		})
 	// The user's own go by the names they have.
 	readonly property var custom: Settings.control.custom

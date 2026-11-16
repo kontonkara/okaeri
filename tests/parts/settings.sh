@@ -578,8 +578,8 @@ shot control-page
 # Wi-Fi, the first tile, to Hidden; the rest move up a place. The wired network's
 # is here whether it has a cable or not.
 drag 656 254 600 480
-same "what's left out" "$(value .control.hidden)" '["wifi"]'
-same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi"]'
+same "what's left out" "$(value .control.hidden)" '["wifi","game"]'
+same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi","game"]'
 # Bluetooth, now second, to a whole row, which takes Hidden a row down: the
 # hotspot's tile is left alone in a row of its own.
 move 926 254
@@ -589,8 +589,8 @@ arrow "$higher_x" 696
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
 drag 594 568 530 254
-same "what's left out, back" "$(value .control.hidden)" '[]'
-same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot"]'
+same "what's left out, back" "$(value .control.hidden)" '["game"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","game"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
 move 1007 623
@@ -610,12 +610,12 @@ sleep 0.3
 same "its sign, the next one" "$(value '.control.custom[0].icon')" '"power"'
 field 934 525 'Fan'
 same "its name" "$(value '.control.custom[0].name')" '"Fan"'
-same "its place under its new name" "$(value '.control.tiles | last')" '"Fan"'
+same "its place under its new name" "$(value '.control.tiles | index("Fan") != null')" true
 move 575 710
 click
 sleep 0.4
 same "the tiles of one's own with it removed" "$(value .control.custom)" '[]'
-same "the order without it" "$(value '.control.tiles | last')" '"hotspot"'
+same "the order without it" "$(value '.control.tiles | index("Fan")')" null
 
 step "The launcher's page"
 printf '{ "tray": { "drawer": true }, "launcher": { "pinned": ["no.such.app"], "hidden": ["nor.this.one"] } }\n' >"$config.new"

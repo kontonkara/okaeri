@@ -236,7 +236,9 @@ Singleton {
 	readonly property string font: values.font || Qt.application.font.family
 	readonly property real fontSize: u(values.fontSize)
 	readonly property int fontWeight: values.fontWeight
-	readonly property bool animate: !!values.animations
+	// Nothing moves and nothing is blurred while this is on: the mode for games.
+	property bool still: false
+	readonly property bool animate: !!values.animations && !still
 	// How fast what moves does: "quick", "normal" or "slow", and how a panel comes:
 	// "grow" out of where it belongs, "fade" in place, or "slide" in from the bar;
 	// and how a notification does: "slide" in from its side, "fade" or "grow".
@@ -251,12 +253,12 @@ Singleton {
 	// Panels let what's under them through, blurred, where the compositor has that,
 	// and so do toasts. In niri that's the wallpaper, and with realBlur the windows
 	// too, which takes a rule of Niri.rules.
-	readonly property bool blur: !!values.blur
-	readonly property bool toastBlur: !!values.toastBlur
+	readonly property bool blur: !!values.blur && !still
+	readonly property bool toastBlur: !!values.toastBlur && !still
 	readonly property bool realBlur: !!values.realBlur
 	// The bar has only the wallpaper under it, so what niri does by itself is all it
 	// takes, and that's blurred once and not with each frame.
-	readonly property bool barBlur: !!values.barBlur
+	readonly property bool barBlur: !!values.barBlur && !still
 	// How much of a surface that lets things through is its own color.
 	readonly property real opacity: values.opacity / 100
 	readonly property real barHeight: u(values.barHeight)

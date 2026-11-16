@@ -25,9 +25,9 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot"],
+		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "game"],
 		"wide": [],
-		"hidden": [],
+		"hidden": ["game"],
 		"custom": [],
 		"size": "large"
 	},
@@ -101,6 +101,8 @@
 		"bellAlways": true,
 		"bellCount": true,
 		"quietSharing": false,
+		"quietFrom": "",
+		"quietUntil": "",
 		"keep": true,
 		"history": 100,
 		"maxAge": 0,
@@ -205,6 +207,12 @@
 		"scroll": true,
 		"menu": true,
 		"ignored": []
+	},
+	"game": {
+		"follow": true,
+		"plain": true,
+		"quiet": true,
+		"awake": true
 	},
 	"bar": {
 		"left": ["workspaces", "media"],

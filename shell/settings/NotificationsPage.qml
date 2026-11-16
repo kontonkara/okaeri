@@ -270,6 +270,39 @@ Flickable {
 			}
 		}
 
+		// The hours of every day toasts wait, as with Do Not Disturb on.
+		Card {
+			width: parent.width
+			title: "Quiet hours"
+
+			Field {
+				holds: "notifications.quietFrom"
+				words: "do not disturb schedule night hours"
+				text: "Quiet every day from"
+				subtext: "As 23:00, with the time below; empty for never"
+				placeholder: "23:00"
+				fieldWidth: Theme.u(100)
+				value: Settings.notifications.quietFrom
+				onKept: value => {
+					if (value === "" || NotificationStore.minutesOf(value) >= 0)
+						page.set("quietFrom", value);
+				}
+			}
+
+			Field {
+				holds: "notifications.quietUntil"
+				text: "Until"
+				subtext: "Critical ones still show"
+				placeholder: "07:00"
+				fieldWidth: Theme.u(100)
+				value: Settings.notifications.quietUntil
+				onKept: value => {
+					if (value === "" || NotificationStore.minutesOf(value) >= 0)
+						page.set("quietUntil", value);
+				}
+			}
+		}
+
 		// The apps kept quiet by the bell beside their names in the history, for how
 		// long still, each to be let speak again.
 		Card {

@@ -81,6 +81,32 @@ Singleton {
 	property var repeats: ({})
 	// The screen's going out to someone.
 	readonly property bool sharing: Settings.notifications.quietSharing && Niri.casts.length > 0
+	// The hours of each day toasts wait, as Do Not Disturb has them: from
+	// Settings.notifications.quietFrom to quietUntil, "23:00" to "07:00" say, over
+	// midnight too. With either not a time there are none.
+	readonly property bool hours: {
+		const from = minutesOf(Settings.notifications.quietFrom);
+		const until = minutesOf(Settings.notifications.quietUntil);
+		if (from < 0 || until < 0 || from === until)
+			return false;
+		const at = clock.date.getHours() * 60 + clock.date.getMinutes();
+		return from < until ? at >= from && at < until : at >= from || at < until;
+	}
+	// Toasts wait, by the switch or by the hour: for the bell.
+	readonly property bool hushed: dnd || hours
+	// The mode for games has them wait too.
+	readonly property bool gaming: GameMode.quiet
+
+	onGamingChanged: {
+		if (gaming)
+			takeDown(n => !critical(n));
+	}
+
+	// "07:30" as minutes of the day, -1 for what isn't a time.
+	function minutesOf(text) {
+		const parts = `${text ?? ""}`.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+		return parts ? Number(parts[1]) * 60 + Number(parts[2]) : -1;
+	}
 	readonly property int unread: panelShown ? 0 : history.filter(n => isUnread(n)).length
 
 	onUpChanged: Qt.callLater(trim)
@@ -105,6 +131,11 @@ Singleton {
 
 	onSharingChanged: {
 		if (sharing)
+			takeDown(n => !critical(n));
+	}
+
+	onHoursChanged: {
+		if (hours)
 			takeDown(n => !critical(n));
 	}
 
@@ -200,7 +231,7 @@ Singleton {
 	// Toasts keep quiet, for now.
 	function quiet(notification) {
 		const own = rule(notification);
-		return !critical(notification) && (panelShown || own.toast === false || !!quietApps[notification.appName] || ((dnd || sharing) && !own.bypass));
+		return !critical(notification) && (panelShown || own.toast === false || !!quietApps[notification.appName] || ((dnd || sharing || hours || GameMode.quiet) && !own.bypass));
 	}
 
 	function receive(notification) {

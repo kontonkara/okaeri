@@ -52,7 +52,7 @@ Scope {
 		// A new timeout counts only from the next enabling.
 		property bool renewing: false
 
-		enabled: after > 0 && !Awake.on && !renewing
+		enabled: after > 0 && !Awake.on && !GameMode.awake && !renewing
 		timeout: Math.max(1, after)
 		onTimeoutChanged: {
 			renewing = true;

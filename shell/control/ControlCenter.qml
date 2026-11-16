@@ -244,7 +244,8 @@ Panel {
 									night: nightTile,
 									awake: awakeTile,
 									power: powerTile,
-									hotspot: hotspotTile
+									hotspot: hotspotTile,
+									game: gameTile
 								})[modelData] ?? customTile
 						}
 					}
@@ -368,6 +369,19 @@ Panel {
 							takesWheel: true
 							onToggled: wanted => NightLight.set(wanted)
 							onScrolled: steps => NightLight.step(-steps)
+						}
+					}
+
+					Component {
+						id: gameTile
+
+						Tile {
+							name: "game"
+							icon: "gamepad"
+							title: "Game mode"
+							summary: !GameMode.on ? "Off" : GameMode.followed ? "On, with gamemode" : "On"
+							checked: GameMode.on
+							onToggled: wanted => GameMode.set(wanted)
 						}
 					}
 
