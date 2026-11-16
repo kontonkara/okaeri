@@ -1077,11 +1077,14 @@ same "one all day again" "$(jq -c .auto "$theme_own")" '"off"'
 move 700 400
 notch 30
 sleep 0.6
-move "$switch_x" 704
-click
+arrow "$higher_x" 704
 sleep 0.3
-same "the accent from the wallpaper" "$(jq -c .wallpaperAccent "$theme_own")" true
-click
+same "the accent from the wallpaper" "$(jq -c '[.wallpaperAccent, .wallpaperPalette]' "$theme_own")" '[true,false]'
+arrow "$higher_x" 704
+sleep 0.3
+same "all the colors from the wallpaper" "$(jq -c '[.wallpaperAccent, .wallpaperPalette]' "$theme_own")" '[true,true]'
+ipc settings reset theme.wallpaperAccent >/dev/null
+ipc settings reset theme.wallpaperPalette >/dev/null
 sleep 0.3
 # An accent of its own, by a swatch, by what's typed, and the palette's again.
 move 987 607
@@ -1199,6 +1202,19 @@ same "the file's accent on its palette" "$(ipc theme state | jq -r .accent)" "#1
 ipc theme palette dark
 sleep 0.3
 same "the palette's accent on another" "$(ipc theme state | jq -r .accent)" "#ffffff"
+# A look kept by a name is on again by a call, with all that was set then.
+ipc theme accent "#aa5500"
+ipc theme keep amber
+ipc theme accent ""
+sleep 0.3
+same "the looks kept" "$(ipc theme looks)" amber
+ipc theme look amber
+sleep 0.3
+same "a look, on again" "$(jq -c .accent "$theme_own")" '"#aa5500"'
+ipc theme look nope
+wait_log 'okaeri: no look "nope"'
+ipc theme accent ""
+sleep 0.3
 if [ -n "$kept_theme" ]; then printf '%s' "$kept_theme" >"$user_theme"; else rm "$user_theme"; fi
 sleep 0.5
 

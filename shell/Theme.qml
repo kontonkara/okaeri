@@ -9,7 +9,7 @@ import Quickshell.Io
 // over those what the settings window changed, in a file of the shell's own.
 // The colors are a palette's, the one the user's file `extends`, with its own
 // `colors` over that key by key, or the one chosen in the settings window, or
-// the hour's; and the accent can be the wallpaper's.
+// the hour's; and the accent can be the wallpaper's, or all of them.
 Singleton {
 	id: theme
 
@@ -75,6 +75,45 @@ Singleton {
 			theme.own = {};
 			theme.ownRead = true;
 		}
+	}
+
+	FileView {
+		id: looksFile
+
+		path: `${Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"}/okaeri/looks.json`
+		blockLoading: true
+		printErrors: false
+		onLoaded: theme.looks = theme.parse(text(), path)
+		onLoadFailed: theme.looks = {}
+	}
+
+	// Looks kept by a name: all the settings window set of this, as it was then, to
+	// have again at once. keepLook() keeps the one that's on, useLook() has one on,
+	// dropLook() forgets one.
+	property var looks: ({})
+
+	function writeLooks(next) {
+		looks = next;
+		looksFile.setText(JSON.stringify(next, null, "\t") + "\n");
+	}
+
+	function keepLook(name) {
+		if (name)
+			writeLooks(Object.assign({}, looks, { [name]: Object.assign({}, own) }));
+	}
+
+	function useLook(name) {
+		if (!(name in looks))
+			return false;
+		own = Object.assign({}, looks[name]);
+		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
+		return true;
+	}
+
+	function dropLook(name) {
+		const next = Object.assign({}, looks);
+		delete next[name];
+		writeLooks(next);
 	}
 
 	// The palettes there are, by name: dark and light, those of
@@ -180,8 +219,19 @@ Singleton {
 		}
 		return best ? Qt.hsla(best.hslHue, Math.min(best.hslSaturation, 0.7), light ? 0.38 : 0.74, 1) : null;
 	}
+	// With `wallpaperPalette`, all of the colors are the wallpaper's: the hue of its
+	// most vivid one, faint in what fills and what's written, dark or light as the
+	// palette that's on is, and the errors' color stays that palette's.
+	readonly property var drawn: {
+		if (!plain.wallpaperPalette || !vivid)
+			return null;
+		const strength = Math.min(vivid.hslSaturation, 0.6);
+		const tone = (share, lightness) => Qt.hsla(vivid.hslHue, strength * share, lightness, 1);
+		return light ? { background: tone(0.5, 0.95), surface: tone(0.5, 0.89), text: tone(0.5, 0.13), subtext: tone(0.35, 0.36), dim: tone(0.3, 0.5), accent: vivid }
+			: { background: tone(0.45, 0.07), surface: tone(0.45, 0.14), text: tone(0.3, 0.93), subtext: tone(0.25, 0.68), dim: tone(0.2, 0.55), accent: vivid };
+	}
 	readonly property var values: Object.assign({}, plain, {
-		colors: Object.assign({}, palette, accent ? { accent } : {}, plain.wallpaperAccent && vivid ? { accent: vivid } : {})
+		colors: Object.assign({}, palette, accent ? { accent } : {}, plain.wallpaperAccent && vivid ? { accent: vivid } : {}, drawn ?? {})
 	})
 
 	// The colors of the palette `name`, as they'd be on: "" for what the files say.
@@ -227,7 +277,7 @@ Singleton {
 	ColorQuantizer {
 		id: quantizer
 
-		source: theme.plain.wallpaperAccent ? Settings.url(theme.picture) : ""
+		source: theme.plain.wallpaperAccent || theme.plain.wallpaperPalette ? Settings.url(theme.picture) : ""
 		depth: 3
 		rescaleSize: 64
 	}
@@ -345,6 +395,21 @@ Singleton {
 				return;
 			}
 			theme.set("accent", color.toLowerCase() || undefined);
+		}
+
+		// A look kept by a name in the settings window, on again: `okaeri theme look
+		// evening`. keep has the one that's on kept by that name.
+		function look(name: string): void {
+			if (!theme.useLook(name))
+				console.info(`okaeri: no look "${name}", it's one of ${Object.keys(theme.looks).join(", ") || "none kept yet"}`);
+		}
+
+		function keep(name: string): void {
+			theme.keepLook(name.trim());
+		}
+
+		function looks(): string {
+			return Object.keys(theme.looks).join("\n");
 		}
 
 		function state(): string {

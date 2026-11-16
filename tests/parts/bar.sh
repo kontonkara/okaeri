@@ -2174,6 +2174,13 @@ settings "{ \"wallpaper\": { \"path\": \"$work/gray.png\" } }"
 sleep 0.5
 shot accent-gray
 same "the accent from a gray wallpaper" "$(reddish accent-gray)" 0
+# All of the colors from it: the bar itself is of the red picture's red, dark, and
+# no longer black.
+settings "{ \"wallpaper\": { \"path\": \"$work/red.png\" } }"
+theme '{ "wallpaperPalette": true }'
+sleep 0.5
+shot palette-red
+same "the bar's fill from a red wallpaper" "$(magick "$out/palette-red.png" -format '%[fx:u.p{560,20}.r - u.p{560,20}.b > 0.02]' info:)" 1
 theme '{}'
 settings '{}'
 

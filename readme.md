@@ -185,9 +185,11 @@ quiet hours, on the Notifications page.
 Its colors are a palette's: `extends` in `theme.json` names one of
 `shell/themes`, your own `colors` go over it, and `palettes` there adds more by
 name. The settings window picks one too, or two, for the day and for the night,
-showing each by its colors, and can take the accent from the wallpaper or have
+showing each by its colors, and can take the accent from the wallpaper, or all
+of its colors, or have
 one of your own over any palette's, `accent` in `theme.json` as `#rrggbb`, or
-`okaeri theme accent '#3366cc'` for a script. `okaeri wallpaper next` puts up
+`okaeri theme accent '#3366cc'` for a script. The Look page keeps a look by a name,
+all that it set, and `okaeri theme look evening` has that one on again. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri wallpaper set <file>` that
 one, and a right click on one in the settings makes it one screen's own or the
 light colors'. `okaeri record toggle`

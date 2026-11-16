@@ -242,6 +242,70 @@ Flickable {
 			}
 		}
 
+		// Looks kept by a name: all this page set, to have again by a click, or by
+		// `okaeri theme look <name>`.
+		Card {
+			width: parent.width
+			title: "Looks kept"
+
+			Field {
+				text: "Keep this look as"
+				subtext: "All that's set on this page, by a name"
+				words: "preset profile theme save"
+				placeholder: "evening"
+				fieldWidth: Theme.u(160)
+				value: ""
+				onKept: value => Theme.keepLook(value.trim())
+			}
+
+			Repeater {
+				model: Object.keys(Theme.looks).sort()
+
+				Item {
+					required property string modelData
+
+					width: parent.width
+					height: Theme.u(34)
+
+					Text {
+						anchors.left: parent.left
+						anchors.right: use.left
+						anchors.rightMargin: Theme.u(12)
+						anchors.verticalCenter: parent.verticalCenter
+						text: parent.modelData
+						textFormat: Text.PlainText
+						elide: Text.ElideRight
+						color: Theme.colors.text
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize
+					}
+
+					Button {
+						id: use
+
+						anchors.right: drop.left
+						anchors.rightMargin: Theme.u(6)
+						anchors.verticalCenter: parent.verticalCenter
+						height: Theme.u(28)
+						text: "Use"
+						onClicked: Theme.useLook(parent.modelData)
+					}
+
+					Button {
+						id: drop
+
+						anchors.right: parent.right
+						anchors.verticalCenter: parent.verticalCenter
+						height: Theme.u(28)
+						flat: true
+						icon: "trash"
+						tip: "Forget it"
+						onClicked: Theme.dropLook(parent.modelData)
+					}
+				}
+			}
+		}
+
 		Card {
 			id: colors
 
@@ -429,12 +493,23 @@ Flickable {
 				}
 			}
 
-			Setting {
+			// Two keys in one line: the accent alone, or with it all the rest.
+			Pick {
 				holds: "theme.wallpaperAccent"
-				text: "The accent from the wallpaper"
-				subtext: "Its most vivid color, where it has one to speak of"
-				checked: !!Theme.values.wallpaperAccent
-				onToggled: wanted => Theme.set("wallpaperAccent", wanted)
+				words: "material you matugen pywal generate scheme"
+				text: "From the wallpaper"
+				subtext: "By its most vivid color, where it has one to speak of"
+				valueWidth: Theme.u(150)
+				options: [
+					{ value: "none", text: "Nothing" },
+					{ value: "accent", text: "The accent" },
+					{ value: "all", text: "All the colors" }
+				]
+				value: Theme.values.wallpaperPalette ? "all" : Theme.values.wallpaperAccent ? "accent" : "none"
+				onChosen: value => {
+					Theme.set("wallpaperAccent", value !== "none");
+					Theme.set("wallpaperPalette", value === "all");
+				}
 			}
 		}
 	}
