@@ -13,6 +13,9 @@
 #                         --only-match has only a line be the answer, never
 #                         what's typed; --select starts on LINE
 #   okaeri commands       lists what can be called, each target with its calls
+#   okaeri doctor         says what of what it needs is on this machine, and what
+#                         each missing thing is for; it ends in 1 if it can't
+#                         run at all
 set -eu
 
 shell=${OKAERI_SHELL_DIR:-$(dirname "$(readlink -f "$0")")/../shell}
@@ -67,6 +70,59 @@ fi
 # All there is to call, as the running shell has it.
 if [ "${1:-}" = commands ]; then
 	exec quickshell ipc -p "$shell" show
+fi
+
+# What it needs, and whether that's here: the two it can't do without first, then
+# each tool with what's without it.
+if [ "${1:-}" = doctor ]; then
+	failed=0
+	has() {
+		command -v "$1" >/dev/null 2>&1
+	}
+	if has quickshell; then
+		echo "ok       quickshell: $(quickshell --version 2>/dev/null | head -n 1)"
+	else
+		echo "MISSING  quickshell: okaeri is made of it, 0.3 or newer"
+		failed=1
+	fi
+	if has niri; then
+		echo "ok       niri: $(niri --version 2>/dev/null | head -n 1)"
+	else
+		echo "MISSING  niri: the compositor it's for, 26.04 or newer"
+		failed=1
+	fi
+	while IFS='|' read -r tool what; do
+		if has "$tool"; then
+			echo "ok       $tool"
+		else
+			echo "missing  $tool: $what"
+		fi
+	done <<LIST
+cliphist|the clipboard's history
+wl-copy|the clipboard, from wl-clipboard
+wl-paste|the clipboard's history, from wl-clipboard
+wtype|pasting, and typing emoji
+qalc|sums in the launcher
+notify-send|its own notices: a recording saved, the battery low, a timer up
+pw-play|sounds
+wlsunset|the night light
+wf-recorder|recording the screen
+slurp|recording a part of the screen
+ddcutil|the brightness of external monitors
+nmcli|VPNs, the hotspot, the wired network, sharing Wi-Fi
+qrencode|the code a phone joins Wi-Fi by
+busctl|the battery's history, failed units, gamemode
+top|the busiest processes on the load's card
+xdg-open|opening files, folders and links
+LIST
+	if [ -n "${NIRI_SOCKET:-}" ] && has quickshell; then
+		if quickshell ipc -p "$shell" show >/dev/null 2>&1; then
+			echo "ok       it's running"
+		else
+			echo "note     it isn't running in this session"
+		fi
+	fi
+	exit "$failed"
 fi
 
 [ "$#" -eq 0 ] || exec quickshell ipc -p "$shell" call -- "$@"

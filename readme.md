@@ -73,6 +73,8 @@ binds {
 }
 ```
 
+`okaeri doctor` says what of what it needs is here, and what each thing missing
+is for.
 `okaeri commands` lists all that binds and scripts can call, as the running shell
 has it: `okaeri launcher open "/emoji "` opens the launcher at the emoji, and
 `okaeri dock toggle` shows the dock or puts it away, `okaeri dock pin firefox`

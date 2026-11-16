@@ -146,4 +146,14 @@ grep -qxF 'Later, with: sudo dnf install niri cliphist qalculate wl-clipboard wt
 	fail "not Fedora's packages: $(grep -i 'with:' "$out/fedora.log")"
 PATH=$tools run last "$tools/sh" "$repo/install.sh" uninstall
 
+step "What a doctor says"
+# With that PATH: Quickshell is here, niri isn't, so it can't run and says so by
+# how it ends; each tool that's missing has what it's for.
+if PATH=$tools "$tools/sh" "$repo/bin/okaeri" doctor >"$out/doctor.log" 2>&1; then
+	fail "the doctor says all is well without niri"
+fi
+grep -q '^ok       quickshell' "$out/doctor.log" || fail "the doctor doesn't see Quickshell: $(head -n 2 "$out/doctor.log")"
+grep -qx 'MISSING  niri: the compositor it'"'"'s for, 26.04 or newer' "$out/doctor.log" || fail "the doctor doesn't miss niri"
+grep -qx 'missing  cliphist: the clipboard'"'"'s history' "$out/doctor.log" || fail "the doctor doesn't miss cliphist"
+
 echo "install: all good" >&2
