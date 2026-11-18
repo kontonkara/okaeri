@@ -1,30 +1,46 @@
 #!/bin/sh
 # Every test, one after another: each part with the bar, the whole shell, and
-# those two with OKAERI_GUEST=1, the whole shell as ./try has it, and install.sh. It goes on
-# past a failure, and says which at the end. Each one's output is in
-# <out>/<name>.log, and what it left in <out>/<name>. In the repo:
+# those two with OKAERI_GUEST=1, the whole shell as ./try has it, and install.sh.
+# It goes on past a failure, and says which at the end, with how long each took.
+# Each one's output is in <out>/<name>.log, and what it left in <out>/<name>. In
+# the repo:
 #
-#   tests/tools.sh tests/all.sh <out>
+#   tests/tools.sh tests/all.sh <out>                  all of them
+#   tests/tools.sh tests/all.sh <out> settings shell   only those, by their names
 set -u
 
-out=${1:?usage: all.sh <out>}
+out=${1:?usage: all.sh <out> [name...]}
+shift
 mkdir -p "$out"
 failed=
+
+# Whether test $1 is one asked for: all of them, with none named.
+wanted() {
+	[ "$#" -eq 1 ] && return 0
+	name=$1
+	shift
+	for other in "$@"; do
+		[ "$other" = "$name" ] && return 0
+	done
+	return 1
+}
 
 # Runs the rest of the line as test $1.
 run() {
 	name=$1
 	shift
+	started=$(date +%s)
 	if "$@" >"$out/$name.log" 2>&1; then
-		echo "passed: $name"
+		echo "passed: $name ($(($(date +%s) - started)) s)"
 	else
-		echo "FAILED: $name"
+		echo "FAILED: $name ($(($(date +%s) - started)) s)"
 		failed="$failed $name"
 	fi
 }
 
 for script in tests/parts/*.sh; do
 	part=$(basename "$script" .sh)
+	wanted "$part" "$@" || continue
 	case $part in
 	bar) root=Scope ;;
 	clipboard) root=ClipboardPanel ;;
@@ -48,10 +64,10 @@ for script in tests/parts/*.sh; do
 	esac
 	run "$part" tests/part.sh "$part" "$root" "$out/$part" "$script"
 done
-run notifications-guest env OKAERI_GUEST=1 tests/part.sh notifications NotificationCenter "$out/notifications-guest" tests/parts/notifications.sh
-run shell tests/part.sh "" "" "$out/shell" tests/shell.sh
-run shell-guest env OKAERI_GUEST=1 OKAERI_GALLERY=1 tests/part.sh "" "" "$out/shell-guest" tests/shell.sh
-run install tests/install.sh "$out/install"
+! wanted notifications-guest "$@" || run notifications-guest env OKAERI_GUEST=1 tests/part.sh notifications NotificationCenter "$out/notifications-guest" tests/parts/notifications.sh
+! wanted shell "$@" || run shell tests/part.sh "" "" "$out/shell" tests/shell.sh
+! wanted shell-guest "$@" || run shell-guest env OKAERI_GUEST=1 OKAERI_GALLERY=1 tests/part.sh "" "" "$out/shell-guest" tests/shell.sh
+! wanted install "$@" || run install tests/install.sh "$out/install"
 
 [ -z "$failed" ] || {
 	echo "failed:$failed"

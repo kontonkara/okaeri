@@ -255,4 +255,5 @@ gamemode has a game, as `gamemoderun` starts one.
 ## Working on it
 
 `./try` opens it in a niri of its own, in a window, next to the desktop you
-have. `tests/all.sh` runs every test, and `tests/part.sh` says how they run.
+have. `tests/all.sh` runs every test, or those it's given the names of, and says how
+long each took; `tests/part.sh` says how they run.
