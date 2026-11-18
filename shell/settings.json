@@ -171,7 +171,8 @@
 		"folder": ""
 	},
 	"display": {
-		"ddc": false
+		"ddc": false,
+		"screens": {}
 	},
 	"nightLight": {
 		"on": false,

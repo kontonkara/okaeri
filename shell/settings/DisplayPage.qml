@@ -4,9 +4,10 @@ import qs
 import qs.services
 import qs.ui
 
-// How the night light warms the screens and when, which is turned on and off in
-// the control center, whether external monitors' brightness is there too, and
-// how the screen is recorded.
+// The screens: how each is driven, scaled, turned and placed. How the night
+// light warms them and when, which is turned on and off in the control center,
+// whether external monitors' brightness is there too, and how the screen is
+// recorded.
 Flickable {
 	id: page
 
@@ -92,6 +93,170 @@ Flickable {
 
 		width: parent.width
 		spacing: Math.round(Theme.u(10))
+
+		// The screens niri has: how each is driven, how large what's on it is, how
+		// it's turned and where it is beside the others. What can leave one dark is
+		// tried out, and goes back by itself unless it's kept.
+		Card {
+			width: parent.width
+			title: "Screens"
+			visible: Object.keys(Niri.outputs).length > 0
+
+			Item {
+				width: parent.width
+				height: Theme.u(40)
+				visible: !!Screens.trial
+
+				Text {
+					anchors.left: parent.left
+					anchors.right: answers.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+					text: `Keep this? It goes back in ${Screens.left} s`
+					color: Theme.colors.text
+					elide: Text.ElideRight
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize
+				}
+
+				Row {
+					id: answers
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					spacing: Theme.u(6)
+
+					Button {
+						objectName: "back"
+						height: Theme.u(30)
+						flat: true
+						text: "Back"
+						onClicked: Screens.dropTrial()
+					}
+
+					Button {
+						objectName: "keep"
+						height: Theme.u(30)
+						filled: true
+						text: "Keep"
+						onClicked: Screens.keepTrial()
+					}
+				}
+			}
+
+			Repeater {
+				model: Object.keys(Niri.outputs).sort()
+
+				Column {
+					id: screen
+
+					required property string modelData
+					readonly property var output: Niri.outputs[modelData] ?? { modes: [], mode: -1, vrr: {}, scale: 1, transform: "Normal" }
+					readonly property bool lit: output.mode >= 0
+					// The others that are on, to be beside.
+					readonly property var others: Object.keys(Niri.outputs).filter(name => name !== modelData && Niri.outputs[name].mode >= 0)
+					readonly property var scales: [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].concat([0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3].includes(output.scale) ? [] : [output.scale]).sort((a, b) => a - b)
+
+					// Where it'd be beside `other`, on `side` of it.
+					function placed(other, side) {
+						const there = Niri.outputs[other];
+						return side === "right" ? { x: there.x + there.width, y: there.y }
+							: side === "left" ? { x: there.x - output.width, y: there.y }
+							: side === "above" ? { x: there.x, y: there.y - output.height }
+							: { x: there.x, y: there.y + there.height };
+					}
+
+					width: parent.width
+
+					Text {
+						width: parent.width
+						topPadding: Theme.u(4)
+						bottomPadding: Theme.u(4)
+						text: [screen.modelData, [screen.output.make, screen.output.model].filter(part => !!part).join(" ")].filter(part => !!part).join(" · ")
+						textFormat: Text.PlainText
+						elide: Text.ElideRight
+						color: Theme.colors.subtext
+						font.family: Theme.font
+						font.pixelSize: Theme.fontSize - Theme.u(2)
+					}
+
+					Pick {
+						text: "Resolution"
+						visible: screen.lit
+						valueWidth: Theme.u(190)
+						options: screen.output.modes.map(mode => ({ value: `${mode.width}x${mode.height}@${mode.rate.toFixed(3)}`, text: `${mode.width}×${mode.height} · ${Math.round(mode.rate)} Hz` }))
+						value: Screens.now(screen.output, "mode")
+						onChosen: value => Screens.tryOut(screen.modelData, "mode", value)
+					}
+
+					Pick {
+						text: "Scale"
+						subtext: "How large what's on it is"
+						visible: screen.lit
+						valueWidth: Theme.u(190)
+						options: screen.scales.map(scale => ({ value: scale, text: `${Math.round(scale * 100)}%` }))
+						value: screen.output.scale
+						onChosen: value => Screens.tryOut(screen.modelData, "scale", value)
+					}
+
+					Pick {
+						text: "Turned"
+						visible: screen.lit
+						valueWidth: Theme.u(190)
+						options: [
+							{ value: "normal", text: "Not turned" },
+							{ value: "90", text: "A quarter left" },
+							{ value: "180", text: "Upside down" },
+							{ value: "270", text: "A quarter right" }
+						]
+						value: Screens.now(screen.output, "transform")
+						onChosen: value => Screens.tryOut(screen.modelData, "transform", value)
+					}
+
+					Setting {
+						text: "Adaptive sync"
+						subtext: "Its refresh keeps pace with what's drawn"
+						visible: screen.lit && !!screen.output.vrr.supported
+						checked: !!screen.output.vrr.on
+						onToggled: wanted => Screens.set(screen.modelData, "vrr", wanted)
+					}
+
+					Pick {
+						text: "Where it is"
+						visible: screen.lit && screen.others.length > 0
+						valueWidth: Theme.u(190)
+						options: [{ value: "", text: "Where it was put" }].concat(...screen.others.map(other => [
+								{ value: `left:${other}`, text: `Left of ${other}` },
+								{ value: `right:${other}`, text: `Right of ${other}` },
+								{ value: `above:${other}`, text: `Above ${other}` },
+								{ value: `below:${other}`, text: `Below ${other}` }
+							]))
+						value: {
+							for (const other of screen.others) {
+								for (const side of ["left", "right", "above", "below"]) {
+									const at = screen.placed(other, side);
+									if (at.x === screen.output.x && at.y === screen.output.y)
+										return `${side}:${other}`;
+								}
+							}
+							return "";
+						}
+						onChosen: value => {
+							if (value)
+								Screens.set(screen.modelData, "position", screen.placed(value.split(":")[1], value.split(":")[0]));
+						}
+					}
+
+					Setting {
+						text: "On"
+						subtext: screen.lit ? "With the others on" : "Off for now"
+						visible: screen.others.length > 0 || !screen.lit
+						checked: screen.lit
+						onToggled: wanted => Screens.tryOut(screen.modelData, "on", wanted)
+					}
+				}
+			}
+		}
 
 		Card {
 			width: parent.width

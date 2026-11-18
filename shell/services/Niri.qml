@@ -117,7 +117,10 @@ window-rule {
 	}
 
 	onRulesChanged: writeRules()
-	Component.onCompleted: writeRules()
+	Component.onCompleted: {
+		writeRules();
+		lookOutputs();
+	}
 
 	// Not before the theme is read, and only what's new: each write has niri read its
 	// whole config again. ./try has a niri of its own, and this is the real one's.
@@ -273,6 +276,95 @@ window-rule {
 				is_active: w.output === output ? w.id === id : w.is_active,
 				is_focused: focused ? w.id === id : w.is_focused
 			}));
+		}
+	}
+
+	// The screens niri has, by name, on or off: { name, make, model, serial, modes:
+	// [{ width, height, rate, preferred }], mode, the index of the one in use, -1
+	// off, vrr: { supported, on }, x, y, width, height, scale, transform }, as
+	// `niri msg outputs` has them. Read at the start, as screens come and go, and
+	// after a change.
+	property var outputs: ({})
+
+	function lookOutputs() {
+		outputLook.running = true;
+	}
+
+	function readOutputs(text) {
+		let all = null;
+		try {
+			all = JSON.parse(text);
+		} catch (error) {
+			return;
+		}
+		const found = {};
+		for (const name of Object.keys(all)) {
+			const one = all[name];
+			found[name] = {
+				name,
+				make: one.make ?? "",
+				model: one.model ?? "",
+				serial: one.serial ?? "",
+				modes: (one.modes ?? []).map(mode => ({ width: mode.width, height: mode.height, rate: mode.refresh_rate / 1000, preferred: !!mode.is_preferred })),
+				mode: one.current_mode ?? -1,
+				vrr: { supported: !!one.vrr_supported, on: !!one.vrr_enabled },
+				x: one.logical?.x ?? 0,
+				y: one.logical?.y ?? 0,
+				width: one.logical?.width ?? 0,
+				height: one.logical?.height ?? 0,
+				scale: one.logical?.scale ?? 1,
+				transform: one.logical?.transform ?? "Normal"
+			};
+		}
+		outputs = found;
+	}
+
+	// Screen `name` set as `words` say, as `niri msg output` takes them: ["scale",
+	// "1.25"], ["mode", "2560x1440@165.000"], ["vrr", "on"], ["off"], ["position",
+	// "set", "0", "0"], ["transform", "90"]. One at a time, in order; until niri
+	// reads its config again.
+	property var outputWork: []
+
+	function setOutput(name, words) {
+		Env.act(`output ${name} ${words.join(" ")}`, () => {
+			outputWork = outputWork.concat([["niri", "msg", "output", name].concat(words)]);
+			nextOutput();
+		});
+	}
+
+	function nextOutput() {
+		if (outputSet.running || outputWork.length === 0)
+			return;
+		outputSet.command = outputWork[0];
+		outputWork = outputWork.slice(1);
+		outputSet.running = true;
+	}
+
+	Process {
+		id: outputLook
+
+		command: ["niri", "msg", "--json", "outputs"]
+		stdout: StdioCollector {
+			onStreamFinished: niri.readOutputs(text)
+		}
+	}
+
+	Process {
+		id: outputSet
+
+		onExited: {
+			if (niri.outputWork.length > 0)
+				niri.nextOutput();
+			else
+				niri.lookOutputs();
+		}
+	}
+
+	Connections {
+		target: Quickshell
+
+		function onScreensChanged() {
+			niri.lookOutputs();
 		}
 	}
 

@@ -182,6 +182,11 @@ tile and a page in the control center: a click on one opens it, mounting it
 first, by udisksctl. With its tile chosen on the Control page it can be mounted at
 once instead, and `okaeri drives list` says what there is.
 
+The Display page has each screen's resolution, scale, turn, adaptive sync and
+place beside the others, and turns one off. niri has that at once, and okaeri has
+it again as it starts and as a screen comes; what can leave a screen dark goes
+back by itself in fifteen seconds unless it's kept.
+
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that
 are; a screenshot's toast opens its folder, copies it or deletes it.

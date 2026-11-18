@@ -814,6 +814,22 @@ same "where the videos go" "$(value .recording.folder)" "\"$HOME/clips\""
 step "The display's page"
 page "$display_y"
 shot display-page
+# The screen, larger: tried out, and kept by its button. Larger again, and back
+# by the other, with nothing more kept.
+screen=$(niri msg --json outputs | jq -r 'keys[0]')
+higher Scale
+wait_log "okaeri: dry: output $screen scale 1.25"
+shot screen-trial
+press_on Keep line
+same "the screen kept" "$(value .display.screens)" "{\"$screen\":{\"scale\":1.25}}"
+higher Scale
+press_on Back line
+for _ in $(seq 30); do
+	log | grep -q "dry: output $screen scale 1\$" && break
+	sleep 0.1
+done
+log | grep -q "dry: output $screen scale 1\$" || fail "the screen didn't go back"
+same "the screen, as it was kept" "$(value .display.screens)" "{\"$screen\":{\"scale\":1.25}}"
 flip "Their brightness"
 same "external monitors' brightness" "$(value .display.ddc)" true
 higher When

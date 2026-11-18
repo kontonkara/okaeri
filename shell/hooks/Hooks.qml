@@ -18,6 +18,8 @@ Scope {
 	readonly property bool calendars: Events.on
 	// And the drives, for one that comes to be said.
 	readonly property bool drives: Drives.read
+	// And the screens, to have them as the settings window set them.
+	readonly property var screens: Screens.kept
 
 	readonly property var own: Settings.hooks
 	// Not for how things are as the shell comes up: those aren't changes.
