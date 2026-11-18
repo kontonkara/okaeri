@@ -166,16 +166,16 @@ under() {
 [ "$(under "$bell")" = "$(under "$clipboard")" ] || fail "the bell is another shape under the pointer"
 move 300 600
 
-step "Two panels"
+step "One panel at a time"
+# The launcher in the middle, then the control center at its corner: the first
+# goes, or the two could cover each other. Escape then leaves nothing.
 ipc launcher toggle
 ipc control toggle
-wait_up panel 2 "two panels"
+wait_up panel 1 "the second of two panels"
 settle
 shot two-panels
 key Escape
-wait_up panel 1 "Escape from two panels"
-key Escape
-wait_up panel 0 "Escape from the other one"
+wait_up panel 0 "Escape from the second"
 
 step "Where the buttons are"
 # Whether what's at $2 150 in shot $1 is the desktop, as it is at the middle of
@@ -193,13 +193,13 @@ shot left-control
 desktop left-control 200 && fail "the control center isn't on the left"
 desktop left-control 1200 || fail "the control center is still on the right"
 ipc clipboard toggle
-wait_up panel 2 "the clipboard in the middle, beside the control center"
+wait_up panel 1 "the clipboard in the middle, the control center gone"
 settle
 shot middle-clipboard
 desktop middle-clipboard 700 && fail "the clipboard isn't in the middle"
+desktop middle-clipboard 200 || fail "the control center stays on the left"
 key Escape
-key Escape
-wait_up panel 0 "Escape from the left and the middle"
+wait_up panel 0 "Escape from the middle"
 printf '{}' >"$config"
 sleep 0.5
 

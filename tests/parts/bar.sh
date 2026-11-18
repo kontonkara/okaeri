@@ -2099,15 +2099,15 @@ sleep 0.5
 shot volume-panel
 [ "$(pixel volume-panel 1300 120)" != "$(pixel volume 1300 120)" ] || fail "a click on the volume opens no control center"
 # With that open a click on the clock is the clock's: the month is there at
-# once, beside the control center, which stays where it is.
+# once, and the control center goes, or the two could cover each other.
 move 700 16
 click
 sleep 0.8
-same "the panels after a click on the clock, with one open" "$(up)" 2
+same "the panels after a click on the clock, with one open" "$(up)" 1
 shot month-at-once
 [ "$(pixel month-at-once 700 200)" != "$(pixel volume 700 200)" ] || fail "a click on the clock with a panel open doesn't open the month"
-same "the control center beside it" "$(pixel month-at-once 1300 120)" "$(pixel volume-panel 1300 120)"
-# A click on the bar where nothing is closes them, as one elsewhere does.
+same "the control center gone" "$(pixel month-at-once 1300 120)" "$(pixel volume 1300 120)"
+# A click on the bar where nothing is closes it, as one elsewhere does.
 move 420 16
 click
 wait_up 0

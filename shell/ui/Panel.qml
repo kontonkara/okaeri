@@ -10,11 +10,12 @@ import qs.services
 // at the bar's top, the second by `middle` and the third at its bottom) or
 // "center". With `edge` and `off` it's by something else than the bar. What's
 // put in it goes on a card `panelWidth` wide, as tall as it needs. show(),
-// hide() and toggle(); Escape, a click elsewhere and another panel opening in the
-// same place close it, unless it's `modal`, which is for whoever owns it to
-// close. A click on the bar isn't one elsewhere: it's the bar's, so that another
-// panel is one click away, not two. It takes the keyboard while open: give what
-// should have the keys `focus: true`.
+// hide() and toggle(); Escape, a click elsewhere and another panel opening, here
+// or on another screen, close it, unless it's `modal`, which is for whoever owns
+// it to close: one panel at a time, or two would cover each other. A click on
+// the bar isn't one elsewhere: it's the bar's, so that another panel is one
+// click away, not two. It takes the keyboard while open: give what should have
+// the keys `focus: true`.
 //
 // It's two surfaces: this one, over the whole screen, is only there for a click
 // elsewhere to land on, and the card has a strip of its own, as wide as it and as
@@ -142,7 +143,7 @@ PanelWindow {
 		target: Panels
 
 		function onOpened(other) {
-			if (other !== panel && other.align === panel.align)
+			if (other !== panel)
 				panel.dismiss();
 		}
 
