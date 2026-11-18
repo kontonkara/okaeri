@@ -142,6 +142,30 @@ sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: 
 # The wired network is a plug of the stand's own, and what nmcli would show of it
 # is what a test puts in $work/wired: with nothing there, it has no cable.
 sed -i 's/^\treadonly property var device: .*/\treadonly property var device: ({ name: "eth-test", connected: false, linkSpeed: 0 })/' "$work/shell/control/Wired.qml"
+# The drives plugged in are what a test puts in $work/drives, as busctl would
+# print UDisks2's objects, and udisksctl says something changed as that file
+# does. What's done to them is only said, as all that changes the machine is.
+cat >"$work/drives-busctl" <<SH
+#!/bin/sh
+cat "$work/drives" 2>/dev/null || echo '{"type":"a{oa{sa{sv}}}","data":[{}]}'
+SH
+cat >"$work/udisksctl" <<SH
+#!/bin/sh
+[ "\$1" = monitor ] || exit 0
+echo "Monitoring the udisks daemon."
+last=
+while :; do
+	# Not past the shell, nor the stand.
+	[ -d "$work" ] && kill -0 \$PPID 2>/dev/null || exit 0
+	now=\$(stat -c %Y.%s "$work/drives" 2>/dev/null)
+	[ "\$now" = "\$last" ] || echo changed
+	last=\$now
+	sleep 0.2
+done
+SH
+chmod +x "$work/drives-busctl" "$work/udisksctl"
+sed -i -e "s|^\treadonly property string reader: .*|\treadonly property string reader: \"$work/drives-busctl\"|" \
+	-e "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/udisksctl\"|" "$work/shell/services/Drives.qml"
 # A code for a phone is a blank picture, and what it would say goes to $work/qr.
 cat >"$work/qrencode" <<'SH'
 #!/bin/sh

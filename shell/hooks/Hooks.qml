@@ -16,6 +16,8 @@ Scope {
 
 	// The calendars are read from the start, for what they have coming to be said.
 	readonly property bool calendars: Events.on
+	// And the drives, for one that comes to be said.
+	readonly property bool drives: Drives.read
 
 	readonly property var own: Settings.hooks
 	// Not for how things are as the shell comes up: those aren't changes.

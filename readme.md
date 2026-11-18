@@ -42,9 +42,10 @@ It takes niri 26.04 or newer, Quickshell 0.3 or newer, and `cliphist`, `qalc`,
 night light, `wf-recorder` to record the screen and `slurp` for a part of it,
 `ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours, `nmcli` for
 VPNs, the hotspot and sharing Wi-Fi, `qrencode` for the code a phone joins it by,
-and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a clone of
-this repository, on any distribution: `nix/` is a package and a Home Manager
-module for those who want them. In niri's config:
+`udisksctl` for the drives one plugs in, and the freedesktop sound theme for
+sounds. `bin/okaeri` runs it from a clone of this repository, on any
+distribution: `nix/` is a package and a Home Manager module for those who want
+them. In niri's config:
 
 ```kdl
 spawn-at-startup "/path/to/okaeri/bin/okaeri"
@@ -176,6 +177,10 @@ A network that asks to be signed in to first has a button on the Wi-Fi page that
 opens a page for that.
 A wired network has a tile and a page of its own once a cable is in it: its
 address, its gateway, its name servers and how fast it goes.
+A drive plugged in says so, with a way to open it and one to eject it, and has a
+tile and a page in the control center: a click on one opens it, mounting it
+first, by udisksctl. With its tile chosen on the Control page it can be mounted at
+once instead, and `okaeri drives list` says what there is.
 
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that

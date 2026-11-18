@@ -18,6 +18,7 @@ Section {
 	readonly property var about: ({
 			wifi: { title: "Wi-Fi", icon: "wifi" },
 			wired: { title: "Wired", icon: "ethernet" },
+			drives: { title: "Drives", icon: "drive" },
 			bluetooth: { title: "Bluetooth", icon: "bluetooth" },
 			night: { title: "Night light", icon: "sunset" },
 			awake: { title: "Keep awake", icon: "coffee" },
@@ -93,7 +94,7 @@ Section {
 					title: "Profile",
 					rows: Power.choices.map(choice => pick(choice.text, Power.profile === choice.profile, () => Power.set(choice.profile)))
 				}];
-		const pages = { wifi: "The networks", wired: "What it has", bluetooth: "The devices", vpn: "The connections", hotspot: "How a phone joins it" };
+		const pages = { wifi: "The networks", wired: "What it has", drives: "What's plugged in", bluetooth: "The devices", vpn: "The connections", hotspot: "How a phone joins it" };
 		if (pages[name])
 			return [{
 					title: "",

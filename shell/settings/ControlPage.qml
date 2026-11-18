@@ -17,6 +17,7 @@ Flickable {
 	readonly property var builtIn: ({
 			wifi: "Wi-Fi",
 			wired: "Wired network",
+			drives: "Drives",
 			bluetooth: "Bluetooth",
 			night: "Night light",
 			awake: "Keep awake",
@@ -418,6 +419,33 @@ Flickable {
 						placeholder: "Made up"
 						value: hotspot.password
 						onKept: value => Settings.set("hotspot", "password", value)
+					}
+				}
+			}
+
+			// What's done as a drive is plugged in.
+			Repeater {
+				model: page.chosen === "drives" ? [page.chosen] : []
+
+				Column {
+					width: parent.width
+
+					Setting {
+						holds: "drives.notify"
+						words: "usb flash removable disk mount"
+						text: "Say when one is plugged in"
+						subtext: "With a way to open it and one to eject it"
+						checked: Settings.drives.notify
+						onToggled: wanted => Settings.set("drives", "notify", wanted)
+					}
+
+					Setting {
+						holds: "drives.automount"
+						words: "usb flash removable disk"
+						text: "Mount it at once"
+						subtext: "Without that, a click on it in the control center does"
+						checked: Settings.drives.automount
+						onToggled: wanted => Settings.set("drives", "automount", wanted)
 					}
 				}
 			}

@@ -23,7 +23,7 @@ FloatingWindow {
 		{ text: "Bar", icon: "bar", page: barPage, sections: ["bar", "clock", "weather", "workspaces", "battery.show", "battery.label", "media", "system", "network", "bluetooth", "locks", "profile", "audio.label", "audio.step", "recording.show"] },
 		{ text: "Dock", icon: "apps", page: dockPage, sections: ["dock"] },
 		{ text: "Tray", icon: "tray", page: trayPage, sections: ["tray"] },
-		{ text: "Control center", icon: "sliders", page: controlPage, sections: ["control", "hotspot"] },
+		{ text: "Control center", icon: "sliders", page: controlPage, sections: ["control", "hotspot", "drives"] },
 		{ text: "Launcher", icon: "search", page: launcherPage, sections: ["launcher"] },
 		{ text: "Clipboard", icon: "clipboard", page: clipboardPage, sections: ["clipboard"] },
 		{ text: "Notifications", icon: "bell", page: notificationsPage, sections: ["notifications"] },

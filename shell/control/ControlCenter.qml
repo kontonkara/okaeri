@@ -63,7 +63,7 @@ Panel {
 			controlCenter.toggle();
 		}
 
-		// Open at a page: wifi, wired, bluetooth, vpn, hotspot, sound or mic.
+		// Open at a page: wifi, wired, drives, bluetooth, vpn, hotspot, sound or mic.
 		function page(name: string): void {
 			Control.show(name);
 		}
@@ -105,7 +105,7 @@ Panel {
 				id: column
 
 				// A page in the place of the rest.
-				readonly property bool paging: [wifi, wired, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
+				readonly property bool paging: [wifi, wired, drives, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
@@ -211,7 +211,7 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "wired" ? Wired.plugged : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "wired" ? Wired.plugged : name === "drives" ? Drives.list.length > 0 : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
@@ -237,6 +237,7 @@ Panel {
 							sourceComponent: ({
 									wifi: wifiTile,
 									wired: wiredTile,
+									drives: drivesTile,
 									bluetooth: bluetoothTile,
 									vpn: vpnTile,
 									airplane: airplaneTile,
@@ -286,6 +287,22 @@ Panel {
 							checked: Wired.connected
 							opens: "wired"
 							onToggled: wanted => Wired.setEnabled(wanted)
+						}
+					}
+
+					Component {
+						id: drivesTile
+
+						Tile {
+							name: "drives"
+							wanted: Drives.list.length > 0
+							icon: "drive"
+							title: "Drives"
+							summary: drives.summary
+							checked: Drives.list.some(drive => !!drive.mount)
+							switches: false
+							opens: "drives"
+							onClicked: Control.unfolded = "drives"
 						}
 					}
 
@@ -442,6 +459,12 @@ Panel {
 
 				WiredSection {
 					id: wired
+
+					room: controlCenter.room
+				}
+
+				DrivesSection {
+					id: drives
 
 					room: controlCenter.room
 				}

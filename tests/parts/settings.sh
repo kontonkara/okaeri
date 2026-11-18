@@ -503,22 +503,24 @@ same "no dock" "$(value .dock.on)" false
 step "The control center's page"
 page "$control_y"
 shot control-page
-# Wi-Fi, the first tile, to Hidden; the rest move up a place. The wired network's
-# is here whether it has a cable or not.
-drag 656 254 600 480
+# Wi-Fi, the first tile, to Hidden, under its name; the rest move up a place. The
+# wired network's and the drives' are here whether they have anything or not.
+# shellcheck disable=SC2046
+set -- $(spot Wi-Fi line) $(spot Hidden line)
+drag "$1" "$2" "$3" "$(($4 + 30))"
 same "what's left out" "$(value .control.hidden)" '["wifi","game"]'
-same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","wifi","game"]'
-# Bluetooth, now second, to a whole row, which takes Hidden a row down: the
-# hotspot's tile is left alone in a row of its own.
-move 926 254
-click
-sleep 0.3
+same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","wifi","game"]'
+# Bluetooth to a whole row, by its card; and Wi-Fi back to the front, on the
+# first tile's left half.
+press_on Bluetooth line
 higher "Its width"
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
-drag 594 568 530 254
+# shellcheck disable=SC2046
+set -- $(spot Wi-Fi line) $(spot "Wired network" line)
+drag "$1" "$2" "$(($3 - 120))" "$4"
 same "what's left out, back" "$(value .control.hidden)" '["game"]'
-same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","game"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","game"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
 press_on "Add your own" line

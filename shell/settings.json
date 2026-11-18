@@ -25,7 +25,7 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "game"],
+		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "drives", "game"],
 		"wide": [],
 		"hidden": ["game"],
 		"custom": [],
@@ -207,6 +207,10 @@
 		"scroll": true,
 		"menu": true,
 		"ignored": []
+	},
+	"drives": {
+		"notify": true,
+		"automount": false
 	},
 	"game": {
 		"follow": true,
