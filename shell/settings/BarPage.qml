@@ -632,6 +632,7 @@ Flickable {
 				TextField {
 					id: format
 
+					objectName: "field"
 					anchors.right: parent.right
 					anchors.verticalCenter: parent.verticalCenter
 					implicitWidth: Theme.u(170)

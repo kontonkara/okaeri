@@ -17,6 +17,7 @@ Item {
 	readonly property string name: themed ? holds.slice(6) : holds
 	readonly property bool set: holds !== "" && differs && (themed ? Theme.owns([name]) : Settings.owns([name]))
 
+	objectName: "mark"
 	x: -Theme.u(11)
 	anchors.verticalCenter: parent.verticalCenter
 	width: Theme.u(8)

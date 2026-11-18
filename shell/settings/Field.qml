@@ -53,6 +53,7 @@ Item {
 	TextField {
 		id: input
 
+		objectName: "field"
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 		implicitWidth: field.fieldWidth

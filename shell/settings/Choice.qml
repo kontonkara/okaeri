@@ -124,6 +124,7 @@ Item {
 		Button {
 			id: backward
 
+			objectName: "lower"
 			height: Theme.u(28)
 			flat: true
 			enabled: choice.lower >= 0
@@ -147,6 +148,7 @@ Item {
 		Button {
 			id: forward
 
+			objectName: "higher"
 			height: Theme.u(28)
 			flat: true
 			enabled: choice.higher >= 0

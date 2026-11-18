@@ -60,6 +60,8 @@ FloatingWindow {
 	// bar to choose first for it.
 	property string seeking: ""
 	property string choosing: ""
+	// The page that shows, as made, for spot().
+	property Item shownPage: null
 
 	// Each page made once, out of sight, for what's on it.
 	function index() {
@@ -239,6 +241,63 @@ FloatingWindow {
 		return { section, key, themed: false, value: Object.assign({}, Settings.defaults[section], Settings.user[section], Settings.own[section])[key] ?? null };
 	}
 
+	// For tests, which go by what a line says and not by where it was: the line
+	// that says `text` on the page that shows, the first in sight, brought into
+	// sight there; with none, a button or the like that says it. Where its `part`
+	// is in the window, as "x y": what in it has that objectName, as "switch",
+	// "higher", "lower", "field" or "mark", or with "line" its middle. Nothing for
+	// what isn't there.
+	function spot(text, part) {
+		const found = spotted(shownPage, text, true) ?? spotted(shownPage, text, false);
+		if (!found)
+			return "";
+		if (shownPage.bring)
+			shownPage.bring(found);
+		for (let view = found.parent; view; view = view.parent) {
+			if (view.contentY === undefined || view.contentHeight === undefined)
+				continue;
+			const top = found.mapToItem(view.contentItem, 0, 0).y;
+			if (top < view.contentY || top + found.height > view.contentY + view.height)
+				view.contentY = Math.max(0, Math.min(top - Theme.u(16), view.contentHeight - view.height));
+			break;
+		}
+		// What's beside words that aren't a line, as an app's switches by its name, is
+		// a step or two up from them.
+		let target = part === "line" ? found : named(found, part);
+		for (let above = found.parent, steps = 0; !target && above && steps < 2 && found.subtext === undefined; above = above.parent, steps++)
+			target = named(above, part);
+		if (!target)
+			return "";
+		const at = target.mapToItem(null, target.width / 2, target.height / 2);
+		return `${Math.round(at.x)} ${Math.round(at.y)}`;
+	}
+
+	function spotted(item, text, lines) {
+		if (!item || !item.visible)
+			return null;
+		if (item.text === text && (!lines || item.subtext !== undefined))
+			return item;
+		for (const child of item.children ?? []) {
+			const found = spotted(child, text, lines);
+			if (found)
+				return found;
+		}
+		return null;
+	}
+
+	function named(item, name) {
+		if (!item)
+			return null;
+		if (item.objectName === name)
+			return item;
+		for (const child of item.children ?? []) {
+			const found = named(child, name);
+			if (found)
+				return found;
+		}
+		return null;
+	}
+
 	function copyConfig(kind) {
 		Quickshell.execDetached(["wl-copy", "--", config(kind)]);
 		// For tests: what was copied, and never what's in it.
@@ -373,6 +432,11 @@ FloatingWindow {
 		// The whole config, as JSON or as Nix: `okaeri settings config nix`.
 		function config(kind: string): string {
 			return window.config(kind);
+		}
+
+		// For tests: where a line's part is in the window, as spot() says.
+		function spot(text: string, part: string): string {
+			return window.spot(text, part);
 		}
 
 		// For tests: how much of the veil is there.
@@ -818,6 +882,7 @@ FloatingWindow {
 				transform: Translate {
 					id: slide
 				}
+				onItemChanged: window.shownPage = item
 				onLoaded: {
 					if (Theme.animate)
 						appear.restart();

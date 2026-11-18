@@ -211,6 +211,7 @@ Flickable {
 				Button {
 					id: showing
 
+					objectName: "show"
 					anchors.right: parent.right
 					anchors.verticalCenter: parent.verticalCenter
 					height: Theme.u(30)
@@ -451,6 +452,7 @@ Flickable {
 								Toggle {
 									id: toast
 
+									objectName: "toasts"
 									anchors.horizontalCenter: parent.horizontalCenter
 									checked: line.held.toast !== false
 									onToggled: wanted => page.change(line.modelData, "toast", wanted)
@@ -464,6 +466,7 @@ Flickable {
 								Toggle {
 									id: history
 
+									objectName: "history"
 									anchors.horizontalCenter: parent.horizontalCenter
 									checked: line.held.history !== false
 									onToggled: wanted => page.change(line.modelData, "history", wanted)

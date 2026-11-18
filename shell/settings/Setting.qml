@@ -85,6 +85,7 @@ Item {
 	Toggle {
 		id: toggle
 
+		objectName: "switch"
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 		onToggled: wanted => setting.toggled(wanted)

@@ -14,8 +14,9 @@ same() {
 
 own=$XDG_STATE_HOME/okaeri/settings.json
 config=$XDG_CONFIG_HOME/okaeri/settings.json
-# 1400x900: the search, the pages under it, the drawer's switch, the rows of the
-# lanes and the pictures.
+# 1400x900: the search, the pages under it, the rows of the bar's lanes and the
+# pictures, all at the top of what they're on. The lines of a page go by what
+# they say: see spot().
 menu_x=420
 search_y=216
 bar_y=257
@@ -35,28 +36,19 @@ back_y=722
 # The halves the button under the pages asks with: the page that shows, and all.
 this_x=373
 all_x=460
-switch_x=1034
-drawer_y=233
 left_y=251
 middle_y=374
 right_y=497
 right2_y=533
 off_y=620
 off_gap_y=660
-# The part made here: in the last lane, on a fourth line of its own, and on the left once
-# it's there.
+# The part made here: in the last lane, on a fourth line of its own, and on the
+# left once it's there.
 script_x=555
 script_y=727
 script_on_x=796
 field_y=257
 picture_y=339
-lower_x=948
-higher_x=1040
-lock_y=255
-screens_y=295
-wait_y=485
-sleep_y=379
-logout_y=669
 
 value() {
 	jq -c "$1" "$own"
@@ -76,7 +68,65 @@ pixel() {
 }
 # The right end of the switch at height $2 in shot $1: the knob, on one that's on.
 knob() {
-	magick "$out/$1.png" -format "%[pixel:p{$((switch_x + 9)),$2}]" info:
+	magick "$out/$1.png" -format "%[pixel:p{$((knob_x + 9)),$2}]" info:
+}
+# Where the window's inside is on the screen.
+origin() {
+	niri msg --json windows | jq -r '[.[] | select(.title == "Settings")][0].layout | "\((.tile_pos_in_workspace_view[0] + .window_offset_in_tile[0]) | floor) \((.tile_pos_in_workspace_view[1] + .window_offset_in_tile[1]) | floor)"'
+}
+# Where part $2 of what says $1 on the page is on the screen, as "x y", brought
+# into sight there first: switch, higher, lower, field, mark, line or another
+# thing's objectName. These go by what lines say rather than by where they were,
+# as a line that comes pushes the rest along.
+spot() {
+	where=$(ipc settings spot "$1" "$2")
+	[ -n "$where" ] || fail "nothing that says \"$1\" with a $2 on the page"
+	# shellcheck disable=SC2046,SC2086
+	set -- $where $(origin)
+	echo "$(($1 + $3)) $(($2 + $4))"
+}
+# The pointer on it.
+point() {
+	# shellcheck disable=SC2046
+	move $(spot "$1" "$2")
+}
+# A click on it, and a moment for that.
+press_on() {
+	point "$1" "$2"
+	click
+	sleep 0.3
+}
+# The line's switch.
+flip() {
+	press_on "$1" switch
+}
+# Its arrow forward, $2 times or once, and back.
+higher() {
+	point "$1" higher
+	for _ in $(seq "${2:-1}"); do
+		click
+	done
+	sleep 0.3
+}
+lower() {
+	point "$1" lower
+	for _ in $(seq "${2:-1}"); do
+		click
+	done
+	sleep 0.3
+}
+# Its field, with $2 in it, kept with Enter.
+put() {
+	point "$1" field
+	click
+	wtype -M ctrl a -m ctrl
+	if [ -n "$2" ]; then
+		type "$2"
+	else
+		key BackSpace
+	fi
+	key Return
+	sleep 0.3
 }
 # To the page at height $1.
 page() {
@@ -91,15 +141,6 @@ drag() {
 	move "$3" "$4"
 	let_go
 	sleep 0.2
-}
-# What's typed in the field at $1 $2, kept with Enter.
-field() {
-	move "$1" "$2"
-	click
-	wtype -M ctrl a -m ctrl
-	type "$3"
-	key Return
-	sleep 0.3
 }
 # The folder field, with $1 in it.
 folder() {
@@ -124,13 +165,16 @@ wait_up 1
 sleep 0.4
 [ ! -e "$own" ] || fail "a file before anything changed"
 page "$tray_y"
+# Where the drawer's switch is, to tell on from off by its knob.
+# shellcheck disable=SC2046
+set -- $(spot "In a drawer" switch)
+knob_x=$1
+drawer_y=$2
 shot open
 on=$(knob open "$drawer_y")
 
 step "Over the config"
-move "$switch_x" "$drawer_y"
-click
-sleep 0.3
+flip "In a drawer"
 same "the drawer in the shell's file" "$(value .tray.drawer)" false
 same "the config" "$(cat "$config")" '{ "tray": { "drawer": true } }'
 shot drawer-off
@@ -201,51 +245,28 @@ choose() {
 }
 choose 745 "$left_y"
 shot part-clock
-# The card's foot is the field for a calendar, a row of 40 under the weather's
-# switch, and the card comes up with its foot at the page's: the rest of it is
-# that row and its spacing higher.
-move "$switch_x" 470
-click
-sleep 0.3
+flip "Seconds"
 same "seconds" "$(value .clock.seconds)" true
-move "$higher_x" 324
-click
-sleep 0.3
+higher "The date"
 same "the date" "$(value .clock.date)" '"after"'
-move 968 374
-click
-wtype -M ctrl a -m ctrl
-type 'yyyy'
-key Return
-sleep 0.3
+put "How it's written" 'yyyy'
 same "how the date's written" "$(value .clock.dateFormat)" '"yyyy"'
-move "$higher_x" 514
-click
-sleep 0.3
+higher "Weeks start on"
 same "the first day of a week" "$(value .clock.weekStart)" '"monday"'
-move "$switch_x" 559
-click
-sleep 0.3
+flip "Week numbers"
 same "week numbers" "$(value .clock.weekNumbers)" true
-field 934 609 'UTC, Asia/Tokyo'
+put "Other places" 'UTC, Asia/Tokyo'
 same "the other places" "$(value .clock.zones)" '["UTC","Asia/Tokyo"]'
-move "$switch_x" 659
-click
-sleep 0.3
+flip "The weather"
 same "the weather" "$(value .weather.on)" true
-click
-sleep 0.3
+flip "The weather"
 choose 577 "$left_y"
 shot part-workspaces
-move "$switch_x" 655
-click
-sleep 0.3
+flip "Empty ones too"
 same "the empty ones" "$(value .workspaces.empty)" false
 choose 559 "$off_y"
 shot part-battery
-move "$higher_x" 655
-click
-sleep 0.3
+higher "It shows"
 same "when the battery shows" "$(value .battery.show)" '"battery"'
 # With a player open, to leave out.
 mpv --no-config --no-terminal --ao=null --vo=null --pause --script="$OKAERI_MPV_MPRIS" av://lavfi:sine >/dev/null 2>&1 &
@@ -253,61 +274,39 @@ player=$!
 sleep 2
 choose 660 "$left_y"
 shot part-media
-move "$higher_x" 454
-click
-sleep 0.3
+higher "It shows"
 same "when the media shows" "$(value .media.show)" '"playing"'
-move "$higher_x" 494
-click
-sleep 0.3
+higher "On it"
 same "what the media says" "$(value .media.label)" '"both"'
-move "$higher_x" 539
-click
-sleep 0.3
+higher "Widest"
 same "how wide the media gets" "$(value .media.width)" 280
-move "$switch_x" 590
-click
-sleep 0.3
+flip "What's cut slides by"
 same "sliding" "$(value .media.scroll)" false
-move "$switch_x" 640
-click
-sleep 0.3
+flip "A right click leaves a player out"
 same "the right click for players" "$(value .media.menu)" false
-move "$switch_x" 710
-click
-sleep 0.3
+flip mpv
 same "the players left out" "$(value .media.ignored)" '["mpv"]'
 kill "$player"
 wait "$player" 2>/dev/null || true
 choose 645 "$off_y"
 shot part-bluetooth
-move "$higher_x" 669
-click
-sleep 0.3
+higher "It shows"
 same "when Bluetooth shows" "$(value .bluetooth.show)" '"on"'
-move "$higher_x" 709
-click
-sleep 0.3
+higher "Beside it"
 same "what's beside Bluetooth" "$(value .bluetooth.label)" '"name"'
 choose 737 "$off_y"
 shot part-network
-move "$higher_x" 709
-click
-sleep 0.3
+higher "Beside it"
 same "what's beside the network" "$(value .network.label)" '"name"'
 # One with a page of its own: a way there.
 choose 785 "$right_y"
 shot part-tray
-move 1021 708
-click
-sleep 0.5
-move "$switch_x" "$drawer_y"
-click
-sleep 0.3
+press_on Open line
+sleep 0.2
+flip "In a drawer"
 same "the drawer, from the tray's page" "$(value .tray.drawer)" true
 # Off again, as a later step has it.
-click
-sleep 0.3
+flip "In a drawer"
 same "the drawer, off again" "$(value .tray.drawer)" false
 
 step "A part of one's own"
@@ -315,13 +314,8 @@ step "A part of one's own"
 # onto the bar, it's chosen anew, for its card to come up at the foot of the page.
 page "$bar_y"
 to_top
-# A wheel's notch down: the lanes take the page, with all there is to put on them.
-move 700 400
-notch 1
-sleep 0.6
-move 1007 649
-click
-sleep 0.8
+press_on "Add your own" line
+sleep 0.5
 shot script-added
 same "the part made" "$(value .bar.scripts)" '[{"name":"script","command":"","every":10}]'
 to_top
@@ -331,86 +325,57 @@ shot script-on
 choose "$script_on_x" "$left_y"
 choose "$script_on_x" "$left_y"
 shot script-card
-field 934 574 'echo hello'
+put "Its command" 'echo hello'
 same "its command" "$(value '.bar.scripts[0].command')" '"echo hello"'
-move "$higher_x" 625
-click
-sleep 0.3
+higher "It runs every"
 same "how often it runs" "$(value '.bar.scripts[0].every')" 30
 # By another name it's the same part where it was, but not by a name that's taken.
-field 934 525 'mine'
+put "What it's called" 'mine'
 same "its name" "$(value '.bar.scripts[0].name')" '"mine"'
 same "the left with its new name" "$(value .bar.left)" '["workspaces","media","clock","mine"]'
-field 934 525 'clock'
+put "What it's called" 'clock'
 same "a name that's taken" "$(value '.bar.scripts[0].name')" '"mine"'
 shot script-refused
 # Under its card, what clicks and the wheel on it run: a command, until the field
-# is emptied. The last two of the five are in sight.
-move 700 400
-notch 30
-sleep 0.6
+# is emptied.
+put "The wheel up" 'echo up'
+put "The wheel down" 'echo down'
 shot script-clicks
-field 932 214 'echo up'
-field 932 258 'echo down'
 same "what clicks and the wheel on it run" "$(value .bar.actions)" '{"mine":{"up":"echo up","down":"echo down"}}'
-move 932 258
-click
-wtype -M ctrl a -m ctrl
-key BackSpace
-key Return
-sleep 0.3
+put "The wheel down" ""
 same "with a command gone" "$(value .bar.actions)" '{"mine":{"up":"echo up"}}'
 # Removed, it leaves nothing of itself.
 choose "$script_on_x" "$left_y"
 choose "$script_on_x" "$left_y"
-move 575 710
-click
-sleep 0.4
+press_on "Remove it" line
+sleep 0.1
 same "the parts with it removed" "$(value .bar.scripts)" '[]'
 same "the left without it" "$(value .bar.left)" '["workspaces","media","clock"]'
 same "the clicks without it" "$(value .bar.actions)" '{}'
 
 step "All of the bar, and its screens"
 page "$bar_y"
-move 700 400
-notch 30
-sleep 0.6
+higher "The wheel on it"
 shot bar-all
-move "$higher_x" 450
-click
-sleep 0.3
 same "the wheel" "$(value .bar.wheel)" '"volume"'
-move "$switch_x" 500
-click
-sleep 0.3
+flip Tips
 same "tips" "$(value .bar.tips)" false
-# The window's top: with the space given up it sits higher.
-window_top() {
-	niri msg --json windows | jq '[.[] | select(.title == "Settings") | .layout.tile_pos_in_workspace_view[1]][0] | floor'
-}
-top_before=$(window_top)
-# A bar that hides gives its space up too.
-move "$switch_x" 550
-click
-sleep 0.5
+# A bar that hides gives its space up, and the window sits higher: where its
+# lines are is asked anew each time.
+flip "It hides"
+sleep 0.3
 same "a bar that hides" "$(value .bar.autoHide)" true
-move "$switch_x" $((550 + $(window_top) - top_before))
-click
-sleep 0.5
+flip "It hides"
+sleep 0.3
 same "a bar that stays" "$(value .bar.autoHide)" false
-move "$switch_x" 600
-click
-sleep 0.5
+flip "Windows keep out from under it"
+sleep 0.3
 same "space for windows" "$(value .bar.reserve)" false
-# Back on, where the switch is now.
-move "$switch_x" $((600 + $(window_top) - top_before))
-click
-sleep 0.5
+flip "Windows keep out from under it"
+sleep 0.3
 same "space for windows, again" "$(value .bar.reserve)" true
 # The only screen keeps its bar.
-move "$switch_x" 705
-click
-sleep 0.3
+flip "$(niri msg --json outputs | jq -r 'keys[0]')"
 same "screens without a bar" "$(value .bar.hideOn)" null
 
 step "The pictures of a folder"
@@ -462,114 +427,77 @@ same "where a picture was" "$(pixel nothing 606 "$picture_y")" 000000
 
 step "How the wallpaper shows"
 # The other leaf: how one fills the screen, how a new one comes, and when.
-arrow() {
-	move "$1" "$2"
-	click
-}
-move 668 214
-click
-sleep 0.4
+press_on "How they show" line
+sleep 0.1
 shot wallpaper-how
-arrow "$higher_x" 300
+higher "A picture of another shape"
 same "how it fills" "$(value .wallpaper.fill)" '"fit"'
-arrow "$higher_x" 439
+higher "The way it comes"
 same "how a new one comes" "$(value .wallpaper.transition)" '"slide"'
-arrow "$higher_x" 524
+higher "Another every"
 same "another by itself" "$(value .wallpaper.every)" 5
-move "$switch_x" 574
-click
-sleep 0.3
+flip "Any of them"
 same "any of them" "$(value .wallpaper.random)" true
 # Not while this goes on: back by the arrow of a line with words, further in.
-arrow 912 524
+lower "Another every"
 same "another by itself, no more" "$(value .wallpaper.every)" 0
 
 step "When things happen by themselves"
-# The arrow at $1 on the line at $2.
-arrow() {
-	move "$1" "$2"
-	click
-}
 page "$session_y"
-arrow "$higher_x" "$lock_y"
+higher "Lock the session"
 same "the lock, one up" "$(value .idle.lock)" 900
-arrow "$lower_x" "$lock_y"
-arrow "$lower_x" "$lock_y"
+lower "Lock the session" 2
 same "the lock, two down" "$(value .idle.lock)" 300
 # Eleven minutes isn't one of them: the next up is the next that is.
-arrow "$higher_x" "$screens_y"
+higher "Turn the screens off"
 same "the screens, from what's not on the list" "$(value .idle.screenOff)" 900
-arrow "$lower_x" "$wait_y"
+lower "Wait before going ahead"
 same "the session menu's wait" "$(value .session.countdown)" 5
-move "$switch_x" "$logout_y"
-click
-sleep 0.3
+flip "Log out"
 same "what the session menu leaves out" "$(value .session.hidden)" '["logout"]'
-arrow "$higher_x" "$sleep_y"
+higher "Put the machine to sleep"
 same "sleep" "$(value .idle.suspend)" 60
-# When, only with sleep on.
-sleep 0.3
-arrow "$higher_x" $((sleep_y + 50))
+# When, only with sleep on, and not while something plays unless that's turned
+# off, and how it sleeps: suspended and then hibernated, a step on.
+higher "Sleep when"
 same "when it sleeps" "$(value .idle.suspendOn)" '"battery"'
-# And not while something plays, unless that's turned off.
-move "$switch_x" $((sleep_y + 130))
-click
-sleep 0.3
+flip "Not while something plays"
 same "sleep with something playing" "$(value .idle.playingHolds)" false
-# How it sleeps: suspended and then hibernated, a step on.
-arrow "$higher_x" $((sleep_y + 85))
+higher "It sleeps as"
 same "how it sleeps" "$(value .idle.sleepAs)" '"suspend-then-hibernate"'
 shot session
 
 step "The battery's line"
-# At the foot of the page.
-move 700 446
-notch 30
-sleep 0.6
-battery_y=525
-arrow "$lower_x" "$battery_y"
+lower "Warn when it's down to"
 same "the warning" "$(value .battery.warning)" 15
-arrow "$higher_x" "$battery_y"
-arrow "$higher_x" "$battery_y"
+higher "Warn when it's down to" 2
 same "the warning, two up" "$(value .battery.warning)" 25
-move "$switch_x" 575
-click
-sleep 0.3
+flip "Save power from then on"
 same "saving power from then on" "$(value .battery.saver)" true
-arrow "$higher_x" 620
+higher "On it, lock after"
 same "the lock on battery" "$(value .idle.batteryLock)" 60
-arrow "$higher_x" 705
+higher "On it, sleep after"
 same "sleep on battery" "$(value .idle.batterySuspend)" 60
-# Over the battery's card, the commands for when things happen: the last of them.
-field 934 423 'true'
+# Over the battery's card, the commands for when things happen.
+put "The wallpaper changes" 'true'
 same "what a new wallpaper runs" "$(value .hooks.wallpaper)" '"true"'
 
 step "The dock's page"
 page "$dock_y"
 shot dock-page
-move "$switch_x" 233
-click
-sleep 0.3
+flip "A dock"
 same "a dock" "$(value .dock.on)" true
-arrow "$higher_x" 283
-sleep 0.3
+higher "It's at"
 same "where the dock is" "$(value .dock.position)" '"left"'
-move "$switch_x" 333
-click
-sleep 0.3
+flip "It hides"
 same "a dock that hides" "$(value .dock.autoHide)" true
-arrow "$higher_x" 378
-sleep 0.3
+higher "Its icons"
 same "the dock's icons" "$(value .dock.size)" 48
-arrow "$higher_x" 423
-sleep 0.3
+higher "Apps with windows"
 same "the apps with windows on it" "$(value .dock.windows)" '"screen"'
-arrow "$higher_x" 473
-sleep 0.3
+higher "Icons grow under the pointer"
 same "how large the icons grow" "$(value .dock.magnify)" 160
-move "$switch_x" 233
-click
-sleep 0.3
+flip "A dock"
 same "no dock" "$(value .dock.on)" false
 
 step "The control center's page"
@@ -585,7 +513,7 @@ same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake"
 move 926 254
 click
 sleep 0.3
-arrow "$higher_x" 696
+higher "Its width"
 same "a whole row" "$(value .control.wide)" '["bluetooth"]'
 shot control-wide
 drag 594 568 530 254
@@ -593,27 +521,21 @@ same "what's left out, back" "$(value .control.hidden)" '["game"]'
 same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","game"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
-move 1007 623
-click
-sleep 0.5
+press_on "Add your own" line
+sleep 0.2
 same "a tile made" "$(value .control.custom)" '[{"name":"Mine","command":"","check":"","icon":"play"}]'
-move 700 400
-notch 30
-sleep 0.6
 shot control-own
-field 934 575 'touch somewhere'
+put "A click runs" 'touch somewhere'
 same "what a click on it runs" "$(value '.control.custom[0].command')" '"touch somewhere"'
-field 934 625 'true'
+put "It's on when" 'true'
 same "when it's on" "$(value '.control.custom[0].check')" '"true"'
-arrow "$higher_x" 670
-sleep 0.3
+higher "Its sign"
 same "its sign, the next one" "$(value '.control.custom[0].icon')" '"power"'
-field 934 525 'Fan'
+put "What it's called" 'Fan'
 same "its name" "$(value '.control.custom[0].name')" '"Fan"'
 same "its place under its new name" "$(value '.control.tiles | index("Fan") != null')" true
-move 575 710
-click
-sleep 0.4
+press_on "Remove it" line
+sleep 0.1
 same "the tiles of one's own with it removed" "$(value .control.custom)" '[]'
 same "the order without it" "$(value '.control.tiles | index("Fan")')" null
 
@@ -624,58 +546,44 @@ mv "$config.new" "$config"
 sleep 0.5
 page "$launcher_y"
 shot launcher-page
-# The first switch, then the second, the folder for files, the apps' own actions,
-# and the switches of the two lists.
-move "$switch_x" 234
-click
-sleep 0.3
+# The two switches, the folder for files, the apps' own actions, and the
+# switches of the two lists.
+flip "Frequent apps first"
 same "frequent first" "$(value .launcher.usage)" false
-move "$switch_x" 284
-click
-sleep 0.3
+flip "Keep the last sums"
 same "the last sums" "$(value .launcher.sums)" false
 same "the sums are gone" "$(cat "$XDG_STATE_HOME/okaeri/sums.json")" '[]'
-field 934 334 '~/documents'
+put "Files are looked for in" '~/documents'
 same "where files are looked for" "$(value .launcher.files)" "\"$HOME/documents\""
-move "$switch_x" 384
-click
-sleep 0.3
+flip "Apps' own actions in the search"
 same "the apps' own actions" "$(value .launcher.actions)" false
-move "$switch_x" 472
-click
-sleep 0.3
+flip no.such.app
 same "the pinned" "$(value .launcher.pinned)" '[]'
 # With the list empty a line says how, about as tall as the row was.
 shot launcher-page-unpinned
-move "$switch_x" 563
-click
-sleep 0.3
+flip nor.this.one
 same "the hidden" "$(value .launcher.hidden)" '[]'
 
 step "The clipboard's page"
 page "$clipboard_y"
 shot clipboard-page
-move "$switch_x" 234
-click
-sleep 0.3
+flip "Enter pastes"
 same "Enter pastes" "$(value .clipboard.paste)" true
-arrow "$higher_x" 284
+higher "Rows in the panel"
 same "the rows" "$(value .clipboard.rows)" 200
 # The wheel on a line goes along the list, and stops at its end.
-move 700 284
+point "Rows in the panel" line
 wheel 1
 same "the rows, by the wheel" "$(value .clipboard.rows)" 500
 wheel -2
 same "the rows, two notches down" "$(value .clipboard.rows)" 100
 wheel -9
 same "the rows at the end of the list" "$(value .clipboard.rows)" 50
-arrow "$lower_x" 284
+lower "Rows in the panel"
 same "the rows past that" "$(value .clipboard.rows)" 50
-arrow "$lower_x" 334
+lower "Entries in the history"
 same "the history" "$(value .clipboard.keep)" 500
-move "$switch_x" 384
-click
-sleep 0.3
+flip "Keep pictures"
 same "keep pictures" "$(value .clipboard.images)" false
 
 step "The notifications' page"
@@ -684,38 +592,19 @@ mv "$config.new" "$config"
 sleep 0.5
 page "$notifications_y"
 shot notifications-page
-arrow "$higher_x" 260
+higher "They stay for"
 same "how long" "$(value .notifications.timeout)" 8
-# Down to the end, by the wheel: an app's row, and what its fold has.
-move 700 500
-notch 30
-sleep 0.6
+# An app's row: what it holds back, and what its fold has.
+press_on Spam history
 shot notifications-rules
-move 1017 670
-click
-sleep 0.3
 same "two things held back" "$(value .notifications.rules)" '[{"app":"Spam","toast":false,"history":false}]'
-move 535 670
-click
-sleep 0.3
-move 700 300
-notch 30
-sleep 0.6
+press_on Spam line
 shot notifications-rule-open
-move "$switch_x" 598
-click
-sleep 0.3
+flip Sound
 same "its sound" "$(value '.notifications.rules[0].sound')" false
-# A toast to see them on, at the foot of the toasts' card: up to the top, and two
-# notches down that's in the middle of the window.
-move 700 400
-notch -30
-sleep 0.6
-notch 2
-sleep 0.6
+# A toast to see them on, at the foot of the toasts' card.
+press_on "Show one" show
 shot notifications-sample
-move 1020 573
-click
 wait_log "okaeri: dry: notify test"
 
 printf '{ "tray": { "drawer": true } }\n' >"$config.new"
@@ -810,9 +699,7 @@ same "a folder for pictures" "$(ipc settings set clipboard.saveTo '~/Shots')" ""
 sleep 0.4
 shot clipboard-marked
 # The dot of a line set here takes it back to the files.
-move 521 433
-click
-sleep 0.3
+press_on "Pictures saved to" mark
 same "a line's own back to the files" "$(value .clipboard.saveTo)" null
 search slideshow
 key Return
@@ -862,47 +749,31 @@ same "its size, back" "$(window_size)" 760x564
 step "How it sounds"
 page "$sounds_y"
 shot sounds-page
-arrow "$higher_x" 232
-sleep 0.3
+higher "The volume goes up to"
 same "how loud the volume goes" "$(value .audio.max)" 125
-arrow "$lower_x" 310
-sleep 0.3
+lower "Volume of the sounds"
 same "the sounds' volume" "$(value .sounds.volume)" 20
-move "$switch_x" 410
-click
-sleep 0.3
+flip Notifications
 same "notifications' sound" "$(value .sounds.notifications)" false
 
 step "The on-screen display"
 page "$osd_y"
 shot osd-page
-arrow "$higher_x" 232
-sleep 0.3
+higher Where
 same "where it shows" "$(value .osd.position)" '"middle"'
-arrow "$higher_x" 282
-sleep 0.3
+higher "For how long"
 same "for how long" "$(value .osd.duration)" 2
-move "$switch_x" 332
-click
-sleep 0.3
+flip "The level in numbers"
 same "in numbers" "$(value .osd.percent)" true
-move "$switch_x" 382
-click
-sleep 0.3
+flip "A track as it starts"
 same "a track as it starts" "$(value .osd.tracks)" true
-move "$switch_x" 672
-click
-sleep 0.3
+flip "Caps Lock and Num Lock"
 same "what has none" "$(value .osd.hidden)" '["locks"]'
 # Its dot takes that one line back, and the key with it, as the files leave none
 # out; then it's off again, for what follows.
-move 521 672
-click
-sleep 0.3
+press_on "Caps Lock and Num Lock" mark
 same "one line of many, back to the files" "$(value .osd.hidden)" null
-move "$switch_x" 672
-click
-sleep 0.3
+flip "Caps Lock and Num Lock"
 same "what has none, again" "$(value .osd.hidden)" '["locks"]'
 # By the keys: Tab on from the search to the first arrow there is, the line's
 # back one, where Right goes on. At an end the other arrow has the focus, so the
@@ -931,50 +802,30 @@ same "for how long, untouched" "$(value .osd.duration)" 2
 step "How the screen is recorded"
 page "$display_y"
 shot display-recording
-arrow "$higher_x" 520
-sleep 0.3
+higher "What's recorded"
 same "what's recorded" "$(value .recording.area)" '"region"'
-arrow "$higher_x" 564
-sleep 0.3
+higher "With the sound of"
 same "with what sound" "$(value .recording.audio)" '"system"'
-field 942 608 '~/clips'
+put "Where the videos go" '~/clips'
 same "where the videos go" "$(value .recording.folder)" "\"$HOME/clips\""
 
 step "The display's page"
 page "$display_y"
 shot display-page
-move "$switch_x" 410
-click
-sleep 0.3
+flip "Their brightness"
 same "external monitors' brightness" "$(value .display.ddc)" true
-arrow "$higher_x" 259
-sleep 0.3
+higher When
 same "when the night light is" "$(value .nightLight.mode)" '"schedule"'
-arrow "$higher_x" 309
-sleep 0.3
+higher "How warm"
 same "how warm" "$(value .nightLight.temperature)" 4500
 # A time that isn't one stays out.
-move 994 359
-click
-wtype -M ctrl a -m ctrl
-type '25:00'
-key Return
-sleep 0.3
+put From '25:00'
 same "a time that isn't" "$(value .nightLight.from)" null
-wtype -M ctrl a -m ctrl
-type '21:30'
-key Return
-sleep 0.3
+put From '21:30'
 same "from when" "$(value .nightLight.from)" '"21:30"'
-arrow "$higher_x" 259
-sleep 0.3
+higher When
 same "by the sun" "$(value .nightLight.mode)" '"sun"'
-move 994 359
-click
-wtype -M ctrl a -m ctrl
-type '52.5'
-key Return
-sleep 0.3
+put Latitude '52.5'
 same "the latitude" "$(value .nightLight.latitude)" 52.5
 shot display-sun
 
@@ -982,17 +833,11 @@ step "How it looks"
 page "$look_y"
 shot look
 theme_own=$XDG_STATE_HOME/okaeri/theme.json
-move "$switch_x" 260
-click
-sleep 0.3
+flip "Blur behind panels"
 same "blur behind panels" "$(jq -c .blur "$theme_own")" true
-move "$switch_x" 310
-click
-sleep 0.3
+flip "Blur behind notifications"
 same "blur behind notifications" "$(jq -c .toastBlur "$theme_own")" true
-move "$switch_x" 360
-click
-sleep 0.3
+flip "Blur behind the bar"
 same "blur behind the bar" "$(jq -c .barBlur "$theme_own")" true
 # The rules for niri: the same file, with what's under the blur or without.
 rules=$XDG_STATE_HOME/okaeri/niri.kdl
@@ -1000,18 +845,14 @@ niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules"
 grep -q 'okaeri-backdrop' "$rules" || fail "no rule for the backdrop"
 ! grep -q 'xray' "$rules" || fail "windows in the blur before they were asked for"
 written=$(stat -c %Y.%y "$rules")
-move "$switch_x" 410
-click
-sleep 0.3
+flip "Windows in the blur too"
 same "windows in the blur" "$(jq -c .realBlur "$theme_own")" true
 niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules with the blur"
 [ "$(grep -c 'xray false' "$rules")" = 2 ] || fail "the rules: $(cat "$rules")"
 [ "$(stat -c %Y.%y "$rules")" != "$written" ] || fail "the rules weren't written"
-arrow "$higher_x" 455
+higher "How solid it stays"
 same "how solid" "$(jq -c .opacity "$theme_own")" 80
-move "$switch_x" 555
-click
-sleep 0.3
+flip Animations
 same "animations" "$(jq -c .animations "$theme_own")" false
 # Solid as it opens, for niri's blur doesn't run then, and clear after that.
 key Escape
@@ -1029,7 +870,11 @@ search "Height of the bar"
 key Return
 sleep 0.8
 shot look-found
-arrow "$higher_x" 231
+# shellcheck disable=SC2046
+set -- $(spot "Height of the bar" higher)
+[ "$2" -lt 260 ] || fail "the line found isn't at the window's top: $2"
+move "$1" "$2"
+click
 move "$menu_x" "$search_y"
 click
 wtype -M ctrl a -m ctrl
@@ -1042,70 +887,45 @@ shot look-changed
 [ "$(pixel look-changed 700 38)" != "$(pixel look-before 700 38)" ] || fail "the bar's height didn't change"
 # Its colors, at the foot of the page: a palette, on at once, and the config's
 # again; another by day; the accent from the wallpaper.
-move 700 400
-notch 30
-sleep 0.6
 shot look-colors
-# The arrow back of a wider line.
-wide_lower_x=862
 bright() {
 	magick "$out/$1.png" -format '%[fx:u.p{507,480}.r > 0.7]' info:
 }
 same "the window before" "$(bright look-colors)" 0
-# The palette's line is a little shorter with one chosen, and the view may take
-# what's above it back down to its foot or not: these are between where the
-# lines are either way.
-arrow "$higher_x" 505
-arrow "$higher_x" 505
-sleep 0.4
+# The palette, a step on twice, and back twice: the config's again.
+higher Palette 2
+sleep 0.1
 same "the palette" "$(jq -c .extends "$theme_own")" '"light"'
 shot look-light
 same "the window in a light palette" "$(bright look-light)" 1
-arrow "$wide_lower_x" 505
-arrow "$wide_lower_x" 505
-sleep 0.4
+lower Palette 2
+sleep 0.1
 same "the config's palette again" "$(jq -c .extends "$theme_own")" null
-arrow "$higher_x" 557
-sleep 0.4
+higher "Another by day"
+sleep 0.1
 same "another by day" "$(jq -c .auto "$theme_own")" '"time"'
 shot look-timed
-# The palette's line went, and this one is where that was.
-arrow "$wide_lower_x" 505
-sleep 0.4
+# The palette's line went with that, and the day's and the night's came.
+lower "Another by day"
+sleep 0.1
 same "one all day again" "$(jq -c .auto "$theme_own")" '"off"'
-# To the foot again: the page has moved with what came and went.
-move 700 400
-notch 30
-sleep 0.6
-arrow "$higher_x" 704
-sleep 0.3
+higher "From the wallpaper"
 same "the accent from the wallpaper" "$(jq -c '[.wallpaperAccent, .wallpaperPalette]' "$theme_own")" '[true,false]'
-arrow "$higher_x" 704
-sleep 0.3
+higher "From the wallpaper"
 same "all the colors from the wallpaper" "$(jq -c '[.wallpaperAccent, .wallpaperPalette]' "$theme_own")" '[true,true]'
 ipc settings reset theme.wallpaperAccent >/dev/null
 ipc settings reset theme.wallpaperPalette >/dev/null
 sleep 0.3
 # An accent of its own, by a swatch, by what's typed, and the palette's again.
-move 987 607
-click
-sleep 0.3
+press_on Accent swatch-#61afef
 same "a swatch's accent" "$(jq -c .accent "$theme_own")" '"#61afef"'
-move 993 657
-click
-wtype -M ctrl a -m ctrl
-wtype '123ABC'
-key Return
-sleep 0.3
+put "Or any other" 123ABC
 same "a typed accent" "$(jq -c .accent "$theme_own")" '"#123abc"'
-move 819 607
-click
-sleep 0.3
+press_on Accent swatch-palette
 same "the palette's accent" "$(jq -c .accent "$theme_own")" null
 # The wheel over a line's arrows is the line's, not the page's: a notch up is the
-# next palette, and one down the config's again. The page moved a while ago, so
-# it's no wheel that rolls it on.
-move "$higher_x" 505
+# next palette, and one down the config's again.
+point Palette higher
 wheel 1
 sleep 0.4
 same "the palette, by the wheel" "$(jq -c .extends "$theme_own")" '"dark"'
