@@ -20,6 +20,8 @@ Scope {
 	readonly property bool drives: Drives.read
 	// And the screens, to have them as the settings window set them.
 	readonly property var screens: Screens.kept
+	// And the phone, for `okaeri phone`.
+	readonly property bool phone: Phone.absent
 	// And screenshots, for `okaeri screenshot`.
 	readonly property string screenshots: Screenshots.folder
 

@@ -25,7 +25,7 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "drives", "screenshot", "game"],
+		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "drives", "phone", "screenshot", "game"],
 		"wide": [],
 		"hidden": ["screenshot", "game"],
 		"custom": [],

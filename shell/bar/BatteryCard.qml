@@ -13,6 +13,8 @@ Column {
 
 	readonly property var device: Power.battery
 	readonly property bool charging: device?.state === UPowerDeviceState.Charging
+	// What else has a battery: a mouse, a headset, and a phone through KDE Connect.
+	readonly property var others: Power.others.concat(Phone.devices.filter(one => one.charge >= 0).map(one => ({ name: one.name, percent: one.charge })))
 
 	// For the panel to go, as the settings come.
 	signal closed
@@ -112,7 +114,7 @@ Column {
 	Column {
 		width: parent.width
 		spacing: Theme.u(4)
-		visible: Power.others.length > 0
+		visible: card.others.length > 0
 
 		Text {
 			leftPadding: Theme.u(4)
@@ -123,7 +125,7 @@ Column {
 		}
 
 		Repeater {
-			model: Power.others
+			model: card.others
 
 			Line {
 				required property var modelData

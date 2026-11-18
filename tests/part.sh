@@ -166,6 +166,21 @@ SH
 chmod +x "$work/drives-busctl" "$work/udisksctl"
 sed -i -e "s|^\treadonly property string reader: .*|\treadonly property string reader: \"$work/drives-busctl\"|" \
 	-e "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/udisksctl\"|" "$work/shell/services/Drives.qml"
+# A phone in reach through KDE Connect is what a test puts in $work/phone, as
+# kdeconnect-cli would list it, charging, at 76%.
+cat >"$work/kdeconnect-cli" <<SH
+#!/bin/sh
+[ "\$1" = -a ] && cat "$work/phone" 2>/dev/null
+exit 0
+SH
+cat >"$work/phone-busctl" <<SH
+#!/bin/sh
+[ -e "$work/phone" ] && printf 'i 76\nb true\n'
+exit 0
+SH
+chmod +x "$work/kdeconnect-cli" "$work/phone-busctl"
+sed -i -e "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/kdeconnect-cli\"|" \
+	-e "s|^\treadonly property string reader: .*|\treadonly property string reader: \"$work/phone-busctl\"|" "$work/shell/services/Phone.qml"
 # A code for a phone is a blank picture, and what it would say goes to $work/qr.
 cat >"$work/qrencode" <<'SH'
 #!/bin/sh

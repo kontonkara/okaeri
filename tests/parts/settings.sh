@@ -509,7 +509,7 @@ shot control-page
 set -- $(spot Wi-Fi line) $(spot Hidden line)
 drag "$1" "$2" "$3" "$(($4 + 30))"
 same "what's left out" "$(value .control.hidden)" '["wifi","screenshot","game"]'
-same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","wifi","screenshot","game"]'
+same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","phone","wifi","screenshot","game"]'
 # Bluetooth to a whole row, by its card; and Wi-Fi back to the front, on the
 # first tile's left half.
 press_on Bluetooth line
@@ -520,7 +520,7 @@ shot control-wide
 set -- $(spot Wi-Fi line) $(spot "Wired network" line)
 drag "$1" "$2" "$(($3 - 120))" "$4"
 same "what's left out, back" "$(value .control.hidden)" '["screenshot","game"]'
-same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","screenshot","game"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","phone","screenshot","game"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
 press_on "Add your own" line

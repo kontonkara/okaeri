@@ -63,7 +63,7 @@ Panel {
 			controlCenter.toggle();
 		}
 
-		// Open at a page: wifi, wired, drives, bluetooth, vpn, hotspot, sound or mic.
+		// Open at a page: wifi, wired, drives, phone, bluetooth, vpn, hotspot, sound or mic.
 		function page(name: string): void {
 			Control.show(name);
 		}
@@ -105,7 +105,7 @@ Panel {
 				id: column
 
 				// A page in the place of the rest.
-				readonly property bool paging: [wifi, wired, drives, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
+				readonly property bool paging: [wifi, wired, drives, phone, bluetooth, vpn, hotspot, sound, mic, tileOptions].some(page => page.visible)
 
 				width: view.width
 				spacing: Math.round(Theme.u(10))
@@ -211,7 +211,7 @@ Panel {
 					readonly property var whole: Control.whole(shown)
 
 					function wanted(name) {
-						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "wired" ? Wired.plugged : name === "drives" ? Drives.list.length > 0 : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
+						return name === "wifi" || name === "hotspot" ? !!Wifi.device : name === "wired" ? Wired.plugged : name === "drives" ? Drives.list.length > 0 : name === "phone" ? Phone.devices.length > 0 : name === "bluetooth" ? !!Bt.adapter : name === "vpn" ? Vpn.connections.length > 0 : name === "airplane" ? Airplane.possible : name === "record" ? Recorder.available : name === "power" ? Power.choices.length > 1 : true;
 					}
 
 					width: parent.width
@@ -238,6 +238,7 @@ Panel {
 									wifi: wifiTile,
 									wired: wiredTile,
 									drives: drivesTile,
+									phone: phoneTile,
 									screenshot: screenshotTile,
 									bluetooth: bluetoothTile,
 									vpn: vpnTile,
@@ -304,6 +305,21 @@ Panel {
 								Control.leave();
 								Screenshots.take("area");
 							}
+						}
+					}
+
+					Component {
+						id: phoneTile
+
+						Tile {
+							name: "phone"
+							wanted: Phone.devices.length > 0
+							icon: "phone"
+							title: phone.title
+							summary: phone.summary
+							switches: false
+							opens: "phone"
+							onClicked: Control.unfolded = "phone"
 						}
 					}
 
@@ -482,6 +498,12 @@ Panel {
 
 				DrivesSection {
 					id: drives
+
+					room: controlCenter.room
+				}
+
+				PhoneSection {
+					id: phone
 
 					room: controlCenter.room
 				}

@@ -182,6 +182,12 @@ tile and a page in the control center: a click on one opens it, mounting it
 first, by udisksctl. With its tile chosen on the Control page it can be mounted at
 once instead, and `okaeri drives list` says what there is.
 
+A phone paired through KDE Connect, with its daemon running, has a tile in the
+control center while it's in reach, with its charge, and a page to ring it,
+ping it or send it what's copied; its charge is on the battery's card too, and
+`okaeri phone ring` finds it by a key. What it says comes as KDE Connect's
+notifications.
+
 The Display page has each screen's resolution, scale, turn, adaptive sync and
 place beside the others, and turns one off. niri has that at once, and okaeri has
 it again as it starts and as a screen comes; what can leave a screen dark goes
