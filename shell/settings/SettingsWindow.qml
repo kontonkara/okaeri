@@ -30,7 +30,7 @@ FloatingWindow {
 		{ text: "Sounds", icon: "volume", page: soundsPage, sections: ["sounds", "audio.max"] },
 		{ text: "On-screen display", icon: "osd", page: osdPage, sections: ["osd"] },
 		{ text: "Display", icon: "sunset", page: displayPage, sections: ["display", "recording", "screenshots", "nightLight.mode", "nightLight.temperature", "nightLight.from", "nightLight.until", "nightLight.latitude", "nightLight.longitude"] },
-		{ text: "Wallpaper", icon: "image", page: wallpaperPage, sections: ["wallpaper"] },
+		{ text: "Wallpaper", icon: "image", page: wallpaperPage, sections: ["wallpaper", "desktop"] },
 		{ text: "Look", icon: "eye", page: lookPage, sections: ["bar.look", "control.size"], keys: ["blur", "toastBlur", "barBlur", "realBlur", "opacity", "animations", "speed", "panelMotion", "toastMotion", "barHeight", "barIcon", "barMargin", "radius", "fontSize", "scale", "font", "fontWeight", "extends", "auto", "day", "night", "dayFrom", "nightFrom", "accent", "wallpaperAccent", "wallpaperPalette"] },
 		{ text: "Session", icon: "lock", page: sessionPage, sections: ["session", "idle", "hooks", "game", "battery.warning", "battery.saver"] }
 	]

@@ -622,6 +622,17 @@ ipc load toggle
 wait_log "okaeri: no load on a bar to open"
 wait_up panel 0 "a call for what isn't on the bar"
 
+step "On the desktop"
+# The time, over the wallpaper and under the windows, on each screen: on the
+# layer below them, taking no keys, and gone again with it off.
+printf '{ "desktop": { "clock": true } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+wait_up desktop 1 "the time on the desktop"
+niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-desktop" and .layer == "Bottom" and .keyboard_interactivity == "None")' >/dev/null ||
+	fail "the desktop isn't under the windows without the keys"
+shot desktop
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+wait_up desktop 0 "the desktop with nothing on it"
+
 step "A reload with a panel up"
 theme '{}'
 ipc control toggle

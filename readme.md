@@ -42,10 +42,10 @@ It takes niri 26.04 or newer, Quickshell 0.3 or newer, and `cliphist`, `qalc`,
 night light, `wf-recorder` to record the screen and `slurp` for a part of it,
 `ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours, `nmcli` for
 VPNs, the hotspot and sharing Wi-Fi, `qrencode` for the code a phone joins it by,
-`udisksctl` for the drives one plugs in, and the freedesktop sound theme for
-sounds. `bin/okaeri` runs it from a clone of this repository, on any
-distribution: `nix/` is a package and a Home Manager module for those who want
-them. In niri's config:
+`udisksctl` for the drives one plugs in, KDE Connect's `kdeconnect-cli` for a
+phone, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a
+clone of this repository, on any distribution: `nix/` is a package and a Home
+Manager module for those who want them. In niri's config:
 
 ```kdl
 spawn-at-startup "/path/to/okaeri/bin/okaeri"
@@ -192,6 +192,10 @@ The Display page has each screen's resolution, scale, turn, adaptive sync and
 place beside the others, and turns one off. niri has that at once, and okaeri has
 it again as it starts and as a screen comes; what can leave a screen dark goes
 back by itself in fifteen seconds unless it's kept.
+
+Over the wallpaper and under the windows, the desktop can have the time, the
+weather, what plays with its buttons, and what the calendars have coming, at a
+corner or in the middle: on the Wallpaper page, with how pictures show.
 
 Screenshots are under `/shot` in the launcher, of a part of the screen, the
 screen or the window in focus, with the latest after them: Enter opens one and

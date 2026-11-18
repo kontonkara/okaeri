@@ -441,6 +441,12 @@ same "any of them" "$(value .wallpaper.random)" true
 # Not while this goes on: back by the arrow of a line with words, further in.
 lower "Another every"
 same "another by itself, no more" "$(value .wallpaper.every)" 0
+# What's on the desktop, at the foot of that leaf.
+flip "The time"
+same "the time on the desktop" "$(value .desktop.clock)" true
+higher "Where they are"
+same "where it is" "$(value .desktop.position)" '"top-right"'
+flip "The time"
 
 step "When things happen by themselves"
 page "$session_y"

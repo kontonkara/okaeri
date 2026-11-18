@@ -8,10 +8,11 @@ import qs.ui
 
 // The wallpaper, on two leaves: the pictures of a folder to pick it from,
 // Settings.wallpaper.folder, or where the wallpaper is, read only as they come
-// into view; and how one is shown, and when another takes its place. With more
-// screens than one a picture can be one screen's own, and one can be for light
-// colors only. A right click on a picture has those choices at hand, and opening
-// it or copying where it is.
+// into view; and how one is shown, when another takes its place, and what's on
+// the desktop over it: the time, the weather, what plays, what's coming. With
+// more screens than one a picture can be one screen's own, and one can be for
+// light colors only. A right click on a picture has those choices at hand, and
+// opening it or copying where it is.
 Column {
 	id: page
 
@@ -429,6 +430,71 @@ Column {
 					enabled: page.own.every > 0
 					checked: page.own.random
 					onToggled: wanted => Settings.set("wallpaper", "random", wanted)
+				}
+			}
+
+			// What's over the wallpaper, under the windows.
+			Card {
+				width: parent.width
+				title: "On the desktop"
+
+				Setting {
+					holds: "desktop.clock"
+					words: "widget desktop clock"
+					text: "The time"
+					subtext: "Large, with the day"
+					checked: Settings.desktop.clock
+					onToggled: wanted => Settings.set("desktop", "clock", wanted)
+				}
+
+				Setting {
+					holds: "desktop.seconds"
+					text: "With seconds"
+					visible: Settings.desktop.clock
+					checked: Settings.desktop.seconds
+					onToggled: wanted => Settings.set("desktop", "seconds", wanted)
+				}
+
+				Setting {
+					holds: "desktop.weather"
+					words: "widget desktop"
+					text: "The weather now"
+					subtext: Weather.on ? "And today's high and low" : "Where you are goes on the Bar page, the clock's"
+					checked: Settings.desktop.weather
+					onToggled: wanted => Settings.set("desktop", "weather", wanted)
+				}
+
+				Setting {
+					holds: "desktop.media"
+					words: "widget desktop player music"
+					text: "What plays"
+					subtext: "With its buttons, while a player's open"
+					checked: Settings.desktop.media
+					onToggled: wanted => Settings.set("desktop", "media", wanted)
+				}
+
+				Setting {
+					holds: "desktop.events"
+					words: "widget desktop calendar agenda"
+					text: "What's coming"
+					subtext: Events.on ? "Today's and tomorrow's, from the calendars" : "Calendars go on the Bar page, the clock's"
+					checked: Settings.desktop.events
+					onToggled: wanted => Settings.set("desktop", "events", wanted)
+				}
+
+				Pick {
+					holds: "desktop.position"
+					text: "Where they are"
+					valueWidth: Theme.u(150)
+					options: [
+						{ value: "top-left", text: "Top left" },
+						{ value: "top-right", text: "Top right" },
+						{ value: "center", text: "In the middle" },
+						{ value: "bottom-left", text: "Bottom left" },
+						{ value: "bottom-right", text: "Bottom right" }
+					]
+					value: Settings.desktop.position
+					onChosen: value => Settings.set("desktop", "position", value)
 				}
 			}
 		}

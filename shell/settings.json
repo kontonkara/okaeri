@@ -214,6 +214,14 @@
 		"delay": 0,
 		"pointer": true
 	},
+	"desktop": {
+		"clock": false,
+		"seconds": false,
+		"weather": false,
+		"media": false,
+		"events": false,
+		"position": "top-left"
+	},
 	"drives": {
 		"notify": true,
 		"automount": false

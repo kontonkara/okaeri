@@ -82,6 +82,7 @@ Singleton {
 	readonly property var notifications: Object.assign({}, defaults.notifications, user.notifications, own.notifications)
 	readonly property var game: Object.assign({}, defaults.game, user.game, own.game)
 	readonly property var drives: Object.assign({}, defaults.drives, user.drives, own.drives)
+	readonly property var desktop: Object.assign({}, defaults.desktop, user.desktop, own.desktop)
 	readonly property var screenshots: Object.assign({}, defaults.screenshots, user.screenshots, own.screenshots)
 	// Where the wallpapers are to pick from: the folder set, or where the wallpaper is.
 	readonly property string pictures: wallpaper.folder || wallpaper.path.replace(/\/[^/]*$/, "") || `${Quickshell.env("HOME")}/Pictures`

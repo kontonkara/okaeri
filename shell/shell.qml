@@ -53,6 +53,8 @@ ShellRoot {
 
 	Wallpaper {}
 
+	Desktop {}
+
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"
 
