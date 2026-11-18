@@ -18,6 +18,7 @@ Flickable {
 			wifi: "Wi-Fi",
 			wired: "Wired network",
 			drives: "Drives",
+			screenshot: "Screenshot",
 			bluetooth: "Bluetooth",
 			night: "Night light",
 			awake: "Keep awake",

@@ -6,8 +6,8 @@ import qs.ui
 
 // The screens: how each is driven, scaled, turned and placed. How the night
 // light warms them and when, which is turned on and off in the control center,
-// whether external monitors' brightness is there too, and how the screen is
-// recorded.
+// whether external monitors' brightness is there too, how the screen is
+// recorded, and where screenshots go.
 Flickable {
 	id: page
 
@@ -401,6 +401,40 @@ Flickable {
 				wide: true
 				value: Settings.recording.folder
 				onKept: value => Settings.set("recording", "folder", value.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
+			}
+		}
+
+		// Where screenshots go, and how long a screen or a window waits for one.
+		Card {
+			width: parent.width
+			title: "Screenshots"
+
+			Field {
+				holds: "screenshots.folder"
+				words: "screenshot capture print"
+				text: "Where they go"
+				subtext: "Empty for where niri's config says"
+				placeholder: "~/Pictures/Screenshots"
+				wide: true
+				value: Settings.screenshots.folder
+				onKept: value => Settings.set("screenshots", "folder", value.trim())
+			}
+
+			Choice {
+				holds: "screenshots.delay"
+				text: "Of the screen or a window, wait"
+				subtext: "From the control center and the launcher"
+				values: [0, 3, 5, 10]
+				none: "Not at all"
+				value: Settings.screenshots.delay
+				onChosen: value => Settings.set("screenshots", "delay", value)
+			}
+
+			Setting {
+				holds: "screenshots.pointer"
+				text: "With the pointer"
+				checked: Settings.screenshots.pointer
+				onToggled: wanted => Settings.set("screenshots", "pointer", wanted)
 			}
 		}
 	}

@@ -508,8 +508,8 @@ shot control-page
 # shellcheck disable=SC2046
 set -- $(spot Wi-Fi line) $(spot Hidden line)
 drag "$1" "$2" "$3" "$(($4 + 30))"
-same "what's left out" "$(value .control.hidden)" '["wifi","game"]'
-same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","wifi","game"]'
+same "what's left out" "$(value .control.hidden)" '["wifi","screenshot","game"]'
+same "the order" "$(value .control.tiles)" '["wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","wifi","screenshot","game"]'
 # Bluetooth to a whole row, by its card; and Wi-Fi back to the front, on the
 # first tile's left half.
 press_on Bluetooth line
@@ -519,8 +519,8 @@ shot control-wide
 # shellcheck disable=SC2046
 set -- $(spot Wi-Fi line) $(spot "Wired network" line)
 drag "$1" "$2" "$(($3 - 120))" "$4"
-same "what's left out, back" "$(value .control.hidden)" '["game"]'
-same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","game"]'
+same "what's left out, back" "$(value .control.hidden)" '["screenshot","game"]'
+same "the order, back" "$(value .control.tiles)" '["wifi","wired","bluetooth","night","awake","power","airplane","vpn","record","hotspot","drives","screenshot","game"]'
 # A tile of one's own, by the button under the lanes, a row further down with
 # Bluetooth's on a row of its own: its card is at the foot of the page.
 press_on "Add your own" line
@@ -830,6 +830,9 @@ for _ in $(seq 30); do
 done
 log | grep -q "dry: output $screen scale 1\$" || fail "the screen didn't go back"
 same "the screen, as it was kept" "$(value .display.screens)" "{\"$screen\":{\"scale\":1.25}}"
+# How long a screenshot of the screen or a window waits.
+higher "Of the screen or a window, wait"
+same "how long a screenshot waits" "$(value .screenshots.delay)" 3
 flip "Their brightness"
 same "external monitors' brightness" "$(value .display.ddc)" true
 higher When

@@ -32,6 +32,7 @@ Panel {
 		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
 		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
+		{ mode: "shot", text: "Screenshots", subtext: "/shot: take one, or the latest: Enter opens one, Shift+Enter copies it", icon: "image" },
 		{ mode: "color", text: "A color off the screen", subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
 		{ mode: "timer", text: "Timer and stopwatch", subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
@@ -251,6 +252,23 @@ Panel {
 		return found;
 	}
 
+	// A screenshot to take, and the latest taken, those that have `query` in their
+	// names.
+	function shots(query) {
+		const later = Settings.screenshots.delay > 0 ? `In ${Settings.screenshots.delay} s` : "";
+		return [
+			{ does: () => Screenshots.take("area"), text: "A part of the screen", subtext: "Picked by niri", icon: "image" },
+			{ does: () => Screenshots.take("screen"), text: "The screen", subtext: later, icon: "image" },
+			{ does: () => Screenshots.take("window"), text: "The window in focus", subtext: later, icon: "image" }
+		].filter(row => !query || row.text.toLowerCase().includes(query)).concat(Screenshots.latest.filter(file => !query || file.toLowerCase().includes(query)).map(file => ({
+			shot: file,
+			text: file.replace(/^.*\//, ""),
+			subtext: file.replace(/\/[^/]*$/, "").replace(Quickshell.env("HOME"), "~"),
+			image: Settings.url(file),
+			icon: "image"
+		})));
+	}
+
 	// What else `entry` can do.
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
@@ -309,6 +327,8 @@ Panel {
 			return session(query);
 		case "timer":
 			return timer(asked[2]);
+		case "shot":
+			return shots(query);
 		case "color":
 			return [{ does: () => colorSoon.restart(), text: "Pick a color off the screen", subtext: "A click on it copies it as #rrggbb", icon: "eye" }];
 		}
@@ -348,15 +368,18 @@ Panel {
 	}
 
 	// What Shift+Enter or a right click does with a row that's no app, the other
-	// thing there is to do with it: a file's folder opens, what was copied is
-	// pasted where Enter copies and copied where it pastes, and an emoji is only
-	// copied. A window closes, and the launcher stays on the rest of them.
+	// thing there is to do with it: a file's folder opens, a screenshot is copied,
+	// what was copied is pasted where Enter copies and copied where it pastes, and
+	// an emoji is only copied. A window closes, and the launcher stays on the rest
+	// of them.
 	function otherWay(row) {
 		if (row?.window) {
 			Env.act("close window", () => Niri.closeWindow(row.window));
 			return;
 		}
-		if (row?.file)
+		if (row?.shot)
+			Screenshots.copy(row.shot);
+		else if (row?.file)
 			Env.act("open folder", () => Niri.spawn(["xdg-open", row.file.replace(/\/[^/]*$/, "") || "/"]));
 		else if (row?.clip) {
 			Clipboard.restore(row.clip);
@@ -717,6 +740,8 @@ Panel {
 					Theme.hang(row.wallpaper);
 				else if (row.file)
 					Env.act("open file", () => Niri.spawn(["xdg-open", row.file]));
+				else if (row.shot)
+					Screenshots.open(row.shot);
 				else if (row.clip) {
 					Clipboard.restore(row.clip);
 					if (Settings.clipboard.paste)

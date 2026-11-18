@@ -265,9 +265,17 @@ Singleton {
 		}
 	}
 
-	// niri only says something for a screenshot.
+	// niri only says something for a screenshot, and where it went.
 	function ring(notification) {
 		if (notification.appName === "niri") {
+			const file = (notification.image || "").replace(/^image:\/\/icon\//, "");
+			if (file.startsWith("/"))
+				Screenshots.saw(file);
+			else if (file.startsWith("file://")) {
+				try {
+					Screenshots.saw(decodeURIComponent(file.slice(7)));
+				} catch (error) {}
+			}
 			if (Settings.sounds.screenshots)
 				Sounds.play("screen-capture");
 		} else if (Settings.sounds.notifications && notification.urgency !== NotificationUrgency.Low && rule(notification).sound !== false) {

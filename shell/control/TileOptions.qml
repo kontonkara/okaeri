@@ -19,6 +19,7 @@ Section {
 			wifi: { title: "Wi-Fi", icon: "wifi" },
 			wired: { title: "Wired", icon: "ethernet" },
 			drives: { title: "Drives", icon: "drive" },
+			screenshot: { title: "Screenshot", icon: "image" },
 			bluetooth: { title: "Bluetooth", icon: "bluetooth" },
 			night: { title: "Night light", icon: "sunset" },
 			awake: { title: "Keep awake", icon: "coffee" },
@@ -61,6 +62,20 @@ Section {
 								Env.act("open folder", () => Niri.spawn(["xdg-open", Recorder.folder]));
 								Control.leave();
 							} }]
+				}];
+		}
+		if (name === "screenshot") {
+			const delay = Settings.screenshots.delay;
+			const take = (kind, text, subtext) => ({ text, subtext, icon: "image", does: () => {
+					Control.leave();
+					Screenshots.take(kind);
+				} });
+			return [{
+					title: "Take one",
+					rows: [take("area", "A part of the screen", "Picked by niri"), take("screen", "The screen", delay ? `In ${delay} s` : ""), take("window", "The window in focus", delay ? `In ${delay} s` : "")]
+				}, {
+					title: "Of the screen and a window, wait first",
+					rows: [0, 3, 5, 10].map(seconds => pick(seconds ? `${seconds} seconds` : "Not at all", delay === seconds, () => Settings.set("screenshots", "delay", seconds)))
 				}];
 		}
 		if (name === "night") {

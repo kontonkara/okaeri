@@ -1060,3 +1060,14 @@ sleep 0.2
 key Return
 wait_log "okaeri: dry: color pick"
 is_closed "a color to pick"
+
+# Screenshots under /shot: niri's picker for a part of the screen, the panel gone
+# first; and the window in focus by a call. Here both are only said.
+open
+type "/shot "
+sleep 0.2
+key Return
+is_closed "a screenshot"
+wait_log "okaeri: dry: screenshot area"
+ipc screenshot take window
+wait_log "okaeri: dry: screenshot window"

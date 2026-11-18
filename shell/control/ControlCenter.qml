@@ -238,6 +238,7 @@ Panel {
 									wifi: wifiTile,
 									wired: wiredTile,
 									drives: drivesTile,
+									screenshot: screenshotTile,
 									bluetooth: bluetoothTile,
 									vpn: vpnTile,
 									airplane: airplaneTile,
@@ -287,6 +288,22 @@ Panel {
 							checked: Wired.connected
 							opens: "wired"
 							onToggled: wanted => Wired.setEnabled(wanted)
+						}
+					}
+
+					Component {
+						id: screenshotTile
+
+						Tile {
+							name: "screenshot"
+							icon: "image"
+							title: "Screenshot"
+							summary: Settings.screenshots.delay > 0 ? `A part, or in ${Settings.screenshots.delay} s the rest` : "Of a part of the screen"
+							switches: false
+							onClicked: {
+								Control.leave();
+								Screenshots.take("area");
+							}
 						}
 					}
 

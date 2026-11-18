@@ -196,6 +196,16 @@ window-rule {
 		act({ Quit: { skip_confirmation: true } });
 	}
 
+	// A screenshot of a part of the screen picked by niri, `kind` "area", of the
+	// screen in focus, "screen", or of the window in focus, "window": to `path`, or
+	// where niri's config says with none, and on the clipboard.
+	function screenshot(kind, path, pointer) {
+		const action = kind === "area" ? "screenshot" : `screenshot-${kind}`;
+		const asked = ["niri", "msg", "action", action, "--show-pointer", String(!!pointer)];
+		// A folder of one's own is made first: niri only writes the file.
+		Env.act(`screenshot ${kind}`, () => Quickshell.execDetached(path ? ["sh", "-c", 'mkdir -p "${1%/*}" && shift && exec "$@"', "sh", path].concat(asked, ["--path", path]) : asked));
+	}
+
 	// A color off the screen, by a click on it, as niri picks it: colorPicked() says
 	// which, as #rrggbb, or nothing if the click was taken back.
 	signal colorPicked(string color)

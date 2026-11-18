@@ -20,6 +20,8 @@ Scope {
 	readonly property bool drives: Drives.read
 	// And the screens, to have them as the settings window set them.
 	readonly property var screens: Screens.kept
+	// And screenshots, for `okaeri screenshot`.
+	readonly property string screenshots: Screenshots.folder
 
 	readonly property var own: Settings.hooks
 	// Not for how things are as the shell comes up: those aren't changes.

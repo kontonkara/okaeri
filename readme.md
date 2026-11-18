@@ -187,6 +187,12 @@ place beside the others, and turns one off. niri has that at once, and okaeri ha
 it again as it starts and as a screen comes; what can leave a screen dark goes
 back by itself in fifteen seconds unless it's kept.
 
+Screenshots are under `/shot` in the launcher, of a part of the screen, the
+screen or the window in focus, with the latest after them: Enter opens one and
+Shift+Enter copies it. The Display page has where they go and how long they wait,
+the control center a tile for them among those left out at first, and `okaeri
+screenshot take area`, `screen` or `window` is one by a key.
+
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that
 are; a screenshot's toast opens its folder, copies it or deletes it.

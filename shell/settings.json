@@ -25,9 +25,9 @@
 		"label": "percent"
 	},
 	"control": {
-		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "drives", "game"],
+		"tiles": ["wifi", "wired", "bluetooth", "night", "awake", "power", "airplane", "vpn", "record", "hotspot", "drives", "screenshot", "game"],
 		"wide": [],
-		"hidden": ["game"],
+		"hidden": ["screenshot", "game"],
 		"custom": [],
 		"size": "large"
 	},
@@ -208,6 +208,11 @@
 		"scroll": true,
 		"menu": true,
 		"ignored": []
+	},
+	"screenshots": {
+		"folder": "",
+		"delay": 0,
+		"pointer": true
 	},
 	"drives": {
 		"notify": true,
