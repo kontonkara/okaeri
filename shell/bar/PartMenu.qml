@@ -106,6 +106,11 @@ Panel {
 
 	// By `item`, the part called `name` on a bar on `screen`.
 	function showFor(name, item, screen) {
+		// Asked again for the same, it goes.
+		if (shown && part === name && menu.screen === screen) {
+			hide();
+			return;
+		}
 		part = name;
 		middle = Panels.middleOf(item);
 		show(screen);

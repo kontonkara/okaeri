@@ -494,6 +494,13 @@ shot drawer-menu
 wait_panels 1 "the menu from the drawer"
 key Escape
 wait_panels 0 "Escape from the menu"
+# The button again: the drawer goes as it came.
+move "$opener" 16
+click
+wait_panels 1 "the drawer once more"
+sleep 0.3
+click
+wait_panels 0 "a second click on the drawer's button"
 settings '{}'
 wait_tray
 tray=$(lane tray | head -n 1)
@@ -2246,7 +2253,9 @@ same "what's on the right with it always there" "$(lane record-always | wc -l)" 
 move "$(lane record-always | head -n 1)" 16
 click right
 wait_up 1
-key Escape
+# A second right click on it puts the menu away, as Escape does.
+sleep 0.3
+click right
 wait_up 0
 sleep 0.3
 click right

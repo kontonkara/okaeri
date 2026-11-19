@@ -37,7 +37,13 @@ Grid {
 		visible: tray.drawn.length > 0
 		icon: "tray"
 		tip: "Tray"
-		onClicked: drawer.showUnder(opener)
+		// Again, it goes: a click on the bar isn't one elsewhere.
+		onClicked: {
+			if (drawer.shown)
+				drawer.hide();
+			else
+				drawer.showUnder(opener);
+		}
 	}
 
 	Repeater {

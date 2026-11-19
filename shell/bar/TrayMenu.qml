@@ -14,6 +14,11 @@ Panel {
 	property var path: []
 
 	function showFor(item, under) {
+		// Asked again for the same, it goes.
+		if (shown && path[0] === item.menu) {
+			hide();
+			return;
+		}
 		middle = Panels.middleOf(under);
 		path = [item.menu];
 		show(under.QsWindow.window.screen);

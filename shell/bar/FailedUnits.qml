@@ -18,6 +18,10 @@ BarButton {
 	tip: Units.failed.length === 1 ? "A unit failed" : `${Units.failed.length} units failed`
 	ink: Theme.colors.error
 	onClicked: {
+		if (list.shown) {
+			list.hide();
+			return;
+		}
 		Units.check();
 		list.middle = Panels.middleOf(button);
 		list.show(button.QsWindow.window.screen);
