@@ -18,6 +18,7 @@ Panel {
 	align: "top"
 	padding: Theme.u(6)
 	panelWidth: Math.min(Math.max(items.length, 1), 6) * Theme.u(34) - Theme.u(6) + padding * 2
+	widens: false
 
 	// The last one went away.
 	onItemsChanged: {

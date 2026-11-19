@@ -109,7 +109,21 @@ window-rule {
 		xray false
 	}
 }
-` : ""}`
+` : ""}${windowsLook}`
+	// How windows look, where Settings.niri says, in the theme's colors: the gaps
+	// between them, their border, the ring around the one in focus and their
+	// corners. What it doesn't say is niri's config's own.
+	readonly property string windowsLook: {
+		const look = Settings.niri;
+		const width = value => typeof value === "number" && value >= 0 ? value : null;
+		const gaps = width(look.gaps);
+		const border = width(look.border);
+		const ring = width(look.focusRing);
+		const corners = width(look.corners);
+		const frame = (name, size) => size === null ? "" : size === 0 ? `\n\t${name} {\n\t\toff\n\t}` : `\n\t${name} {\n\t\ton\n\t\twidth ${size}\n\t\tactive-color "${Theme.colors.accent}"\n\t\tinactive-color "${Theme.colors.surface}"\n\t\turgent-color "${Theme.colors.error}"\n\t}`;
+		const layout = (gaps === null ? "" : `\n\tgaps ${gaps}`) + frame("border", border) + frame("focus-ring", ring);
+		return (layout ? `\nlayout {${layout}\n}\n` : "") + (corners === null ? "" : `\nwindow-rule {\n\tgeometry-corner-radius ${corners}\n\tclip-to-geometry true\n}\n`);
+	}
 
 	onFocusedWindowChanged: {
 		if (focusedWindow)

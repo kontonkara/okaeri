@@ -25,6 +25,7 @@
   "barHeight": 34,
   "barMargin": 4,
   "barIcon": 16,
+  "panelWidth": 100,
   "auto": "off",
   "day": "light",
   "night": "dark",

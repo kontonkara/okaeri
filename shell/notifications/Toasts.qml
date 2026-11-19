@@ -32,7 +32,7 @@ PanelWindow {
 	readonly property real small: Theme.toastMotion === "grow" || (Theme.toastMotion === "slide" && side === 0) ? 0.94 : 1
 	// How far they go for what's open in their corner.
 	readonly property real aside: {
-		const widths = Panels.open.filter(panel => panel.place === window.place && panel.screen === window.screen).map(panel => panel.panelWidth);
+		const widths = Panels.open.filter(panel => panel.place === window.place && panel.screen === window.screen).map(panel => panel.wide);
 		return widths.length ? Math.round(Math.max(...widths) + Theme.u(8)) : 0;
 	}
 

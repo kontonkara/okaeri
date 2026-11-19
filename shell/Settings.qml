@@ -89,11 +89,33 @@ Singleton {
 	readonly property var updates: Object.assign({}, defaults.updates, user.updates, own.updates)
 	readonly property var pomodoro: Object.assign({}, defaults.pomodoro, user.pomodoro, own.pomodoro)
 	readonly property var screenshots: Object.assign({}, defaults.screenshots, user.screenshots, own.screenshots)
+	readonly property var niri: Object.assign({}, defaults.niri, user.niri, own.niri)
 	// Where the wallpapers are to pick from: the folder set, or where the wallpaper is.
 	readonly property string pictures: wallpaper.folder || wallpaper.path.replace(/\/[^/]*$/, "") || `${Quickshell.env("HOME")}/Pictures`
 
 	function set(section, key, value) {
 		own = Object.assign({}, own, { [section]: Object.assign({}, own[section], { [key]: value }) });
+		save();
+	}
+
+	// Many at once, { section: { key: value } }, saved once: a key whose value is
+	// undefined goes back to what the files say.
+	function setAll(changes) {
+		const next = Object.assign({}, own);
+		Object.keys(changes).forEach(section => {
+			const keys = Object.assign({}, next[section]);
+			Object.keys(changes[section]).forEach(key => {
+				if (changes[section][key] === undefined)
+					delete keys[key];
+				else
+					keys[key] = changes[section][key];
+			});
+			if (Object.keys(keys).length > 0)
+				next[section] = keys;
+			else
+				delete next[section];
+		});
+		own = next;
 		save();
 	}
 

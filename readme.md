@@ -26,10 +26,11 @@ and away again, settings too if you say so:
 ```
 
 It puts okaeri in `~/.local/share/okaeri`, offers to get what it needs from your
-package manager, and puts two includes at the top of niri's config, between
-`okaeri` marks: its start and its keys, which yours override, and what the shell
-needs of niri. Another bar that niri starts, or what does what okaeri does, as mako
-or swayidle, it offers to turn off, till okaeri goes, and it says which services
+package manager, and puts two includes in niri's config, between `okaeri`
+marks: at the top its start and its keys, which yours override, and at the end
+what the shell needs of niri, with how windows look where the Look page says.
+Another bar that niri starts, or what does what okaeri does, as mako or
+swayidle, it offers to turn off, till okaeri goes, and it says which services
 of yours do the same.
 Running it again updates it. The keys are Mod+Space for the launcher, Mod+Alt+V
 for the clipboard, Mod+Shift+Escape for the session menu and Mod+Shift+Comma for
@@ -52,7 +53,8 @@ them. In niri's config:
 ```kdl
 spawn-at-startup "/path/to/okaeri/bin/okaeri"
 
-// What the shell needs of niri, in a file it keeps itself.
+// What the shell needs of niri, in a file it keeps itself: at the end, where
+// how windows look, as the Look page says, goes over what comes before.
 include optional=true "~/.local/state/okaeri/niri.kdl"
 
 // The keys install.sh binds: niri's default config has Mod+V and Mod+Escape.
@@ -96,16 +98,17 @@ screencasts show the notifications.
 ## Settings
 
 The settings window changes most things in place, over what the files say, and
-`okaeri settings toggle` opens it. The files are `~/.config/okaeri/settings.json` for
-what it does and `theme.json` beside it for how it looks: `shell/settings.json` and
-`shell/themes/dark.json` have every key. How fast things move, and how panels and
-notifications come, growing, fading or sliding in, are on the Look page with the
-rest. "Back to the config", under the pages, takes back what the window set: on
-the page that shows, or all of it. `okaeri theme toggle` goes between the day's
-and the night's palettes, for a key. A choice in the window takes the wheel and the
-arrow keys, and the Notifications page has one to show, to see how they come. The
-on-screen display says what plays after a key of the player's, too, and as a
-track starts by itself where its page says so.
+`okaeri settings toggle` opens it. The files are `~/.config/okaeri/settings.json`
+for what it does and `theme.json` beside it for how it looks:
+`shell/settings.json` and `shell/themes/dark.json` have every key. How fast things
+move, and how panels and notifications come, growing, fading, sliding, springing
+or dropping in, and how wide panels are, are on the Look page with the rest. "Back
+to the config", under the pages, takes back what the window set: on the page that
+shows, or all of it. `okaeri theme toggle` goes between the day's and the night's
+palettes, for a key. A choice in the window takes the wheel and the arrow keys,
+and the Notifications page has one to show, to see how they come. The on-screen
+display says what plays after a key of the player's, too, and as a track starts by
+itself where its page says so.
 
 A dot left of a line of the settings window says the window set it, and a click
 on the dot takes that back; a line that's one of a list, as what has an on-screen

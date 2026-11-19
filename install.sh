@@ -8,12 +8,13 @@
 # also at ~/.local/share/okaeri/install.sh. Running it again updates it.
 #
 # It installs into ~/.local/share/okaeri, links ~/.local/bin/okaeri to it, and
-# puts two includes at the top of niri's config.kdl, between "okaeri" marks:
-# its own file, with the shell's start and its keys, and the one the shell keeps.
-# Keys you bound yourself come later in your config and win. What the shell needs
-# from the system it asks your package manager for, if you say so. Uninstalling
-# stops the shell and takes the marks and all between them away, the files, and,
-# if you say so, your settings. It never needs root but for packages.
+# puts two includes in niri's config.kdl, between "okaeri" marks: at the top its
+# own file, with the shell's start and its keys, which keys you bound yourself
+# come after and win over; at the end the one the shell keeps, with how windows
+# look where its settings say. What the shell needs from the system it asks your
+# package manager for, if you say so. Uninstalling stops the shell and takes the
+# marks and all between them away, the files, and, if you say so, your settings.
+# It never needs root but for packages.
 #
 # OKAERI_REF is the branch or tag it downloads, main by default.
 set -eu
@@ -222,15 +223,20 @@ find_tree() {
 }
 
 # niri's config without the marks and what's between them, and the blank line
-# after the end mark, which was put there with them.
+# put there with each: after the one at the top, before the one at the end. With
+# "keep", what install.sh turned off stays off.
 unmarked() {
-	awk -v begin="$begin" -v end="$end" -v off="$off" '
-		index($0, off) == 1 { $0 = substr($0, length(off) + 1) }
-		$0 == begin { skipping = 1; next }
+	awk -v begin="$begin" -v end="$end" -v off="$off" -v keep="${1:-}" '
+		keep == "" && index($0, off) == 1 { $0 = substr($0, length(off) + 1) }
+		held && $0 != begin { print ""; held = 0 }
+		$0 == begin { held = 0; skipping = 1; next }
 		skipping && $0 == end { skipping = 0; dropping = 1; next }
 		skipping { next }
 		dropping && $0 == "" { dropping = 0; next }
-		{ dropping = 0; print }
+		{ dropping = 0 }
+		$0 == "" { held = 1; next }
+		{ print }
+		END { if (held) print "" }
 	' "$niri_config"
 }
 
@@ -263,25 +269,42 @@ binds {
 KDL
 }
 
-# The marks at the top of niri's config, written in place: niri reads it anew
-# as it changes.
+# The marks in niri's config, written in place: niri reads it anew as it
+# changes. At the top okaeri's start and keys, which yours come after and win
+# over; at the end the file the shell keeps, with how windows look, which wins
+# over yours where its settings say. An install from before there were two has
+# its one moved.
 mark_niri() {
 	if [ ! -f "$niri_config" ]; then
 		say "niri has no config yet: start niri once, then run this again for its start and keys."
 		return
 	fi
-	if grep -qxF "$begin" "$niri_config"; then
+	marks=$(grep -cxF "$begin" "$niri_config" || true)
+	if [ "$marks" -ge 2 ]; then
 		return
 	fi
 	[ -e "$niri_config.before-okaeri" ] || cp "$niri_config" "$niri_config.before-okaeri"
 	{
 		say "$begin"
 		say "include optional=true \"$dest/niri.kdl\""
-		say "include optional=true \"$state/niri.kdl\""
 		say "$end"
 		say ""
-		cat "$niri_config"
+		if [ "$marks" -ge 1 ]; then
+			unmarked keep
+		else
+			cat "$niri_config"
+		fi
+		say ""
+		say "$begin"
+		say "include optional=true \"$state/niri.kdl\""
+		say "$end"
 	} >"$niri_config.okaeri-new"
+	if [ "$marks" -ge 1 ]; then
+		cat "$niri_config.okaeri-new" >"$niri_config"
+		rm "$niri_config.okaeri-new"
+		say "niri's config has the shell's own file at its end now, for how windows look."
+		return
+	fi
 	cat "$niri_config.okaeri-new" >"$niri_config"
 	rm "$niri_config.okaeri-new"
 	say "niri's config includes okaeri now: $niri_config (as it was: $niri_config.before-okaeri)"

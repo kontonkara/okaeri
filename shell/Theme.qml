@@ -139,6 +139,20 @@ Singleton {
 		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
 	}
 
+	// Many at once, saved once: a key whose value is undefined goes back to what
+	// the files say.
+	function setAll(changes) {
+		const next = Object.assign({}, own);
+		Object.keys(changes).forEach(key => {
+			if (changes[key] === undefined)
+				delete next[key];
+			else
+				next[key] = changes[key];
+		});
+		own = next;
+		ownFile.setText(JSON.stringify(own, null, "\t") + "\n");
+	}
+
 	// Back to what the files say.
 	function reset() {
 		own = {};
@@ -293,7 +307,7 @@ Singleton {
 	// "grow" out of where it belongs, "fade" in place, or "slide" in from the bar;
 	// and how a notification does: "slide" in from its side, "fade" or "grow".
 	readonly property real pace: ({ quick: 0.6, slow: 1.6 })[values.speed] ?? 1
-	readonly property string panelMotion: ["fade", "slide"].includes(values.panelMotion) ? values.panelMotion : "grow"
+	readonly property string panelMotion: ["fade", "slide", "spring", "drop"].includes(values.panelMotion) ? values.panelMotion : "grow"
 	readonly property string toastMotion: ["fade", "grow"].includes(values.toastMotion) ? values.toastMotion : "slide"
 
 	// An animation `n` milliseconds long at the pace that's set.
@@ -314,6 +328,8 @@ Singleton {
 	readonly property real barHeight: u(values.barHeight)
 	readonly property real barMargin: u(values.barMargin)
 	readonly property real barIcon: u(values.barIcon)
+	// How wide panels are, against their own width.
+	readonly property real panelScale: Math.max(0.8, Math.min(1.6, (values.panelWidth ?? 100) / 100))
 
 	// How far what opens stays from the sides of the screen, as the bar does, and
 	// where it starts under it. Whole pixels: at a fraction its edges would smear.

@@ -952,6 +952,17 @@ step "How it looks"
 page "$look_y"
 shot look
 theme_own=$XDG_STATE_HOME/okaeri/theme.json
+# A layout, in one click, and the last one taken back.
+bar_before=$(value .bar)
+press_on Layouts layout-capsules
+sleep 0.3
+same "the layout's bar" "$(value .bar.look)" '"capsules"'
+same "the layout's gap" "$(jq -c .barMargin "$theme_own")" 6
+same "the layout it's as" "$(ipc layouts list | grep '\*')" "capsules *"
+shot layout
+press_on "As it was" line
+same "the bar as it was" "$(value .bar)" "$bar_before"
+same "the gap as it was" "$(jq -c .barMargin "$theme_own")" null
 flip "Blur behind panels"
 same "blur behind panels" "$(jq -c .blur "$theme_own")" true
 flip "Blur behind notifications"
@@ -969,6 +980,24 @@ same "windows in the blur" "$(jq -c .realBlur "$theme_own")" true
 niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules with the blur"
 [ "$(grep -c 'xray false' "$rules")" = 2 ] || fail "the rules: $(cat "$rules")"
 [ "$(stat -c %Y.%y "$rules")" != "$written" ] || fail "the rules weren't written"
+# How windows look, in the same file: none of it till a line says.
+! grep -q 'gaps\|focus-ring\|geometry-corner-radius' "$rules" || fail "how windows look, before it was asked for"
+higher "Gaps between them" 3
+same "the gaps" "$(value .niri.gaps)" 8
+higher "A ring around the one in focus"
+same "the ring" "$(value .niri.focusRing)" 0
+higher "Their corners" 3
+same "the corners" "$(value .niri.corners)" 8
+sleep 0.3
+niri validate -c "$rules" 2>/dev/null || fail "niri can't read the rules with how windows look"
+grep -q 'gaps 8' "$rules" || fail "no gaps in the rules: $(cat "$rules")"
+grep -q 'geometry-corner-radius 8' "$rules" || fail "no corners in the rules"
+same "the ring off" "$(grep -A1 'focus-ring {' "$rules" | tail -n 1 | tr -d '\t')" off
+lower "Gaps between them" 3
+lower "A ring around the one in focus"
+lower "Their corners" 3
+sleep 0.3
+! grep -q 'gaps\|focus-ring\|geometry-corner-radius' "$rules" || fail "how windows look stayed: $(cat "$rules")"
 higher "How solid it stays"
 same "how solid" "$(jq -c .opacity "$theme_own")" 80
 flip Animations
@@ -1004,6 +1033,18 @@ sleep 0.3
 shot look-changed
 # The bar went by it: its lower edge is further down.
 [ "$(pixel look-changed 700 38)" != "$(pixel look-before 700 38)" ] || fail "the bar's height didn't change"
+# A font of those installed, found by a search and picked by a click.
+family=$(fc-list : family | cut -d, -f1 | sort -u | grep -v '^$' | head -n 1)
+press_on "Installed fonts" line
+press_on Done font-search
+# Not all of its name: the field would say the same as its line.
+type "${family%?}"
+sleep 0.3
+press_on "$family" line
+same "the font picked" "$(jq -r .font "$theme_own")" "$family"
+press_on Done line
+same "the font as it was" "$(ipc settings reset theme.font)" ""
+sleep 0.5
 # Its colors, at the foot of the page: a palette, on at once, and the config's
 # again; another by day; the accent from the wallpaper.
 shot look-colors

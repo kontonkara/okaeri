@@ -35,6 +35,9 @@ PanelWindow {
 	property real off: Settings.inset(screen, edge)
 	readonly property bool upright: edge === "left" || edge === "right"
 	property real panelWidth: Theme.u(380)
+	// Whether its width goes by the theme's panelWidth, and how wide it is then.
+	property bool widens: true
+	readonly property real wide: Math.round(panelWidth * (widens ? Theme.panelScale : 1))
 	property real padding: Theme.u(12)
 	property bool modal: false
 	// What Escape does before it closes the panel: true if that was all of it.
@@ -185,7 +188,7 @@ PanelWindow {
 			: panel.align === "top-right" ? panel.across - implicitWidth - Theme.edge
 			: panel.align === "top-left" ? Theme.edge
 			: Math.round(Math.max(Theme.edge, Math.min(panel.middle - implicitWidth / 2, panel.across - implicitWidth - Theme.edge)))
-		implicitWidth: Math.round(panel.panelWidth)
+		implicitWidth: panel.wide
 		color: "transparent"
 		exclusionMode: ExclusionMode.Ignore
 		WlrLayershell.layer: WlrLayer.Overlay
@@ -232,12 +235,14 @@ PanelWindow {
 			height: card.height
 			focus: true
 			opacity: 0
-			scale: Theme.panelMotion === "grow" ? 0.94 : 1
+			scale: Theme.panelMotion === "grow" ? 0.94 : Theme.panelMotion === "spring" ? 0.85 : 1
 			// How far it is from its place, 1 out of sight and 0 there: it slides that
 			// far in from the bar, or with no bar beside it from below, with
 			// Theme.panelMotion "slide".
 			property real away: 1
-			readonly property real lift: Theme.panelMotion === "slide" ? Theme.u(28) : 0
+			readonly property real lift: Theme.panelMotion === "slide" ? Theme.u(28) : Theme.panelMotion === "drop" ? Theme.u(56) : 0
+			// "spring" and "drop" go past their place and back.
+			readonly property bool springs: Theme.panelMotion === "spring" || Theme.panelMotion === "drop"
 			readonly property real shiftX: panel.beside ? away * lift * (panel.edge === "left" ? -1 : 1) : 0
 			readonly property real shiftY: panel.beside ? 0 : away * lift * (panel.align === "center" || panel.low ? 1 : -1)
 
@@ -278,8 +283,9 @@ PanelWindow {
 
 					NumberAnimation {
 						properties: "scale,away"
-						duration: Theme.ms(240)
-						easing.type: Easing.OutQuint
+						duration: Theme.ms(scope.springs ? 340 : 240)
+						easing.type: scope.springs ? Easing.OutBack : Easing.OutQuint
+						easing.overshoot: 1.8
 					}
 				},
 				Transition {

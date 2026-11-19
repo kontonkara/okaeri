@@ -71,7 +71,10 @@ same "the link" "$(readlink "$home/.local/bin/okaeri")" "$dest/bin/okaeri"
 same "the config's first line" "$(head -n 1 "$config")" "// okaeri: begin, install.sh puts this here and takes it away"
 grep -qxF "include optional=true \"$dest/niri.kdl\"" "$config" || fail "no include of okaeri's keys"
 grep -qxF "include optional=true \"$home/.local/state/okaeri/niri.kdl\"" "$config" || fail "no include of the shell's own file"
-same "the rest of the config" "$(sed '1,/^\/\/ okaeri: end$/d' "$config" | sed '1d')" "$(cat "$out/config-before.kdl")"
+# The shell's own file at the end, where how windows look wins over the config.
+same "the config's last line" "$(tail -n 1 "$config")" "// okaeri: end"
+same "the end's include" "$(tail -n 2 "$config" | head -n 1)" "include optional=true \"$home/.local/state/okaeri/niri.kdl\""
+same "the rest of the config" "$(sed '1,/^\/\/ okaeri: end$/d' "$config" | sed '1d' | head -n -4)" "$(cat "$out/config-before.kdl")"
 grep -q "Mod+Space .*\"$dest/bin/okaeri\" \"launcher\" \"toggle\"" "$dest/niri.kdl" || fail "no key for the launcher"
 grep -q "spawn-at-startup \"$dest/bin/okaeri\"" "$dest/niri.kdl" || fail "nothing starts it"
 # With no one to say so, the other bar stays, and so does the system.
@@ -83,7 +86,21 @@ fi
 step "Again, as an update"
 echo "left behind" >"$dest/shell/stale.qml"
 OKAERI_ARCHIVE="$out/okaeri.tar.gz" run again sh "$dest/install.sh"
-same "the marks after a second run" "$(grep -c '^// okaeri: begin' "$config")" 1
+same "the marks after a second run" "$(grep -c '^// okaeri: begin' "$config")" 2
+# An install from before, with both at the top, has the shell's own moved.
+{
+	echo "// okaeri: begin, install.sh puts this here and takes it away"
+	echo "include optional=true \"$dest/niri.kdl\""
+	echo "include optional=true \"$home/.local/state/okaeri/niri.kdl\""
+	echo "// okaeri: end"
+	echo
+	sed "s|^spawn-at-startup \"waybar\"|// okaeri turned this off: &|" "$out/config-before.kdl"
+} >"$config"
+OKAERI_ARCHIVE="$out/okaeri.tar.gz" run older sh "$dest/install.sh"
+same "the marks of one from before" "$(grep -c '^// okaeri: begin' "$config")" 2
+same "its end's include" "$(tail -n 2 "$config" | head -n 1)" "include optional=true \"$home/.local/state/okaeri/niri.kdl\""
+grep -qx '// okaeri turned this off: spawn-at-startup "waybar"' "$config" || fail "what was off came on as the file moved"
+sed -i 's|^// okaeri turned this off: ||' "$config"
 [ ! -e "$dest/shell/stale.qml" ] || fail "an update left the old files"
 
 step "Away again"

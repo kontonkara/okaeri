@@ -1,5 +1,6 @@
 import QtQuick
 import qs
+import qs.services
 import qs.ui
 
 // What everything is drawn with, as much of it as a line can say: this goes over
@@ -15,11 +16,124 @@ Flickable {
 		view: page
 	}
 
+	// A size of Settings.niri, or null for niri's config's own.
+	component WindowsPick: Pick {
+		required property string key
+		required property var sizes
+		property string none: Tr.t("None")
+
+		holds: `niri.${key}`
+		options: [{ value: null, text: Tr.t("As niri's config") }].concat(sizes.map(size => ({ value: size, text: size === 0 ? none : `${size} px` })))
+		value: Settings.niri[key] ?? null
+		valueWidth: Theme.u(130)
+		onChosen: value => Settings.set("niri", key, value)
+	}
+
 	Column {
 		id: column
 
 		width: parent.width
 		spacing: Math.round(Theme.u(10))
+
+		// Where the bar is and how, what's on it, and the dock, in one click.
+		Card {
+			id: layouts
+
+			// For the search, as a line has them.
+			readonly property string text: Tr.t("Layouts")
+			readonly property string words: "layout preset style dock panel islands capsules"
+
+			width: parent.width
+			title: Tr.t("Layouts")
+
+			Flow {
+				width: parent.width
+				spacing: Theme.u(8)
+
+				Repeater {
+					model: Layouts.all
+
+					LayoutTile {
+						required property var modelData
+
+						layout: modelData
+					}
+				}
+			}
+
+			Item {
+				width: parent.width
+				height: Theme.u(34)
+
+				Text {
+					anchors.left: parent.left
+					anchors.right: back.left
+					anchors.rightMargin: Theme.u(12)
+					anchors.verticalCenter: parent.verticalCenter
+					text: Tr.t("Each sets where the bar is and how, what's on it, and the dock. Any of it can be changed after.")
+					wrapMode: Text.WordWrap
+					color: Theme.colors.subtext
+					font.family: Theme.font
+					font.pixelSize: Theme.fontSize - Theme.u(2)
+				}
+
+				Button {
+					id: back
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					height: Theme.u(30)
+					visible: Layouts.before !== null
+					flat: true
+					text: Tr.t("As it was")
+					onClicked: Layouts.back()
+				}
+			}
+		}
+
+		// How niri draws windows, in the theme's colors, over its config.
+		Card {
+			width: parent.width
+			title: Tr.t("Windows")
+
+			WindowsPick {
+				key: "gaps"
+				words: "gap spacing margin niri"
+				text: Tr.t("Gaps between them")
+				sizes: [0, 4, 8, 12, 16, 24, 32]
+			}
+
+			WindowsPick {
+				key: "border"
+				words: "frame outline niri"
+				text: Tr.t("A border")
+				sizes: [0, 1, 2, 3, 4, 6]
+			}
+
+			WindowsPick {
+				key: "focusRing"
+				words: "focus ring outline niri"
+				text: Tr.t("A ring around the one in focus")
+				sizes: [0, 1, 2, 3, 4, 6]
+			}
+
+			WindowsPick {
+				key: "corners"
+				words: "radius rounded corners niri"
+				text: Tr.t("Their corners")
+				sizes: [0, 4, 8, 12, 16, 20]
+				none: Tr.t("Square")
+			}
+
+			Text {
+				width: parent.width
+				wrapMode: Text.WordWrap
+				text: Tr.t("In the accent and the theme's colors, through the file okaeri keeps for niri; \"As niri's config\" leaves niri's own.")
+				color: Theme.colors.subtext
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+		}
 
 		Card {
 			width: parent.width
@@ -102,7 +216,9 @@ Flickable {
 				options: [
 					{ value: "grow", text: Tr.t("Growing") },
 					{ value: "fade", text: Tr.t("Fading in") },
-					{ value: "slide", text: Tr.t("Sliding in") }
+					{ value: "slide", text: Tr.t("Sliding in") },
+					{ value: "spring", text: Tr.t("Springing") },
+					{ value: "drop", text: Tr.t("Dropping in") }
 				]
 				value: Theme.panelMotion
 				onChosen: value => Theme.set("panelMotion", value)
@@ -142,6 +258,17 @@ Flickable {
 				value: Theme.values.barIcon
 				unit: " px"
 				onChosen: value => Theme.set("barIcon", value)
+			}
+
+			Choice {
+				holds: "theme.panelWidth"
+				words: "size wide panels"
+				text: Tr.t("How wide panels are")
+				subtext: Tr.t("The launcher, the control center and the rest")
+				values: [80, 90, 100, 110, 120, 130, 140]
+				value: Theme.values.panelWidth ?? 100
+				unit: "%"
+				onChosen: value => Theme.set("panelWidth", value)
 			}
 
 			Choice {
@@ -226,6 +353,95 @@ Flickable {
 				placeholder: Qt.application.font.family
 				value: Theme.values.font || ""
 				onKept: value => Theme.set("font", value)
+			}
+
+			// The families there are, each shown in itself, to pick from by a click:
+			// as many as the search leaves.
+			Column {
+				id: fonts
+
+				property bool open: false
+				readonly property var all: Qt.fontFamilies()
+				readonly property var found: all.filter(family => family.toLowerCase().includes(fontSearch.text.trim().toLowerCase()))
+
+				width: parent.width
+				spacing: Theme.u(8)
+
+				Button {
+					objectName: "fonts"
+					height: Theme.u(30)
+					flat: true
+					icon: "text"
+					text: fonts.open ? Tr.t("Done") : Tr.t("Installed fonts")
+					tip: Tr.f("%1 of them", fonts.all.length)
+					onClicked: fonts.open = !fonts.open
+				}
+
+				TextField {
+					id: fontSearch
+
+					objectName: "font-search"
+					visible: fonts.open
+					width: parent.width
+					implicitHeight: Theme.u(32)
+					icon: "search"
+					placeholder: Tr.t("Search the fonts")
+				}
+
+				ListView {
+					visible: fonts.open
+					width: parent.width
+					height: Theme.u(260)
+					clip: true
+					boundsBehavior: Flickable.StopAtBounds
+					model: fonts.found
+
+					delegate: Rectangle {
+						required property string modelData
+						readonly property bool on: (Theme.values.font || Qt.application.font.family) === modelData
+
+						width: ListView.view.width
+						height: Theme.u(38)
+						radius: Theme.round(height, Theme.u(4))
+						color: on ? Qt.alpha(Theme.colors.accent, 0.2) : row.containsMouse ? Theme.hover : "transparent"
+
+						Text {
+							anchors.left: parent.left
+							anchors.leftMargin: Theme.u(10)
+							anchors.right: sample.left
+							anchors.rightMargin: Theme.u(10)
+							anchors.verticalCenter: parent.verticalCenter
+							text: parent.modelData
+							textFormat: Text.PlainText
+							elide: Text.ElideRight
+							color: Theme.colors.text
+							font.family: parent.modelData
+							font.pixelSize: Theme.fontSize + Theme.u(1)
+						}
+
+						// What the clock and a title would look like in it.
+						Text {
+							id: sample
+
+							anchors.right: parent.right
+							anchors.rightMargin: Theme.u(10)
+							anchors.verticalCenter: parent.verticalCenter
+							text: "12:45 Aa Gg 0123"
+							color: Theme.colors.subtext
+							font.family: parent.modelData
+							font.pixelSize: Theme.fontSize
+						}
+
+						MouseArea {
+							id: row
+
+							anchors.fill: parent
+							hoverEnabled: true
+							cursorShape: Qt.PointingHandCursor
+							onClicked: Theme.set("font", parent.modelData === Qt.application.font.family ? undefined : parent.modelData)
+						}
+					}
+				}
 			}
 
 			Pick {

@@ -218,6 +218,12 @@
 		"menu": true,
 		"ignored": []
 	},
+	"niri": {
+		"gaps": null,
+		"border": null,
+		"focusRing": null,
+		"corners": null
+	},
 	"screenshots": {
 		"folder": "",
 		"delay": 0,
