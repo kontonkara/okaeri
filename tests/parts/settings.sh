@@ -839,6 +839,10 @@ same "the screen, as it was kept" "$(value .display.screens)" "{\"$screen\":{\"s
 # How long a screenshot of the screen or a window waits.
 higher "Of the screen or a window, wait"
 same "how long a screenshot waits" "$(value .screenshots.delay)" 3
+put "Edit with" "satty --filename"
+same "what edits a screenshot" "$(value .screenshots.editor)" '"satty --filename"'
+put "The text in them is in" "eng+rus"
+same "the languages of the text" "$(value .screenshots.languages)" '"eng+rus"'
 flip "Their brightness"
 same "external monitors' brightness" "$(value .display.ddc)" true
 higher When

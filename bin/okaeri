@@ -91,8 +91,13 @@ if [ "${1:-}" = doctor ]; then
 		echo "MISSING  niri: the compositor it's for, 26.04 or newer"
 		failed=1
 	fi
+	# Of "one/other", either does.
 	while IFS='|' read -r tool what; do
-		if has "$tool"; then
+		there=false
+		for one in $(echo "$tool" | tr / ' '); do
+			! has "$one" || there=true
+		done
+		if [ "$there" = true ]; then
 			echo "ok       $tool"
 		else
 			echo "missing  $tool: $what"
@@ -116,6 +121,8 @@ top|the busiest processes on the load's card
 xdg-open|opening files, folders and links
 udisksctl|the drives one plugs in: mounting and ejecting them
 kdeconnect-cli|a phone through KDE Connect, with kdeconnectd running
+tesseract|the text in a screenshot, onto the clipboard
+satty/swappy|editing a screenshot
 pw-metadata|an app's own output, from PipeWire
 LIST
 	if [ -n "${NIRI_SOCKET:-}" ] && has quickshell; then

@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 import qs
+import qs.services
 import qs.ui
 
 // One notification: its picture, where it's from, when, what it says, how far
@@ -355,7 +356,8 @@ Card {
 			}
 
 			// What's done with a screenshot most: its folder, the picture on the
-			// clipboard, or away with it.
+			// clipboard, or away with it; and with the tools for it, edited, or its text
+			// on the clipboard.
 			Flow {
 				width: parent.width
 				topPadding: Theme.u(6)
@@ -384,6 +386,26 @@ Card {
 					icon: "trash"
 					text: "Delete"
 					onClicked: NotificationStore.deleteFile(card.notification, card.file)
+				}
+
+				// Where there's something to do it with.
+				Button {
+					height: Theme.u(28)
+					visible: Screenshots.edits
+					activeFocusOnTab: false
+					icon: "pencil"
+					text: "Edit"
+					onClicked: Screenshots.edit(card.file)
+				}
+
+				Button {
+					height: Theme.u(28)
+					visible: Screenshots.reads
+					activeFocusOnTab: false
+					icon: "text"
+					text: "Text"
+					tip: "Its text onto the clipboard"
+					onClicked: Screenshots.readText(card.file)
 				}
 			}
 		}

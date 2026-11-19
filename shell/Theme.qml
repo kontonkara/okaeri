@@ -441,6 +441,7 @@ Singleton {
 		copy: "M9 9h11v11H9z M5 15H4V4h11v1",
 		download: "M12 4v11 M7 10l5 5 5-5 M5 20h14",
 		drive: "M8 3h8v5H8z M6 8h12v13H6z M10 5h1 M13 5h1 M9 17h6",
+		pencil: "M4 20h4L19 9l-4-4L4 16z M14 6l4 4",
 		ethernet: "M5 6h14v10h-4v3H9v-3H5z M9 10v2 M12 10v2 M15 10v2",
 		eye: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z",
 		eyeOff: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z M4 4l16 16",

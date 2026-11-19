@@ -252,7 +252,9 @@ Panel {
 		return found;
 	}
 
-	// A screenshot to take, and the latest taken, those that have `query` in their
+	// A screenshot to take, the text off the screen and the latest to edit where
+	// there's what for, and the latest taken, those that have `query` in their
+	// names.
 	// names.
 	function shots(query) {
 		const later = Settings.screenshots.delay > 0 ? `In ${Settings.screenshots.delay} s` : "";
@@ -260,7 +262,7 @@ Panel {
 			{ does: () => Screenshots.take("area"), text: "A part of the screen", subtext: "Picked by niri", icon: "image" },
 			{ does: () => Screenshots.take("screen"), text: "The screen", subtext: later, icon: "image" },
 			{ does: () => Screenshots.take("window"), text: "The window in focus", subtext: later, icon: "image" }
-		].filter(row => !query || row.text.toLowerCase().includes(query)).concat(Screenshots.latest.filter(file => !query || file.toLowerCase().includes(query)).map(file => ({
+		].concat(Screenshots.reads ? [{ does: () => Screenshots.textOffScreen(), text: "Text off the screen", subtext: "Of a part of it, onto the clipboard", icon: "text" }] : [], Screenshots.edits && Screenshots.latest.length > 0 ? [{ does: () => Screenshots.edit(Screenshots.latest[0]), text: "Edit the latest", subtext: Screenshots.latest[0].replace(/^.*\//, ""), icon: "pencil" }] : []).filter(row => !query || row.text.toLowerCase().includes(query)).concat(Screenshots.latest.filter(file => !query || file.toLowerCase().includes(query)).map(file => ({
 			shot: file,
 			text: file.replace(/^.*\//, ""),
 			subtext: file.replace(/\/[^/]*$/, "").replace(Quickshell.env("HOME"), "~"),

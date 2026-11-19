@@ -212,7 +212,9 @@
 	"screenshots": {
 		"folder": "",
 		"delay": 0,
-		"pointer": true
+		"pointer": true,
+		"editor": "",
+		"languages": "eng"
 	},
 	"desktop": {
 		"clock": false,

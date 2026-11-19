@@ -1071,3 +1071,31 @@ is_closed "a screenshot"
 wait_log "okaeri: dry: screenshot area"
 ipc screenshot take window
 wait_log "okaeri: dry: screenshot window"
+
+# With tesseract and an editor there, stand-ins both: the text off a part of the
+# screen, and the latest screenshot edited, from /shot. Here both are only said.
+printf '#!/bin/sh\necho text\n' >"$work/tesseract"
+chmod +x "$work/tesseract"
+mkdir "$work/shots"
+magick -size 64x36 xc:red "$work/shots/Screenshot one.png"
+printf '{ "screenshots": { "folder": "%s/shots", "editor": "true" } }\n' "$work" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+reloads=$(log | grep -c "Reloading configuration")
+sed "s|^\treadonly property string reader: .*|\treadonly property string reader: \"$work/tesseract\"|" "$work/shell/services/Screenshots.qml" >"$work/Screenshots.qml"
+grep -q "$work/tesseract" "$work/Screenshots.qml" || fail "no stand-in for tesseract"
+cat "$work/Screenshots.qml" >"$work/shell/services/Screenshots.qml"
+for _ in $(seq 50); do
+	[ "$(log | grep -c "Reloading configuration")" -gt "$reloads" ] && break
+	sleep 0.1
+done
+sleep 1
+open
+type "/shot text"
+sleep 0.3
+shot shot-text
+key Return
+wait_log "okaeri: dry: screenshot text area"
+open
+type "/shot edit"
+sleep 0.3
+key Return
+wait_log "okaeri: dry: screenshot edit"

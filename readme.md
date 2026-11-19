@@ -43,7 +43,8 @@ night light, `wf-recorder` to record the screen and `slurp` for a part of it,
 `ddcutil` for external monitors' brightness, with `/dev/i2c-*` yours, `nmcli` for
 VPNs, the hotspot and sharing Wi-Fi, `qrencode` for the code a phone joins it by,
 `udisksctl` for the drives one plugs in, KDE Connect's `kdeconnect-cli` for a
-phone, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a
+phone, `tesseract` for the text in screenshots, `satty` or `swappy` to edit
+them, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a
 clone of this repository, on any distribution: `nix/` is a package and a Home
 Manager module for those who want them. In niri's config:
 
@@ -200,9 +201,13 @@ corner or in the middle: on the Wallpaper page, with how pictures show.
 
 Screenshots are under `/shot` in the launcher, of a part of the screen, the
 screen or the window in focus, with the latest after them: Enter opens one and
-Shift+Enter copies it. The Display page has where they go and how long they wait,
-the control center a tile for them among those left out at first, and `okaeri
-screenshot take area`, `screen` or `window` is one by a key.
+Shift+Enter copies it. With tesseract there, the text off a part of the screen
+goes onto the clipboard from there too, and with satty or swappy, or an editor
+of one's own, the latest is edited; niri's word of one has Edit and Text
+buttons for the same. The Display page has where they go, how long they wait,
+the editor and the text's languages, the control center a tile for them among
+those left out at first, and `okaeri screenshot take area`, `screen` or
+`window` is one by a key.
 
 The bell beside an app's name in the notifications' history keeps it quiet for
 an hour, eight or until you say, and the Notifications page lists those that

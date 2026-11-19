@@ -436,6 +436,27 @@ Flickable {
 				checked: Settings.screenshots.pointer
 				onToggled: wanted => Settings.set("screenshots", "pointer", wanted)
 			}
+
+			Field {
+				holds: "screenshots.editor"
+				words: "screenshot annotate draw satty swappy"
+				text: "Edit with"
+				subtext: Screenshots.editor ? `Empty for ${Screenshots.editor}, found here` : "A command the picture goes to the end of"
+				placeholder: Screenshots.editor || "satty --filename"
+				wide: true
+				value: Settings.screenshots.editor
+				onKept: value => Settings.set("screenshots", "editor", value.trim())
+			}
+
+			Field {
+				holds: "screenshots.languages"
+				words: "screenshot ocr text recognize tesseract"
+				text: "The text in them is in"
+				subtext: Screenshots.reads ? "Tesseract's languages, as eng+rus" : "It takes tesseract, with its languages"
+				placeholder: "eng"
+				value: Settings.screenshots.languages
+				onKept: value => Settings.set("screenshots", "languages", value.trim() || "eng")
+			}
 		}
 	}
 }

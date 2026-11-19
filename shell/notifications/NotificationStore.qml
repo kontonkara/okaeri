@@ -235,6 +235,11 @@ Singleton {
 	}
 
 	function receive(notification) {
+		// niri's word of a screenshot taken for its text alone: that's said after.
+		if (Screenshots.forText(notification)) {
+			notification.tracked = false;
+			return;
+		}
 		// A replaced one doesn't come in again, it only changes: back up it goes.
 		// Urgency comes after the words, and the same words from a new process
 		// only change the hints. From the same process nothing changes at all,
