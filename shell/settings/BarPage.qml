@@ -39,7 +39,9 @@ Flickable {
 		night: "Night light",
 		volume: "Volume",
 		launcher: "Launcher",
-		notes: "Notes and things to do"
+		notes: "Notes and things to do",
+		visualizer: "Sound bars",
+		updates: "Updates"
 	})
 	// The user's own parts go by the names they have, and plugins' by their folders'
 	// names, shown by what they call themselves.
@@ -96,6 +98,8 @@ Flickable {
 			system: systemSettings,
 			bluetooth: bluetoothSettings,
 			locks: locksSettings,
+			visualizer: visualizerSettings,
+			updates: updatesSettings,
 			profile: profileSettings,
 			volume: volumeSettings,
 			recording: recordingSettings
@@ -1158,6 +1162,60 @@ Flickable {
 				]
 				value: Settings.bluetooth.label
 				onChosen: value => Settings.set("bluetooth", "label", value)
+			}
+		}
+	}
+
+	Component {
+		id: updatesSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Choice {
+				holds: "updates.every"
+				words: "updates upgrade packages pacman apt dnf flatpak"
+				text: "It looks every"
+				subtext: Updates.there.length > 0 ? `By ${Updates.there.join(", ")}` : "Nothing here to ask: pacman's checkupdates, apt, dnf or flatpak"
+				values: [1, 3, 6, 12, 24]
+				unit: "h"
+				value: Settings.updates.every
+				onChosen: value => Settings.set("updates", "every", value)
+			}
+
+			Field {
+				holds: "updates.command"
+				text: "A click runs"
+				subtext: "A terminal with the update, say"
+				placeholder: "kitty -e sudo pacman -Syu"
+				value: Settings.updates.command
+				onKept: value => Settings.set("updates", "command", value.trim())
+			}
+		}
+	}
+
+	Component {
+		id: visualizerSettings
+
+		Column {
+			spacing: Theme.u(10)
+
+			Choice {
+				holds: "visualizer.bars"
+				words: "cava visualizer spectrum audio"
+				text: "How many bars"
+				subtext: Visualizer.found ? "" : "It takes cava"
+				values: [6, 8, 10, 12, 16, 24]
+				value: Settings.visualizer.bars
+				onChosen: value => Settings.set("visualizer", "bars", value)
+			}
+
+			Setting {
+				holds: "visualizer.playing"
+				text: "Only while a player plays"
+				subtext: "Else it hears all there is, and is always there"
+				checked: Settings.visualizer.playing
+				onToggled: wanted => Settings.set("visualizer", "playing", wanted)
 			}
 		}
 	}

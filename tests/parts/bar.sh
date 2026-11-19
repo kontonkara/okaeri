@@ -2137,6 +2137,41 @@ wait_up 0
 settings '{}'
 move 300 600
 
+step "The sound's bars"
+# With cava there, here a stand-in, its bars are a part of the bar, and they move.
+settings '{ "bar": { "right": ["visualizer", "control"] }, "visualizer": { "playing": false } }'
+move 300 600
+sleep 0.8
+shot sound-bars
+same "what's on the right with the sound's bars" "$(lane sound-bars | wc -l)" 2
+settings '{}'
+
+step "Updates"
+# What there is to update, as a stand-in package manager has it: the part says
+# how many, a click runs its command, and with none it goes.
+printf 'firefox 1.0 -> 2.0\nniri 25 -> 26\n' >"$work/updates"
+settings '{ "bar": { "right": ["updates", "control"] }, "updates": { "command": "true" } }'
+move 300 600
+for _ in $(seq 30); do
+	[ "$(ipc updates list)" = '{"test":["firefox","niri"]}' ] && break
+	sleep 0.1
+done
+same "the updates" "$(ipc updates list)" '{"test":["firefox","niri"]}'
+sleep 0.4
+shot updates
+with=$(lane updates | wc -l)
+move "$(lane updates | head -n 1)" 16
+click
+wait_log "okaeri: dry: updates run"
+: >"$work/updates"
+ipc updates look
+move 300 600
+sleep 0.8
+shot updates-none
+same "what's on the right with none" "$(lane updates-none | wc -l)" 1
+[ "$with" -gt 1 ] || fail "no part for the updates on the bar"
+settings '{}'
+
 step "Islands"
 # Each lane on its own, and between them the desktop.
 settings '{ "bar": { "right": ["control"] } }'

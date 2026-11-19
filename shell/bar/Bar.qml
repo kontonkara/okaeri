@@ -48,7 +48,9 @@ PanelWindow {
 		awake,
 		night,
 		volume,
-		notes
+		notes,
+		visualizer,
+		updates
 	})
 	// Those with a right click of their own: on the rest it opens the part's menu.
 	readonly property var ownRight: ["tray", "keyboard", "notifications", "volume"]
@@ -420,6 +422,18 @@ PanelWindow {
 		id: notes
 
 		NotesButton {}
+	}
+
+	Component {
+		id: visualizer
+
+		SoundBars {}
+	}
+
+	Component {
+		id: updates
+
+		UpdatesButton {}
 	}
 
 	Component {

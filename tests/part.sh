@@ -72,6 +72,8 @@ export OKAERI_DRY=1 QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DES
 export OKAERI_WEATHER_URL=http://127.0.0.1:9 OKAERI_PLACES_URL=http://127.0.0.1:9
 # Nor Wallhaven: a test that wants it serves it on this port.
 export OKAERI_WALLHAVEN_URL=http://127.0.0.1:$((20000 + $$ % 20000))
+# Nor the package managers: the updates there are are what a test puts in here.
+export OKAERI_UPDATES_FILE=$work/updates
 # As bin/okaeri has it.
 export mesa_glthread=false GALLIUM_THREAD=0
 export WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=gles2 WLR_HEADLESS_OUTPUTS=1
@@ -190,6 +192,17 @@ exit 0
 SH
 chmod +x "$work/logind-busctl"
 sed -i "s|^\treadonly property string bus: .*|\treadonly property string bus: \"$work/logind-busctl\"|" "$work/shell/idle/Idle.qml"
+
+# cava hears a rise and a fall, ten times a second, for as long as the shell runs.
+cat >"$work/cava" <<SH
+#!/bin/sh
+while [ -d "$work" ] && kill -0 \$PPID 2>/dev/null; do
+	echo "10;30;50;70;90;70;50;30;10;0;"
+	sleep 0.1
+done
+SH
+chmod +x "$work/cava"
+sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/cava\"|" "$work/shell/services/Visualizer.qml"
 
 # A phone in reach through KDE Connect is what a test puts in $work/phone, as
 # kdeconnect-cli would list it, charging, at 76%.

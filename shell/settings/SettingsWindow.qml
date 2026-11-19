@@ -20,7 +20,7 @@ FloatingWindow {
 	// control center's, not the Display page's. tests/parts/settings.sh reads each
 	// page for what it sets and looks for that here, on the page's own line.
 	readonly property var pages: [
-		{ text: "Bar", icon: "bar", page: barPage, sections: ["bar", "clock", "weather", "workspaces", "battery.show", "battery.label", "media", "system", "network", "bluetooth", "locks", "profile", "audio.label", "audio.step", "recording.show"] },
+		{ text: "Bar", icon: "bar", page: barPage, sections: ["bar", "clock", "weather", "workspaces", "battery.show", "battery.label", "media", "system", "network", "bluetooth", "locks", "profile", "audio.label", "audio.step", "recording.show", "visualizer", "updates", "pomodoro"] },
 		{ text: "Dock", icon: "apps", page: dockPage, sections: ["dock"] },
 		{ text: "Tray", icon: "tray", page: trayPage, sections: ["tray"] },
 		{ text: "Control center", icon: "sliders", page: controlPage, sections: ["control", "hotspot", "drives"] },

@@ -202,6 +202,11 @@ The bar can have a part for things to do and a note: how many are left, and a
 card to add one, tick it off or take it away, and to write in. `/todo` in the
 launcher adds one or ticks one off, `okaeri notes add` adds one from a script,
 and `okaeri notes toggle` shows the card by a key.
+With `cava` there, the bar can have the sound's bars too, which rise and fall
+with it, and by its settings only while a player plays.
+Another part says how many updates there are, by pacman's `checkupdates`, `apt`,
+`dnf` or `flatpak`, whichever are there, looked for every few hours, and a
+click on it runs a command of yours, a terminal with the update say.
 
 Plugins are folders in `~/.config/okaeri/plugins`, each with a `plugin.json`:
 none runs until it's turned on, on the Plugins page of the settings, where

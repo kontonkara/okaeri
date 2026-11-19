@@ -125,6 +125,7 @@ tesseract|the text in a screenshot, onto the clipboard
 satty/swappy|editing a screenshot
 pw-metadata|an app's own output, from PipeWire
 curl|pictures from Wallhaven, fetched for the wallpaper
+cava|the sound's bars on the bar
 LIST
 	if [ -n "${NIRI_SOCKET:-}" ] && has quickshell; then
 		if quickshell ipc -p "$shell" show >/dev/null 2>&1; then

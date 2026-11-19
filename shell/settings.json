@@ -216,6 +216,14 @@
 		"editor": "",
 		"languages": "eng"
 	},
+	"updates": {
+		"every": 3,
+		"command": ""
+	},
+	"visualizer": {
+		"bars": 10,
+		"playing": true
+	},
 	"plugins": {
 		"enabled": []
 	},
