@@ -481,7 +481,12 @@ wide=$(magick "$out/layout.png" -depth 8 -crop "1400x1+0+$middle" +repage txt:- 
 leaves "$(now)" >/dev/null
 
 # The lock keys, by their lights: a card as one changes, saying which and how.
+# The lights are looked at while there's input, as the key that changes one is:
+# the pointer moves a pixel first.
+nudged=0
 light() {
+	nudged=$((1 - nudged))
+	move $((100 + nudged)) 300
 	echo "$2" >"$work/leds/input9::$1/brightness"
 }
 # Whether two shots show something else where the card is.

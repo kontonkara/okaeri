@@ -12,6 +12,9 @@ Item {
 	readonly property bool num: Locks.ready && Locks.num && Settings.locks.show === "both"
 	readonly property bool wanted: caps || num
 
+	Component.onCompleted: Locks.users += 1
+	Component.onDestruction: Locks.users -= 1
+
 	implicitWidth: grid.implicitWidth
 	implicitHeight: grid.implicitHeight
 	visible: wanted

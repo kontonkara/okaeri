@@ -22,6 +22,8 @@ Scope {
 	// stays on for good, and leaving a session for another identity sets it.
 	property bool tried: false
 	property bool refused: false
+	// Caps Lock is looked at while it asks, for the line under the field.
+	property bool countsLocks: false
 
 	readonly property var live: {
 		const chosen = flow?.selectedIdentity;
@@ -93,6 +95,10 @@ Scope {
 	}
 
 	onFlowChanged: startOver()
+	Component.onDestruction: {
+		if (countsLocks)
+			Locks.users -= 1;
+	}
 
 	onLiveChanged: {
 		if (open)
@@ -101,6 +107,10 @@ Scope {
 
 	onOpenChanged: {
 		forget();
+		if (open !== countsLocks) {
+			Locks.users += open ? 1 : -1;
+			countsLocks = open;
+		}
 		if (open) {
 			view = live;
 			scroller.contentY = 0;

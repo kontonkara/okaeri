@@ -265,11 +265,14 @@ closed
 open_demo
 park
 shot dark-caps-off
+# The lights are only looked at while there's input, as a key would be.
+move 1391 890
 echo 1 >"$work/leds/input9::capslock/brightness"
 sleep 0.6
 shot dark-caps-on
 different dark-caps-off dark-caps-on "$note"
 [ "$(pixels dark-caps-on "$note" "#ee6666")" -eq 0 ] || fail "Caps Lock in the error color"
+park
 echo 0 >"$work/leds/input9::capslock/brightness"
 sleep 0.6
 shot dark-caps-back

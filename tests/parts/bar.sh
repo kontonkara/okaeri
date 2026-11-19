@@ -1995,10 +1995,26 @@ same "what's on the right, with no lock on" "$(lane machine | wc -l)" 4
 profile_x=$(lane machine | sed -n 1p)
 awake_x=$(lane machine | sed -n 2p)
 night_x=$(lane machine | sed -n 3p)
+# The lights are only looked at while there's input, as a key would be.
+move 301 600
 echo 1 >"$work/leds/input9::capslock/brightness"
 sleep 0.6
 shot machine-caps
 same "what's on the right, with Caps Lock on" "$(lane machine-caps | wc -l)" 5
+move 300 600
+echo 0 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+# With no input for a while, a light isn't looked at: it is again at the next.
+sleep 2.5
+echo 1 >"$work/leds/input9::capslock/brightness"
+sleep 0.6
+shot machine-still
+same "Caps Lock on, with no input" "$(lane machine-still | wc -l)" 4
+move 301 600
+sleep 0.6
+shot machine-moved
+same "Caps Lock on, at input" "$(lane machine-moved | wc -l)" 5
+move 300 600
 echo 0 >"$work/leds/input9::capslock/brightness"
 sleep 0.6
 dry() {
