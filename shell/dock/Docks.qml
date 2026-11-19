@@ -34,6 +34,7 @@ Scope {
 	// Settings.dock.windows has it show, "all" of them, those on its "screen", or
 	// with "pinned" none of other apps than those it keeps.
 	function appsOn(output) {
+		const own = Settings.dockOf(output);
 		if (own.windows !== "screen" && own.windows !== "pinned")
 			return apps;
 		const here = own.windows === "screen" ? Niri.on(output).map(workspace => workspace.id) : null;

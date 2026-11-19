@@ -31,7 +31,7 @@ PanelWindow {
 	property var apps: []
 	// The apps starting from it now, by their ids.
 	property var launching: []
-	readonly property var own: Settings.dock
+	readonly property var own: Settings.dockOf(modelData?.name ?? "")
 	readonly property string at: ["top", "left", "right"].includes(own.position) ? own.position : "bottom"
 	readonly property bool upright: at === "left" || at === "right"
 	readonly property bool hides: own.autoHide

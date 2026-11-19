@@ -202,6 +202,11 @@ can leave a screen dark asks in the middle of the screens to be kept, by Enter o
 its button, and goes back by itself in fifteen seconds otherwise. What niri
 won't do is said in a notification.
 
+With more screens than one, the Bar page picks whose lanes it shows: a screen's
+bar can have parts of its own, and "Like the others" has it like every other
+again. The Dock page does the same for a screen's dock: where it is, how
+large, whether it hides and the rest.)
+
 The bar can have a part for things to do and a note: how many are left, and a
 card to add one, tick it off or take it away, and to write in. `/todo` in the
 launcher adds one or ticks one off, `okaeri notes add` adds one from a script,
@@ -213,6 +218,10 @@ Another part says how many updates there are, by pacman's `checkupdates`, `apt`,
 click on it runs a command of yours, a terminal with the update say.
 
 Plugins are folders in `~/.config/okaeri/plugins`, each with a `plugin.json`:
+its `name`, a `description`, and QML files of its own, `bar` for a part of the
+bar, which goes on it by the folder's name as any part does, and `background`
+for what runs with the shell, an `IpcHandler` say. They `import qs` and the rest
+of okaeri's modules as its own files do. Their code runs as the shell's own, so
 none runs until it's turned on, on the Plugins page of the settings, where
 "Look again" finds new ones; `examples/plugins/hello` is one to start from.
 

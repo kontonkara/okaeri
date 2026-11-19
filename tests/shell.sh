@@ -670,6 +670,39 @@ sleep 0.5
 rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
 ipc plugins look
 
+step "A bar of its own"
+# The screen's own lanes, in place of every screen's: on its right only the
+# control center, and every screen's again without them.
+screen=$(niri msg --json outputs | jq -r 'keys[0]')
+move 300 600
+shot every-bar
+printf '{ "bar": { "screens": { "%s": { "left": [], "center": ["clock"], "right": ["control"] } } } }' "$screen" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+shot own-bar
+[ "$(lane own-bar | wc -l)" = 1 ] || fail "the screen's own right lane has $(lane own-bar | wc -l) on it"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+shot every-bar-again
+[ "$(lane every-bar-again | wc -l)" = "$(lane every-bar | wc -l)" ] || fail "every screen's lanes aren't back"
+
+step "A dock of its own"
+# Every screen's dock at the bottom; the screen's own on its left instead.
+# Without that, at the bottom again.
+region() {
+	magick "$out/$1.png" -crop "$2" +repage -format '%[fx:standard_deviation]' info:
+}
+printf '{ "dock": { "on": true, "launcher": "start", "windows": "pinned" } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+move 700 300
+shot dock-bottom
+printf '{ "dock": { "on": true, "launcher": "start", "windows": "pinned", "screens": { "%s": { "position": "left" } } } }' "$screen" >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.8
+shot dock-left
+awk -v a="$(region dock-bottom 200x70+600+830)" -v b="$(region dock-left 200x70+600+830)" 'BEGIN { exit !(a > b) }' || fail "the dock stays at the bottom with one of its own on the left"
+awk -v a="$(region dock-left 70x200+0+350)" -v b="$(region dock-bottom 70x200+0+350)" 'BEGIN { exit !(a > b) }' || fail "the screen's own dock isn't on its left"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+
 step "On the desktop"
 # The time, over the wallpaper and under the windows, on each screen: on the
 # layer below them, taking no keys, and gone again with it off.

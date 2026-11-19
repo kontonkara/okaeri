@@ -148,7 +148,8 @@
 		"launcher": "none",
 		"smartHide": false,
 		"separator": true,
-		"unread": true
+		"unread": true,
+		"screens": {}
 	},
 	"hooks": {
 		"charger": "",
@@ -263,6 +264,7 @@
 		"reserve": true,
 		"autoHide": false,
 		"actions": {},
-		"scripts": []
+		"scripts": [],
+		"screens": {}
 	}
 }

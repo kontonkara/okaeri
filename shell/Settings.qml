@@ -107,6 +107,72 @@ Singleton {
 		return !screen || !bar.hideOn.includes(screen.name);
 	}
 
+	// What lane `lane` of the bar on screen `name` has: its own, where it has lanes
+	// of its own in bar.screens, or else every screen's.
+	function laneOf(name, lane) {
+		return (name ? bar.screens?.[name]?.[lane] : null) ?? bar[lane];
+	}
+
+	// Lane `lane` of the bar on screen `name`, or with "" every screen's. A screen
+	// that comes to have one lane of its own has all three, from every screen's.
+	function setLane(name, lane, parts) {
+		if (!name) {
+			set("bar", lane, parts);
+			return;
+		}
+		const all = Object.assign({}, bar.screens);
+		all[name] = Object.assign({ left: bar.left, center: bar.center, right: bar.right }, all[name], { [lane]: parts });
+		set("bar", "screens", all);
+	}
+
+	// The dock of screen `name`: every screen's settings, with what that screen has
+	// of its own in dock.screens over them.
+	function dockOf(name) {
+		return Object.assign({}, dock, (name ? dock.screens?.[name] : null) ?? {});
+	}
+
+	// A setting of the dock of screen `name`, or with "" of every screen's.
+	function setDock(name, key, value) {
+		if (!name) {
+			set("dock", key, value);
+			return;
+		}
+		const all = Object.assign({}, dock.screens);
+		all[name] = Object.assign({}, all[name], { [key]: value });
+		set("dock", "screens", all);
+	}
+
+	// A screen's dock like every other again.
+	function dropDock(name) {
+		const all = Object.assign({}, dock.screens);
+		delete all[name];
+		set("dock", "screens", all);
+	}
+
+	// A screen's bar like every other again.
+	function dropLanes(name) {
+		const all = Object.assign({}, bar.screens);
+		delete all[name];
+		set("bar", "screens", all);
+	}
+
+	// Every lane of every bar as `change` makes it of what it has.
+	function eachLane(change) {
+		const lanes = ["left", "center", "right"];
+		lanes.forEach(lane => {
+			const next = change(bar[lane]);
+			if (next.join() !== bar[lane].join())
+				set("bar", lane, next);
+		});
+		const all = {};
+		Object.keys(bar.screens ?? {}).forEach(name => {
+			all[name] = {};
+			lanes.forEach(lane => all[name][lane] = change(bar.screens[name][lane] ?? bar[lane]));
+		});
+		if (JSON.stringify(all) !== JSON.stringify(bar.screens ?? {}))
+			set("bar", "screens", all);
+	}
+
 	// Where the bars are on their screens: "top", "bottom", "left" or "right".
 	readonly property string barAt: ["bottom", "left", "right"].includes(bar.position) ? bar.position : "top"
 	readonly property bool barBelow: barAt === "bottom"

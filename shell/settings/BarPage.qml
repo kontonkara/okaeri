@@ -73,13 +73,19 @@ Flickable {
 		{ name: "right", text: Settings.barSide ? "Bottom" : "Right" },
 		{ name: "off", text: "Not on the bar" }
 	]
+	// The bar whose lanes show: a screen's, by its name, or with "" every screen's.
+	// A screen picked has lanes of its own from the first change to them.
+	property string forScreen: ""
+	readonly property var barScreens: [...new Set(Quickshell.screens.map(screen => screen.name).concat(Object.keys(Settings.bar.screens ?? {})))]
 	readonly property var settled: {
-		const bar = Settings.bar;
-		const on = bar.left.concat(bar.center, bar.right);
+		const left = Settings.laneOf(forScreen, "left");
+		const center = Settings.laneOf(forScreen, "center");
+		const right = Settings.laneOf(forScreen, "right");
+		const on = left.concat(center, right);
 		return {
-			left: bar.left,
-			center: bar.center,
-			right: bar.right,
+			left,
+			center,
+			right,
 			off: Object.keys(names).filter(name => !on.includes(name))
 		};
 	}
@@ -162,7 +168,7 @@ Flickable {
 
 	function drop() {
 		if (moved) {
-			["left", "center", "right"].filter(lane => moved[lane].join() !== Settings.bar[lane].join()).forEach(lane => Settings.set("bar", lane, moved[lane]));
+			["left", "center", "right"].filter(lane => moved[lane].join() !== Settings.laneOf(forScreen, lane).join()).forEach(lane => Settings.setLane(forScreen, lane, moved[lane]));
 		}
 		held = "";
 		moved = null;
@@ -200,7 +206,7 @@ Flickable {
 			return false;
 		// The part first: the bar knows nothing by the new name before.
 		changeScript(name, "name", to);
-		["left", "center", "right"].filter(lane => Settings.bar[lane].includes(name)).forEach(lane => Settings.set("bar", lane, Settings.bar[lane].map(other => other === name ? to : other)));
+		Settings.eachLane(parts => parts.map(other => other === name ? to : other));
 		const actions = Object.assign({}, Settings.bar.actions);
 		if (actions[name]) {
 			actions[to] = actions[name];
@@ -212,7 +218,7 @@ Flickable {
 	}
 
 	function removeScript(name) {
-		["left", "center", "right"].filter(lane => Settings.bar[lane].includes(name)).forEach(lane => Settings.set("bar", lane, Settings.bar[lane].filter(other => other !== name)));
+		Settings.eachLane(parts => parts.filter(other => other !== name));
 		runs(name, "", "");
 		Settings.set("bar", "scripts", scripts.filter(own => own.name !== name));
 		chosen = "";
@@ -306,6 +312,38 @@ Flickable {
 
 		width: parent.width
 		spacing: Math.round(Theme.u(10))
+
+		// With more screens than one, each bar can have lanes of its own.
+		Item {
+			width: parent.width
+			height: whichBar.height
+			visible: page.barScreens.length > 1 || Object.keys(Settings.bar.screens ?? {}).length > 0
+
+			Pick {
+				id: whichBar
+
+				holds: "bar.screens"
+				words: "monitor screen several bars"
+				width: parent.width - (alike.visible ? alike.width + Theme.u(8) : 0)
+				text: "The bar of"
+				subtext: page.forScreen && !Settings.bar.screens?.[page.forScreen] ? "It has every screen's, till a part moves" : ""
+				options: [{ value: "", text: "Every screen" }].concat(page.barScreens.map(name => ({ value: name, text: name })))
+				value: page.forScreen
+				onChosen: value => page.forScreen = value
+			}
+
+			Button {
+				id: alike
+
+				anchors.right: parent.right
+				anchors.verticalCenter: parent.verticalCenter
+				height: Theme.u(30)
+				visible: page.forScreen !== "" && !!Settings.bar.screens?.[page.forScreen]
+				flat: true
+				text: "Like the others"
+				onClicked: Settings.dropLanes(page.forScreen)
+			}
+		}
 
 		Item {
 			id: board

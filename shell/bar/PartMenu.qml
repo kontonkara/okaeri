@@ -116,11 +116,14 @@ Panel {
 		show(screen);
 	}
 
-	// Off the lane it's in: the bars of every screen go by the same.
+	// Off the lane it's in on the bar it was asked of: that screen's own lanes, where
+	// it has them, or every screen's.
 	function takeOff(name) {
-		const lane = ["left", "center", "right"].find(key => Settings.bar[key].includes(name));
+		const screen = menu.screen?.name ?? "";
+		const own = screen && Settings.bar.screens?.[screen] ? screen : "";
+		const lane = ["left", "center", "right"].find(key => Settings.laneOf(own, key).includes(name));
 		if (lane)
-			Settings.set("bar", lane, Settings.bar[lane].filter(other => other !== name));
+			Settings.setLane(own, lane, Settings.laneOf(own, lane).filter(other => other !== name));
 	}
 
 	align: "top"

@@ -10,7 +10,10 @@ import qs.ui
 Flickable {
 	id: page
 
-	readonly property var own: Settings.dock
+	// The dock whose settings show: a screen's, by its name, or with "" every
+	// screen's. What's set for a screen is that screen's own, over every screen's.
+	property string forScreen: ""
+	readonly property var own: Settings.dockOf(forScreen)
 	// The screens there are, and those left without a dock that aren't there now.
 	readonly property var screens: {
 		const there = Quickshell.screens.map(screen => ({
@@ -43,8 +46,41 @@ Flickable {
 		Card {
 			width: parent.width
 
+			// With more screens than one, each dock can have settings of its own.
+			Item {
+				width: parent.width
+				height: whichDock.height
+				visible: Quickshell.screens.length > 1 || Object.keys(Settings.dock.screens ?? {}).length > 0
+
+				Pick {
+					id: whichDock
+
+					holds: "dock.screens"
+					words: "monitor screen several docks"
+					width: parent.width - (likeOthers.visible ? likeOthers.width + Theme.u(8) : 0)
+					text: "The dock of"
+					subtext: page.forScreen ? "What's set here is that screen's own" : ""
+					options: [{ value: "", text: "Every screen" }].concat([...new Set(Quickshell.screens.map(screen => screen.name).concat(Object.keys(Settings.dock.screens ?? {})))].map(name => ({ value: name, text: name })))
+					value: page.forScreen
+					onChosen: value => page.forScreen = value
+				}
+
+				Button {
+					id: likeOthers
+
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					height: Theme.u(30)
+					visible: page.forScreen !== "" && !!Settings.dock.screens?.[page.forScreen]
+					flat: true
+					text: "Like the others"
+					onClicked: Settings.dropDock(page.forScreen)
+				}
+			}
+
 			Setting {
 				holds: "dock.on"
+				visible: page.forScreen === ""
 				text: "A dock"
 				subtext: "The apps it keeps, and those with windows: a click goes to one"
 				checked: page.own.on
@@ -62,7 +98,7 @@ Flickable {
 					{ value: "top", text: "The top" }
 				]
 				value: page.own.position
-				onChosen: value => Settings.set("dock", "position", value)
+				onChosen: value => Settings.setDock(page.forScreen, "position", value)
 			}
 
 			Setting {
@@ -70,7 +106,7 @@ Flickable {
 				text: "It hides"
 				subtext: "Over the windows, until the pointer rests at its edge, or the overview opens"
 				checked: page.own.autoHide
-				onToggled: wanted => Settings.set("dock", "autoHide", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "autoHide", wanted)
 			}
 
 			Choice {
@@ -79,7 +115,7 @@ Flickable {
 				values: [28, 32, 40, 48, 56, 64]
 				value: page.own.size
 				unit: " px"
-				onChosen: value => Settings.set("dock", "size", value)
+				onChosen: value => Settings.setDock(page.forScreen, "size", value)
 			}
 
 			Pick {
@@ -92,7 +128,7 @@ Flickable {
 					{ value: "pinned", text: "None" }
 				]
 				value: page.own.windows
-				onChosen: value => Settings.set("dock", "windows", value)
+				onChosen: value => Settings.setDock(page.forScreen, "windows", value)
 			}
 
 			Choice {
@@ -104,7 +140,7 @@ Flickable {
 				value: page.own.magnify
 				none: "No"
 				unit: "%"
-				onChosen: value => Settings.set("dock", "magnify", value)
+				onChosen: value => Settings.setDock(page.forScreen, "magnify", value)
 			}
 
 			Setting {
@@ -113,7 +149,7 @@ Flickable {
 				text: "Apps hop"
 				subtext: "As one starts, until its window comes, and while it asks to be looked at"
 				checked: page.own.bounce
-				onToggled: wanted => Settings.set("dock", "bounce", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "bounce", wanted)
 			}
 
 			Setting {
@@ -121,7 +157,7 @@ Flickable {
 				text: "How many windows"
 				subtext: "A number on an app with more than one"
 				checked: page.own.count
-				onToggled: wanted => Settings.set("dock", "count", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "count", wanted)
 			}
 
 			Setting {
@@ -129,7 +165,7 @@ Flickable {
 				text: "Unread notifications"
 				subtext: "How many, on the app they're from"
 				checked: page.own.unread
-				onToggled: wanted => Settings.set("dock", "unread", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "unread", wanted)
 			}
 
 			Setting {
@@ -137,7 +173,7 @@ Flickable {
 				text: "A line after those kept"
 				subtext: "Before the others with windows"
 				checked: page.own.separator
-				onToggled: wanted => Settings.set("dock", "separator", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "separator", wanted)
 			}
 
 			Pick {
@@ -149,7 +185,7 @@ Flickable {
 					{ value: "end", text: "Last" }
 				]
 				value: page.own.launcher
-				onChosen: value => Settings.set("dock", "launcher", value)
+				onChosen: value => Settings.setDock(page.forScreen, "launcher", value)
 			}
 
 			Setting {
@@ -158,7 +194,7 @@ Flickable {
 				subtext: "Where it hides: over no windows there's nothing to hide it for"
 				enabled: page.own.autoHide
 				checked: page.own.smartHide
-				onToggled: wanted => Settings.set("dock", "smartHide", wanted)
+				onToggled: wanted => Settings.setDock(page.forScreen, "smartHide", wanted)
 			}
 		}
 

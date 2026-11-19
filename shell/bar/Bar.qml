@@ -619,7 +619,7 @@ PanelWindow {
 
 			x: bar.upright ? Math.round((parent.width - width) / 2) : Theme.u(14)
 			y: bar.upright ? Theme.u(14) : (parent.height - height) / 2
-			names: Settings.bar.left
+			names: Settings.laneOf(bar.screen?.name ?? "", "left")
 		}
 
 		// In the middle, or beside the last one on a narrow screen.
@@ -633,7 +633,7 @@ PanelWindow {
 
 			x: bar.upright ? Math.round((parent.width - width) / 2) : along
 			y: bar.upright ? along : (parent.height - height) / 2
-			names: Settings.bar.center
+			names: Settings.laneOf(bar.screen?.name ?? "", "center")
 			room: bar.upright ? Infinity : to - from
 		}
 
@@ -642,7 +642,7 @@ PanelWindow {
 
 			x: bar.upright ? Math.round((parent.width - width) / 2) : parent.width - width - Theme.u(8)
 			y: bar.upright ? parent.height - height - Theme.u(8) : (parent.height - height) / 2
-			names: Settings.bar.right
+			names: Settings.laneOf(bar.screen?.name ?? "", "right")
 		}
 	}
 
