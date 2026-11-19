@@ -30,7 +30,7 @@ Singleton {
 
 	Process {
 		running: true
-		command: ["sh", "-c", "for tool in cliphist wl-copy wl-paste wtype qalc; do command -v $tool >/dev/null 2>&1 || echo $tool; done"]
+		command: ["sh", "-c", "for tool in cliphist wl-copy wl-paste wtype qalc curl; do command -v $tool >/dev/null 2>&1 || echo $tool; done"]
 		stdout: StdioCollector {
 			onStreamFinished: missing = text.split("\n").filter(tool => tool !== "")
 		}

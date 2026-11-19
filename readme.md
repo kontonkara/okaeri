@@ -118,8 +118,8 @@ config nix` prints it all.
 
 The bar takes parts of your own, made on its page of the settings: a command, and
 what it prints is on the bar. The first line shows and the second is what the
-pointer on it says, or it's a line of JSON with `text`,
-`tooltip` and `class`. It runs every so many seconds, or once, and then each line
+pointer on it says, or it's a line of JSON with `text`, `tooltip` and `class`.
+It runs every so many seconds, or once, and then each line
 it goes on to print is shown in turn. A click or the wheel on any part, yours or
 not, can run a command too, in place of what the part does with it, and a part of
 yours runs again right after, to show what that changed. A right click on a part
@@ -261,9 +261,9 @@ one of your own over any palette's, `accent` in `theme.json` as `#rrggbb`, or
 all that it set, and `okaeri theme look evening` has that one on again. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri wallpaper set <file>` that
 one, and a right click on one in the settings makes it one screen's own or the
-light colors'. The Wallpaper page looks on Wallhaven too, only when asked, for
-pictures safe for work as large as the screen: one picked is fetched into the
-folder by `curl` and goes up. `okaeri record toggle`
+light colors'. With `curl` there, the Wallpaper page looks on Wallhaven too,
+only when asked, for pictures safe for work as large as the screen: one picked
+is fetched into the folder and goes up. `okaeri record toggle`
 starts and stops a recording of the screen, and `okaeri settings open Wallpaper`
 opens the settings at a page. For scripts, `okaeri dmenu` shows the lines of its
 standard input in the launcher and prints the one picked, as dmenu does, with

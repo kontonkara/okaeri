@@ -97,10 +97,12 @@ Column {
 			}
 		}
 
+		// Only with curl to fetch a picture by.
 		Button {
 			height: Theme.u(30)
 			flat: !page.online
 			text: Tr.t("Wallhaven")
+			visible: !Env.lacks("curl")
 			onClicked: {
 				page.online = true;
 				page.showing = false;
