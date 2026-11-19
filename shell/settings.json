@@ -253,7 +253,8 @@
 		"name": ""
 	},
 	"plugins": {
-		"enabled": []
+		"enabled": [],
+		"options": {}
 	},
 	"desktop": {
 		"clock": false,

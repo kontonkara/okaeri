@@ -863,6 +863,12 @@ sleep 0.5
 shot plugins-page
 flip Hello
 same "the plugins on" "$(value .plugins.enabled)" '["hello"]'
+# What it has to set shows under it while it's on, and its code reads it.
+put "What it says" 'Hi'
+same "its greeting" "$(value .plugins.options.hello.greeting)" '"Hi"'
+flip "It counts clicks"
+same "whether it counts" "$(value .plugins.options.hello.count)" false
+shot plugins-options
 flip Hello
 same "the plugins on, none" "$(value .plugins.enabled)" '[]'
 rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
@@ -1209,6 +1215,9 @@ same "a setting, as the Dock page set it" "$(ipc settings get dock.magnify)" 160
 same "setting it" "$(ipc settings set dock.magnify 180)" ""
 same "what's set" "$(value .dock.magnify)" 180
 same "one of another kind" "$(ipc settings set dock.magnify big)" "dock.magnify takes a number, not big"
+# A schema of it all, for an editor: each section's keys and their kinds.
+ipc settings schema >"$work/schema.json"
+jq -e '.properties.bar.properties.looks.type == "object" and .properties.dock.properties.magnify.type == "number" and .properties.bar.additionalProperties == false' "$work/schema.json" >/dev/null || fail "the schema: $(head -c 300 "$work/schema.json")"
 same "one that isn't" "$(ipc settings get dock.nothing | cut -c1-22)" 'dock has no "nothing":'
 same "a name" "$(ipc settings set dock.launcher start)" ""
 same "the name set" "$(value .dock.launcher)" '"start"'

@@ -46,16 +46,94 @@ Flickable {
 		Repeater {
 			model: Plugins.list
 
-			Setting {
+			// A plugin, and under it, while it's on, what it has to set.
+			Column {
+				id: plugin
+
 				required property var modelData
 
-				holds: "plugins.enabled"
-				words: "plugin addon extension"
-				text: modelData.name
-				subtext: modelData.trouble || [modelData.description, [modelData.bar ? "a part for the bar" : "", modelData.background ? "runs with the shell" : ""].filter(part => part !== "").join(", ")].filter(part => part !== "").join(" · ")
-				enabled: !modelData.trouble
-				checked: modelData.on
-				onToggled: wanted => Plugins.enable(modelData.id, wanted)
+				width: parent.width
+				spacing: Theme.u(6)
+
+				Setting {
+					holds: "plugins.enabled"
+					words: "plugin addon extension"
+					text: plugin.modelData.name
+					subtext: plugin.modelData.trouble || [plugin.modelData.description, [plugin.modelData.bar ? "a part for the bar" : "", plugin.modelData.background ? "runs with the shell" : ""].filter(part => part !== "").join(", ")].filter(part => part !== "").join(" · ")
+					enabled: !plugin.modelData.trouble
+					checked: plugin.modelData.on
+					onToggled: wanted => Plugins.enable(plugin.modelData.id, wanted)
+				}
+
+				Repeater {
+					model: plugin.modelData.on ? plugin.modelData.settings : []
+
+					Loader {
+						id: option
+
+						required property var modelData
+						readonly property var value: Plugins.option(plugin.modelData.id, modelData.key)
+
+						function keep(value) {
+							Plugins.setOption(plugin.modelData.id, modelData.key, value);
+						}
+
+						x: Theme.u(16)
+						width: parent.width - x
+						sourceComponent: ({ toggle: toggleOption, text: textOption, number: numberOption, choice: choiceOption })[modelData.type]
+
+						Component {
+							id: toggleOption
+
+							Setting {
+								holds: "plugins.options"
+								text: option.modelData.text
+								subtext: option.modelData.subtext
+								checked: !!option.value
+								onToggled: wanted => option.keep(wanted)
+							}
+						}
+
+						Component {
+							id: textOption
+
+							Field {
+								holds: "plugins.options"
+								text: option.modelData.text
+								subtext: option.modelData.subtext
+								value: option.value ?? ""
+								onKept: value => option.keep(value)
+							}
+						}
+
+						Component {
+							id: numberOption
+
+							Choice {
+								holds: "plugins.options"
+								text: option.modelData.text
+								subtext: option.modelData.subtext
+								values: option.modelData.values.length > 0 ? option.modelData.values : [0, 1, 2, 5, 10]
+								value: Number(option.value) || 0
+								none: "0"
+								onChosen: value => option.keep(value)
+							}
+						}
+
+						Component {
+							id: choiceOption
+
+							Pick {
+								holds: "plugins.options"
+								text: option.modelData.text
+								subtext: option.modelData.subtext
+								options: option.modelData.options
+								value: option.value
+								onChosen: value => option.keep(value)
+							}
+						}
+					}
+				}
 			}
 		}
 

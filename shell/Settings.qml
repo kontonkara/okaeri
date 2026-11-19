@@ -125,6 +125,28 @@ Singleton {
 		return bar.left.includes(part) ? "top-left" : bar.center.includes(part) ? "top" : "top-right";
 	}
 
+	// A JSON Schema of the settings, by what settings.json has: each section with
+	// the keys it has and of the kinds their values are; a key of no section's, or
+	// a value of another kind, is one an editor marks.
+	function schema() {
+		const of = value => {
+			if (value === null)
+				return {};
+			if (Array.isArray(value))
+				return value.length > 0 ? { type: "array", items: of(value[0]) } : { type: "array" };
+			if (typeof value === "object")
+				return { type: "object" };
+			return { type: typeof value };
+		};
+		const properties = { "$schema": { type: "string" } };
+		Object.keys(defaults).forEach(section => {
+			const keys = {};
+			Object.keys(defaults[section]).forEach(key => keys[key] = of(defaults[section][key]));
+			properties[section] = { type: "object", properties: keys, additionalProperties: false };
+		});
+		return { "$schema": "https://json-schema.org/draft/2020-12/schema", title: "okaeri settings", type: "object", properties, additionalProperties: false };
+	}
+
 	// Whether a name on the bar is a separator or a space: "separator",
 	// "separator 2", "space" and on, as many as there are.
 	function spacer(name) {

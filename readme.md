@@ -117,7 +117,9 @@ that's set, the files' and the window's, as JSON or as Nix for the Home Manager
 module. The search finds a line by its key too, as `saveTo`. `okaeri settings
 get dock.magnify`, `okaeri settings set dock.magnify 160` and `reset` read and
 change one setting, `theme.accent` and the like the look's, and `okaeri settings
-config nix` prints it all.
+config nix` prints it all. `okaeri settings schema` prints a JSON Schema of
+settings.json, for an editor to complete and check it by: kept beside it as
+`settings.schema.json`, `"$schema": "./settings.schema.json"` in it says so.
 
 The bar takes parts of your own, made on its page of the settings: a command, and
 what it prints is on the bar. The first line shows and the second is what the
@@ -250,7 +252,11 @@ bar, which goes on it by the folder's name as any part does, and `background`
 for what runs with the shell, an `IpcHandler` say. They `import qs` and the rest
 of okaeri's modules as its own files do. Their code runs as the shell's own, so
 none runs until it's turned on, on the Plugins page of the settings, where
-"Look again" finds new ones; `examples/plugins/hello` is one to start from.
+"Look again" finds new ones; `examples/plugins/hello` is one to start from. A
+plugin's `settings` list what it has to set there, under its line while it's on:
+each a `key`, its `text`, a `type`, "toggle", "text", "number" with its `values`
+or "choice" with its `options`, and a `default`; its code reads one with
+`Plugins.option("hello", "greeting")`.
 
 Over the wallpaper and under the windows, the desktop can have the time, the
 weather, what plays with its buttons, and what the calendars have coming, at a

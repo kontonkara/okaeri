@@ -409,6 +409,12 @@ FloatingWindow {
 			return window.config(kind);
 		}
 
+		// A JSON Schema of settings.json, for an editor to complete and check it
+		// by: `okaeri settings schema > ~/.config/okaeri/settings.schema.json`.
+		function schema(): string {
+			return JSON.stringify(Settings.schema(), null, "\t");
+		}
+
 		// For tests: where a line's part is in the window, as spot() says.
 		function spot(text: string, part: string): string {
 			return window.spot(text, part);

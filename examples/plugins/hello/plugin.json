@@ -2,5 +2,9 @@
 	"name": "Hello",
 	"description": "A part for the bar that counts clicks, and `okaeri hello ping`",
 	"bar": "Bar.qml",
-	"background": "Main.qml"
+	"background": "Main.qml",
+	"settings": [
+		{ "key": "greeting", "text": "What it says", "type": "text", "default": "Hello" },
+		{ "key": "count", "text": "It counts clicks", "type": "toggle", "default": true }
+	]
 }
