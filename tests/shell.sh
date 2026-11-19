@@ -665,8 +665,11 @@ step "A plugin"
 # answers a call. Off again, both go.
 mkdir -p "$XDG_CONFIG_HOME/okaeri/plugins"
 cp -r "$repo/examples/plugins/hello" "$XDG_CONFIG_HOME/okaeri/plugins/"
-ipc plugins look
-sleep 0.5
+# Found by itself, though the folder for them came only now.
+for _ in $(seq 30); do
+	[ "$(ipc plugins list)" != '[]' ] && break
+	sleep 0.1
+done
 [ "$(ipc plugins list)" = '[{"id":"hello","name":"Hello","on":false,"bar":true,"background":true,"trouble":""}]' ] || fail "the plugins found: $(ipc plugins list)"
 move 300 600
 printf '{ "plugins": { "enabled": ["hello"] }, "bar": { "right": ["hello", "control"] } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"

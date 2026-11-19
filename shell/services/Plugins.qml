@@ -82,11 +82,24 @@ Singleton {
 		}
 	}
 
-	// A folder that comes or goes is looked at again.
+	// A folder that comes or goes is looked at again; and the folder for them too,
+	// which may come only after the shell started: watched from the one above it.
 	FolderListModel {
+		id: inside
+
 		folder: Settings.url(plugins.folder)
 		showFiles: false
 		onCountChanged: plugins.look()
+	}
+
+	FolderListModel {
+		folder: Settings.url(plugins.folder.replace(/\/[^/]*$/, ""))
+		showFiles: false
+		onCountChanged: {
+			inside.folder = "";
+			inside.folder = Settings.url(plugins.folder);
+			plugins.look();
+		}
 	}
 
 	// `okaeri plugins list`, and `look` after a plugin.json changed.
