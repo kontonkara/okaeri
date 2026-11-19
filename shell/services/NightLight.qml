@@ -124,6 +124,7 @@ Singleton {
 	Process {
 		id: sunset
 
-		command: ["wlsunset"].concat(night.args)
+		// It goes with the shell, however that ends: two would fight over the screens.
+		command: ["setpriv", "--pdeathsig", "TERM", "wlsunset"].concat(night.args)
 	}
 }

@@ -6,10 +6,10 @@ import qs.ui
 
 // A part of the user's own, the one of Settings.bar.scripts that's called `name`:
 // { name, command, every }. What its command prints is on it: the first line, and
-// the second is what the pointer on it says; or a line of JSON
-// with "text", "tooltip" and "class", which makes it red when it's
-// "critical". The command runs every so many seconds, or once with `every` 0, and
-// then each line it prints, for as long as it runs, is the next thing to show.
+// the second is what the pointer on it says; or a line of JSON with "text",
+// "tooltip" and "class", which makes it red when it's "critical". The command
+// runs every so many seconds, or once with `every` 0, and then each line it
+// prints, for as long as it runs, is the next thing to show.
 // With nothing to show the part isn't there, unless the command failed and said
 // why: then it's its name, red, with that for the pointer.
 BarButton {
@@ -79,9 +79,8 @@ BarButton {
 	}
 
 	// A command of Settings.bar.actions ran from a click or the wheel on it: a run
-	// a moment later shows what that changed at once, and
-	// what it shows stays until then. One that keeps running says so
-	// itself.
+	// a moment later shows what that changed at once, and what it shows stays
+	// until then. One that keeps running says so itself.
 	function ran() {
 		if (!stays)
 			again.restart();
@@ -100,7 +99,9 @@ BarButton {
 	Process {
 		id: process
 
-		command: ["setsid", "sh", "-c", part.command]
+		// In a group of its own, which stop() ends; and with the shell, however that
+		// ends, though what it started may outlive it.
+		command: ["setpriv", "--pdeathsig", "TERM", "setsid", "sh", "-c", part.command]
 		stdout: SplitParser {
 			onRead: line => {
 				if (part.stale)

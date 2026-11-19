@@ -76,7 +76,9 @@ Singleton {
 			file = name;
 			elapsed = 0;
 			about = told(part ? "" : where[1] || "The screen", own.audio, folder);
-			process.command = ["sh", "-c", 'mkdir -p "$1" && shift && exec "$@"', "sh", folder, tool, "-f", name].concat(where, sound);
+			// Ended by an interrupt, as stop() does, with the shell however that ends:
+			// the video is whole then.
+			process.command = ["setpriv", "--pdeathsig", "INT", "sh", "-c", 'mkdir -p "$1" && shift && exec "$@"', "sh", folder, tool, "-f", name].concat(where, sound);
 			process.running = true;
 		});
 	}

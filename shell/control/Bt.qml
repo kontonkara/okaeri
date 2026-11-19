@@ -196,7 +196,8 @@ Singleton {
 	Process {
 		id: agent
 
-		command: ["bluetoothctl", "--agent", "KeyboardDisplay"]
+		// It goes with the shell, however that ends.
+		command: ["setpriv", "--pdeathsig", "TERM", "bluetoothctl", "--agent", "KeyboardDisplay"]
 		stdinEnabled: true
 		stdout: SplitParser {
 			splitMarker: ""

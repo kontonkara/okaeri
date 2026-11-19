@@ -161,7 +161,8 @@ Singleton {
 	// Each line past its first is a change: a look a moment after the last of them.
 	Process {
 		running: true
-		command: [drives.tool, "monitor"]
+		// It goes with the shell, however that ends.
+		command: ["setpriv", "--pdeathsig", "TERM", drives.tool, "monitor"]
 		stdout: SplitParser {
 			onRead: again.restart()
 		}
