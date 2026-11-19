@@ -192,13 +192,13 @@ wait "$player" 2>/dev/null || true
 said "session suspend" 20
 
 # Once the session is locked, by this or anything else, the screens go off
-# sooner: here a session that says it is, by a file in the place of logind.
+# sooner: here a session that comes to say it is, by a file in the place of
+# logind, heard as it changes.
+printf 'b false\n' >"$work/locked"
 settings '{ "idle": { "lock": 0, "screenOff": 0, "lockedScreenOff": 2 } }'
+sleep 1
 printf 'b true\n' >"$work/locked"
-sed "s|^\treadonly property var lockedHint: .*|\treadonly property var lockedHint: [\"cat\", \"$work/locked\"]|" "$work/shell/idle/Idle.qml" >"$work/Idle.qml"
-grep -q "$work/locked" "$work/Idle.qml" || fail "the stand's idle still asks logind"
-cat "$work/Idle.qml" >"$work/shell/idle/Idle.qml"
-sleep 2
+sleep 1
 wake
 said "screens off" 80
 settings '{}'

@@ -166,6 +166,29 @@ SH
 chmod +x "$work/drives-busctl" "$work/udisksctl"
 sed -i -e "s|^\treadonly property string reader: .*|\treadonly property string reader: \"$work/drives-busctl\"|" \
 	-e "s|^\treadonly property string tool: .*|\treadonly property string tool: \"$work/udisksctl\"|" "$work/shell/services/Drives.qml"
+# What logind says of the session's lock is $work/locked, "b true" or "b false",
+# and that file changing is the session changing, as `busctl wait` hears it.
+cat >"$work/logind-busctl" <<SH
+#!/bin/sh
+case "\$*" in
+*GetSession*) echo 'o "/org/freedesktop/login1/session/_31"' ;;
+*get-property*) cat "$work/locked" 2>/dev/null ;;
+*" wait "*)
+	last=\$(stat -c %Y.%s "$work/locked" 2>/dev/null)
+	while :; do
+		# Not past the shell, nor the stand.
+		[ -d "$work" ] && kill -0 \$PPID 2>/dev/null || exit 0
+		now=\$(stat -c %Y.%s "$work/locked" 2>/dev/null)
+		[ "\$now" = "\$last" ] || echo '{"payload":{"data":["org.freedesktop.login1.Session",{"LockedHint":{"type":"b","data":true}},[]]}}'
+		last=\$now
+		sleep 0.2
+	done ;;
+esac
+exit 0
+SH
+chmod +x "$work/logind-busctl"
+sed -i "s|^\treadonly property string bus: .*|\treadonly property string bus: \"$work/logind-busctl\"|" "$work/shell/idle/Idle.qml"
+
 # A phone in reach through KDE Connect is what a test puts in $work/phone, as
 # kdeconnect-cli would list it, charging, at 76%.
 cat >"$work/kdeconnect-cli" <<SH
