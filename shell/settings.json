@@ -108,6 +108,7 @@
 		"history": 100,
 		"maxAge": 0,
 		"rules": [],
+		"waitAway": 60,
 		"screen": ""
 	},
 	"clock": {

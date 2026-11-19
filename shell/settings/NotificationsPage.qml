@@ -116,6 +116,17 @@ Flickable {
 				onChosen: value => page.set("timeoutCritical", value)
 			}
 
+			Choice {
+				holds: "notifications.waitAway"
+				words: "idle away afk"
+				text: Tr.t("They wait while you're away for")
+				subtext: Tr.t("And start over when you're back; a video playing keeps them going")
+				values: [0, 30, 60, 120, 300]
+				value: Settings.notifications.waitAway
+				none: Tr.t("Never")
+				onChosen: value => page.set("waitAway", value)
+			}
+
 			Setting {
 				text: Tr.t("Apps can say how long")
 				checked: Settings.notifications.appsDecide

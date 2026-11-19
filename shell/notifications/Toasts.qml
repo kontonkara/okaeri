@@ -256,7 +256,7 @@ PanelWindow {
 				color: Theme.toastFill
 			}
 
-			// It waits while the pointer is on it.
+			// It waits while the pointer is on it, and while no one is there.
 			HoverHandler {
 				id: hover
 			}
@@ -265,7 +265,7 @@ PanelWindow {
 				id: life
 
 				interval: NotificationStore.lifetime(toast.modelData)
-				running: interval > 0 && !hover.hovered && !toast.asking
+				running: interval > 0 && !hover.hovered && !toast.asking && !NotificationStore.away
 				onTriggered: NotificationStore.takeDown(n => n === toast.modelData)
 			}
 

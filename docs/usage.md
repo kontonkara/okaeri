@@ -148,8 +148,11 @@ on: the quiet hours, on the Notifications page. An app's rule there, or one for
 some words, can keep its toasts or its history away, let it through Do Not
 Disturb, give it a sound of its own, from the sound theme or a file, and run a
 command as one comes, with `OKAERI_APP`, `OKAERI_SUMMARY`, `OKAERI_BODY` and
-`OKAERI_URGENCY` in its environment. The on-screen display says what plays after a
-key of the player's, too, and as a track starts by itself where its page says so.
+`OKAERI_URGENCY` in its environment. With nothing done for a minute toasts wait,
+as under the pointer, and start over once you're back, unless a video keeps the
+screen awake; the Notifications page has how long. The on-screen display says what
+plays after a key of the player's, too, and as a track starts by itself where its
+page says so.
 
 ## Screens
 

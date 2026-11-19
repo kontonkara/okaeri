@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import Quickshell.Wayland
 import qs
 import qs.services
 
@@ -23,6 +24,10 @@ Singleton {
 	id: store
 
 	property var server: null
+	// Nothing done for Settings.notifications.waitAway seconds, 0 for never: the
+	// toasts wait then, as under the pointer, and start over when one's back. What
+	// keeps the screen awake, a video, keeps them going.
+	readonly property bool away: !!awayWatch.instances[0]?.isIdle
 	property var panel: null
 	property alias dnd: kept.dnd
 	// When Do Not Disturb ends by itself, 0 for never.
@@ -597,5 +602,21 @@ Singleton {
 		property string quiet: "{}"
 
 		reloadableId: "notifications"
+	}
+
+	// Made anew for another time: one doesn't take a new timeout.
+	Variants {
+		id: awayWatch
+
+		model: Settings.notifications.waitAway > 0 ? [Settings.notifications.waitAway] : []
+
+		IdleMonitor {
+			required property var modelData
+
+			timeout: modelData
+			respectInhibitors: true
+			// For tests.
+			onIsIdleChanged: console.info("okaeri: notifications: away", isIdle)
+		}
 	}
 }

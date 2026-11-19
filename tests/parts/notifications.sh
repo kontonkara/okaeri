@@ -1444,6 +1444,22 @@ printf '{}\n' >"$config"
 sleep 0.5
 ipc notifications clear
 wait_state history 0
+
+step "While no one is there"
+# With nothing done for a second the toast waits past its time, and goes in its
+# time again while the pointer moves.
+printf '{ "notifications": { "timeout": 3, "waitAway": 1 } }\n' >"$config"
+sleep 0.5
+send -a Mail "Waiting" "For you to be back."
+wait_state toasts 1
+sleep 5
+is toasts 1
+for step in $(seq 30); do
+	move $((300 + step % 2 * 10)) 600
+	[ "$(state toasts)" = 0 ] && break
+	sleep 0.2
+done
+is toasts 0
 printf '{}\n' >"$config"
 sleep 0.5
 ipc notifications clear
