@@ -377,9 +377,10 @@ Panel {
 
 	function rows() {
 		// What tells rows apart, so one that stays from a search to the next moves
-		// instead of being made anew: all that shows on it.
+		// instead of being made anew: all that shows on it, or a process's number,
+		// as what it takes changes on every look.
 		return (menuOf ? menu(menuOf) : grouping ? groupRows() : typed()).map(row => Object.assign({
-			key: [row.text, row.subtext, row.entry?.id, row.action?.id, row.window, row.session?.text, row.mark].join("|")
+			key: row.pid ? `pid ${row.pid}` : [row.text, row.subtext, row.entry?.id, row.action?.id, row.window, row.session?.text, row.mark].join("|")
 		}, row));
 	}
 
@@ -391,12 +392,17 @@ Panel {
 		list.positionViewAtBeginning();
 	}
 
-	// The same search over apps that came or went, on the same app if it's there.
+	// The same search over apps that came or went, or processes looked at again, on
+	// the same row if it's there, and where the list was scrolled to.
 	function refresh() {
 		// The row picked stays picked: an app by its entry, the rest by their keys.
 		const was = found.values[list.currentIndex];
-		search();
+		const scrolled = list.contentY;
+		found.values = rows();
 		list.currentIndex = Math.max(0, found.values.findIndex(row => was?.entry ? row.entry?.id === was.entry.id : row.key === was?.key));
+		list.contentY = Math.max(list.originY, Math.min(scrolled, list.originY + Math.max(0, list.contentHeight - list.height)));
+		// For tests: how far down it stayed.
+		console.info("okaeri: launcher: refreshed at", Math.round(list.contentY - list.originY));
 	}
 
 	function openMenu(row) {

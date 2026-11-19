@@ -1115,5 +1115,28 @@ shot process-asked
 key Return
 wait_log "okaeri: dry: process end"
 key Escape
+# Scrolled down a long list, it stays there as the processes are looked at
+# again.
+many=""
+for n in $(seq 30); do
+	perl -e '$0 = "okaeri-many-'"$n"'"; sleep 120' &
+	many="$many $!"
+done
+open
+type "/ps "
+sleep 2.5
+move 700 450
+notch 6
+sleep 0.3
+from=$(log | grep -c "okaeri: launcher: refreshed at")
+for _ in $(seq 60); do
+	[ "$(log | grep -c "okaeri: launcher: refreshed at")" -gt "$from" ] && break
+	sleep 0.1
+done
+at=$(log | sed -n 's/.*okaeri: launcher: refreshed at //p' | tail -n 1)
+[ "${at:-0}" -gt 0 ] || fail "the list went back to its top as the processes were looked at again: at $at"
+key Escape
+# shellcheck disable=SC2086
+kill $many
 kill "$sleeper"
 wait "$sleeper" 2>/dev/null || true
