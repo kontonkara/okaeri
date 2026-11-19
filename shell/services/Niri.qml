@@ -67,6 +67,12 @@ Singleton {
 			focus(workspaces[to].id);
 	}
 
+	// The screen called `name`, or the one in focus while that isn't there, or with
+	// "".
+	function screenOr(name) {
+		return (name ? Quickshell.screens.find(screen => screen.name === name) : null) ?? focusedScreen;
+	}
+
 	// The screen with the focused workspace, the first one if niri has none of
 	// them (a test's).
 	readonly property var focusedScreen: {

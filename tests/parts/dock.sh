@@ -71,6 +71,20 @@ sleep 1.5
 move 700 400
 shot running
 [ "$(magick "$out/running.png" "$out/kept.png" -compose difference -composite -crop 60x12+$((middle - 30))+884 +repage -format '%[fx:maxima > 0.2]' info:)" = 1 ] || fail "no mark under an app with a window"
+# The mark as a line is longer than the dot, and with none there's none.
+mark() {
+	magick "$out/$1.png" "$out/kept.png" -compose difference -composite -crop 60x12+$((middle - 30))+884 +repage -threshold 20% -format '%[fx:mean * w * h]' info:
+}
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "indicator": "line" } }'
+sleep 0.4
+shot running-line
+awk -v a="$(mark running-line)" -v b="$(mark running)" 'BEGIN { exit !(a > b) }' || fail "the line isn't longer than the dot: $(mark running-line) against $(mark running)"
+settings '{ "dock": { "on": true, "pinned": ["kitty"], "indicator": "none" } }'
+sleep 0.4
+shot running-none
+[ "$(mark running-none)" = 0 ] || fail "a mark with none asked for: $(mark running-none)"
+settings '{ "dock": { "on": true, "pinned": ["kitty"] } }'
+sleep 0.4
 DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null kitty --class okaeri-other --config NONE -o confirm_os_window_close=0 sleep 60 &
 second=$!
 sleep 1.5

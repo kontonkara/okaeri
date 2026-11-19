@@ -605,6 +605,7 @@ Column {
 				Pick {
 					holds: "desktop.position"
 					text: Tr.t("Where they are")
+					subtext: Object.keys(Settings.desktop.places ?? {}).length > 0 ? Tr.t("Where they were dragged to; a corner puts them back") : Tr.t("Or anywhere they're dragged to")
 					valueWidth: Theme.u(150)
 					options: [
 						{ value: "top-left", text: Tr.t("Top left") },
@@ -612,9 +613,12 @@ Column {
 						{ value: "center", text: Tr.t("In the middle") },
 						{ value: "bottom-left", text: Tr.t("Bottom left") },
 						{ value: "bottom-right", text: Tr.t("Bottom right") }
-					]
-					value: Settings.desktop.position
-					onChosen: value => Settings.set("desktop", "position", value)
+					].concat(Object.keys(Settings.desktop.places ?? {}).length > 0 ? [{ value: "dragged", text: Tr.t("Where dragged") }] : [])
+					value: Object.keys(Settings.desktop.places ?? {}).length > 0 ? "dragged" : Settings.desktop.position
+					onChosen: value => {
+						if (value !== "dragged")
+							Settings.setAll({ desktop: { position: value, places: undefined } });
+					}
 				}
 			}
 		}

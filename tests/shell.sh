@@ -728,6 +728,20 @@ wait_up desktop 1 "the time on the desktop"
 niri msg --json layers | jq -e 'any(.[]; .namespace == "okaeri-desktop" and .layer == "Bottom" and .keyboard_interactivity == "None")' >/dev/null ||
 	fail "the desktop isn't under the windows without the keys"
 shot desktop
+# Dragged, it stays where it's let go, on that screen, and a corner has it back.
+move 120 110
+hold
+move 300 250
+move 700 500
+let_go
+wait_log "okaeri: desktop: placed"
+sleep 0.4
+shot desktop-dragged
+awk -v x="$(jq -r '.desktop.places | to_entries[0].value.x' "$XDG_STATE_HOME/okaeri/settings.json")" 'BEGIN { exit !(x > 0.3 && x < 0.8) }' ||
+	fail "the place it was dragged to: $(jq -c .desktop "$XDG_STATE_HOME/okaeri/settings.json")"
+[ "$(magick "$out/desktop-dragged.png" -crop 200x60+40+90 +repage -format '%[fx:standard_deviation]' info:)" != "$(magick "$out/desktop.png" -crop 200x60+40+90 +repage -format '%[fx:standard_deviation]' info:)" ] ||
+	fail "the clock didn't move"
+ipc settings reset desktop.places >/dev/null
 printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 wait_up desktop 0 "the desktop with nothing on it"
 

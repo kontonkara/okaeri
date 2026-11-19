@@ -143,6 +143,14 @@ Flickable {
 				onChosen: value => page.set("position", value)
 			}
 
+			ScreenPick {
+				holds: "notifications.screen"
+				words: "monitor display output popups"
+				text: Tr.t("On the screen")
+				value: Settings.notifications.screen
+				onChosen: value => page.set("screen", value)
+			}
+
 			Setting {
 				text: Tr.t("Over fullscreen windows")
 				subtext: Tr.t("Games and video too")

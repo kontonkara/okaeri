@@ -9,7 +9,8 @@ import qs.ui
 // What's on the desktop of each screen, over the wallpaper and under the
 // windows, as Settings.desktop has it: the clock, the weather, what plays and
 // what the calendars have coming, one under another at a corner or in the
-// middle. Only those cards take the pointer; the rest of the desktop is the
+// middle, or where they were dragged to on a screen, Settings.desktop.places by
+// its name. Only those cards take the pointer; the rest of the desktop is the
 // wallpaper's.
 Scope {
 	id: desktop
@@ -56,13 +57,47 @@ Scope {
 				precision: desktop.own.seconds ? SystemClock.Seconds : SystemClock.Minutes
 			}
 
+			// Where they were dragged to on this screen, as parts of the room there
+			// is across and down, or null for the corner.
+			readonly property var place: desktop.own.places?.[modelData.name] ?? null
+
+			// The corner's, or the place's, kept within the screen.
+			function placed() {
+				stack.x = Qt.binding(() => place ? Math.round(Math.max(0, Math.min(1, place.x)) * (width - stack.width)) : at.endsWith("left") ? from("left") : at.endsWith("right") ? width - stack.width - from("right") : (width - stack.width) / 2);
+				stack.y = Qt.binding(() => place ? Math.round(Math.max(0, Math.min(1, place.y)) * (height - stack.height)) : at.startsWith("top") ? from("top") : at.startsWith("bottom") ? height - stack.height - from("bottom") : (height - stack.height) / 2);
+			}
+
+			Component.onCompleted: placed()
+
 			Column {
 				id: stack
 
-				x: window.at.endsWith("left") ? window.from("left") : window.at.endsWith("right") ? parent.width - width - window.from("right") : (parent.width - width) / 2
-				y: window.at.startsWith("top") ? window.from("top") : window.at.startsWith("bottom") ? parent.height - height - window.from("bottom") : (parent.height - height) / 2
 				width: Theme.u(320)
 				spacing: Theme.u(12)
+
+				// Dragged by any of them, they stay where they're let go, on this
+				// screen; its own buttons still take a click.
+				DragHandler {
+					id: drag
+
+					target: stack
+					xAxis.minimum: 0
+					xAxis.maximum: window.width - stack.width
+					yAxis.minimum: 0
+					yAxis.maximum: window.height - stack.height
+					cursorShape: Qt.ClosedHandCursor
+					onActiveChanged: {
+						if (active)
+							return;
+						const across = window.width - stack.width;
+						const down = window.height - stack.height;
+						const places = Object.assign({}, desktop.own.places);
+						places[window.modelData.name] = { x: across > 0 ? Math.round(stack.x / across * 1000) / 1000 : 0, y: down > 0 ? Math.round(stack.y / down * 1000) / 1000 : 0 };
+						console.info("okaeri: desktop: placed", JSON.stringify(places[window.modelData.name]));
+						Settings.set("desktop", "places", places);
+						window.placed();
+					}
+				}
 
 				// The time, large, and the day under it.
 				Card {

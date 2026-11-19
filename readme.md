@@ -142,8 +142,9 @@ each app playing or listening has a volume of its own, and one playing can have
 an output of its own too, which WirePlumber keeps for it. The dock has the apps
 it keeps and those with windows, all of them or only its screen's, and a right
 click on one has its windows, what else it can start, bringing its windows here,
-keeping it and closing it. Its icons grow under the pointer, an app hops as it
-starts and while it asks to be looked at, and it can have a button for the
+keeping it and closing it. Its icons grow under the pointer, an app hops, grows
+or rocks as it starts and while it asks to be looked at, a dot, a line or a dot
+for each window marks one that's open, and it can have a button for the
 launcher, and stay in sight on an empty workspace where it hides. An app has how
 many of its notifications are unread, and a line goes after the apps it keeps.
 An app with a window, carried out of the dock onto a workspace of the bar, has
@@ -209,7 +210,24 @@ won't do is said in a notification.
 With more screens than one, the Bar page picks whose lanes it shows: a screen's
 bar can have parts of its own, and "Like the others" has it like every other
 again. The Dock page does the same for a screen's dock: where it is, how
-large, whether it hides and the rest.)
+large, whether it hides and the rest. The on-screen display and the
+notifications show on the screen in focus, or on one of their own, as their pages
+say.
+
+The bar is one piece across the screen, an island for each lane, or a capsule for
+each part, as the Look page has it. A part chosen on the Bar page can have a
+capsule of its own all the same, and a fill and a color for its icons and words:
+one of a few, one typed, or one taken off the screen. The accent and the warnings
+keep theirs. Separators and spaces go between parts as any part does, as many as
+wanted. With "The pointer opens panels" on the Bar page, the pointer resting on
+the clock and the like opens its panel. The load on the bar is written as its
+`format` says, and turns red past what its alerts say.
+
+The Look page has layouts too, a click each, drawn small: where the bar is and
+how, what's on it, and the dock, with "As it was" to take the last one back;
+`okaeri layouts list` and `take <name>` do the same. It sets how niri draws
+windows too, in the theme's colors: the gaps between them, a border, the ring
+around the one in focus and their corners, or leaves them to niri's config.
 
 okaeri's own words are in English, or in Russian where the locale is, or where
 the Look page says; another language is a file in `shell/i18n`, the English
@@ -236,7 +254,8 @@ none runs until it's turned on, on the Plugins page of the settings, where
 
 Over the wallpaper and under the windows, the desktop can have the time, the
 weather, what plays with its buttons, and what the calendars have coming, at a
-corner or in the middle: on the Wallpaper page, with how pictures show.
+corner or in the middle, or dragged anywhere on a screen, where they stay on it:
+on the Wallpaper page, with how pictures show.
 
 Screenshots are under `/shot` in the launcher, of a part of the screen, the
 screen or the window in focus, with the latest after them: Enter opens one and

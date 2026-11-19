@@ -22,8 +22,9 @@ import qs.ui
 // Under the pointer the icons grow, as Settings.dock.magnify says, the nearest
 // most, and those beside them make room; the dock itself keeps its size, and
 // what grows stands out of it, away from the edge. With Settings.dock.bounce an
-// app hops as it starts, until its window comes, and while it asks to be looked
-// at.
+// app moves as it starts, until its window comes, and while it asks to be looked
+// at, as Settings.dock.motion says; Settings.dock.indicator is what marks one
+// with windows.
 PanelWindow {
 	id: dock
 
@@ -46,7 +47,13 @@ PanelWindow {
 	// that make room.
 	readonly property real magnify: own.magnify >= 100 ? own.magnify / 100 : 1
 	readonly property bool magnifies: magnify > 1
-	readonly property real hop: own.bounce ? Theme.u(12) : 0
+	// How an app moves as it starts: up and down, larger and back, or side to
+	// side; only the first needs room out of the dock.
+	readonly property string motion: ["pulse", "wiggle"].includes(own.motion) ? own.motion : "bounce"
+	readonly property real hop: own.bounce && motion === "bounce" ? Theme.u(12) : own.bounce && motion === "pulse" ? Theme.u(4) : 0
+	// What marks an app with windows: a dot, a line, a dot for each window, or
+	// nothing.
+	readonly property string indicator: ["line", "dots", "none"].includes(own.indicator) ? own.indicator : "dot"
 	readonly property real headroom: Math.ceil(size * (magnify - 1) + hop)
 	readonly property real across: thick + headroom
 	readonly property real ends: Math.ceil(size * (magnify - 1) * 1.2)
@@ -434,7 +441,7 @@ PanelWindow {
 							width: dock.size
 							height: dock.size
 							transform: Translate {
-								readonly property real away: app.up * dock.hop
+								readonly property real away: dock.motion === "bounce" ? app.up * dock.hop : 0
 								x: dock.upright ? (dock.at === "left" ? away : -away) : app.shift
 								y: dock.upright ? app.shift : (dock.at === "top" ? away : -away)
 							}
@@ -443,7 +450,8 @@ PanelWindow {
 								id: picture
 
 								anchors.fill: parent
-								scale: app.grow
+								scale: app.grow * (dock.motion === "pulse" ? 1 + app.up * 0.2 : 1)
+								rotation: dock.motion === "wiggle" ? Math.sin(app.up * Math.PI * 2) * 12 : 0
 								transformOrigin: dock.at === "top" ? Item.Top : dock.at === "left" ? Item.Left : dock.at === "right" ? Item.Right : Item.Bottom
 
 								IconImage {
@@ -509,16 +517,42 @@ PanelWindow {
 							}
 						}
 
-						Rectangle {
-							property real long: Theme.u(app.focused ? 14 : 4)
-							readonly property real short: Theme.u(4)
+						// A dot for each of its windows, up to three.
+						Grid {
+							objectName: "windows"
+							x: dock.upright ? (dock.at === "left" ? 0 : parent.width - width) : (parent.width - width) / 2
+							y: dock.upright ? (parent.height - height) / 2 : (dock.at === "top" ? 0 : parent.height - height)
+							visible: app.running && dock.indicator === "dots"
+							columns: dock.upright ? 1 : 3
+							spacing: Theme.u(3)
+							transform: Translate {
+								x: dock.upright ? 0 : app.shift
+								y: dock.upright ? app.shift : 0
+							}
 
+							Repeater {
+								model: Math.min(3, app.modelData.windows.length)
+
+								Rectangle {
+									width: Theme.u(4)
+									height: Theme.u(4)
+									radius: width / 2
+									color: app.urgent ? Theme.colors.error : app.focused ? Theme.colors.accent : Theme.colors.subtext
+								}
+							}
+						}
+
+						Rectangle {
+							property real long: Theme.u(dock.indicator === "line" ? (app.focused ? 22 : 12) : app.focused ? 14 : 4)
+							readonly property real short: Theme.u(dock.indicator === "line" ? 3 : 4)
+
+							objectName: "running"
 							x: dock.upright ? (dock.at === "left" ? 0 : parent.width - width) : (parent.width - width) / 2
 							y: dock.upright ? (parent.height - height) / 2 : (dock.at === "top" ? 0 : parent.height - height)
 							width: dock.upright ? short : long
 							height: dock.upright ? long : short
 							radius: Theme.round(short)
-							visible: app.running
+							visible: app.running && (dock.indicator === "dot" || dock.indicator === "line")
 							color: app.urgent ? Theme.colors.error : app.focused ? Theme.colors.accent : Theme.colors.subtext
 							transform: Translate {
 								x: dock.upright ? 0 : app.shift

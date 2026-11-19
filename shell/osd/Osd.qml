@@ -94,7 +94,7 @@ PanelWindow {
 			return;
 		osd.kind = kind;
 		osd.level = level;
-		screen = Niri.focusedScreen;
+		screen = Niri.screenOr(Settings.osd.screen);
 		shown = true;
 		visible = true;
 		hold.restart();

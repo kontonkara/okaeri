@@ -59,7 +59,8 @@
 		"duration": 1.5,
 		"percent": false,
 		"tracks": false,
-		"hidden": []
+		"hidden": [],
+		"screen": ""
 	},
 	"sounds": {
 		"volume": 25,
@@ -106,7 +107,8 @@
 		"keep": true,
 		"history": 100,
 		"maxAge": 0,
-		"rules": []
+		"rules": [],
+		"screen": ""
 	},
 	"clock": {
 		"date": "before",
@@ -146,6 +148,8 @@
 		"windows": "all",
 		"magnify": 140,
 		"bounce": true,
+		"motion": "bounce",
+		"indicator": "dot",
 		"count": true,
 		"launcher": "none",
 		"smartHide": false,
@@ -257,7 +261,8 @@
 		"weather": false,
 		"media": false,
 		"events": false,
-		"position": "top-left"
+		"position": "top-left",
+		"places": {}
 	},
 	"drives": {
 		"notify": true,

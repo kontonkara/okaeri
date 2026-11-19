@@ -146,10 +146,40 @@ Flickable {
 			Setting {
 				holds: "dock.bounce"
 				words: "jump launching"
-				text: Tr.t("Apps hop")
+				text: Tr.t("Apps move")
 				subtext: Tr.t("As one starts, until its window comes, and while it asks to be looked at")
 				checked: page.own.bounce
 				onToggled: wanted => Settings.setDock(page.forScreen, "bounce", wanted)
+			}
+
+			Pick {
+				holds: "dock.motion"
+				words: "animation launch jump"
+				visible: page.own.bounce
+				text: Tr.t("How")
+				options: [
+					{ value: "bounce", text: Tr.t("Up and down") },
+					{ value: "pulse", text: Tr.t("Larger and back") },
+					{ value: "wiggle", text: Tr.t("Side to side") }
+				]
+				value: page.own.motion
+				valueWidth: Theme.u(140)
+				onChosen: value => Settings.setDock(page.forScreen, "motion", value)
+			}
+
+			Pick {
+				holds: "dock.indicator"
+				words: "running dot line mark"
+				text: Tr.t("An app with windows has")
+				options: [
+					{ value: "dot", text: Tr.t("A dot") },
+					{ value: "line", text: Tr.t("A line") },
+					{ value: "dots", text: Tr.t("A dot for each") },
+					{ value: "none", text: Tr.t("Nothing") }
+				]
+				value: page.own.indicator
+				valueWidth: Theme.u(140)
+				onChosen: value => Settings.setDock(page.forScreen, "indicator", value)
 			}
 
 			Setting {

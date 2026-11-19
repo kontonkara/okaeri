@@ -49,7 +49,6 @@ Flickable {
 				holds: "osd.position"
 				words: "popup"
 				text: Tr.t("Where")
-				subtext: Tr.t("On the screen in focus")
 				options: [
 					{ value: "bottom", text: Tr.t("At the bottom") },
 					{ value: "middle", text: Tr.t("In the middle") },
@@ -57,6 +56,14 @@ Flickable {
 				]
 				value: Settings.osd.position
 				onChosen: value => Settings.set("osd", "position", value)
+			}
+
+			ScreenPick {
+				holds: "osd.screen"
+				words: "monitor display output"
+				text: Tr.t("On the screen")
+				value: Settings.osd.screen
+				onChosen: value => Settings.set("osd", "screen", value)
 			}
 
 			Choice {

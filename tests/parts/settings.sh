@@ -791,6 +791,10 @@ page "$osd_y"
 shot osd-page
 higher Where
 same "where it shows" "$(value .osd.position)" '"middle"'
+higher "On the screen"
+same "the screen it shows on" "$(value .osd.screen)" "\"$(niri msg --json outputs | jq -r 'keys[0]')\""
+lower "On the screen"
+same "the screen in focus" "$(value .osd.screen)" '""'
 higher "For how long"
 same "for how long" "$(value .osd.duration)" 2
 flip "The level in numbers"

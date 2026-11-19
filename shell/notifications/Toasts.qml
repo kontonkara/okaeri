@@ -50,7 +50,7 @@ PanelWindow {
 
 	onWantedChanged: {
 		if (wanted)
-			screen = Niri.focusedScreen;
+			screen = Niri.screenOr(Settings.notifications.screen);
 		visible = wanted;
 	}
 
