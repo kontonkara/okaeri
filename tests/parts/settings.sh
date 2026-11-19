@@ -44,8 +44,6 @@ off_y=620
 off_gap_y=660
 # The part made here: in the last lane, on a fourth line of its own, and on the
 # left once it's there.
-script_x=735
-script_y=727
 script_on_x=796
 field_y=257
 picture_y=339
@@ -319,7 +317,12 @@ sleep 0.5
 shot script-added
 same "the part made" "$(value .bar.scripts)" '[{"name":"script","command":"","every":10}]'
 to_top
-drag "$script_x" "$script_y" 900 "$left_y"
+# Its chip, across by its name, as the parts before it come and go; down at the
+# foot of the lanes with them at the top, which a spot of it would scroll from.
+# shellcheck disable=SC2046
+set -- $(spot script line)
+to_top
+drag "$1" 727 900 "$left_y"
 same "the left with it" "$(value .bar.left)" '["workspaces","media","clock","script"]'
 shot script-on
 choose "$script_on_x" "$left_y"
