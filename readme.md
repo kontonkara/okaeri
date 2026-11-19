@@ -195,6 +195,11 @@ place beside the others, and turns one off. niri has that at once, and okaeri ha
 it again as it starts and as a screen comes; what can leave a screen dark goes
 back by itself in fifteen seconds unless it's kept.
 
+The bar can have a part for things to do and a note: how many are left, and a
+card to add one, tick it off or take it away, and to write in. `/todo` in the
+launcher adds one or ticks one off, `okaeri notes add` adds one from a script,
+and `okaeri notes toggle` shows the card by a key.
+
 Over the wallpaper and under the windows, the desktop can have the time, the
 weather, what plays with its buttons, and what the calendars have coming, at a
 corner or in the middle: on the Wallpaper page, with how pictures show.

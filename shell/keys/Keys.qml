@@ -214,6 +214,24 @@ Scope {
 		}
 	}
 
+	// `okaeri notes add "buy milk"`, what's to do, as JSON, and the card of them on
+	// the bar of the screen in focus.
+	IpcHandler {
+		target: "notes"
+
+		function add(text: string): void {
+			Notes.add(text);
+		}
+
+		function list(): string {
+			return JSON.stringify(Notes.todos);
+		}
+
+		function toggle(): void {
+			Panels.ask("notes", Niri.focusedScreen?.name ?? "");
+		}
+	}
+
 	// The battery's card, on the bar of the screen in focus.
 	IpcHandler {
 		target: "battery"

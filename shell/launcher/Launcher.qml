@@ -35,6 +35,7 @@ Panel {
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
 		{ mode: "shot", text: "Screenshots", subtext: "/shot: take one, or the latest: Enter opens one, Shift+Enter copies it", icon: "image" },
 		{ mode: "color", text: "A color off the screen", subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
+		{ mode: "todo", text: "Things to do", subtext: "/todo and what: Enter adds it; without, Enter ticks one off", icon: "notes" },
 		{ mode: "timer", text: "Timer and stopwatch", subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
 		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
 	]
@@ -253,6 +254,21 @@ Panel {
 		return found;
 	}
 
+	// A thing to do added from the text, or without it those not done yet, Enter
+	// ticking one off, the launcher staying on the rest.
+	function todoRows(text) {
+		if (text)
+			return [{ does: () => Notes.add(text), text: `Add ${text}`, subtext: "To what's to do", icon: "notes" }];
+		return Notes.todos.map((todo, index) => ({ todo, index })).filter(one => !one.todo.done).map(one => ({
+			key: `todo|${one.todo.text}`,
+			stays: true,
+			does: () => Notes.toggle(one.index),
+			text: one.todo.text,
+			subtext: "Enter ticks it off",
+			icon: "box"
+		}));
+	}
+
 	// One's processes with `query` in their names, their command lines or as their
 	// pids, the busiest first. Enter on one asks to end it and stays, and on it
 	// again ends it; Shift+Enter kills it the same way. Each row stays itself as
@@ -271,7 +287,6 @@ Panel {
 
 	// A screenshot to take, the text off the screen and the latest to edit where
 	// there's what for, and the latest taken, those that have `query` in their
-	// names.
 	// names.
 	function shots(query) {
 		const later = Settings.screenshots.delay > 0 ? `In ${Settings.screenshots.delay} s` : "";
@@ -350,6 +365,8 @@ Panel {
 			return shots(query);
 		case "ps":
 			return processRows(query);
+		case "todo":
+			return todoRows(asked[2].trim());
 		case "color":
 			return [{ does: () => colorSoon.restart(), text: "Pick a color off the screen", subtext: "A click on it copies it as #rrggbb", icon: "eye" }];
 		}
@@ -473,6 +490,16 @@ Panel {
 
 		function onArmedChanged() {
 			if (Processes.watched)
+				launcher.refresh();
+		}
+	}
+
+	// A thing ticked off under /todo goes from the rows at once.
+	Connections {
+		target: Notes
+
+		function onTodosChanged() {
+			if (launcher.shown && /^\s*\/todo(\s|$)/i.test(field.text))
 				launcher.refresh();
 		}
 	}

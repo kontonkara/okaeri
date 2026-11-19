@@ -622,6 +622,29 @@ ipc load toggle
 wait_log "okaeri: no load on a bar to open"
 wait_up panel 0 "a call for what isn't on the bar"
 
+step "Things to do"
+# The notes' part on the bar: one thing added by a call, one in its card's field,
+# and both in its file, the newest last.
+printf '{ "bar": { "right": ["notes", "control"] } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc notes add "buy milk"
+ipc notes toggle
+wait_up panel 1 "the notes' card"
+settle
+type "call mom"
+key Return
+sleep 0.4
+shot notes
+[ "$(ipc notes list | jq -c '[.[].text]')" = '["buy milk","call mom"]' ] || fail "what's to do: $(ipc notes list)"
+key Escape
+wait_up panel 0 "the notes' card, Escape"
+for _ in $(seq 20); do
+	[ "$(jq -c '[.todos[].text]' "$XDG_STATE_HOME/okaeri/notes.json" 2>/dev/null)" = '["buy milk","call mom"]' ] && break
+	sleep 0.1
+done
+[ "$(jq -c '[.todos[].text]' "$XDG_STATE_HOME/okaeri/notes.json" 2>/dev/null)" = '["buy milk","call mom"]' ] || fail "the notes' file"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+
 step "On the desktop"
 # The time, over the wallpaper and under the windows, on each screen: on the
 # layer below them, taking no keys, and gone again with it off.
