@@ -832,6 +832,33 @@ flip Hello
 same "the plugins on, none" "$(value .plugins.enabled)" '[]'
 rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
 
+step "Wallhaven"
+# Its leaf on the Wallpaper page, with a stand-in for Wallhaven on this port: Enter
+# in its field asks for the most liked, and a click on one fetches it, here only
+# said.
+mkdir -p "$work/wallhaven/api/v1"
+magick -size 64x36 xc:purple "$work/wallhaven/one.png"
+printf '{"data":[{"id":"abc123","path":"%s/one.png","thumbs":{"small":"%s/one.png"},"resolution":"1920x1080","file_type":"image/png"}]}' "$OKAERI_WALLHAVEN_URL" "$OKAERI_WALLHAVEN_URL" >"$work/wallhaven/api/v1/search"
+timeout 120 python3 -m http.server "${OKAERI_WALLHAVEN_URL##*:}" --bind 127.0.0.1 --directory "$work/wallhaven" >"$out/wallhaven-server.log" 2>&1 &
+wallhaven=$!
+sleep 1
+ipc settings open Wallpaper
+sleep 0.5
+press_on Wallhaven line
+press_on Wallhaven wallhaven-field
+key Return
+for _ in $(seq 30); do
+	[ -n "$(ipc settings spot Wallhaven result)" ] && break
+	sleep 0.1
+done
+sleep 0.5
+shot wallhaven
+press_on Wallhaven result
+wait_log "okaeri: dry: wallpaper download abc123"
+kill "$wallhaven"
+wait "$wallhaven" 2>/dev/null || true
+press_on Pictures line
+
 step "The display's page"
 page "$display_y"
 shot display-page

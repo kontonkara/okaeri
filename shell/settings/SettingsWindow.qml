@@ -252,8 +252,9 @@ FloatingWindow {
 		const [found, target] = Spots.part(shownPage, text, part, ["text"]);
 		if (!found)
 			return "";
+		// The leaf of what's to be clicked, which can be another than the words'.
 		if (shownPage.bring)
-			shownPage.bring(found);
+			shownPage.bring(target ?? found);
 		for (let view = found.parent; view; view = view.parent) {
 			if (view.contentY === undefined || view.contentHeight === undefined)
 				continue;

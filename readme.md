@@ -44,9 +44,10 @@ night light, `wf-recorder` to record the screen and `slurp` for a part of it,
 VPNs, the hotspot and sharing Wi-Fi, `qrencode` for the code a phone joins it by,
 `udisksctl` for the drives one plugs in, KDE Connect's `kdeconnect-cli` for a
 phone, `tesseract` for the text in screenshots, `satty` or `swappy` to edit
-them, and the freedesktop sound theme for sounds. `bin/okaeri` runs it from a
-clone of this repository, on any distribution: `nix/` is a package and a Home
-Manager module for those who want them. In niri's config:
+them, `curl` for pictures from Wallhaven, and the freedesktop sound theme for
+sounds. `bin/okaeri` runs it from a clone of this repository, on any
+distribution: `nix/` is a package and a Home Manager module for those who want
+them. In niri's config:
 
 ```kdl
 spawn-at-startup "/path/to/okaeri/bin/okaeri"
@@ -237,7 +238,9 @@ one of your own over any palette's, `accent` in `theme.json` as `#rrggbb`, or
 all that it set, and `okaeri theme look evening` has that one on again. `okaeri wallpaper next` puts up
 another picture of the wallpaper's folder, `okaeri wallpaper set <file>` that
 one, and a right click on one in the settings makes it one screen's own or the
-light colors'. `okaeri record toggle`
+light colors'. The Wallpaper page looks on Wallhaven too, only when asked, for
+pictures safe for work as large as the screen: one picked is fetched into the
+folder by `curl` and goes up. `okaeri record toggle`
 starts and stops a recording of the screen, and `okaeri settings open Wallpaper`
 opens the settings at a page. For scripts, `okaeri dmenu` shows the lines of its
 standard input in the launcher and prints the one picked, as dmenu does, with

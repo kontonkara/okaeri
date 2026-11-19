@@ -10,6 +10,7 @@
   pipewire,
   sound-theme-freedesktop,
   coreutils,
+  curl,
   systemd,
   util-linux,
   wl-clipboard,
@@ -52,6 +53,7 @@ stdenvNoCC.mkDerivation {
           libnotify
           pipewire
           coreutils
+          curl
           systemd
           util-linux
           wl-clipboard

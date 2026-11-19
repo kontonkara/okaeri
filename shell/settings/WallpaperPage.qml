@@ -6,9 +6,10 @@ import qs
 import qs.services
 import qs.ui
 
-// The wallpaper, on two leaves: the pictures of a folder to pick it from,
+// The wallpaper, on three leaves: the pictures of a folder to pick it from,
 // Settings.wallpaper.folder, or where the wallpaper is, read only as they come
-// into view; and how one is shown, when another takes its place, and what's on
+// into view; Wallhaven's, looked for there and fetched into the folder as one
+// is picked; and how one is shown, when another takes its place, and what's on
 // the desktop over it: the time, the weather, what plays, what's coming. With
 // more screens than one a picture can be one screen's own, and one can be for
 // light colors only. A right click on a picture has those choices at hand, and
@@ -18,8 +19,9 @@ Column {
 
 	readonly property real gap: Math.round(Theme.u(8))
 	readonly property var own: Settings.wallpaper
-	// Which leaf shows.
+	// Which leaf shows: the pictures, how they show, or Wallhaven's.
 	property bool showing: false
+	property bool online: false
 	// Who the pictures are picked for: a screen, by its name, "*light" for all of
 	// them under a light palette, "" for all of them.
 	property string screen
@@ -56,11 +58,18 @@ Column {
 		for (let above = item; above; above = above.parent) {
 			if (above === how) {
 				showing = true;
+				page.online = false;
 				how.contentY = Math.max(0, Math.min(item.mapToItem(how.contentItem, 0, 0).y - Theme.u(16), how.contentHeight - how.height));
+				return;
+			}
+			if (above === onlineLeaf) {
+				page.online = true;
+				showing = false;
 				return;
 			}
 		}
 		showing = false;
+		page.online = false;
 	}
 
 	spacing: Math.round(Theme.u(10))
@@ -70,23 +79,39 @@ Column {
 
 		Button {
 			height: Theme.u(30)
-			flat: page.showing
+			flat: page.showing || page.online
 			text: "Pictures"
-			onClicked: page.showing = false
+			onClicked: {
+				page.showing = false;
+				page.online = false;
+			}
 		}
 
 		Button {
 			height: Theme.u(30)
 			flat: !page.showing
 			text: "How they show"
-			onClicked: page.showing = true
+			onClicked: {
+				page.showing = true;
+				page.online = false;
+			}
+		}
+
+		Button {
+			height: Theme.u(30)
+			flat: !page.online
+			text: "Wallhaven"
+			onClicked: {
+				page.online = true;
+				page.showing = false;
+			}
 		}
 	}
 
 	Column {
 		width: parent.width
 		height: parent.height - y
-		visible: !page.showing
+		visible: !page.showing && !page.online
 		spacing: page.spacing
 
 		FolderListModel {
@@ -321,6 +346,99 @@ Column {
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize
+			}
+		}
+	}
+
+	// Wallhaven's, looked for only when asked: a click on one fetches it into the
+	// folder and puts it up for whoever the pictures are picked for.
+	Column {
+		id: onlineLeaf
+
+		width: parent.width
+		height: parent.height - y
+		visible: page.online
+		spacing: page.spacing
+
+		TextField {
+			objectName: "wallhaven-field"
+			width: parent.width
+			icon: "search"
+			placeholder: "Look on Wallhaven, or Enter for the most liked"
+			onAccepted: Wallhaven.search(text)
+		}
+
+		Text {
+			width: parent.width
+			visible: text !== ""
+			text: Wallhaven.looking ? "Looking..." : Wallhaven.taking ? "Fetching it..." : Wallhaven.trouble || (Wallhaven.asked !== "" && Wallhaven.found.length === 0 ? "Nothing found" : "")
+			color: Wallhaven.trouble ? Theme.colors.error : Theme.colors.subtext
+			font.family: Theme.font
+			font.pixelSize: Theme.fontSize - Theme.u(1)
+		}
+
+		GridView {
+			id: found
+
+			width: parent.width
+			height: parent.height - y
+			cellWidth: Math.floor(width / 3)
+			cellHeight: Math.round(cellWidth * 9 / 16)
+			model: Wallhaven.found
+			clip: true
+			boundsBehavior: Flickable.StopAtBounds
+
+			Glide {
+				view: found
+				notch: found.cellHeight
+			}
+
+			delegate: Item {
+				id: result
+
+				required property var modelData
+
+				width: found.cellWidth
+				height: found.cellHeight
+
+				ClippingRectangle {
+					x: page.gap / 2
+					y: page.gap / 2
+					width: parent.width - page.gap
+					height: parent.height - page.gap
+					radius: Math.max(0, Theme.cardRadius - Theme.u(4))
+					color: Theme.hover
+
+					Image {
+						anchors.fill: parent
+						source: result.modelData.thumb
+						fillMode: Image.PreserveAspectCrop
+						asynchronous: true
+					}
+
+					Rectangle {
+						anchors.fill: parent
+						color: Wallhaven.taking === result.modelData.id ? Qt.alpha(Theme.colors.background, 0.5) : chooser.containsMouse ? Qt.alpha(Theme.colors.text, 0.12) : "transparent"
+					}
+				}
+
+				MouseArea {
+					id: chooser
+
+					objectName: "result"
+
+					anchors.fill: parent
+					hoverEnabled: true
+					cursorShape: Qt.PointingHandCursor
+					onClicked: Wallhaven.take(result.modelData, Settings.pictures, path => page.pick(path))
+				}
+
+				Tip {
+					listens: false
+					hovered: chooser.containsMouse
+					pressed: chooser.pressed
+					text: result.modelData.size
+				}
 			}
 		}
 	}

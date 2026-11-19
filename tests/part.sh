@@ -70,6 +70,8 @@ export XDG_RUNTIME_DIR=$work/run XDG_CACHE_HOME=$work/cache XDG_CONFIG_HOME=$wor
 export OKAERI_DRY=1 QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DESKTOP_PORTAL=1
 # The weather asks nobody on the network here: a test that wants it answers itself.
 export OKAERI_WEATHER_URL=http://127.0.0.1:9 OKAERI_PLACES_URL=http://127.0.0.1:9
+# Nor Wallhaven: a test that wants it serves it on this port.
+export OKAERI_WALLHAVEN_URL=http://127.0.0.1:$((20000 + $$ % 20000))
 # As bin/okaeri has it.
 export mesa_glthread=false GALLIUM_THREAD=0
 export WLR_BACKENDS=headless WLR_LIBINPUT_NO_DEVICES=1 WLR_RENDERER=gles2 WLR_HEADLESS_OUTPUTS=1
