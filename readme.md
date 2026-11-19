@@ -192,8 +192,10 @@ notifications.
 
 The Display page has each screen's resolution, scale, turn, adaptive sync and
 place beside the others, and turns one off. niri has that at once, and okaeri has
-it again as it starts and as a screen comes; what can leave a screen dark goes
-back by itself in fifteen seconds unless it's kept.
+it again as it starts, as a screen comes and as niri reads its config again; what
+can leave a screen dark asks in the middle of the screens to be kept, by Enter or
+its button, and goes back by itself in fifteen seconds otherwise. What niri
+won't do is said in a notification.
 
 The bar can have a part for things to do and a note: how many are left, and a
 card to add one, tick it off or take it away, and to write in. `/todo` in the

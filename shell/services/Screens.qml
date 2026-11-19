@@ -7,9 +7,9 @@ import qs
 // The screens as the settings window set them, Settings.display.screens by
 // their names: { mode, scale, vrr, transform, position, on }, each only where it
 // was set. niri forgets what it's told at its next config: they're had again as
-// the shell starts and as a screen comes, over what niri's own config says. A
-// change from the window that can leave a screen dark is tried out first, and
-// goes back by itself unless it's kept.
+// the shell starts, as a screen comes and as niri reads its config, over what
+// that says. A change from the window that can leave a screen dark is tried out
+// first, and goes back by itself unless it's kept.
 Singleton {
 	id: screens
 
@@ -123,6 +123,12 @@ Singleton {
 
 		function onOutputsChanged() {
 			screens.came();
+		}
+
+		// niri read its config again and took back what it was told: each is had
+		// as kept again at the look that follows.
+		function onConfigLoaded() {
+			screens.known = [];
 		}
 	}
 

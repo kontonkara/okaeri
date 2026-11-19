@@ -370,6 +370,10 @@ FloatingWindow {
 		}
 	}
 
+	// A change to a screen asks to be kept, on the screens themselves: the window
+	// may not be in sight after it.
+	ScreenTrial {}
+
 	IpcHandler {
 		target: "settings"
 

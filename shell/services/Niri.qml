@@ -209,6 +209,8 @@ window-rule {
 	// A color off the screen, by a click on it, as niri picks it: colorPicked() says
 	// which, as #rrggbb, or nothing if the click was taken back.
 	signal colorPicked(string color)
+	// niri read its config again, which takes back what `niri msg output` said.
+	signal configLoaded
 
 	function pickColor() {
 		picker.running = true;
@@ -231,6 +233,10 @@ window-rule {
 	}
 
 	function handle(event) {
+		if (event.ConfigLoaded && !event.ConfigLoaded.failed) {
+			configLoaded();
+			lookOutputs();
+		}
 		if (event.KeyboardLayoutsChanged) {
 			layouts = event.KeyboardLayoutsChanged.keyboard_layouts.names;
 			layout = event.KeyboardLayoutsChanged.keyboard_layouts.current_idx;
@@ -362,7 +368,13 @@ window-rule {
 	Process {
 		id: outputSet
 
-		onExited: {
+		stderr: StdioCollector {
+			id: outputSaid
+		}
+		// What niri wouldn't do is said, not left to be guessed at.
+		onExited: code => {
+			if (code !== 0)
+				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", "The screen stayed as it was", outputSaid.text.trim().split("\n").pop() || `niri said no to ${outputSet.command.slice(3).join(" ")}`]);
 			if (niri.outputWork.length > 0)
 				niri.nextOutput();
 			else

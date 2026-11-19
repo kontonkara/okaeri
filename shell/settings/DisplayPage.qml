@@ -96,53 +96,11 @@ Flickable {
 
 		// The screens niri has: how each is driven, how large what's on it is, how
 		// it's turned and where it is beside the others. What can leave one dark is
-		// tried out, and goes back by itself unless it's kept.
+		// tried out, and goes back by itself unless it's kept, as ScreenTrial asks.
 		Card {
 			width: parent.width
 			title: "Screens"
 			visible: Object.keys(Niri.outputs).length > 0
-
-			Item {
-				width: parent.width
-				height: Theme.u(40)
-				visible: !!Screens.trial
-
-				Text {
-					anchors.left: parent.left
-					anchors.right: answers.left
-					anchors.rightMargin: Theme.u(12)
-					anchors.verticalCenter: parent.verticalCenter
-					text: `Keep this? It goes back in ${Screens.left} s`
-					color: Theme.colors.text
-					elide: Text.ElideRight
-					font.family: Theme.font
-					font.pixelSize: Theme.fontSize
-				}
-
-				Row {
-					id: answers
-
-					anchors.right: parent.right
-					anchors.verticalCenter: parent.verticalCenter
-					spacing: Theme.u(6)
-
-					Button {
-						objectName: "back"
-						height: Theme.u(30)
-						flat: true
-						text: "Back"
-						onClicked: Screens.dropTrial()
-					}
-
-					Button {
-						objectName: "keep"
-						height: Theme.u(30)
-						filled: true
-						text: "Keep"
-						onClicked: Screens.keepTrial()
-					}
-				}
-			}
 
 			Repeater {
 				model: Object.keys(Niri.outputs).sort()
