@@ -99,7 +99,7 @@ Item {
 			visible: Qr.known && !Qr.available
 			horizontalAlignment: Text.AlignHCenter
 			wrapMode: Text.WordWrap
-			text: "The code needs qrencode, which isn't here."
+			text: Tr.t("The code needs qrencode, which isn't here.")
 			color: Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -123,7 +123,7 @@ Item {
 
 			Text {
 				width: parent.width
-				text: "Its name"
+				text: Tr.t("Its name")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -147,7 +147,7 @@ Item {
 
 			Text {
 				width: parent.width
-				text: "Its password"
+				text: Tr.t("Its password")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -155,7 +155,7 @@ Item {
 
 			Text {
 				width: parent.width
-				text: share.open ? "None: it's open" : share.note || share.key
+				text: share.open ? Tr.t("None: it's open") : share.note || share.key
 				textFormat: Text.PlainText
 				wrapMode: Text.WrapAnywhere
 				maximumLineCount: 3

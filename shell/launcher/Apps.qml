@@ -144,13 +144,13 @@ Singleton {
 	// the folders of one's own, Settings.launcher.folders, each { name, apps } with
 	// the apps by their ids. Each is { key, text, own, has(entry) }.
 	readonly property var kinds: [
-		{ key: "games", text: "Games", categories: ["Game"] },
-		{ key: "code", text: "Programming", categories: ["Development"] },
-		{ key: "design", text: "Design", categories: ["Graphics"] },
-		{ key: "media", text: "Sound and video", categories: ["AudioVideo", "Audio", "Video"] },
-		{ key: "office", text: "Office", categories: ["Office", "Education", "Science"] },
-		{ key: "net", text: "Internet", categories: ["Network"] },
-		{ key: "tools", text: "Tools", categories: ["Utility", "System", "Settings"] }
+		{ key: "games", text: Tr.t("Games"), categories: ["Game"] },
+		{ key: "code", text: Tr.t("Programming"), categories: ["Development"] },
+		{ key: "design", text: Tr.t("Design"), categories: ["Graphics"] },
+		{ key: "media", text: Tr.t("Sound and video"), categories: ["AudioVideo", "Audio", "Video"] },
+		{ key: "office", text: Tr.t("Office"), categories: ["Office", "Education", "Science"] },
+		{ key: "net", text: Tr.t("Internet"), categories: ["Network"] },
+		{ key: "tools", text: Tr.t("Tools"), categories: ["Utility", "System", "Settings"] }
 	]
 	readonly property var folders: Array.isArray(Settings.launcher.folders) ? Settings.launcher.folders.filter(folder => folder && typeof folder.name === "string" && folder.name !== "") : []
 	readonly property var groups: {

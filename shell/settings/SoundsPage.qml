@@ -11,8 +11,8 @@ Column {
 
 		Choice {
 			holds: "audio.max"
-			text: "The volume goes up to"
-			subtext: "Past 100% the sound is made louder, and can crackle"
+			text: Tr.t("The volume goes up to")
+			subtext: Tr.t("Past 100% the sound is made louder, and can crackle")
 			values: [100, 125, 150]
 			value: Settings.audio.max
 			unit: "%"
@@ -25,11 +25,11 @@ Column {
 
 		Choice {
 			holds: "sounds.volume"
-			text: "Volume of the sounds"
-			subtext: "They go through the sound theme, freedesktop's"
+			text: Tr.t("Volume of the sounds")
+			subtext: Tr.t("They go through the sound theme, freedesktop's")
 			values: [0, 10, 15, 20, 25, 30, 40, 50, 75, 100]
 			value: Settings.sounds.volume
-			none: "Off"
+			none: Tr.t("Off")
 			unit: "%"
 			onChosen: value => Settings.set("sounds", "volume", value)
 		}
@@ -37,32 +37,32 @@ Column {
 
 	Card {
 		width: parent.width
-		title: "What has one"
+		title: Tr.t("What has one")
 
 		Setting {
 			holds: "sounds.notifications"
-			text: "Notifications"
+			text: Tr.t("Notifications")
 			checked: Settings.sounds.notifications
 			onToggled: wanted => Settings.set("sounds", "notifications", wanted)
 		}
 
 		Setting {
 			holds: "sounds.volumeChange"
-			text: "Changing the volume"
+			text: Tr.t("Changing the volume")
 			checked: Settings.sounds.volumeChange
 			onToggled: wanted => Settings.set("sounds", "volumeChange", wanted)
 		}
 
 		Setting {
 			holds: "sounds.power"
-			text: "The charger going in or out"
+			text: Tr.t("The charger going in or out")
 			checked: Settings.sounds.power
 			onToggled: wanted => Settings.set("sounds", "power", wanted)
 		}
 
 		Setting {
 			holds: "sounds.screenshots"
-			text: "Screenshots"
+			text: Tr.t("Screenshots")
 			checked: Settings.sounds.screenshots
 			onToggled: wanted => Settings.set("sounds", "screenshots", wanted)
 		}

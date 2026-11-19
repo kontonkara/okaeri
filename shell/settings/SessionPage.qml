@@ -58,12 +58,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "With nothing going on"
+			title: Tr.t("With nothing going on")
 
 			Choice {
 				holds: "idle.lock"
 				words: "locker screen lock"
-				text: "Lock the session"
+				text: Tr.t("Lock the session")
 				values: page.waits
 				value: Settings.idle.lock
 				onChosen: value => Settings.set("idle", "lock", value)
@@ -71,7 +71,7 @@ Flickable {
 
 			Choice {
 				holds: "idle.screenOff"
-				text: "Turn the screens off"
+				text: Tr.t("Turn the screens off")
 				values: page.waits
 				value: Settings.idle.screenOff
 				onChosen: value => Settings.set("idle", "screenOff", value)
@@ -79,18 +79,18 @@ Flickable {
 
 			Choice {
 				holds: "idle.fade"
-				text: "Fade out before that"
+				text: Tr.t("Fade out before that")
 				values: [0, 3, 5, 10, 15, 30]
 				value: Settings.idle.fade
-				none: "Don't"
+				none: Tr.t("Don't")
 				onChosen: value => Settings.set("idle", "fade", value)
 			}
 
 			Choice {
 				holds: "idle.suspend"
 				words: "sleep"
-				text: "Put the machine to sleep"
-				subtext: Session.canSuspend ? "Suspend, from when nothing went on" : "Suspend, which logind says this machine can't now"
+				text: Tr.t("Put the machine to sleep")
+				subtext: Session.canSuspend ? Tr.t("Suspend, from when nothing went on") : Tr.t("Suspend, which logind says this machine can't now")
 				values: page.waits
 				value: Settings.idle.suspend
 				onChosen: value => Settings.set("idle", "suspend", value)
@@ -98,11 +98,11 @@ Flickable {
 
 			Pick {
 				holds: "idle.suspendOn"
-				text: "Sleep when"
+				text: Tr.t("Sleep when")
 				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
 				options: [
-					{ value: "always", text: "Always" },
-					{ value: "battery", text: "On battery" }
+					{ value: "always", text: Tr.t("Always") },
+					{ value: "battery", text: Tr.t("On battery") }
 				]
 				value: Settings.idle.suspendOn
 				onChosen: value => Settings.set("idle", "suspendOn", value)
@@ -111,14 +111,14 @@ Flickable {
 			Pick {
 				holds: "idle.sleepAs"
 				words: "hibernate"
-				text: "It sleeps as"
-				subtext: Settings.idle.sleepAs === "suspend-then-hibernate" ? (Session.canSuspendThenHibernate ? "Suspended, and hibernated after a while, as logind is set" : "Which logind says this machine can't now: it suspends") : Settings.idle.sleepAs === "hibernate" && !Session.canHibernate ? "Which logind says this machine can't now: it suspends" : ""
+				text: Tr.t("It sleeps as")
+				subtext: Settings.idle.sleepAs === "suspend-then-hibernate" ? (Session.canSuspendThenHibernate ? Tr.t("Suspended, and hibernated after a while, as logind is set") : Tr.t("Which logind says this machine can't now: it suspends")) : Settings.idle.sleepAs === "hibernate" && !Session.canHibernate ? Tr.t("Which logind says this machine can't now: it suspends") : ""
 				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
 				valueWidth: Theme.u(150)
 				options: [
-					{ value: "suspend", text: "Suspended" },
-					{ value: "suspend-then-hibernate", text: "Then hibernated" },
-					{ value: "hibernate", text: "Hibernated" }
+					{ value: "suspend", text: Tr.t("Suspended") },
+					{ value: "suspend-then-hibernate", text: Tr.t("Then hibernated") },
+					{ value: "hibernate", text: Tr.t("Hibernated") }
 				]
 				value: Settings.idle.sleepAs
 				onChosen: value => Settings.set("idle", "sleepAs", value)
@@ -126,8 +126,8 @@ Flickable {
 
 			Setting {
 				holds: "idle.playingHolds"
-				text: "Not while something plays"
-				subtext: "Music keeps it up, with the screens off"
+				text: Tr.t("Not while something plays")
+				subtext: Tr.t("Music keeps it up, with the screens off")
 				visible: Settings.idle.suspend > 0 || Settings.idle.batterySuspend > 0
 				checked: Settings.idle.playingHolds
 				onToggled: wanted => Settings.set("idle", "playingHolds", wanted)
@@ -136,15 +136,15 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Session menu"
+			title: Tr.t("Session menu")
 
 			Choice {
 				holds: "session.countdown"
-				text: "Wait before going ahead"
-				subtext: "Time to cancel a shutdown or a logout"
+				text: Tr.t("Wait before going ahead")
+				subtext: Tr.t("Time to cancel a shutdown or a logout")
 				values: [0, 3, 5, 10, 15, 30]
 				value: Settings.session.countdown
-				none: "Don't"
+				none: Tr.t("Don't")
 				onChosen: value => Settings.set("session", "countdown", value)
 			}
 
@@ -158,7 +158,7 @@ Flickable {
 					differs: page.fileHidden.includes(modelData.action) !== Settings.session.hidden.includes(modelData.action)
 					back: () => page.show(modelData.action, !page.fileHidden.includes(modelData.action))
 					text: modelData.text
-					subtext: modelData.can ? "" : "Not on this machine"
+					subtext: modelData.can ? "" : Tr.t("Not on this machine")
 					enabled: modelData.can
 					checked: modelData.can && !Settings.session.hidden.includes(modelData.action)
 					onToggled: wanted => page.show(modelData.action, wanted)
@@ -167,8 +167,8 @@ Flickable {
 
 			Field {
 				holds: "session.lock"
-				text: "Locking is"
-				subtext: "A command, where the lock screen doesn't listen to the session"
+				text: Tr.t("Locking is")
+				subtext: Tr.t("A command, where the lock screen doesn't listen to the session")
 				placeholder: "loginctl lock-session"
 				value: Settings.session.lock
 				onKept: value => Settings.set("session", "lock", value)
@@ -176,19 +176,19 @@ Flickable {
 
 			Setting {
 				holds: "session.lockFirst"
-				text: "Lock before sleeping"
-				subtext: "When the session menu, the launcher or idle puts it to sleep"
+				text: Tr.t("Lock before sleeping")
+				subtext: Tr.t("When the session menu, the launcher or idle puts it to sleep")
 				checked: Settings.session.lockFirst
 				onToggled: wanted => Settings.set("session", "lockFirst", wanted)
 			}
 
 			Choice {
 				holds: "idle.lockedScreenOff"
-				text: "Screens off once it's locked"
-				subtext: "With nothing going on for that long, by any lock screen that says so"
+				text: Tr.t("Screens off once it's locked")
+				subtext: Tr.t("With nothing going on for that long, by any lock screen that says so")
 				values: [0, 10, 30, 60, 120]
 				value: Settings.idle.lockedScreenOff
-				none: "Don't"
+				none: Tr.t("Don't")
 				onChosen: value => Settings.set("idle", "lockedScreenOff", value)
 			}
 		}
@@ -196,37 +196,37 @@ Flickable {
 		// The mode for games: what it turns off, and whether gamemode has it on.
 		Card {
 			width: parent.width
-			title: "Game mode"
+			title: Tr.t("Game mode")
 
 			Setting {
 				holds: "game.follow"
 				words: "gamemode feral gaming"
-				text: "On while gamemode has a game"
-				subtext: "As gamemoderun starts one; its tile and okaeri game toggle have it on by hand"
+				text: Tr.t("On while gamemode has a game")
+				subtext: Tr.t("As gamemoderun starts one; its tile and okaeri game toggle have it on by hand")
 				checked: Settings.game.follow
 				onToggled: wanted => Settings.set("game", "follow", wanted)
 			}
 
 			Setting {
 				holds: "game.plain"
-				text: "Nothing moves or is blurred"
-				subtext: "While it's on"
+				text: Tr.t("Nothing moves or is blurred")
+				subtext: Tr.t("While it's on")
 				checked: Settings.game.plain
 				onToggled: wanted => Settings.set("game", "plain", wanted)
 			}
 
 			Setting {
 				holds: "game.quiet"
-				text: "Notifications wait"
-				subtext: "As with Do Not Disturb: critical ones still show"
+				text: Tr.t("Notifications wait")
+				subtext: Tr.t("As with Do Not Disturb: critical ones still show")
 				checked: Settings.game.quiet
 				onToggled: wanted => Settings.set("game", "quiet", wanted)
 			}
 
 			Setting {
 				holds: "game.awake"
-				text: "The machine stays awake"
-				subtext: "No lock, no screens off, no sleep"
+				text: Tr.t("The machine stays awake")
+				subtext: Tr.t("No lock, no screens off, no sleep")
 				checked: Settings.game.awake
 				onToggled: wanted => Settings.set("game", "awake", wanted)
 			}
@@ -235,12 +235,12 @@ Flickable {
 		// Over the commands, which can have the apps read them again.
 		Card {
 			width: parent.width
-			title: "Colors for other apps"
+			title: Tr.t("Colors for other apps")
 
 			Text {
 				width: parent.width
 				wrapMode: Text.WordWrap
-				text: "Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone: kitty.conf, foot.ini, alacritty.toml, gtk3.css, gtk4.css and fuzzel.ini."
+				text: Tr.t("Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone: kitty.conf, foot.ini, alacritty.toml, gtk3.css, gtk4.css and fuzzel.ini.")
 				textFormat: Text.PlainText
 				color: Theme.colors.subtext
 				font.family: Theme.font
@@ -266,7 +266,7 @@ Flickable {
 					TextField {
 						width: line.half
 						implicitHeight: Theme.u(32)
-						placeholder: "Template"
+						placeholder: Tr.t("Template")
 						text: line.own.from ?? ""
 						keeps: true
 						wrong: text.trim() === ""
@@ -279,7 +279,7 @@ Flickable {
 					TextField {
 						width: line.half
 						implicitHeight: Theme.u(32)
-						placeholder: "Written to"
+						placeholder: Tr.t("Written to")
 						text: line.own.to ?? ""
 						keeps: true
 						wrong: !page.whole(text.trim())
@@ -295,7 +295,7 @@ Flickable {
 						height: Math.round(Theme.u(32))
 						flat: true
 						icon: "trash"
-						tip: "Remove it"
+						tip: Tr.t("Remove it")
 						onClicked: page.removeTemplate(line.index)
 					}
 				}
@@ -323,7 +323,7 @@ Flickable {
 
 					width: adding.half
 					implicitHeight: Theme.u(32)
-					placeholder: "A template: kitty.conf"
+					placeholder: Tr.t("A template: kitty.conf")
 					// On to where it's written, unless that's there already.
 					onAccepted: {
 						if (adding.filled)
@@ -348,7 +348,7 @@ Flickable {
 
 					height: Math.round(Theme.u(32))
 					icon: "plus"
-					tip: "Add it"
+					tip: Tr.t("Add it")
 					enabled: adding.filled
 					onClicked: adding.add()
 				}
@@ -357,12 +357,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Commands"
+			title: Tr.t("Commands")
 
 			Text {
 				width: parent.width
 				wrapMode: Text.WordWrap
-				text: "Run when that happens. What it's about is in the command's environment: OKAERI_CHARGE, OKAERI_LIGHT, OKAERI_PALETTE and OKAERI_COLOR_ACCENT with the other colors, OKAERI_WALLPAPER."
+				text: Tr.t("Run when that happens. What it's about is in the command's environment: OKAERI_CHARGE, OKAERI_LIGHT, OKAERI_PALETTE and OKAERI_COLOR_ACCENT with the other colors, OKAERI_WALLPAPER.")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -370,18 +370,18 @@ Flickable {
 
 			Repeater {
 				model: [
-					{ name: "charger", text: "The charger goes in" },
-					{ name: "battery", text: "The charger comes out" },
-					{ name: "low", text: "The battery gets low" },
-					{ name: "colors", text: "The colors change" },
-					{ name: "wallpaper", text: "The wallpaper changes" }
+					{ name: "charger", text: Tr.t("The charger goes in") },
+					{ name: "battery", text: Tr.t("The charger comes out") },
+					{ name: "low", text: Tr.t("The battery gets low") },
+					{ name: "colors", text: Tr.t("The colors change") },
+					{ name: "wallpaper", text: Tr.t("The wallpaper changes") }
 				]
 
 				Field {
 					required property var modelData
 
 					text: modelData.text
-					placeholder: "A command"
+					placeholder: Tr.t("A command")
 					value: Settings.hooks[modelData.name] ?? ""
 					onKept: value => Settings.set("hooks", modelData.name, value)
 				}
@@ -390,12 +390,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Battery"
+			title: Tr.t("Battery")
 
 			Choice {
 				holds: "battery.warning"
-				text: "Warn when it's down to"
-				subtext: "And again at 5%, to stay on screen"
+				text: Tr.t("Warn when it's down to")
+				subtext: Tr.t("And again at 5%, to stay on screen")
 				values: [0, 5, 10, 15, 20, 25, 30, 40, 50]
 				value: Settings.battery.warning
 				unit: "%"
@@ -404,37 +404,37 @@ Flickable {
 
 			Setting {
 				holds: "battery.saver"
-				text: "Save power from then on"
-				subtext: "The saver profile, until the charger is in"
+				text: Tr.t("Save power from then on")
+				subtext: Tr.t("The saver profile, until the charger is in")
 				checked: Settings.battery.saver
 				onToggled: wanted => Settings.set("battery", "saver", wanted)
 			}
 
 			Choice {
 				holds: "idle.batteryLock"
-				text: "On it, lock after"
+				text: Tr.t("On it, lock after")
 				values: page.waits
 				value: Settings.idle.batteryLock
-				none: "The same"
+				none: Tr.t("The same")
 				onChosen: value => Settings.set("idle", "batteryLock", value)
 			}
 
 			Choice {
 				holds: "idle.batteryScreenOff"
-				text: "On it, screens off after"
+				text: Tr.t("On it, screens off after")
 				values: page.waits
 				value: Settings.idle.batteryScreenOff
-				none: "The same"
+				none: Tr.t("The same")
 				onChosen: value => Settings.set("idle", "batteryScreenOff", value)
 			}
 
 			Choice {
 				holds: "idle.batterySuspend"
-				text: "On it, sleep after"
-				subtext: "Even where it doesn't sleep on the charger"
+				text: Tr.t("On it, sleep after")
+				subtext: Tr.t("Even where it doesn't sleep on the charger")
 				values: page.waits
 				value: Settings.idle.batterySuspend
-				none: "The same"
+				none: Tr.t("The same")
 				onChosen: value => Settings.set("idle", "batterySuspend", value)
 			}
 		}

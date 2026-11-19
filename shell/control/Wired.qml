@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
+import qs
 import qs.services
 
 // The wired network, where the machine has a plug for one: whether it's up, and
@@ -43,13 +44,13 @@ Singleton {
 		state = (found["GENERAL.STATE"] ?? [""])[0];
 		const speed = (device?.linkSpeed ?? 0) > 0 ? [`${device.linkSpeed} Mb/s`] : [];
 		const rows = [
-			{ text: "Connection", value: found["GENERAL.CONNECTION"] },
-			{ text: "Speed", value: speed },
-			{ text: "Address", value: found["IP4.ADDRESS"] },
-			{ text: "Gateway", value: found["IP4.GATEWAY"] },
+			{ text: Tr.t("Connection"), value: found["GENERAL.CONNECTION"] },
+			{ text: Tr.t("Speed"), value: speed },
+			{ text: Tr.t("Address"), value: found["IP4.ADDRESS"] },
+			{ text: Tr.t("Gateway"), value: found["IP4.GATEWAY"] },
 			{ text: "DNS", value: found["IP4.DNS"] },
-			{ text: "IPv6", value: found["IP6.ADDRESS"] },
-			{ text: "Hardware", value: found["GENERAL.HWADDR"] }
+			{ text: Tr.t("IPv6"), value: found["IP6.ADDRESS"] },
+			{ text: Tr.t("Hardware"), value: found["GENERAL.HWADDR"] }
 		].filter(row => row.value && row.value.length > 0).map(row => ({ text: row.text, value: row.value.join(", ") }));
 		// Only what changed: the page isn't made anew every few seconds.
 		if (JSON.stringify(rows) !== JSON.stringify(details))

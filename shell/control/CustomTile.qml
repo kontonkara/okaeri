@@ -34,7 +34,7 @@ Tile {
 
 	icon: own.icon in Theme.icons ? own.icon : "play"
 	title: name
-	summary: check === "" ? "" : said || (on ? "On" : "Off")
+	summary: check === "" ? "" : said || (on ? Tr.t("On") : Tr.t("Off"))
 	checked: check !== "" && on
 	switches: check !== ""
 	onToggled: run()

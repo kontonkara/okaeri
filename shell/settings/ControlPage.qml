@@ -40,8 +40,8 @@ Flickable {
 	readonly property bool own: chosen !== "" && builtIn[chosen] === undefined
 	readonly property var signs: Object.keys(Theme.icons).map(name => ({ value: name, text: name }))
 	readonly property var lanes: [
-		{ name: "shown", text: "Tiles" },
-		{ name: "hidden", text: "Hidden" }
+		{ name: "shown", text: Tr.t("Tiles") },
+		{ name: "hidden", text: Tr.t("Hidden") }
 	]
 	readonly property var settled: ({
 			shown: Control.order.filter(name => !Settings.control.hidden.includes(name)),
@@ -137,7 +137,7 @@ Flickable {
 
 	component Chip: Rectangle {
 		property string name
-		property string text: page.names[name] ?? name
+		property string text: Tr.t(page.names[name] ?? name)
 		// For the search: a tile is found by its name, as a line is.
 		readonly property string subtext: ""
 		property color ink: Theme.colors.text
@@ -203,7 +203,7 @@ Flickable {
 
 						width: parent.width
 						padding: Theme.u(10)
-						title: modelData.text
+						title: Tr.t(modelData.text)
 
 						Flow {
 							id: chips
@@ -250,7 +250,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN, the screen recording and the hotspot show only where the machine has them."
+						text: Tr.t("A tile is dragged to where it goes, or to Hidden to leave it out, and a click on one shows its width. Wi-Fi, Bluetooth, the power profile, airplane mode, VPN, the screen recording and the hotspot show only where the machine has them.")
 					}
 
 					Button {
@@ -258,8 +258,8 @@ Flickable {
 
 						anchors.right: parent.right
 						height: Theme.u(30)
-						text: "Add your own"
-						tip: "A tile that runs a command"
+						text: Tr.t("Add your own")
+						tip: Tr.t("A tile that runs a command")
 						onClicked: page.add()
 					}
 				}
@@ -325,14 +325,14 @@ Flickable {
 		Card {
 			width: parent.width
 			visible: page.chosen !== ""
-			title: page.names[page.chosen] ?? page.chosen
+			title: Tr.t(page.names[page.chosen] ?? page.chosen)
 
 			Pick {
-				text: "Its width"
-				subtext: "Alone in its row, it takes all of it either way"
+				text: Tr.t("Its width")
+				subtext: Tr.t("Alone in its row, it takes all of it either way")
 				options: [
-					{ value: false, text: "Half a row" },
-					{ value: true, text: "A whole row" }
+					{ value: false, text: Tr.t("Half a row") },
+					{ value: true, text: Tr.t("A whole row") }
 				]
 				value: Settings.control.wide.includes(page.chosen)
 				onChosen: value => page.widen(page.chosen, value)
@@ -354,30 +354,30 @@ Flickable {
 					spacing: Theme.u(10)
 
 					Field {
-						text: "What it's called"
-						subtext: tile.refused ? "A tile goes by that name" : "On the tile"
+						text: Tr.t("What it's called")
+						subtext: tile.refused ? Tr.t("A tile goes by that name") : Tr.t("On the tile")
 						value: tile.modelData
 						onKept: value => tile.refused = !page.rename(tile.modelData, value)
 					}
 
 					Field {
-						text: "A click runs"
-						subtext: "For sh: OKAERI_ON is 1 with the tile on"
-						placeholder: "A command"
+						text: Tr.t("A click runs")
+						subtext: Tr.t("For sh: OKAERI_ON is 1 with the tile on")
+						placeholder: Tr.t("A command")
 						value: tile.its.command ?? ""
 						onKept: value => page.change(tile.modelData, "command", value)
 					}
 
 					Field {
-						text: "It's on when"
-						subtext: "Its command ends well then: with none it's a button"
-						placeholder: "A command"
+						text: Tr.t("It's on when")
+						subtext: Tr.t("Its command ends well then: with none it's a button")
+						placeholder: Tr.t("A command")
 						value: tile.its.check ?? ""
 						onKept: value => page.change(tile.modelData, "check", value)
 					}
 
 					Pick {
-						text: "Its sign"
+						text: Tr.t("Its sign")
 						options: page.signs
 						value: tile.its.icon ?? "play"
 						onChosen: value => page.change(tile.modelData, "icon", value)
@@ -385,7 +385,7 @@ Flickable {
 
 					Button {
 						height: Theme.u(30)
-						text: "Remove it"
+						text: Tr.t("Remove it")
 						onClicked: page.remove(tile.modelData)
 					}
 				}
@@ -407,18 +407,18 @@ Flickable {
 
 					Field {
 						holds: "hotspot.name"
-						text: "What phones see it as"
-						subtext: "Empty is the machine's name"
-						placeholder: "The machine's name"
+						text: Tr.t("What phones see it as")
+						subtext: Tr.t("Empty is the machine's name")
+						placeholder: Tr.t("The machine's name")
 						value: Settings.hotspot.name
 						onKept: value => Settings.set("hotspot", "name", value)
 					}
 
 					Field {
 						holds: "hotspot.password"
-						text: "Its password"
-						subtext: hotspot.password !== "" && (hotspot.password.length < 8 || hotspot.password.length > 63) ? "It takes 8 to 63 letters" : "Empty makes one up as it first goes on"
-						placeholder: "Made up"
+						text: Tr.t("Its password")
+						subtext: hotspot.password !== "" && (hotspot.password.length < 8 || hotspot.password.length > 63) ? Tr.t("It takes 8 to 63 letters") : Tr.t("Empty makes one up as it first goes on")
+						placeholder: Tr.t("Made up")
 						value: hotspot.password
 						onKept: value => Settings.set("hotspot", "password", value)
 					}
@@ -435,8 +435,8 @@ Flickable {
 					Setting {
 						holds: "drives.notify"
 						words: "usb flash removable disk mount"
-						text: "Say when one is plugged in"
-						subtext: "With a way to open it and one to eject it"
+						text: Tr.t("Say when one is plugged in")
+						subtext: Tr.t("With a way to open it and one to eject it")
 						checked: Settings.drives.notify
 						onToggled: wanted => Settings.set("drives", "notify", wanted)
 					}
@@ -444,8 +444,8 @@ Flickable {
 					Setting {
 						holds: "drives.automount"
 						words: "usb flash removable disk"
-						text: "Mount it at once"
-						subtext: "Without that, a click on it in the control center does"
+						text: Tr.t("Mount it at once")
+						subtext: Tr.t("Without that, a click on it in the control center does")
 						checked: Settings.drives.automount
 						onToggled: wanted => Settings.set("drives", "automount", wanted)
 					}

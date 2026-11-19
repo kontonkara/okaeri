@@ -36,16 +36,16 @@ Flickable {
 
 			Setting {
 				holds: "launcher.usage"
-				text: "Frequent apps first"
-				subtext: "What's launched often comes up sooner"
+				text: Tr.t("Frequent apps first")
+				subtext: Tr.t("What's launched often comes up sooner")
 				checked: Settings.launcher.usage
 				onToggled: wanted => Settings.set("launcher", "usage", wanted)
 			}
 
 			Setting {
 				holds: "launcher.sums"
-				text: "Keep the last sums"
-				subtext: "They're under /calc, turning this off forgets them"
+				text: Tr.t("Keep the last sums")
+				subtext: Tr.t("They're under /calc, turning this off forgets them")
 				checked: Settings.launcher.sums
 				onToggled: wanted => {
 					Settings.set("launcher", "sums", wanted);
@@ -56,8 +56,8 @@ Flickable {
 
 			Field {
 				holds: "launcher.files"
-				text: "Files are looked for in"
-				subtext: "Under /file: a folder, empty for your home"
+				text: Tr.t("Files are looked for in")
+				subtext: Tr.t("Under /file: a folder, empty for your home")
 				placeholder: "~"
 				value: Settings.launcher.files
 				onKept: value => Settings.set("launcher", "files", value.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
@@ -65,8 +65,8 @@ Flickable {
 
 			Setting {
 				holds: "launcher.actions"
-				text: "Apps' own actions in the search"
-				subtext: "New private window and such, by their names"
+				text: Tr.t("Apps' own actions in the search")
+				subtext: Tr.t("New private window and such, by their names")
 				checked: Settings.launcher.actions
 				onToggled: wanted => Settings.set("launcher", "actions", wanted)
 			}
@@ -74,12 +74,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Pinned"
+			title: Tr.t("Pinned")
 
 			Text {
 				width: parent.width
 				visible: Settings.launcher.pinned.length === 0
-				text: "A right click on an app in the launcher pins it"
+				text: Tr.t("A right click on an app in the launcher pins it")
 				color: Theme.colors.subtext
 				elide: Text.ElideRight
 				font.family: Theme.font
@@ -102,12 +102,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Hidden"
+			title: Tr.t("Hidden")
 
 			Text {
 				width: parent.width
 				visible: Settings.launcher.hidden.length === 0
-				text: "A right click on an app in the launcher hides it"
+				text: Tr.t("A right click on an app in the launcher hides it")
 				color: Theme.colors.subtext
 				elide: Text.ElideRight
 				font.family: Theme.font
@@ -128,22 +128,22 @@ Flickable {
 		// folders of one's own, which an app goes into from its menu there.
 		Card {
 			width: parent.width
-			title: "Groups"
+			title: Tr.t("Groups")
 
 			Setting {
 				holds: "launcher.categories"
 				words: "category folder sort games programming design"
-				text: "Apps by their kind"
-				subtext: "Games, Programming, Design and the like, by the button in its field or Ctrl+G"
+				text: Tr.t("Apps by their kind")
+				subtext: Tr.t("Games, Programming, Design and the like, by the button in its field or Ctrl+G")
 				checked: Settings.launcher.categories
 				onToggled: wanted => Settings.set("launcher", "categories", wanted)
 			}
 
 			Field {
-				text: "A folder of your own"
-				subtext: "By a name; an app goes into it from its menu in the launcher"
+				text: Tr.t("A folder of your own")
+				subtext: Tr.t("By a name; an app goes into it from its menu in the launcher")
 				words: "group category"
-				placeholder: "Work"
+				placeholder: Tr.t("Work")
 				fieldWidth: Theme.u(160)
 				value: ""
 				onKept: value => Apps.addFolder(value.trim())
@@ -192,7 +192,7 @@ Flickable {
 						height: Theme.u(28)
 						flat: true
 						icon: "trash"
-						tip: "Away with the folder; its apps stay"
+						tip: Tr.t("Away with the folder; its apps stay")
 						onClicked: Apps.dropFolder(parent.modelData.name)
 					}
 				}
@@ -202,13 +202,13 @@ Flickable {
 		// Where a ? in front looks things up.
 		Card {
 			width: parent.width
-			title: "The web"
+			title: Tr.t("The web")
 
 			Field {
 				holds: "launcher.search"
 				words: "web engine google duckduckgo"
-				text: "A ? looks things up at"
-				subtext: "An address with %s for the words; > runs a command"
+				text: Tr.t("A ? looks things up at")
+				subtext: Tr.t("An address with %s for the words; > runs a command")
 				fieldWidth: Theme.u(260)
 				value: Settings.launcher.search
 				onKept: value => {

@@ -99,7 +99,7 @@ Flickable {
 		// tried out, and goes back by itself unless it's kept, as ScreenTrial asks.
 		Card {
 			width: parent.width
-			title: "Screens"
+			title: Tr.t("Screens")
 			visible: Object.keys(Niri.outputs).length > 0
 
 			Repeater {
@@ -139,7 +139,7 @@ Flickable {
 					}
 
 					Pick {
-						text: "Resolution"
+						text: Tr.t("Resolution")
 						visible: screen.lit
 						valueWidth: Theme.u(190)
 						options: screen.output.modes.map(mode => ({ value: `${mode.width}x${mode.height}@${mode.rate.toFixed(3)}`, text: `${mode.width}×${mode.height} · ${Math.round(mode.rate)} Hz` }))
@@ -148,8 +148,8 @@ Flickable {
 					}
 
 					Pick {
-						text: "Scale"
-						subtext: "How large what's on it is"
+						text: Tr.t("Scale")
+						subtext: Tr.t("How large what's on it is")
 						visible: screen.lit
 						valueWidth: Theme.u(190)
 						options: screen.scales.map(scale => ({ value: scale, text: `${Math.round(scale * 100)}%` }))
@@ -158,36 +158,36 @@ Flickable {
 					}
 
 					Pick {
-						text: "Turned"
+						text: Tr.t("Turned")
 						visible: screen.lit
 						valueWidth: Theme.u(190)
 						options: [
-							{ value: "normal", text: "Not turned" },
-							{ value: "90", text: "A quarter left" },
-							{ value: "180", text: "Upside down" },
-							{ value: "270", text: "A quarter right" }
+							{ value: "normal", text: Tr.t("Not turned") },
+							{ value: "90", text: Tr.t("A quarter left") },
+							{ value: "180", text: Tr.t("Upside down") },
+							{ value: "270", text: Tr.t("A quarter right") }
 						]
 						value: Screens.now(screen.output, "transform")
 						onChosen: value => Screens.tryOut(screen.modelData, "transform", value)
 					}
 
 					Setting {
-						text: "Adaptive sync"
-						subtext: "Its refresh keeps pace with what's drawn"
+						text: Tr.t("Adaptive sync")
+						subtext: Tr.t("Its refresh keeps pace with what's drawn")
 						visible: screen.lit && !!screen.output.vrr.supported
 						checked: !!screen.output.vrr.on
 						onToggled: wanted => Screens.set(screen.modelData, "vrr", wanted)
 					}
 
 					Pick {
-						text: "Where it is"
+						text: Tr.t("Where it is")
 						visible: screen.lit && screen.others.length > 0
 						valueWidth: Theme.u(190)
-						options: [{ value: "", text: "Where it was put" }].concat(...screen.others.map(other => [
-								{ value: `left:${other}`, text: `Left of ${other}` },
-								{ value: `right:${other}`, text: `Right of ${other}` },
-								{ value: `above:${other}`, text: `Above ${other}` },
-								{ value: `below:${other}`, text: `Below ${other}` }
+						options: [{ value: "", text: Tr.t("Where it was put") }].concat(...screen.others.map(other => [
+								{ value: `left:${other}`, text: Tr.f("Left of %1", other) },
+								{ value: `right:${other}`, text: Tr.f("Right of %1", other) },
+								{ value: `above:${other}`, text: Tr.f("Above %1", other) },
+								{ value: `below:${other}`, text: Tr.f("Below %1", other) }
 							]))
 						value: {
 							for (const other of screen.others) {
@@ -206,8 +206,8 @@ Flickable {
 					}
 
 					Setting {
-						text: "On"
-						subtext: screen.lit ? "With the others on" : "Off for now"
+						text: Tr.t("On")
+						subtext: screen.lit ? Tr.t("With the others on") : Tr.t("Off for now")
 						visible: screen.others.length > 0 || !screen.lit
 						checked: screen.lit
 						onToggled: wanted => Screens.tryOut(screen.modelData, "on", wanted)
@@ -218,13 +218,13 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Night light"
+			title: Tr.t("Night light")
 
 			Text {
 				width: parent.width
 				visible: !NightLight.available
 				wrapMode: Text.WordWrap
-				text: "It needs wlsunset, which isn't here."
+				text: Tr.t("It needs wlsunset, which isn't here.")
 				color: Theme.colors.error
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -233,12 +233,12 @@ Flickable {
 			Pick {
 				holds: "nightLight.mode"
 				words: "blue light redshift gammastep warm"
-				text: "When"
-				subtext: "Once it's on, in the control center"
+				text: Tr.t("When")
+				subtext: Tr.t("Once it's on, in the control center")
 				options: [
-					{ value: "always", text: "All the time" },
-					{ value: "schedule", text: "From, until" },
-					{ value: "sun", text: "By the sun" }
+					{ value: "always", text: Tr.t("All the time") },
+					{ value: "schedule", text: Tr.t("From, until") },
+					{ value: "sun", text: Tr.t("By the sun") }
 				]
 				value: page.own.mode
 				onChosen: value => Settings.set("nightLight", "mode", value)
@@ -246,8 +246,8 @@ Flickable {
 
 			Choice {
 				holds: "nightLight.temperature"
-				text: "How warm"
-				subtext: "Lower is warmer; daylight is 6500 K"
+				text: Tr.t("How warm")
+				subtext: Tr.t("Lower is warmer; daylight is 6500 K")
 				values: [2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000]
 				value: page.own.temperature
 				unit: " K"
@@ -257,8 +257,8 @@ Flickable {
 			Field {
 				visible: page.own.mode === "schedule"
 				holds: "nightLight.from"
-				text: "From"
-				subtext: "As 24-hour time"
+				text: Tr.t("From")
+				subtext: Tr.t("As 24-hour time")
 				placeholder: "20:00"
 				value: page.own.from
 				valid: value => /^([01]?\d|2[0-3]):[0-5]\d$/.test(value)
@@ -268,8 +268,8 @@ Flickable {
 			Field {
 				visible: page.own.mode === "schedule"
 				holds: "nightLight.until"
-				text: "Until"
-				subtext: "As 24-hour time"
+				text: Tr.t("Until")
+				subtext: Tr.t("As 24-hour time")
 				placeholder: "07:00"
 				value: page.own.until
 				valid: value => /^([01]?\d|2[0-3]):[0-5]\d$/.test(value)
@@ -279,8 +279,8 @@ Flickable {
 			Field {
 				visible: page.own.mode === "sun"
 				holds: "nightLight.latitude"
-				text: "Latitude"
-				subtext: "North is above 0"
+				text: Tr.t("Latitude")
+				subtext: Tr.t("North is above 0")
 				placeholder: "52.5"
 				value: String(page.own.latitude)
 				valid: value => value !== "" && !isNaN(Number(value)) && Math.abs(Number(value)) <= 90
@@ -290,8 +290,8 @@ Flickable {
 			Field {
 				visible: page.own.mode === "sun"
 				holds: "nightLight.longitude"
-				text: "Longitude"
-				subtext: "East is above 0"
+				text: Tr.t("Longitude")
+				subtext: Tr.t("East is above 0")
 				placeholder: "13.4"
 				value: String(page.own.longitude)
 				valid: value => value !== "" && !isNaN(Number(value)) && Math.abs(Number(value)) <= 180
@@ -301,12 +301,12 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "External monitors"
+			title: Tr.t("External monitors")
 
 			Setting {
 				holds: "display.ddc"
-				text: "Their brightness"
-				subtext: Ddc.available ? "In the control center, by DDC/CI: it needs /dev/i2c-* to be yours" : "It needs ddcutil, which isn't here"
+				text: Tr.t("Their brightness")
+				subtext: Ddc.available ? Tr.t("In the control center, by DDC/CI: it needs /dev/i2c-* to be yours") : Tr.t("It needs ddcutil, which isn't here")
 				enabled: Ddc.available
 				checked: Settings.display.ddc
 				onToggled: wanted => Settings.set("display", "ddc", wanted)
@@ -315,13 +315,13 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Recording the screen"
+			title: Tr.t("Recording the screen")
 
 			Text {
 				width: parent.width
 				visible: !Recorder.available
 				wrapMode: Text.WordWrap
-				text: "It needs wf-recorder, which isn't here."
+				text: Tr.t("It needs wf-recorder, which isn't here.")
 				color: Theme.colors.error
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -329,11 +329,11 @@ Flickable {
 
 			Pick {
 				holds: "recording.area"
-				text: "What's recorded"
+				text: Tr.t("What's recorded")
 				subtext: Recorder.picks ? "Started in the control center, or by `okaeri record toggle`" : "A part of it needs slurp, which isn't here"
 				options: [
-					{ value: "screen", text: "The screen" },
-					{ value: "region", text: "A part of it" }
+					{ value: "screen", text: Tr.t("The screen") },
+					{ value: "region", text: Tr.t("A part of it") }
 				]
 				value: Settings.recording.area
 				onChosen: value => Settings.set("recording", "area", value)
@@ -341,11 +341,11 @@ Flickable {
 
 			Pick {
 				holds: "recording.audio"
-				text: "With the sound of"
+				text: Tr.t("With the sound of")
 				options: [
-					{ value: "none", text: "Nothing" },
-					{ value: "system", text: "What plays" },
-					{ value: "mic", text: "The mic" }
+					{ value: "none", text: Tr.t("Nothing") },
+					{ value: "system", text: Tr.t("What plays") },
+					{ value: "mic", text: Tr.t("The mic") }
 				]
 				value: Settings.recording.audio
 				onChosen: value => Settings.set("recording", "audio", value)
@@ -353,8 +353,8 @@ Flickable {
 
 			Field {
 				holds: "recording.folder"
-				text: "Where the videos go"
-				subtext: "A folder: empty is Videos"
+				text: Tr.t("Where the videos go")
+				subtext: Tr.t("A folder: empty is Videos")
 				placeholder: "~/Videos"
 				wide: true
 				value: Settings.recording.folder
@@ -365,13 +365,13 @@ Flickable {
 		// Where screenshots go, and how long a screen or a window waits for one.
 		Card {
 			width: parent.width
-			title: "Screenshots"
+			title: Tr.t("Screenshots")
 
 			Field {
 				holds: "screenshots.folder"
 				words: "screenshot capture print"
-				text: "Where they go"
-				subtext: "Empty for where niri's config says"
+				text: Tr.t("Where they go")
+				subtext: Tr.t("Empty for where niri's config says")
 				placeholder: "~/Pictures/Screenshots"
 				wide: true
 				value: Settings.screenshots.folder
@@ -380,17 +380,17 @@ Flickable {
 
 			Choice {
 				holds: "screenshots.delay"
-				text: "Of the screen or a window, wait"
-				subtext: "From the control center and the launcher"
+				text: Tr.t("Of the screen or a window, wait")
+				subtext: Tr.t("From the control center and the launcher")
 				values: [0, 3, 5, 10]
-				none: "Not at all"
+				none: Tr.t("Not at all")
 				value: Settings.screenshots.delay
 				onChosen: value => Settings.set("screenshots", "delay", value)
 			}
 
 			Setting {
 				holds: "screenshots.pointer"
-				text: "With the pointer"
+				text: Tr.t("With the pointer")
 				checked: Settings.screenshots.pointer
 				onToggled: wanted => Settings.set("screenshots", "pointer", wanted)
 			}
@@ -398,7 +398,7 @@ Flickable {
 			Field {
 				holds: "screenshots.editor"
 				words: "screenshot annotate draw satty swappy"
-				text: "Edit with"
+				text: Tr.t("Edit with")
 				subtext: Screenshots.editor ? `Empty for ${Screenshots.editor}, found here` : "A command the picture goes to the end of"
 				placeholder: Screenshots.editor || "satty --filename"
 				wide: true
@@ -409,8 +409,8 @@ Flickable {
 			Field {
 				holds: "screenshots.languages"
 				words: "screenshot ocr text recognize tesseract"
-				text: "The text in them is in"
-				subtext: Screenshots.reads ? "Tesseract's languages, as eng+rus" : "It takes tesseract, with its languages"
+				text: Tr.t("The text in them is in")
+				subtext: Screenshots.reads ? Tr.t("Tesseract's languages, as eng+rus") : Tr.t("It takes tesseract, with its languages")
 				placeholder: "eng"
 				value: Settings.screenshots.languages
 				onKept: value => Settings.set("screenshots", "languages", value.trim() || "eng")

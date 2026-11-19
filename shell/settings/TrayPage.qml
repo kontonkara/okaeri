@@ -10,9 +10,9 @@ Flickable {
 	id: page
 
 	readonly property var places: [
-		{ value: "drawer", text: "In the drawer" },
-		{ value: "bar", text: "On the bar" },
-		{ value: "hidden", text: "Hidden" }
+		{ value: "drawer", text: Tr.t("In the drawer") },
+		{ value: "bar", text: Tr.t("On the bar") },
+		{ value: "hidden", text: Tr.t("Hidden") }
 	]
 
 	function show(id, wanted) {
@@ -45,16 +45,16 @@ Flickable {
 
 		Setting {
 			holds: "tray.drawer"
-			text: "In a drawer"
-			subtext: "Behind a button on the bar"
+			text: Tr.t("In a drawer")
+			subtext: Tr.t("Behind a button on the bar")
 			checked: Settings.tray.drawer
 			onToggled: wanted => Settings.set("tray", "drawer", wanted)
 		}
 
 		Setting {
 			holds: "tray.passive"
-			text: "Quiet ones too"
-			subtext: "Those that say there's nothing to see now"
+			text: Tr.t("Quiet ones too")
+			subtext: Tr.t("Those that say there's nothing to see now")
 			checked: Settings.tray.passive
 			onToggled: wanted => Settings.set("tray", "passive", wanted)
 		}

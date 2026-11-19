@@ -58,7 +58,7 @@ Card {
 				height: Theme.u(34)
 				flat: true
 				icon: "back"
-				tip: "Back"
+				tip: Tr.t("Back")
 				onClicked: Control.unfolded = ""
 			}
 

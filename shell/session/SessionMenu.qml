@@ -139,13 +139,13 @@ Panel {
 			spacing: Theme.u(8)
 
 			Button {
-				text: "Cancel"
+				text: Tr.t("Cancel")
 				onClicked: menu.cancel()
 			}
 
 			Button {
 				filled: true
-				text: "Now"
+				text: Tr.t("Now")
 				onClicked: menu.run(menu.pending)
 			}
 		}

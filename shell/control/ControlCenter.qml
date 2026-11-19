@@ -182,7 +182,7 @@ Panel {
 							height: Theme.u(32)
 							flat: true
 							icon: "gear"
-							tip: "Settings"
+							tip: Tr.t("Settings")
 							onClicked: {
 								controlCenter.hide();
 								Settings.asked();
@@ -193,7 +193,7 @@ Panel {
 							height: Theme.u(32)
 							flat: true
 							icon: "power"
-							tip: "Session"
+							tip: Tr.t("Session")
 							onClicked: {
 								controlCenter.hide();
 								Session.menuWanted();
@@ -273,7 +273,7 @@ Panel {
 							name: "wifi"
 							wanted: !!Wifi.device
 							icon: Wifi.enabled ? "wifi" : "wifiOff"
-							title: "Wi-Fi"
+							title: Tr.t("Wi-Fi")
 							summary: wifi.summary
 							checked: Wifi.enabled
 							canSwitch: !Wifi.blocked
@@ -289,7 +289,7 @@ Panel {
 							name: "wired"
 							wanted: Wired.plugged
 							icon: "ethernet"
-							title: "Wired"
+							title: Tr.t("Wired")
 							summary: wired.summary
 							checked: Wired.connected
 							opens: "wired"
@@ -303,7 +303,7 @@ Panel {
 						Tile {
 							name: "screenshot"
 							icon: "image"
-							title: "Screenshot"
+							title: Tr.t("Screenshot")
 							summary: Settings.screenshots.delay > 0 ? `A part, or in ${Settings.screenshots.delay} s the rest` : "Of a part of the screen"
 							switches: false
 							onClicked: {
@@ -335,7 +335,7 @@ Panel {
 							name: "drives"
 							wanted: Drives.list.length > 0
 							icon: "drive"
-							title: "Drives"
+							title: Tr.t("Drives")
 							summary: drives.summary
 							checked: Drives.list.some(drive => !!drive.mount)
 							switches: false
@@ -351,7 +351,7 @@ Panel {
 							name: "bluetooth"
 							wanted: !!Bt.adapter
 							icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
-							title: "Bluetooth"
+							title: Tr.t("Bluetooth")
 							summary: bluetooth.summary
 							checked: Bt.enabled
 							canSwitch: !Bt.blocked
@@ -382,8 +382,8 @@ Panel {
 							name: "airplane"
 							wanted: Airplane.possible
 							icon: "plane"
-							title: "Airplane mode"
-							summary: Airplane.on ? "Radios off" : "Off"
+							title: Tr.t("Airplane mode")
+							summary: Airplane.on ? Tr.t("Radios off") : Tr.t("Off")
 							checked: Airplane.on
 							onToggled: wanted => Airplane.set(wanted)
 						}
@@ -397,8 +397,8 @@ Panel {
 							name: "record"
 							wanted: Recorder.available
 							icon: "video"
-							title: "Record"
-							summary: Recorder.recording ? Recorder.clock(Recorder.elapsed) : Settings.recording.area === "region" && Recorder.picks ? "A part of the screen" : "The screen"
+							title: Tr.t("Record")
+							summary: Recorder.recording ? Recorder.clock(Recorder.elapsed) : Settings.recording.area === "region" && Recorder.picks ? Tr.t("A part of the screen") : Tr.t("The screen")
 							checked: Recorder.recording
 							onToggled: wanted => {
 								if (wanted) {
@@ -417,8 +417,8 @@ Panel {
 						Tile {
 							name: "night"
 							icon: "sunset"
-							title: "Night light"
-							summary: !NightLight.available ? "It needs wlsunset" : NightLight.on ? NightLight.summary : NightLight.paused ? NightLight.pauseLabel : "Off"
+							title: Tr.t("Night light")
+							summary: !NightLight.available ? Tr.t("It needs wlsunset") : NightLight.on ? NightLight.summary : NightLight.paused ? NightLight.pauseLabel : Tr.t("Off")
 							checked: NightLight.on && NightLight.available
 							canSwitch: NightLight.available
 							takesWheel: true
@@ -433,8 +433,8 @@ Panel {
 						Tile {
 							name: "game"
 							icon: "gamepad"
-							title: "Game mode"
-							summary: !GameMode.on ? "Off" : GameMode.followed ? "On, with gamemode" : "On"
+							title: Tr.t("Game mode")
+							summary: !GameMode.on ? Tr.t("Off") : GameMode.followed ? Tr.t("On, with gamemode") : Tr.t("On")
 							checked: GameMode.on
 							onToggled: wanted => GameMode.set(wanted)
 						}
@@ -446,8 +446,8 @@ Panel {
 						Tile {
 							name: "awake"
 							icon: "coffee"
-							title: "Keep awake"
-							summary: !Awake.on ? "Off" : Awake.label || "It won't lock or dim"
+							title: Tr.t("Keep awake")
+							summary: !Awake.on ? Tr.t("Off") : Awake.label || Tr.t("It won't lock or dim")
 							checked: Awake.on
 							takesWheel: true
 							onToggled: wanted => Awake.set(wanted, 0)
@@ -462,7 +462,7 @@ Panel {
 							name: "power"
 							wanted: Power.choices.length > 1
 							icon: "bolt"
-							title: "Power"
+							title: Tr.t("Power")
 							summary: [Power.profileName, Power.profileWhy].filter(part => part !== "").join(" · ")
 							checked: Power.profile !== PowerProfile.Balanced
 							switches: false
@@ -479,7 +479,7 @@ Panel {
 							name: "hotspot"
 							wanted: !!Wifi.device
 							icon: "hotspot"
-							title: "Hotspot"
+							title: Tr.t("Hotspot")
 							summary: Hotspot.summary
 							checked: Hotspot.on
 							canSwitch: !Wifi.blocked && Wifi.hasTool

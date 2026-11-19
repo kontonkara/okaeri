@@ -207,6 +207,11 @@ bar can have parts of its own, and "Like the others" has it like every other
 again. The Dock page does the same for a screen's dock: where it is, how
 large, whether it hides and the rest.)
 
+okaeri's own words are in English, or in Russian where the locale is, or where
+the Look page says; another language is a file in `shell/i18n`, the English
+words to its own, as `ru.json` has them. A few words put together with numbers
+are English yet.
+
 The bar can have a part for things to do and a note: how many are left, and a
 card to add one, tick it off or take it away, and to write in. `/todo` in the
 launcher adds one or ticks one off, `okaeri notes add` adds one from a script,

@@ -47,6 +47,6 @@ Item {
 	}
 
 	Tip {
-		text: "Set here: a click takes it back to the config"
+		text: Tr.t("Set here: a click takes it back to the config")
 	}
 }

@@ -76,7 +76,7 @@ Card {
 			// A panel of a few steps goes a whole one at a time, or a notch would
 			// round back to where it was.
 			step: Math.max(0.05, 1 / Math.max(1, Brightness.maximum))
-			label: levels.monitors.length > 0 ? "Built-in" : ""
+			label: levels.monitors.length > 0 ? Tr.t("Built-in") : ""
 			onMoved: wanted => Brightness.set(wanted)
 
 			Icon {

@@ -60,7 +60,7 @@ Scope {
 				width: Theme.u(380)
 				focus: true
 				color: Theme.panel
-				title: "Keep this?"
+				title: Tr.t("Keep this?")
 				Keys.onReturnPressed: Screens.keepTrial()
 				Keys.onEnterPressed: Screens.keepTrial()
 				Keys.onEscapePressed: Screens.dropTrial()
@@ -77,7 +77,7 @@ Scope {
 
 				Text {
 					width: parent.width
-					text: `It goes back in ${Screens.left} s`
+					text: Tr.f("It goes back in %1 s", Screens.left)
 					color: Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize
@@ -93,16 +93,16 @@ Scope {
 					Button {
 						height: Theme.u(32)
 						flat: true
-						text: "Back"
-						tip: "Escape"
+						text: Tr.t("Back")
+						tip: Tr.t("Escape")
 						onClicked: Screens.dropTrial()
 					}
 
 					Button {
 						height: Theme.u(32)
 						filled: true
-						text: "Keep"
-						tip: "Enter"
+						text: Tr.t("Keep")
+						tip: Tr.t("Enter")
 						onClicked: Screens.keepTrial()
 					}
 				}

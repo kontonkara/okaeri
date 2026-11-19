@@ -58,9 +58,9 @@ Flickable {
 					holds: "dock.screens"
 					words: "monitor screen several docks"
 					width: parent.width - (likeOthers.visible ? likeOthers.width + Theme.u(8) : 0)
-					text: "The dock of"
-					subtext: page.forScreen ? "What's set here is that screen's own" : ""
-					options: [{ value: "", text: "Every screen" }].concat([...new Set(Quickshell.screens.map(screen => screen.name).concat(Object.keys(Settings.dock.screens ?? {})))].map(name => ({ value: name, text: name })))
+					text: Tr.t("The dock of")
+					subtext: page.forScreen ? Tr.t("What's set here is that screen's own") : ""
+					options: [{ value: "", text: Tr.t("Every screen") }].concat([...new Set(Quickshell.screens.map(screen => screen.name).concat(Object.keys(Settings.dock.screens ?? {})))].map(name => ({ value: name, text: name })))
 					value: page.forScreen
 					onChosen: value => page.forScreen = value
 				}
@@ -73,7 +73,7 @@ Flickable {
 					height: Theme.u(30)
 					visible: page.forScreen !== "" && !!Settings.dock.screens?.[page.forScreen]
 					flat: true
-					text: "Like the others"
+					text: Tr.t("Like the others")
 					onClicked: Settings.dropDock(page.forScreen)
 				}
 			}
@@ -81,21 +81,21 @@ Flickable {
 			Setting {
 				holds: "dock.on"
 				visible: page.forScreen === ""
-				text: "A dock"
-				subtext: "The apps it keeps, and those with windows: a click goes to one"
+				text: Tr.t("A dock")
+				subtext: Tr.t("The apps it keeps, and those with windows: a click goes to one")
 				checked: page.own.on
 				onToggled: wanted => Settings.set("dock", "on", wanted)
 			}
 
 			Pick {
 				holds: "dock.position"
-				text: "It's at"
-				subtext: "In the middle of that edge"
+				text: Tr.t("It's at")
+				subtext: Tr.t("In the middle of that edge")
 				options: [
-					{ value: "bottom", text: "The bottom" },
-					{ value: "left", text: "The left" },
-					{ value: "right", text: "The right" },
-					{ value: "top", text: "The top" }
+					{ value: "bottom", text: Tr.t("The bottom") },
+					{ value: "left", text: Tr.t("The left") },
+					{ value: "right", text: Tr.t("The right") },
+					{ value: "top", text: Tr.t("The top") }
 				]
 				value: page.own.position
 				onChosen: value => Settings.setDock(page.forScreen, "position", value)
@@ -103,15 +103,15 @@ Flickable {
 
 			Setting {
 				holds: "dock.autoHide"
-				text: "It hides"
-				subtext: "Over the windows, until the pointer rests at its edge, or the overview opens"
+				text: Tr.t("It hides")
+				subtext: Tr.t("Over the windows, until the pointer rests at its edge, or the overview opens")
 				checked: page.own.autoHide
 				onToggled: wanted => Settings.setDock(page.forScreen, "autoHide", wanted)
 			}
 
 			Choice {
 				holds: "dock.size"
-				text: "Its icons"
+				text: Tr.t("Its icons")
 				values: [28, 32, 40, 48, 56, 64]
 				value: page.own.size
 				unit: " px"
@@ -120,12 +120,12 @@ Flickable {
 
 			Pick {
 				holds: "dock.windows"
-				text: "Apps with windows"
-				subtext: page.own.windows === "pinned" ? "Only those it keeps, with their windows" : page.own.windows === "screen" ? "Those with a window on its screen" : "All of them, on every screen's dock"
+				text: Tr.t("Apps with windows")
+				subtext: page.own.windows === "pinned" ? Tr.t("Only those it keeps, with their windows") : page.own.windows === "screen" ? Tr.t("Those with a window on its screen") : Tr.t("All of them, on every screen's dock")
 				options: [
-					{ value: "all", text: "All" },
-					{ value: "screen", text: "Its screen's" },
-					{ value: "pinned", text: "None" }
+					{ value: "all", text: Tr.t("All") },
+					{ value: "screen", text: Tr.t("Its screen's") },
+					{ value: "pinned", text: Tr.t("None") }
 				]
 				value: page.own.windows
 				onChosen: value => Settings.setDock(page.forScreen, "windows", value)
@@ -134,11 +134,11 @@ Flickable {
 			Choice {
 				holds: "dock.magnify"
 				words: "zoom magnification"
-				text: "Icons grow under the pointer"
-				subtext: "To this much, and those beside them make room"
+				text: Tr.t("Icons grow under the pointer")
+				subtext: Tr.t("To this much, and those beside them make room")
 				values: [0, 120, 140, 160, 180, 200]
 				value: page.own.magnify
-				none: "No"
+				none: Tr.t("No")
 				unit: "%"
 				onChosen: value => Settings.setDock(page.forScreen, "magnify", value)
 			}
@@ -146,43 +146,43 @@ Flickable {
 			Setting {
 				holds: "dock.bounce"
 				words: "jump launching"
-				text: "Apps hop"
-				subtext: "As one starts, until its window comes, and while it asks to be looked at"
+				text: Tr.t("Apps hop")
+				subtext: Tr.t("As one starts, until its window comes, and while it asks to be looked at")
 				checked: page.own.bounce
 				onToggled: wanted => Settings.setDock(page.forScreen, "bounce", wanted)
 			}
 
 			Setting {
 				holds: "dock.count"
-				text: "How many windows"
-				subtext: "A number on an app with more than one"
+				text: Tr.t("How many windows")
+				subtext: Tr.t("A number on an app with more than one")
 				checked: page.own.count
 				onToggled: wanted => Settings.setDock(page.forScreen, "count", wanted)
 			}
 
 			Setting {
 				holds: "dock.unread"
-				text: "Unread notifications"
-				subtext: "How many, on the app they're from"
+				text: Tr.t("Unread notifications")
+				subtext: Tr.t("How many, on the app they're from")
 				checked: page.own.unread
 				onToggled: wanted => Settings.setDock(page.forScreen, "unread", wanted)
 			}
 
 			Setting {
 				holds: "dock.separator"
-				text: "A line after those kept"
-				subtext: "Before the others with windows"
+				text: Tr.t("A line after those kept")
+				subtext: Tr.t("Before the others with windows")
 				checked: page.own.separator
 				onToggled: wanted => Settings.setDock(page.forScreen, "separator", wanted)
 			}
 
 			Pick {
 				holds: "dock.launcher"
-				text: "A button for the launcher"
+				text: Tr.t("A button for the launcher")
 				options: [
-					{ value: "none", text: "No" },
-					{ value: "start", text: "First" },
-					{ value: "end", text: "Last" }
+					{ value: "none", text: Tr.t("No") },
+					{ value: "start", text: Tr.t("First") },
+					{ value: "end", text: Tr.t("Last") }
 				]
 				value: page.own.launcher
 				onChosen: value => Settings.setDock(page.forScreen, "launcher", value)
@@ -190,8 +190,8 @@ Flickable {
 
 			Setting {
 				holds: "dock.smartHide"
-				text: "In sight on an empty workspace"
-				subtext: "Where it hides: over no windows there's nothing to hide it for"
+				text: Tr.t("In sight on an empty workspace")
+				subtext: Tr.t("Where it hides: over no windows there's nothing to hide it for")
 				enabled: page.own.autoHide
 				checked: page.own.smartHide
 				onToggled: wanted => Settings.setDock(page.forScreen, "smartHide", wanted)
@@ -200,7 +200,7 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Screens"
+			title: Tr.t("Screens")
 			visible: page.screens.length > 1
 
 			Repeater {
@@ -219,13 +219,13 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Kept on it"
+			title: Tr.t("Kept on it")
 
 			Text {
 				width: parent.width
 				visible: page.own.pinned.length === 0
 				wrapMode: Text.WordWrap
-				text: "None yet: a right click on an app in the dock has a menu that keeps it there, and so does its menu in the launcher. One that's kept goes where it's dragged along the dock."
+				text: Tr.t("None yet: a right click on an app in the dock has a menu that keeps it there, and so does its menu in the launcher. One that's kept goes where it's dragged along the dock.")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)

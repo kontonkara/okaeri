@@ -42,7 +42,7 @@ Section {
 	name: "wifi"
 	wanted: !!Wifi.device
 	icon: Wifi.enabled ? "wifi" : "wifiOff"
-	title: "Wi-Fi"
+	title: Tr.t("Wi-Fi")
 	summary: {
 		if (Wifi.blocked)
 			return "Blocked by a switch";
@@ -99,7 +99,7 @@ Section {
 		visible: !!Wifi.connected && Networking.connectivity === NetworkConnectivity.Portal
 		height: visible ? Theme.u(30) : 0
 		icon: "lock"
-		text: "Sign in to the network"
+		text: Tr.t("Sign in to the network")
 		onClicked: {
 			Control.leave();
 			Env.act("wifi sign in", () => Qt.openUrlExternally("http://neverssl.com"));
@@ -109,7 +109,7 @@ Section {
 	Rows {
 		values: section.networks
 		room: section.roomInside - hidden.height - (shareCard.visible ? shareCard.height : 0) - signIn.height
-		empty: "Looking for networks..."
+		empty: Tr.t("Looking for networks...")
 		onActivated: (index, network) => section.pick(network)
 
 		delegate: WifiRow {
@@ -187,8 +187,8 @@ Section {
 			height: Theme.u(30)
 			flat: true
 			icon: section.sharing ? "" : "qr"
-			text: section.sharing ? "Done" : "Share"
-			tip: section.sharing ? "" : "Its name, its password and a code for a phone"
+			text: section.sharing ? Tr.t("Done") : Tr.t("Share")
+			tip: section.sharing ? "" : Tr.t("Its name, its password and a code for a phone")
 			ink: Theme.colors.subtext
 			onClicked: section.sharing = !section.sharing
 			Keys.onEscapePressed: event => {
@@ -211,7 +211,7 @@ Section {
 
 				width: parent.width
 				implicitHeight: Theme.u(34)
-				placeholder: "Its name"
+				placeholder: Tr.t("Its name")
 				onAccepted: key.take()
 				Keys.onEscapePressed: hidden.asking = false
 			}
@@ -228,7 +228,7 @@ Section {
 					anchors.rightMargin: Theme.u(6)
 					implicitHeight: Theme.u(34)
 					secret: true
-					placeholder: "Password, if it has one"
+					placeholder: Tr.t("Password, if it has one")
 					onAccepted: hidden.join()
 					Keys.onEscapePressed: hidden.asking = false
 				}
@@ -240,7 +240,7 @@ Section {
 					height: key.height
 					filled: true
 					enabled: name.text.trim() !== ""
-					text: "Connect"
+					text: Tr.t("Connect")
 					onClicked: hidden.join()
 				}
 			}

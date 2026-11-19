@@ -11,8 +11,8 @@ Section {
 
 	name: "mic"
 	icon: "mic"
-	title: "Microphone"
-	summary: Audio.source?.description ?? "None chosen"
+	title: Tr.t("Microphone")
+	summary: Audio.source?.description ?? Tr.t("None chosen")
 	switches: false
 
 	Binding {
@@ -24,7 +24,7 @@ Section {
 	Rows {
 		values: Audio.inputs
 		room: section.roomInside
-		empty: "No microphones"
+		empty: Tr.t("No microphones")
 		onActivated: (index, node) => Audio.useInput(node)
 
 		delegate: Entry {
@@ -88,7 +88,7 @@ Section {
 		leftPadding: Theme.u(10)
 		topPadding: Theme.u(6)
 		bottomPadding: Theme.u(4)
-		text: "Apps"
+		text: Tr.t("Apps")
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -99,7 +99,7 @@ Section {
 		visible: Audio.listeners.length === 0
 		leftPadding: Theme.u(10)
 		bottomPadding: Theme.u(8)
-		text: "Nothing listens"
+		text: Tr.t("Nothing listens")
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize - Theme.u(2)

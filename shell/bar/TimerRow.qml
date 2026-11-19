@@ -21,8 +21,8 @@ Flow {
 
 			height: Theme.u(28)
 			flat: true
-			text: `${modelData} min`
-			tip: "A timer that long"
+			text: Tr.f("%1 min", modelData)
+			tip: Tr.t("A timer that long")
 			onClicked: Timers.start(modelData * 60, "")
 		}
 	}
@@ -31,8 +31,8 @@ Flow {
 		visible: !Timers.counting
 		height: Theme.u(28)
 		flat: true
-		text: "Pomodoro"
-		tip: `${Settings.pomodoro.work} min of work, then a break, and again`
+		text: Tr.t("Pomodoro")
+		tip: Tr.f("%1 min of work, then a break, and again", Settings.pomodoro.work)
 		onClicked: Timers.startPomodoro()
 	}
 
@@ -41,7 +41,7 @@ Flow {
 		height: Theme.u(28)
 		icon: "close"
 		text: [Timers.clock(Timers.left), Timers.label, Timers.phase ? `${(Timers.rounds - (Timers.phase === "work" ? 0 : 1)) % Math.max(1, Settings.pomodoro.rounds) + 1} of ${Settings.pomodoro.rounds}` : ""].filter(part => part !== "").join(" · ")
-		tip: Timers.phase ? "Stop the pomodoros" : "Stop the timer"
+		tip: Timers.phase ? Tr.t("Stop the pomodoros") : Tr.t("Stop the timer")
 		longest: Theme.u(180)
 		onClicked: Timers.stop()
 	}
@@ -50,8 +50,8 @@ Flow {
 		height: Theme.u(28)
 		flat: !Timers.watching && Timers.watched === 0
 		icon: Timers.watching ? "pause" : "play"
-		text: Timers.watching || Timers.watched > 0 ? Timers.clock(Timers.watched) : "Stopwatch"
-		tip: Timers.watching ? "Stand · a right click starts over" : Timers.watched > 0 ? "Go on · a right click starts over" : "Start the stopwatch"
+		text: Timers.watching || Timers.watched > 0 ? Timers.clock(Timers.watched) : Tr.t("Stopwatch")
+		tip: Timers.watching ? Tr.t("Stand · a right click starts over") : Timers.watched > 0 ? Tr.t("Go on · a right click starts over") : Tr.t("Start the stopwatch")
 		onClicked: Timers.toggleWatch()
 		onRightClicked: Timers.resetWatch()
 	}

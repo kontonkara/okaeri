@@ -31,7 +31,7 @@ FloatingWindow {
 		{ text: "On-screen display", icon: "osd", page: osdPage, sections: ["osd"] },
 		{ text: "Display", icon: "sunset", page: displayPage, sections: ["display", "recording", "screenshots", "nightLight.mode", "nightLight.temperature", "nightLight.from", "nightLight.until", "nightLight.latitude", "nightLight.longitude"] },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage, sections: ["wallpaper", "desktop"] },
-		{ text: "Look", icon: "eye", page: lookPage, sections: ["bar.look", "control.size"], keys: ["blur", "toastBlur", "barBlur", "realBlur", "opacity", "animations", "speed", "panelMotion", "toastMotion", "barHeight", "barIcon", "barMargin", "radius", "fontSize", "scale", "font", "fontWeight", "extends", "auto", "day", "night", "dayFrom", "nightFrom", "accent", "wallpaperAccent", "wallpaperPalette"] },
+		{ text: "Look", icon: "eye", page: lookPage, sections: ["bar.look", "control.size", "language"], keys: ["blur", "toastBlur", "barBlur", "realBlur", "opacity", "animations", "speed", "panelMotion", "toastMotion", "barHeight", "barIcon", "barMargin", "radius", "fontSize", "scale", "font", "fontWeight", "extends", "auto", "day", "night", "dayFrom", "nightFrom", "accent", "wallpaperAccent", "wallpaperPalette"] },
 		{ text: "Session", icon: "lock", page: sessionPage, sections: ["session", "idle", "hooks", "game", "battery.warning", "battery.saver"] },
 		{ text: "Plugins", icon: "plugin", page: pluginsPage, sections: ["plugins"] }
 	]
@@ -90,7 +90,7 @@ FloatingWindow {
 	// Where an entry is, in words: its page, and its part of the bar.
 	function where(entry) {
 		const part = entry.part ? barPartName(entry.part) : "";
-		return part ? `${pages[entry.page].text} · ${part}` : pages[entry.page].text;
+		return part ? `${Tr.t(pages[entry.page].text)} · ${part}` : Tr.t(pages[entry.page].text);
 	}
 
 	function barPartName(part) {
@@ -275,7 +275,7 @@ FloatingWindow {
 		console.info("okaeri: settings: copied as", kind);
 	}
 
-	title: "Settings"
+	title: Tr.t("Settings")
 	visible: false
 	minimumSize: least
 	onWidthChanged: keeping.restart()
@@ -639,7 +639,7 @@ FloatingWindow {
 				width: menu.width
 				implicitHeight: Theme.u(34)
 				icon: "search"
-				placeholder: "Search"
+				placeholder: Tr.t("Search")
 				onTextChanged: {
 					if (text !== "")
 						window.index();
@@ -674,7 +674,7 @@ FloatingWindow {
 					parent: found
 					anchors.centerIn: parent
 					visible: found.count === 0
-					text: "Nothing found"
+					text: Tr.t("Nothing found")
 					color: Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -718,7 +718,7 @@ FloatingWindow {
 							pad: Theme.u(10)
 							flat: index !== window.page
 							icon: modelData.icon
-							text: modelData.text
+							text: Tr.t(modelData.text)
 							onClicked: window.page = index
 						}
 					}
@@ -744,7 +744,7 @@ FloatingWindow {
 					atStart: true
 					pad: Theme.u(10)
 					flat: true
-					text: "Back to the config"
+					text: Tr.t("Back to the config")
 					onClicked: {
 						const keyed = activeFocus;
 						sure.start();
@@ -767,7 +767,7 @@ FloatingWindow {
 						flat: true
 						pad: Theme.u(6)
 						longest: width - pad * 2
-						text: "This page"
+						text: Tr.t("This page")
 						ink: Theme.colors.error
 						onClicked: {
 							const keyed = activeFocus;
@@ -786,7 +786,7 @@ FloatingWindow {
 						flat: true
 						pad: Theme.u(6)
 						longest: width - pad * 2
-						text: "All of it"
+						text: Tr.t("All of it")
 						ink: Theme.colors.error
 						onClicked: {
 							const keyed = activeFocus;
@@ -808,7 +808,7 @@ FloatingWindow {
 					visible: !sure.running && !copying.running
 					flat: true
 					icon: "copy"
-					tip: "Copy as config"
+					tip: Tr.t("Copy as config")
 					onClicked: copying.start()
 				}
 
@@ -817,7 +817,7 @@ FloatingWindow {
 					spacing: Math.round(Theme.u(4))
 
 					Repeater {
-						model: [{ kind: "json", text: "As JSON" }, { kind: "nix", text: "As Nix" }]
+						model: [{ kind: "json", text: Tr.t("As JSON") }, { kind: "nix", text: Tr.t("As Nix") }]
 
 						Button {
 							required property var modelData
@@ -826,7 +826,7 @@ FloatingWindow {
 							flat: true
 							pad: Theme.u(6)
 							longest: width - pad * 2
-							text: modelData.text
+							text: Tr.t(modelData.text)
 							onClicked: {
 								copying.stop();
 								window.copyConfig(modelData.kind);

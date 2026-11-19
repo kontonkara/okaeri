@@ -26,7 +26,7 @@ Section {
 
 	name: "sound"
 	icon: "volume"
-	title: "Sound"
+	title: Tr.t("Sound")
 	summary: Audio.sink?.description ?? ""
 	switches: false
 	// A screen may have come since the last time.
@@ -41,7 +41,7 @@ Section {
 
 	Heading {
 		visible: Audio.outputs.length > 1
-		text: "Output"
+		text: Tr.t("Output")
 	}
 
 	Rows {
@@ -70,7 +70,7 @@ Section {
 
 	Heading {
 		visible: Audio.cards.length > 0
-		text: "Cards"
+		text: Tr.t("Cards")
 	}
 
 	Rows {
@@ -90,7 +90,7 @@ Section {
 			readonly property bool open: card.id !== undefined && section.opened === card.id
 
 			text: card.name ?? ""
-			subtext: card.profiles?.find(profile => profile.index === card.profile)?.text ?? "Off"
+			subtext: card.profiles?.find(profile => profile.index === card.profile)?.text ?? Tr.t("Off")
 			// Its ways come into sight. Opened by the keys, the keys go on to
 			// them, from the one it's in, and back as it folds.
 			onOpenChanged: {
@@ -131,7 +131,7 @@ Section {
 	}
 
 	Heading {
-		text: "Apps"
+		text: Tr.t("Apps")
 	}
 
 	Text {
@@ -139,7 +139,7 @@ Section {
 		visible: Audio.nodes.length === 0
 		leftPadding: Theme.u(10)
 		bottomPadding: Theme.u(8)
-		text: "Nothing plays"
+		text: Tr.t("Nothing plays")
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -190,7 +190,7 @@ Section {
 				height: app.open ? count * rowHeight : 0
 				visible: app.open
 				interactive: false
-				model: [{ text: "Where the rest go", subtext: Audio.sink?.description ?? "", check: !app.going || app.going === Audio.sink, output: null }].concat(Audio.outputs.filter(node => node !== Audio.sink).map(node => ({ text: node.description, subtext: node.nickname, check: app.going === node, output: node })))
+				model: [{ text: Tr.t("Where the rest go"), subtext: Audio.sink?.description ?? "", check: !app.going || app.going === Audio.sink, output: null }].concat(Audio.outputs.filter(node => node !== Audio.sink).map(node => ({ text: node.description, subtext: node.nickname, check: app.going === node, output: node })))
 				onActivated: (index, entry) => {
 					app.page.routing = -1;
 					if (!entry.check || !entry.output)

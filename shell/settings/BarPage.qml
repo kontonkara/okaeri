@@ -27,7 +27,7 @@ Flickable {
 		notifications: "Notifications",
 		privacy: "Microphone and camera",
 		system: "System load",
-		title: "Window title",
+		title: Tr.t("Window title"),
 		tray: "Tray",
 		units: "Failed units",
 		workspaces: "Workspaces",
@@ -53,11 +53,11 @@ Flickable {
 		return all;
 	}
 	readonly property var buttons: [
-		{ name: "left", text: "A click runs" },
-		{ name: "right", text: "A right click" },
-		{ name: "middle", text: "A middle click" },
-		{ name: "up", text: "The wheel up" },
-		{ name: "down", text: "The wheel down" }
+		{ name: "left", text: Tr.t("A click runs") },
+		{ name: "right", text: Tr.t("A right click") },
+		{ name: "middle", text: Tr.t("A middle click") },
+		{ name: "up", text: Tr.t("The wheel up") },
+		{ name: "down", text: Tr.t("The wheel down") }
 	]
 	// Those whose settings are on a page of their own, by its name.
 	readonly property var elsewhere: ({
@@ -69,9 +69,9 @@ Flickable {
 	})
 	readonly property var lanes: [
 		{ name: "left", text: Settings.barSide ? "Top" : "Left" },
-		{ name: "center", text: "Middle" },
+		{ name: "center", text: Tr.t("Middle") },
 		{ name: "right", text: Settings.barSide ? "Bottom" : "Right" },
-		{ name: "off", text: "Not on the bar" }
+		{ name: "off", text: Tr.t("Not on the bar") }
 	]
 	// The bar whose lanes show: a screen's, by its name, or with "" every screen's.
 	// A screen picked has lanes of its own from the first change to them.
@@ -325,9 +325,9 @@ Flickable {
 				holds: "bar.screens"
 				words: "monitor screen several bars"
 				width: parent.width - (alike.visible ? alike.width + Theme.u(8) : 0)
-				text: "The bar of"
-				subtext: page.forScreen && !Settings.bar.screens?.[page.forScreen] ? "It has every screen's, till a part moves" : ""
-				options: [{ value: "", text: "Every screen" }].concat(page.barScreens.map(name => ({ value: name, text: name })))
+				text: Tr.t("The bar of")
+				subtext: page.forScreen && !Settings.bar.screens?.[page.forScreen] ? Tr.t("It has every screen's, till a part moves") : ""
+				options: [{ value: "", text: Tr.t("Every screen") }].concat(page.barScreens.map(name => ({ value: name, text: name })))
 				value: page.forScreen
 				onChosen: value => page.forScreen = value
 			}
@@ -340,7 +340,7 @@ Flickable {
 				height: Theme.u(30)
 				visible: page.forScreen !== "" && !!Settings.bar.screens?.[page.forScreen]
 				flat: true
-				text: "Like the others"
+				text: Tr.t("Like the others")
 				onClicked: Settings.dropLanes(page.forScreen)
 			}
 		}
@@ -371,7 +371,7 @@ Flickable {
 
 						width: parent.width
 						padding: Theme.u(10)
-						title: modelData.text
+						title: Tr.t(modelData.text)
 
 						Flow {
 							id: chips
@@ -400,7 +400,7 @@ Flickable {
 									required property string modelData
 									readonly property string name: modelData
 
-									text: page.names[name] ?? name
+									text: Tr.t(page.names[name] ?? name)
 									color: name === page.chosen ? Qt.alpha(Theme.colors.accent, 0.3) : Qt.alpha(Theme.colors.text, 0.1)
 									opacity: name === page.held ? 0.3 : 1
 								}
@@ -417,7 +417,7 @@ Flickable {
 						id: about
 
 						width: parent.width - adding.width - Theme.u(12)
-						text: "A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen recording, Screen sharing, Failed units, Keyboard layout and Caps Lock show only when they have something to say."
+						text: Tr.t("A click on a part shows its settings, and under them what clicks and the wheel on it run. Media, Bluetooth, Microphone and camera, Screen recording, Screen sharing, Failed units, Keyboard layout and Caps Lock show only when they have something to say.")
 					}
 
 					Button {
@@ -425,8 +425,8 @@ Flickable {
 
 						anchors.right: parent.right
 						height: Theme.u(30)
-						text: "Add your own"
-						tip: "A part that shows what a command prints"
+						text: Tr.t("Add your own")
+						tip: Tr.t("A part that shows what a command prints")
 						onClicked: page.addScript()
 					}
 				}
@@ -483,7 +483,7 @@ Flickable {
 				x: pointer.mouseX - pointer.grip.x
 				y: pointer.mouseY - pointer.grip.y
 				visible: page.held !== ""
-				text: page.names[page.held] ?? page.held
+				text: Tr.t(page.names[page.held] ?? page.held)
 				color: Theme.colors.accent
 				ink: Theme.colors.background
 			}
@@ -494,7 +494,7 @@ Flickable {
 
 			width: parent.width
 			visible: page.chosen !== ""
-			title: page.names[page.chosen] ?? page.chosen
+			title: Tr.t(page.names[page.chosen] ?? page.chosen)
 
 			Loader {
 				width: parent.width
@@ -508,7 +508,7 @@ Flickable {
 
 			width: parent.width
 			visible: page.chosen !== "" && page.chosen !== "tray"
-			title: visible ? "Clicks and the wheel on it" : ""
+			title: visible ? Tr.t("Clicks and the wheel on it") : ""
 
 			// Anew for another part: what was typed and not kept goes.
 			Repeater {
@@ -530,14 +530,14 @@ Flickable {
 							required property var modelData
 
 							text: modelData.text
-							placeholder: "A command"
+							placeholder: Tr.t("A command")
 							value: commands.kept[modelData.name] ?? ""
 							onKept: value => page.runs(commands.modelData, modelData.name, value)
 						}
 					}
 
 					Note {
-						text: "A command, kept with Enter, takes the place of what the part does with that button, or with the wheel. Emptied, the part has it back."
+						text: Tr.t("A command, kept with Enter, takes the place of what the part does with that button, or with the wheel. Emptied, the part has it back.")
 					}
 				}
 			}
@@ -545,17 +545,17 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "All of the bar"
+			title: Tr.t("All of the bar")
 
 			Pick {
 				holds: "bar.position"
-				text: "It's at"
-				subtext: Settings.barSide ? "Upright, its parts one under another" : "And its panels with it"
+				text: Tr.t("It's at")
+				subtext: Settings.barSide ? Tr.t("Upright, its parts one under another") : Tr.t("And its panels with it")
 				options: [
-					{ value: "top", text: "The top" },
-					{ value: "bottom", text: "The bottom" },
-					{ value: "left", text: "The left" },
-					{ value: "right", text: "The right" }
+					{ value: "top", text: Tr.t("The top") },
+					{ value: "bottom", text: Tr.t("The bottom") },
+					{ value: "left", text: Tr.t("The left") },
+					{ value: "right", text: Tr.t("The right") }
 				]
 				value: Settings.bar.position
 				onChosen: value => Settings.set("bar", "position", value)
@@ -563,14 +563,14 @@ Flickable {
 
 			Pick {
 				holds: "bar.wheel"
-				text: "The wheel on it"
-				subtext: Settings.bar.wheel === "split" ? "Brightness on the left half, volume on the right" : "Where no part takes it"
+				text: Tr.t("The wheel on it")
+				subtext: Settings.bar.wheel === "split" ? Tr.t("Brightness on the left half, volume on the right") : Tr.t("Where no part takes it")
 				options: [
-					{ value: "split", text: "Split" },
-					{ value: "volume", text: "Volume" },
-					{ value: "brightness", text: "Brightness" },
-					{ value: "workspaces", text: "Workspaces" },
-					{ value: "none", text: "Nothing" }
+					{ value: "split", text: Tr.t("Split") },
+					{ value: "volume", text: Tr.t("Volume") },
+					{ value: "brightness", text: Tr.t("Brightness") },
+					{ value: "workspaces", text: Tr.t("Workspaces") },
+					{ value: "none", text: Tr.t("Nothing") }
 				]
 				value: Settings.bar.wheel
 				onChosen: value => Settings.set("bar", "wheel", value)
@@ -578,24 +578,24 @@ Flickable {
 
 			Setting {
 				holds: "bar.tips"
-				text: "Tips"
-				subtext: "What a part is or says, under the pointer"
+				text: Tr.t("Tips")
+				subtext: Tr.t("What a part is or says, under the pointer")
 				checked: Settings.bar.tips
 				onToggled: wanted => Settings.set("bar", "tips", wanted)
 			}
 
 			Setting {
 				holds: "bar.autoHide"
-				text: "It hides"
-				subtext: "Until the pointer rests at the top of the screen, or a panel opens"
+				text: Tr.t("It hides")
+				subtext: Tr.t("Until the pointer rests at the top of the screen, or a panel opens")
 				checked: Settings.bar.autoHide
 				onToggled: wanted => Settings.set("bar", "autoHide", wanted)
 			}
 
 			Setting {
 				holds: "bar.reserve"
-				text: "Windows keep out from under it"
-				subtext: "Off, they take the whole screen, and the bar is over them"
+				text: Tr.t("Windows keep out from under it")
+				subtext: Tr.t("Off, they take the whole screen, and the bar is over them")
 				checked: Settings.bar.reserve
 				// A bar that hides keeps no space.
 				enabled: !Settings.bar.autoHide
@@ -605,7 +605,7 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Screens"
+			title: Tr.t("Screens")
 
 			Repeater {
 				model: page.screens
@@ -633,12 +633,12 @@ Flickable {
 
 			Pick {
 				holds: "clock.date"
-				text: "The date"
-				subtext: "Beside the time"
+				text: Tr.t("The date")
+				subtext: Tr.t("Beside the time")
 				options: [
-					{ value: "before", text: "Before" },
-					{ value: "after", text: "After" },
-					{ value: "none", text: "None" }
+					{ value: "before", text: Tr.t("Before") },
+					{ value: "after", text: Tr.t("After") },
+					{ value: "none", text: Tr.t("None") }
 				]
 				value: Settings.clock.date
 				onChosen: value => Settings.set("clock", "date", value)
@@ -657,7 +657,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: "How it's written"
+						text: Tr.t("How it's written")
 						color: Theme.colors.text
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -666,7 +666,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: "In Qt's letters: ddd d MMM is Sat 7 Nov"
+						text: Tr.t("In Qt's letters: ddd d MMM is Sat 7 Nov")
 						color: Theme.colors.subtext
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -692,26 +692,26 @@ Flickable {
 			Setting {
 				holds: "clock.hours12"
 				text: "12-hour time"
-				subtext: "With AM and PM"
+				subtext: Tr.t("With AM and PM")
 				checked: Settings.clock.hours12
 				onToggled: wanted => Settings.set("clock", "hours12", wanted)
 			}
 
 			Setting {
 				holds: "clock.seconds"
-				text: "Seconds"
+				text: Tr.t("Seconds")
 				checked: Settings.clock.seconds
 				onToggled: wanted => Settings.set("clock", "seconds", wanted)
 			}
 
 			Pick {
 				holds: "clock.weekStart"
-				text: "Weeks start on"
-				subtext: "In the month a click on it shows"
+				text: Tr.t("Weeks start on")
+				subtext: Tr.t("In the month a click on it shows")
 				options: [
-					{ value: "locale", text: "As here" },
-					{ value: "monday", text: "Monday" },
-					{ value: "sunday", text: "Sunday" }
+					{ value: "locale", text: Tr.t("As here") },
+					{ value: "monday", text: Tr.t("Monday") },
+					{ value: "sunday", text: Tr.t("Sunday") }
 				]
 				value: Settings.clock.weekStart
 				onChosen: value => Settings.set("clock", "weekStart", value)
@@ -719,24 +719,24 @@ Flickable {
 
 			Setting {
 				holds: "clock.weekNumbers"
-				text: "Week numbers"
+				text: Tr.t("Week numbers")
 				checked: Settings.clock.weekNumbers
 				onToggled: wanted => Settings.set("clock", "weekNumbers", wanted)
 			}
 
 			Field {
 				holds: "clock.zones"
-				text: "Other places"
-				subtext: "Their time, over the month: Europe/Berlin, Asia/Tokyo"
-				placeholder: "Zones, with commas"
+				text: Tr.t("Other places")
+				subtext: Tr.t("Their time, over the month: Europe/Berlin, Asia/Tokyo")
+				placeholder: Tr.t("Zones, with commas")
 				value: Settings.clock.zones.join(", ")
 				onKept: value => Settings.set("clock", "zones", value.split(",").map(zone => zone.trim()).filter(zone => zone !== ""))
 			}
 
 			Setting {
 				holds: "weather.on"
-				text: "The weather"
-				subtext: "Over the month, from open-meteo.com"
+				text: Tr.t("The weather")
+				subtext: Tr.t("Over the month, from open-meteo.com")
 				checked: Settings.weather.on
 				onToggled: wanted => Settings.set("weather", "on", wanted)
 			}
@@ -774,7 +774,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: "Where"
+						text: Tr.t("Where")
 						color: Theme.colors.text
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -783,7 +783,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: place.looking ? "Looking for it" : place.said || Settings.weather.place || "A town's name, Enter to look for it"
+						text: place.looking ? Tr.t("Looking for it") : place.said || Settings.weather.place || Tr.t("A town's name, Enter to look for it")
 						textFormat: Text.PlainText
 						color: place.said ? Theme.colors.error : Theme.colors.subtext
 						elide: Text.ElideRight
@@ -799,7 +799,7 @@ Flickable {
 					anchors.verticalCenter: parent.verticalCenter
 					implicitWidth: Theme.u(170)
 					implicitHeight: Theme.u(32)
-					placeholder: "Berlin"
+					placeholder: Tr.t("Berlin")
 					onAccepted: {
 						if (text.trim() !== "") {
 							place.looking = true;
@@ -811,7 +811,7 @@ Flickable {
 
 			Pick {
 				holds: "weather.units"
-				text: "In"
+				text: Tr.t("In")
 				visible: Settings.weather.on
 				options: [
 					{ value: "celsius", text: "°C" },
@@ -823,8 +823,8 @@ Flickable {
 
 			Setting {
 				holds: "weather.bar"
-				text: "Beside the time"
-				subtext: "How warm it is"
+				text: Tr.t("Beside the time")
+				subtext: Tr.t("How warm it is")
 				visible: Settings.weather.on
 				checked: Settings.weather.bar
 				onToggled: wanted => Settings.set("weather", "bar", wanted)
@@ -833,8 +833,8 @@ Flickable {
 			Choice {
 				holds: "clock.remind"
 				words: "reminder notification event"
-				text: "Say that an event is coming"
-				subtext: "That long before one with a time starts"
+				text: Tr.t("Say that an event is coming")
+				subtext: Tr.t("That long before one with a time starts")
 				visible: Events.on
 				values: [0, 300, 600, 900, 1800, 3600]
 				value: Settings.clock.remind * 60
@@ -844,8 +844,8 @@ Flickable {
 			Choice {
 				holds: "pomodoro.work"
 				words: "pomodoro focus timer"
-				text: "A pomodoro's work"
-				subtext: "From the clock's card, then a break"
+				text: Tr.t("A pomodoro's work")
+				subtext: Tr.t("From the clock's card, then a break")
 				values: [15, 20, 25, 30, 45, 50, 60]
 				unit: "min"
 				value: Settings.pomodoro.work
@@ -855,7 +855,7 @@ Flickable {
 			Choice {
 				holds: "pomodoro.pause"
 				words: "pomodoro break"
-				text: "Its break"
+				text: Tr.t("Its break")
 				values: [3, 5, 10, 15]
 				unit: "min"
 				value: Settings.pomodoro.pause
@@ -865,7 +865,7 @@ Flickable {
 			Choice {
 				holds: "pomodoro.long"
 				words: "pomodoro break"
-				text: "A long break"
+				text: Tr.t("A long break")
 				values: [10, 15, 20, 30]
 				unit: "min"
 				value: Settings.pomodoro.long
@@ -875,8 +875,8 @@ Flickable {
 			Choice {
 				holds: "pomodoro.rounds"
 				words: "pomodoro"
-				text: "After how many works"
-				subtext: "The long break"
+				text: Tr.t("After how many works")
+				subtext: Tr.t("The long break")
 				values: [2, 3, 4, 5, 6]
 				value: Settings.pomodoro.rounds
 				onChosen: value => Settings.set("pomodoro", "rounds", value)
@@ -931,7 +931,7 @@ Flickable {
 						height: Theme.u(30)
 						flat: true
 						icon: "close"
-						tip: "Remove it"
+						tip: Tr.t("Remove it")
 						onClicked: page.removeCalendar(calendarRow.modelData)
 					}
 				}
@@ -949,7 +949,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: "Add a calendar"
+						text: Tr.t("Add a calendar")
 						color: Theme.colors.text
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -958,7 +958,7 @@ Flickable {
 
 					Text {
 						width: parent.width
-						text: calendarField.wrong ? "A file by its whole path, or an address" : "An .ics file or an iCal address, for the month"
+						text: calendarField.wrong ? Tr.t("A file by its whole path, or an address") : Tr.t("An .ics file or an iCal address, for the month")
 						color: calendarField.wrong ? Theme.colors.error : Theme.colors.subtext
 						elide: Text.ElideRight
 						font.family: Theme.font
@@ -996,12 +996,12 @@ Flickable {
 
 			Pick {
 				holds: "workspaces.labels"
-				text: "On each"
-				subtext: "A name is niri's, where its config gives one"
+				text: Tr.t("On each")
+				subtext: Tr.t("A name is niri's, where its config gives one")
 				options: [
-					{ value: "none", text: "Nothing" },
-					{ value: "number", text: "Its number" },
-					{ value: "name", text: "Its name" }
+					{ value: "none", text: Tr.t("Nothing") },
+					{ value: "number", text: Tr.t("Its number") },
+					{ value: "name", text: Tr.t("Its name") }
 				]
 				value: Settings.workspaces.labels
 				onChosen: value => Settings.set("workspaces", "labels", value)
@@ -1009,31 +1009,31 @@ Flickable {
 
 			Setting {
 				holds: "workspaces.apps"
-				text: "The apps on each"
-				subtext: "Their icons: a click on one goes to its window"
+				text: Tr.t("The apps on each")
+				subtext: Tr.t("Their icons: a click on one goes to its window")
 				checked: Settings.workspaces.apps
 				onToggled: wanted => Settings.set("workspaces", "apps", wanted)
 			}
 
 			Setting {
 				holds: "workspaces.occupied"
-				text: "Those with windows stand out"
+				text: Tr.t("Those with windows stand out")
 				checked: Settings.workspaces.occupied
 				onToggled: wanted => Settings.set("workspaces", "occupied", wanted)
 			}
 
 			Setting {
 				holds: "workspaces.empty"
-				text: "Empty ones too"
-				subtext: "Off, only those with windows and the one you're on"
+				text: Tr.t("Empty ones too")
+				subtext: Tr.t("Off, only those with windows and the one you're on")
 				checked: Settings.workspaces.empty
 				onToggled: wanted => Settings.set("workspaces", "empty", wanted)
 			}
 
 			Setting {
 				holds: "workspaces.reverse"
-				text: "The wheel the other way"
-				subtext: "Up goes to the next one"
+				text: Tr.t("The wheel the other way")
+				subtext: Tr.t("Up goes to the next one")
 				checked: Settings.workspaces.reverse
 				onToggled: wanted => Settings.set("workspaces", "reverse", wanted)
 			}
@@ -1048,12 +1048,12 @@ Flickable {
 
 			Pick {
 				holds: "battery.show"
-				text: "It shows"
-				subtext: "How low is low is on the Session page"
+				text: Tr.t("It shows")
+				subtext: Tr.t("How low is low is on the Session page")
 				options: [
-					{ value: "always", text: "Always" },
-					{ value: "battery", text: "On battery" },
-					{ value: "low", text: "When low" }
+					{ value: "always", text: Tr.t("Always") },
+					{ value: "battery", text: Tr.t("On battery") },
+					{ value: "low", text: Tr.t("When low") }
 				]
 				value: Settings.battery.show
 				onChosen: value => Settings.set("battery", "show", value)
@@ -1061,12 +1061,12 @@ Flickable {
 
 			Pick {
 				holds: "battery.label"
-				text: "Beside it"
-				subtext: "The time, where it's known"
+				text: Tr.t("Beside it")
+				subtext: Tr.t("The time, where it's known")
 				options: [
-					{ value: "percent", text: "Percent" },
-					{ value: "time", text: "Time left" },
-					{ value: "none", text: "Nothing" }
+					{ value: "percent", text: Tr.t("Percent") },
+					{ value: "time", text: Tr.t("Time left") },
+					{ value: "none", text: Tr.t("Nothing") }
 				]
 				value: Settings.battery.label
 				onChosen: value => Settings.set("battery", "label", value)
@@ -1082,10 +1082,10 @@ Flickable {
 
 			Pick {
 				holds: "media.show"
-				text: "It shows"
+				text: Tr.t("It shows")
 				options: [
-					{ value: "player", text: "With a player" },
-					{ value: "playing", text: "While it plays" }
+					{ value: "player", text: Tr.t("With a player") },
+					{ value: "playing", text: Tr.t("While it plays") }
 				]
 				value: Settings.media.show
 				onChosen: value => Settings.set("media", "show", value)
@@ -1093,11 +1093,11 @@ Flickable {
 
 			Pick {
 				holds: "media.label"
-				text: "On it"
+				text: Tr.t("On it")
 				options: [
-					{ value: "title", text: "The title" },
-					{ value: "both", text: "Artist, title" },
-					{ value: "none", text: "Only the icon" }
+					{ value: "title", text: Tr.t("The title") },
+					{ value: "both", text: Tr.t("Artist, title") },
+					{ value: "none", text: Tr.t("Only the icon") }
 				]
 				value: Settings.media.label
 				onChosen: value => Settings.set("media", "label", value)
@@ -1105,8 +1105,8 @@ Flickable {
 
 			Choice {
 				holds: "media.width"
-				text: "Widest"
-				subtext: "Past that the title is cut"
+				text: Tr.t("Widest")
+				subtext: Tr.t("Past that the title is cut")
 				visible: Settings.media.label !== "none"
 				values: [120, 160, 200, 280, 360]
 				value: Settings.media.width
@@ -1116,8 +1116,8 @@ Flickable {
 
 			Setting {
 				holds: "media.scroll"
-				text: "What's cut slides by"
-				subtext: "Under the pointer, to its end and back"
+				text: Tr.t("What's cut slides by")
+				subtext: Tr.t("Under the pointer, to its end and back")
 				visible: Settings.media.label !== "none"
 				checked: Settings.media.scroll
 				onToggled: wanted => Settings.set("media", "scroll", wanted)
@@ -1126,14 +1126,14 @@ Flickable {
 			Setting {
 				holds: "media.menu"
 				words: "exclude ignore browser"
-				text: "A right click leaves a player out"
-				subtext: "On it on the bar, and on one in its card"
+				text: Tr.t("A right click leaves a player out")
+				subtext: Tr.t("On it on the bar, and on one in its card")
 				checked: Settings.media.menu
 				onToggled: wanted => Settings.set("media", "menu", wanted)
 			}
 
 			Note {
-				text: page.players.length > 0 ? "Players: one turned off is left out of the bar, its card and the media keys." : "Players show here as they open."
+				text: page.players.length > 0 ? Tr.t("Players: one turned off is left out of the bar, its card and the media keys.") : Tr.t("Players show here as they open.")
 			}
 
 			Repeater {
@@ -1143,7 +1143,7 @@ Flickable {
 					required property var modelData
 
 					text: modelData.name
-					subtext: modelData.there ? "" : "Not open now"
+					subtext: modelData.there ? "" : Tr.t("Not open now")
 					image: modelData.icon
 					checked: !Settings.media.ignored.includes(modelData.name)
 					onToggled: wanted => page.ignore(modelData.name, !wanted)
@@ -1160,39 +1160,39 @@ Flickable {
 
 			Setting {
 				holds: "system.cpu"
-				text: "The processor"
-				subtext: "How busy it is"
+				text: Tr.t("The processor")
+				subtext: Tr.t("How busy it is")
 				checked: Settings.system.cpu
 				onToggled: wanted => Settings.set("system", "cpu", wanted)
 			}
 
 			Setting {
 				holds: "system.memory"
-				text: "Memory"
-				subtext: "How much is in use"
+				text: Tr.t("Memory")
+				subtext: Tr.t("How much is in use")
 				checked: Settings.system.memory
 				onToggled: wanted => Settings.set("system", "memory", wanted)
 			}
 
 			Setting {
 				holds: "system.temperature"
-				text: "Temperature"
-				subtext: "The processor's, where it has a sensor"
+				text: Tr.t("Temperature")
+				subtext: Tr.t("The processor's, where it has a sensor")
 				checked: Settings.system.temperature
 				onToggled: wanted => Settings.set("system", "temperature", wanted)
 			}
 
 			Setting {
 				holds: "system.network"
-				text: "The network"
-				subtext: "How fast it comes in and goes out"
+				text: Tr.t("The network")
+				subtext: Tr.t("How fast it comes in and goes out")
 				checked: Settings.system.network
 				onToggled: wanted => Settings.set("system", "network", wanted)
 			}
 
 			Choice {
 				holds: "system.interval"
-				text: "Read every"
+				text: Tr.t("Read every")
 				values: [1, 2, 5, 10]
 				value: Settings.system.interval
 				onChosen: value => Settings.set("system", "interval", value)
@@ -1205,10 +1205,10 @@ Flickable {
 
 		Pick {
 			holds: "network.label"
-			text: "Beside it"
+			text: Tr.t("Beside it")
 			options: [
-				{ value: "none", text: "Nothing" },
-				{ value: "name", text: "The network" }
+				{ value: "none", text: Tr.t("Nothing") },
+				{ value: "name", text: Tr.t("The network") }
 			]
 			value: Settings.network.label
 			onChosen: value => Settings.set("network", "label", value)
@@ -1223,10 +1223,10 @@ Flickable {
 
 			Pick {
 				holds: "bluetooth.show"
-				text: "It shows"
+				text: Tr.t("It shows")
 				options: [
-					{ value: "connected", text: "With a device" },
-					{ value: "on", text: "While it's on" }
+					{ value: "connected", text: Tr.t("With a device") },
+					{ value: "on", text: Tr.t("While it's on") }
 				]
 				value: Settings.bluetooth.show
 				onChosen: value => Settings.set("bluetooth", "show", value)
@@ -1234,10 +1234,10 @@ Flickable {
 
 			Pick {
 				holds: "bluetooth.label"
-				text: "Beside it"
+				text: Tr.t("Beside it")
 				options: [
-					{ value: "none", text: "Nothing" },
-					{ value: "name", text: "The device" }
+					{ value: "none", text: Tr.t("Nothing") },
+					{ value: "name", text: Tr.t("The device") }
 				]
 				value: Settings.bluetooth.label
 				onChosen: value => Settings.set("bluetooth", "label", value)
@@ -1254,7 +1254,7 @@ Flickable {
 			Choice {
 				holds: "updates.every"
 				words: "updates upgrade packages pacman apt dnf flatpak"
-				text: "It looks every"
+				text: Tr.t("It looks every")
 				subtext: Updates.there.length > 0 ? `By ${Updates.there.join(", ")}` : "Nothing here to ask: pacman's checkupdates, apt, dnf or flatpak"
 				values: [1, 3, 6, 12, 24]
 				unit: "h"
@@ -1264,8 +1264,8 @@ Flickable {
 
 			Field {
 				holds: "updates.command"
-				text: "A click runs"
-				subtext: "A terminal with the update, say"
+				text: Tr.t("A click runs")
+				subtext: Tr.t("A terminal with the update, say")
 				placeholder: "kitty -e sudo pacman -Syu"
 				value: Settings.updates.command
 				onKept: value => Settings.set("updates", "command", value.trim())
@@ -1282,8 +1282,8 @@ Flickable {
 			Choice {
 				holds: "visualizer.bars"
 				words: "cava visualizer spectrum audio"
-				text: "How many bars"
-				subtext: Visualizer.found ? "" : "It takes cava"
+				text: Tr.t("How many bars")
+				subtext: Visualizer.found ? "" : Tr.t("It takes cava")
 				values: [6, 8, 10, 12, 16, 24]
 				value: Settings.visualizer.bars
 				onChosen: value => Settings.set("visualizer", "bars", value)
@@ -1291,8 +1291,8 @@ Flickable {
 
 			Setting {
 				holds: "visualizer.playing"
-				text: "Only while a player plays"
-				subtext: "Else it hears all there is, and is always there"
+				text: Tr.t("Only while a player plays")
+				subtext: Tr.t("Else it hears all there is, and is always there")
 				checked: Settings.visualizer.playing
 				onToggled: wanted => Settings.set("visualizer", "playing", wanted)
 			}
@@ -1304,11 +1304,11 @@ Flickable {
 
 		Pick {
 			holds: "locks.show"
-			text: "It shows for"
-			subtext: "While that's on"
+			text: Tr.t("It shows for")
+			subtext: Tr.t("While that's on")
 			options: [
-				{ value: "caps", text: "Caps Lock" },
-				{ value: "both", text: "Num Lock too" }
+				{ value: "caps", text: Tr.t("Caps Lock") },
+				{ value: "both", text: Tr.t("Num Lock too") }
 			]
 			value: Settings.locks.show
 			onChosen: value => Settings.set("locks", "show", value)
@@ -1320,10 +1320,10 @@ Flickable {
 
 		Pick {
 			holds: "profile.label"
-			text: "Beside it"
+			text: Tr.t("Beside it")
 			options: [
-				{ value: "none", text: "Nothing" },
-				{ value: "name", text: "Its name" }
+				{ value: "none", text: Tr.t("Nothing") },
+				{ value: "name", text: Tr.t("Its name") }
 			]
 			value: Settings.profile.label
 			onChosen: value => Settings.set("profile", "label", value)
@@ -1338,10 +1338,10 @@ Flickable {
 
 			Pick {
 				holds: "audio.label"
-				text: "Beside it"
+				text: Tr.t("Beside it")
 				options: [
-					{ value: "none", text: "Nothing" },
-					{ value: "percent", text: "How loud" }
+					{ value: "none", text: Tr.t("Nothing") },
+					{ value: "percent", text: Tr.t("How loud") }
 				]
 				value: Settings.audio.label
 				onChosen: value => Settings.set("audio", "label", value)
@@ -1349,8 +1349,8 @@ Flickable {
 
 			Choice {
 				holds: "audio.step"
-				text: "The wheel turns it by"
-				subtext: "Here and on the bar's own wheel"
+				text: Tr.t("The wheel turns it by")
+				subtext: Tr.t("Here and on the bar's own wheel")
 				values: [1, 2, 5, 10]
 				value: Settings.audio.step
 				unit: "%"
@@ -1367,17 +1367,17 @@ Flickable {
 
 			Pick {
 				holds: "recording.show"
-				text: "It's on the bar"
+				text: Tr.t("It's on the bar")
 				options: [
-					{ value: "recording", text: "While it records" },
-					{ value: "always", text: "Always, to start one" }
+					{ value: "recording", text: Tr.t("While it records") },
+					{ value: "always", text: Tr.t("Always, to start one") }
 				]
 				value: Settings.recording.show
 				onChosen: value => Settings.set("recording", "show", value)
 			}
 
 			Note {
-				text: "A right click on it has what it records and with which sound; the rest is on the Display page."
+				text: Tr.t("A right click on it has what it records and with which sound; the rest is on the Display page.")
 			}
 		}
 	}
@@ -1393,7 +1393,7 @@ Flickable {
 				anchors.right: opener.left
 				anchors.rightMargin: Theme.u(12)
 				anchors.verticalCenter: parent.verticalCenter
-				text: `Its settings are on the ${page.elsewhere[page.chosen]} page.`
+				text: Tr.f("Its settings are on the %1 page.", Tr.t(page.elsewhere[page.chosen]))
 			}
 
 			Button {
@@ -1402,7 +1402,7 @@ Flickable {
 				anchors.right: parent.right
 				anchors.verticalCenter: parent.verticalCenter
 				height: Theme.u(30)
-				text: "Open"
+				text: Tr.t("Open")
 				onClicked: page.opens(page.elsewhere[page.chosen])
 			}
 		}
@@ -1428,36 +1428,36 @@ Flickable {
 					spacing: Theme.u(10)
 
 					Field {
-						text: "What it's called"
-						subtext: script.refused ? "A part goes by that name" : "On the lanes above, and in the config"
+						text: Tr.t("What it's called")
+						subtext: script.refused ? Tr.t("A part goes by that name") : Tr.t("On the lanes above, and in the config")
 						value: script.modelData
 						onKept: value => script.refused = !page.renameScript(script.modelData, value)
 					}
 
 					Field {
-						text: "Its command"
-						subtext: "For sh"
+						text: Tr.t("Its command")
+						subtext: Tr.t("For sh")
 						placeholder: "date +%A"
 						value: script.own.command ?? ""
 						onKept: value => page.changeScript(script.modelData, "command", value)
 					}
 
 					Choice {
-						text: "It runs every"
-						subtext: "Once, each line it goes on to print is shown in turn"
+						text: Tr.t("It runs every")
+						subtext: Tr.t("Once, each line it goes on to print is shown in turn")
 						values: [0, 1, 2, 5, 10, 30, 60, 300, 900, 3600]
 						value: script.own.every ?? 0
-						none: "Once"
+						none: Tr.t("Once")
 						onChosen: value => page.changeScript(script.modelData, "every", value)
 					}
 
 					Note {
-						text: "The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there."
+						text: Tr.t("The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there.")
 					}
 
 					Button {
 						height: Theme.u(30)
-						text: "Remove it"
+						text: Tr.t("Remove it")
 						onClicked: page.removeScript(script.modelData)
 					}
 				}
@@ -1469,7 +1469,7 @@ Flickable {
 		id: nothingSettings
 
 		Note {
-			text: "Nothing to set for it yet."
+			text: Tr.t("Nothing to set for it yet.")
 		}
 	}
 }

@@ -166,6 +166,20 @@ under() {
 [ "$(under "$bell")" = "$(under "$clipboard")" ] || fail "the bell is another shape under the pointer"
 move 300 600
 
+step "In Russian"
+# The Look page's language, Russian: the control center's tiles say so.
+printf '{ "language": { "name": "ru" } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+ipc control toggle
+wait_up panel 1 "the control center in Russian"
+settle
+shot russian
+[ -n "$(ipc control spot "Не засыпать" line)" ] || fail "no tile says Не засыпать"
+ipc control toggle
+wait_up panel 0 "the control center in Russian, closed"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+
 step "One panel at a time"
 # The launcher in the middle, then the control center at its corner: the first
 # goes, or the two could cover each other. Escape then leaves nothing.

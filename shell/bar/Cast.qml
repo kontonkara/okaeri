@@ -24,7 +24,7 @@ BarButton {
 	enabled: sessions.length > 0
 	opacity: 1
 	icon: "cast"
-	text: enabled && !stacked ? "Stop" : ""
+	text: enabled && !stacked ? Tr.t("Stop") : ""
 	tip: `${about || "The screen is shared"}${enabled ? ": a click stops it" : ""}`
 	ink: Theme.colors.error
 	onClicked: {

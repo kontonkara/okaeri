@@ -41,6 +41,6 @@ Item {
 	}
 
 	Tip {
-		text: [keys.caps ? "Caps Lock" : "", keys.num ? "Num Lock" : ""].filter(part => part !== "").join(" and ") + " on"
+		text: [keys.caps ? Tr.t("Caps Lock") : "", keys.num ? Tr.t("Num Lock") : ""].filter(part => part !== "").join(" and ") + " on"
 	}
 }

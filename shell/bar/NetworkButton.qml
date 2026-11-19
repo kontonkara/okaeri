@@ -24,7 +24,7 @@ BarButton {
 	visible: wanted
 	longest: Theme.u(140)
 	icon: wired ? "ethernet" : !Wifi.enabled ? "wifiOff" : !network ? "wifi" : strength > 66 ? "wifi" : strength > 33 ? "wifi2" : "wifi1"
-	text: Settings.network.label === "name" && online && !stacked ? (wired ? "Wired" : network.name) : ""
+	text: Settings.network.label === "name" && online && !stacked ? (wired ? Tr.t("Wired") : network.name) : ""
 	ink: trouble !== "" ? Theme.colors.error : online ? Theme.colors.text : Theme.colors.subtext
 	tip: {
 		const about = wired ? ["Wired", wired.linkSpeed > 0 ? `${wired.linkSpeed} Mb/s` : ""] : !Wifi.enabled ? ["Wi-Fi off"] : network ? [network.name, `${strength}%`] : ["Not connected"];

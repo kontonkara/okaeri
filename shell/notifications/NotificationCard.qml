@@ -223,7 +223,7 @@ Card {
 				id: summary
 
 				width: parent.width - (app.visible ? 0 : card.beside)
-				text: card.says === "none" ? "New notification" : card.notification.summary
+				text: card.says === "none" ? Tr.t("New notification") : card.notification.summary
 				maximumLineCount: 2
 				color: Theme.colors.text
 				font.weight: Theme.fontWeight
@@ -247,7 +247,7 @@ Card {
 				flat: true
 				pad: Theme.u(6)
 				activeFocusOnTab: false
-				text: card.expanded ? "Less" : "More"
+				text: card.expanded ? Tr.t("Less") : Tr.t("More")
 				ink: Theme.colors.subtext
 				onClicked: card.expanded = !card.expanded
 			}
@@ -279,7 +279,7 @@ Card {
 				width: parent.width
 				implicitHeight: Theme.u(30)
 				visible: card.inHistory && !!card.notification.hasInlineReply
-				placeholder: card.notification.inlineReplyPlaceholder || "Reply"
+				placeholder: card.notification.inlineReplyPlaceholder || Tr.t("Reply")
 				onAccepted: {
 					if (text !== "") {
 						NotificationStore.reply(card.notification, text);
@@ -368,7 +368,7 @@ Card {
 					height: Theme.u(28)
 					activeFocusOnTab: false
 					icon: "file"
-					text: "Folder"
+					text: Tr.t("Folder")
 					onClicked: NotificationStore.openFolder(card.notification, card.file)
 				}
 
@@ -376,7 +376,7 @@ Card {
 					height: Theme.u(28)
 					activeFocusOnTab: false
 					icon: "copy"
-					text: "Copy"
+					text: Tr.t("Copy")
 					onClicked: NotificationStore.copyFile(card.notification, card.file)
 				}
 
@@ -384,7 +384,7 @@ Card {
 					height: Theme.u(28)
 					activeFocusOnTab: false
 					icon: "trash"
-					text: "Delete"
+					text: Tr.t("Delete")
 					onClicked: NotificationStore.deleteFile(card.notification, card.file)
 				}
 
@@ -394,7 +394,7 @@ Card {
 					visible: Screenshots.edits
 					activeFocusOnTab: false
 					icon: "pencil"
-					text: "Edit"
+					text: Tr.t("Edit")
 					onClicked: Screenshots.edit(card.file)
 				}
 
@@ -403,8 +403,8 @@ Card {
 					visible: Screenshots.reads
 					activeFocusOnTab: false
 					icon: "text"
-					text: "Text"
-					tip: "Its text onto the clipboard"
+					text: Tr.t("Text")
+					tip: Tr.t("Its text onto the clipboard")
 					onClicked: Screenshots.readText(card.file)
 				}
 			}

@@ -106,7 +106,7 @@ Item {
 			height: Theme.u(28)
 			visible: entry.action !== ""
 			flat: true
-			text: entry.armed ? "Sure?" : entry.action
+			text: entry.armed ? Tr.t("Sure?") : entry.action
 			onClicked: {
 				if (entry.risky && !entry.armed) {
 					entry.armed = true;

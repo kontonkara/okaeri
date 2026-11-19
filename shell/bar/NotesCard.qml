@@ -15,7 +15,7 @@ Column {
 		width: parent.width
 		focus: true
 		icon: "plus"
-		placeholder: "Something to do"
+		placeholder: Tr.t("Something to do")
 		onAccepted: {
 			Notes.add(text);
 			text = "";
@@ -48,7 +48,7 @@ Column {
 					icon: row.modelData.done ? "check" : "box"
 					iconSize: Theme.u(16)
 					ink: row.modelData.done ? Theme.colors.accent : Theme.colors.subtext
-					tip: row.modelData.done ? "Not done after all" : "Done"
+					tip: row.modelData.done ? Tr.t("Not done after all") : Tr.t("Done")
 					onClicked: Notes.toggle(row.index)
 				}
 
@@ -75,7 +75,7 @@ Column {
 					flat: true
 					icon: "trash"
 					iconSize: Theme.u(16)
-					tip: "Away with it"
+					tip: Tr.t("Away with it")
 					onClicked: Notes.remove(row.index)
 				}
 			}
@@ -87,7 +87,7 @@ Column {
 		visible: Notes.todos.some(todo => todo.done)
 		flat: true
 		icon: "trash"
-		text: "Clear what's done"
+		text: Tr.t("Clear what's done")
 		onClicked: Notes.clearDone()
 	}
 
@@ -131,7 +131,7 @@ Column {
 
 			Text {
 				visible: writing.text === ""
-				text: "A note"
+				text: Tr.t("A note")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize

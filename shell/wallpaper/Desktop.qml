@@ -73,7 +73,7 @@ Scope {
 
 					Text {
 						width: parent.width
-						text: Qt.formatDateTime(clock.date, (Settings.clock.hours12 ? "h:mm" : "HH:mm") + (desktop.own.seconds ? ":ss" : "") + (Settings.clock.hours12 ? " AP" : ""))
+						text: Qt.formatDateTime(clock.date, (Settings.clock.hours12 ? "h:mm" : Tr.t("HH:mm")) + (desktop.own.seconds ? ":ss" : "") + (Settings.clock.hours12 ? " AP" : ""))
 						color: Theme.colors.text
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize * 4
@@ -204,7 +204,7 @@ Scope {
 					Text {
 						width: parent.width
 						visible: events.coming.length === 0
-						text: "Nothing more today or tomorrow"
+						text: Tr.t("Nothing more today or tomorrow")
 						color: Theme.colors.subtext
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize
@@ -225,7 +225,7 @@ Scope {
 								anchors.left: parent.left
 								anchors.verticalCenter: parent.verticalCenter
 								width: Theme.u(90)
-								text: [parent.modelData.day, parent.modelData.allDay ? "All day" : Qt.formatTime(parent.modelData.start, Settings.clock.hours12 ? "h:mm AP" : "HH:mm")].filter(part => part !== "").join(" ")
+								text: [parent.modelData.day, parent.modelData.allDay ? Tr.t("All day") : Qt.formatTime(parent.modelData.start, Settings.clock.hours12 ? "h:mm AP" : Tr.t("HH:mm"))].filter(part => part !== "").join(" ")
 								elide: Text.ElideRight
 								color: Theme.colors.subtext
 								font.family: Theme.font

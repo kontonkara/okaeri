@@ -27,7 +27,7 @@ Section {
 			readonly property bool wrong: Vpn.failure !== "" && Vpn.failedId === connection.id
 
 			text: connection.name ?? ""
-			subtext: connection.busy ? "Working on it..." : wrong ? Vpn.failure : connection.on ? "Connected" : connection.kind ?? ""
+			subtext: connection.busy ? Tr.t("Working on it...") : wrong ? Vpn.failure : connection.on ? Tr.t("Connected") : connection.kind ?? ""
 			failed: wrong
 			pickable: !connection.busy
 

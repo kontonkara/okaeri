@@ -25,19 +25,19 @@ Panel {
 
 	// What a / in front asks for.
 	readonly property var modes: [
-		{ mode: "calc", text: "Sums", subtext: "/calc and the sum, or the last ones", icon: "calculator" },
-		{ mode: "win", text: "Open windows", subtext: "/win: Enter goes to one, Shift+Enter closes it", icon: "apps" },
-		{ mode: "wall", text: "Wallpapers", subtext: "/wall", icon: "image" },
-		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it and copies it, Shift+Enter only copies", icon: "text" },
-		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
-		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
-		{ mode: "ps", text: "Processes", subtext: "/ps and a name: Enter twice ends one, Shift+Enter twice kills it", icon: "chip" },
-		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
-		{ mode: "shot", text: "Screenshots", subtext: "/shot: take one, or the latest: Enter opens one, Shift+Enter copies it", icon: "image" },
-		{ mode: "color", text: "A color off the screen", subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
-		{ mode: "todo", text: "Things to do", subtext: "/todo and what: Enter adds it; without, Enter ticks one off", icon: "notes" },
-		{ mode: "timer", text: "Timer and stopwatch", subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
-		{ mode: "session", text: "Session", subtext: "/session", icon: "power" }
+		{ mode: "calc", text: Tr.t("Sums"), subtext: "/calc and the sum, or the last ones", icon: "calculator" },
+		{ mode: "win", text: Tr.t("Open windows"), subtext: "/win: Enter goes to one, Shift+Enter closes it", icon: "apps" },
+		{ mode: "wall", text: Tr.t("Wallpapers"), subtext: "/wall", icon: "image" },
+		{ mode: "emoji", text: Tr.t("Emoji and symbols"), subtext: "/emoji and a name: Enter types it and copies it, Shift+Enter only copies", icon: "text" },
+		{ mode: "clip", text: Tr.t("Clipboard"), subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
+		{ mode: "file", text: Tr.t("Files"), subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
+		{ mode: "ps", text: Tr.t("Processes"), subtext: "/ps and a name: Enter twice ends one, Shift+Enter twice kills it", icon: "chip" },
+		{ mode: "set", text: Tr.t("Settings"), subtext: "/set and what to look for", icon: "gear" },
+		{ mode: "shot", text: Tr.t("Screenshots"), subtext: "/shot: take one, or the latest: Enter opens one, Shift+Enter copies it", icon: "image" },
+		{ mode: "color", text: Tr.t("A color off the screen"), subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
+		{ mode: "todo", text: Tr.t("Things to do"), subtext: "/todo and what: Enter adds it; without, Enter ticks one off", icon: "notes" },
+		{ mode: "timer", text: Tr.t("Timer and stopwatch"), subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
+		{ mode: "session", text: Tr.t("Session"), subtext: "/session", icon: "power" }
 	]
 	// The group whose apps alone show, by its key, "" for all of them; and whether
 	// the groups there are show in the list's place, to pick one of.
@@ -46,7 +46,7 @@ Panel {
 	readonly property var grouped: Apps.groups.find(one => one.key === group) ?? null
 
 	function groupRows() {
-		return [{ group: "", text: "All apps", subtext: "", icon: "apps" }].concat(Apps.groups.map(one => ({
+		return [{ group: "", text: Tr.t("All apps"), subtext: "", icon: "apps" }].concat(Apps.groups.map(one => ({
 			group: one.key,
 			text: one.text,
 			subtext: one.count === 1 ? "1 app" : `${one.count} apps`,
@@ -160,7 +160,7 @@ Panel {
 			return {
 				window: w.id,
 				text: w.title,
-				subtext: [Apps.entryOf(w.app_id)?.name || w.app_id || "Window"].concat(where).join(" · "),
+				subtext: [Apps.entryOf(w.app_id)?.name || w.app_id || Tr.t("Window")].concat(where).join(" · "),
 				image: Apps.imageOf(w.app_id),
 				icon: "apps",
 				mark: w.is_focused ? "check" : ""
@@ -172,7 +172,7 @@ Panel {
 		return Session.actions.filter(row => row.text.toLowerCase().includes(wanted)).map(row => ({
 			session: row,
 			text: row.text,
-			subtext: "Session",
+			subtext: Tr.t("Session"),
 			icon: row.icon
 		}));
 	}
@@ -191,7 +191,7 @@ Panel {
 		for (let index = 0; index < pictures.count && found.length < Apps.limit; index++) {
 			const name = pictures.get(index, "fileName");
 			if (name.toLowerCase().includes(wanted))
-				found.push({ wallpaper: pictures.get(index, "filePath"), text: name, subtext: "Wallpaper", image: pictures.get(index, "fileUrl"), icon: "image" });
+				found.push({ wallpaper: pictures.get(index, "filePath"), text: name, subtext: Tr.t("Wallpaper"), image: pictures.get(index, "fileUrl"), icon: "image" });
 		}
 		return found;
 	}
@@ -201,7 +201,7 @@ Panel {
 			emoji: character,
 			glyph: character,
 			text: name.replace(/ \(symbol\)$/, ""),
-			subtext: name.endsWith("(symbol)") ? "Symbol" : "Emoji"
+			subtext: name.endsWith("(symbol)") ? Tr.t("Symbol") : Tr.t("Emoji")
 		}));
 	}
 
@@ -228,7 +228,7 @@ Panel {
 		return Clipboard.shown.filter(entry => entry.text.toLowerCase().includes(wanted)).slice(0, Apps.limit).map(entry => ({
 			clip: entry,
 			text: entry.text.replace(/\s+/g, " ").slice(0, 200),
-			subtext: entry.subtext || (entry.pinned ? "Pinned" : "Copied"),
+			subtext: entry.subtext || (entry.pinned ? Tr.t("Pinned") : Tr.t("Copied")),
 			icon: "clipboard",
 			mark: entry.id
 		}));
@@ -247,11 +247,11 @@ Panel {
 		const what = words.slice(1).join(" ");
 		const found = [];
 		if (seconds > 0)
-			found.push({ does: () => Timers.start(seconds, what), text: `A timer for ${Timers.span(seconds)}`, subtext: what || "It says when the time is up", icon: "bell" });
+			found.push({ does: () => Timers.start(seconds, what), text: Tr.f("A timer for %1", Timers.span(seconds)), subtext: what || "It says when the time is up", icon: "bell" });
 		else if (!Timers.counting)
-			found.push({ does: () => Timers.startPomodoro(), text: "Pomodoros", subtext: `${Settings.pomodoro.work} min of work, then a break, and again`, icon: "bell" });
+			found.push({ does: () => Timers.startPomodoro(), text: "Pomodoros", subtext: Tr.f("%1 min of work, then a break, and again", Settings.pomodoro.work), icon: "bell" });
 		if (Timers.counting)
-			found.push({ does: () => Timers.stop(), text: "Stop the timer", subtext: `${Timers.clock(Timers.left)} left`, icon: "close" });
+			found.push({ does: () => Timers.stop(), text: "Stop the timer", subtext: Tr.f("%1 left", Timers.clock(Timers.left)), icon: "close" });
 		found.push({ does: () => Timers.toggleWatch(), text: Timers.watching ? "Stop the stopwatch" : "Start the stopwatch", subtext: Timers.watched > 0 ? Timers.clock(Timers.watched) : "", icon: Timers.watching ? "pause" : "play" });
 		return found;
 	}
@@ -260,13 +260,13 @@ Panel {
 	// ticking one off, the launcher staying on the rest.
 	function todoRows(text) {
 		if (text)
-			return [{ does: () => Notes.add(text), text: `Add ${text}`, subtext: "To what's to do", icon: "notes" }];
+			return [{ does: () => Notes.add(text), text: Tr.f("Add %1", text), subtext: "To what's to do", icon: "notes" }];
 		return Notes.todos.map((todo, index) => ({ todo, index })).filter(one => !one.todo.done).map(one => ({
 			key: `todo|${one.todo.text}`,
 			stays: true,
 			does: () => Notes.toggle(one.index),
 			text: one.todo.text,
-			subtext: "Enter ticks it off",
+			subtext: Tr.t("Enter ticks it off"),
 			icon: "box"
 		}));
 	}
@@ -293,10 +293,10 @@ Panel {
 	function shots(query) {
 		const later = Settings.screenshots.delay > 0 ? `In ${Settings.screenshots.delay} s` : "";
 		return [
-			{ does: () => Screenshots.take("area"), text: "A part of the screen", subtext: "Picked by niri", icon: "image" },
-			{ does: () => Screenshots.take("screen"), text: "The screen", subtext: later, icon: "image" },
-			{ does: () => Screenshots.take("window"), text: "The window in focus", subtext: later, icon: "image" }
-		].concat(Screenshots.reads ? [{ does: () => Screenshots.textOffScreen(), text: "Text off the screen", subtext: "Of a part of it, onto the clipboard", icon: "text" }] : [], Screenshots.edits && Screenshots.latest.length > 0 ? [{ does: () => Screenshots.edit(Screenshots.latest[0]), text: "Edit the latest", subtext: Screenshots.latest[0].replace(/^.*\//, ""), icon: "pencil" }] : []).filter(row => !query || row.text.toLowerCase().includes(query)).concat(Screenshots.latest.filter(file => !query || file.toLowerCase().includes(query)).map(file => ({
+			{ does: () => Screenshots.take("area"), text: Tr.t("A part of the screen"), subtext: Tr.t("Picked by niri"), icon: "image" },
+			{ does: () => Screenshots.take("screen"), text: Tr.t("The screen"), subtext: later, icon: "image" },
+			{ does: () => Screenshots.take("window"), text: Tr.t("The window in focus"), subtext: later, icon: "image" }
+		].concat(Screenshots.reads ? [{ does: () => Screenshots.textOffScreen(), text: Tr.t("Text off the screen"), subtext: Tr.t("Of a part of it, onto the clipboard"), icon: "text" }] : [], Screenshots.edits && Screenshots.latest.length > 0 ? [{ does: () => Screenshots.edit(Screenshots.latest[0]), text: Tr.t("Edit the latest"), subtext: Screenshots.latest[0].replace(/^.*\//, ""), icon: "pencil" }] : []).filter(row => !query || row.text.toLowerCase().includes(query)).concat(Screenshots.latest.filter(file => !query || file.toLowerCase().includes(query)).map(file => ({
 			shot: file,
 			text: file.replace(/^.*\//, ""),
 			subtext: file.replace(/\/[^/]*$/, "").replace(Quickshell.env("HOME"), "~"),
@@ -309,14 +309,14 @@ Panel {
 	function menu(entry) {
 		const pinned = Settings.launcher.pinned.includes(entry.id);
 		const docked = Settings.dock.pinned.includes(entry.id);
-		return [{ back: true, text: "Back", subtext: entry.name, icon: "back" }].concat(Array.from(entry.actions).map(action => ({
+		return [{ back: true, text: Tr.t("Back"), subtext: entry.name, icon: "back" }].concat(Array.from(entry.actions).map(action => ({
 			action,
 			text: action.name,
 			image: Apps.image(action.icon),
 			icon: "apps"
 		})), [
 			{ pin: !pinned, pinning: true, text: pinned ? "Unpin" : "Pin to the top", icon: "pin" },
-			{ hiding: true, text: "Hide from the launcher", icon: "eyeOff" },
+			{ hiding: true, text: Tr.t("Hide from the launcher"), icon: "eyeOff" },
 			{ dock: !docked, docking: true, text: docked ? "Take off the dock" : "Keep on the dock", icon: "apps" }
 		], Apps.folders.map(folder => {
 			const inside = Array.isArray(folder.apps) && folder.apps.includes(entry.id);
@@ -334,10 +334,10 @@ Panel {
 		// A > in front runs the rest as a command, and a ? looks it up on the web.
 		const command = text.match(/^\s*>\s*(.*)$/);
 		if (command)
-			return command[1].trim() ? [{ does: () => Env.act("run a command", () => Niri.spawn(["sh", "-c", command[1].trim()])), text: `Run ${command[1].trim()}`, subtext: "A command, by sh", icon: "play" }] : [{ stays: true, does: () => {}, text: "A command to run", subtext: "> and the command", icon: "play" }];
+			return command[1].trim() ? [{ does: () => Env.act("run a command", () => Niri.spawn(["sh", "-c", command[1].trim()])), text: Tr.f("Run %1", command[1].trim()), subtext: "A command, by sh", icon: "play" }] : [{ stays: true, does: () => {}, text: "A command to run", subtext: "> and the command", icon: "play" }];
 		const looked = text.match(/^\s*\?\s*(.*)$/);
 		if (looked)
-			return looked[1].trim() ? [{ does: () => Env.act("web search", () => Qt.openUrlExternally(Settings.launcher.search.replace("%s", encodeURIComponent(looked[1].trim())))), text: `Look up ${looked[1].trim()}`, subtext: "On the web", icon: "search" }] : [{ stays: true, does: () => {}, text: "Something to look up on the web", subtext: "? and the words", icon: "search" }];
+			return looked[1].trim() ? [{ does: () => Env.act("web search", () => Qt.openUrlExternally(Settings.launcher.search.replace("%s", encodeURIComponent(looked[1].trim())))), text: Tr.f("Look up %1", looked[1].trim()), subtext: "On the web", icon: "search" }] : [{ stays: true, does: () => {}, text: "Something to look up on the web", subtext: "? and the words", icon: "search" }];
 		const asked = text.match(/^\s*\/(\S*)(\s+.*)?$/);
 		if (!asked)
 			return grouped ? Apps.search(text, grouped.has) : sum().concat(Apps.search(text), wanted ? windows(wanted) : [], wanted.length < 2 ? [] : session(wanted));
@@ -370,7 +370,7 @@ Panel {
 		case "todo":
 			return todoRows(asked[2].trim());
 		case "color":
-			return [{ does: () => colorSoon.restart(), text: "Pick a color off the screen", subtext: "A click on it copies it as #rrggbb", icon: "eye" }];
+			return [{ does: () => colorSoon.restart(), text: Tr.t("Pick a color off the screen"), subtext: Tr.t("A click on it copies it as #rrggbb"), icon: "eye" }];
 		}
 		return [];
 	}
@@ -726,7 +726,7 @@ Panel {
 			icon: "apps"
 			text: launcher.grouped ? launcher.grouped.text : ""
 			longest: Theme.u(120)
-			tip: "Groups · Ctrl+G"
+			tip: Tr.t("Groups · Ctrl+G")
 			onClicked: launcher.toggleGroups()
 		}
 	}
@@ -841,7 +841,7 @@ Panel {
 		Text {
 			anchors.centerIn: parent
 			visible: list.count === 0
-			text: /^\s*\/calc(\s|$)/i.test(field.text) && Env.lacks("qalc") ? "Sums need qalc, which isn't here"
+			text: /^\s*\/calc(\s|$)/i.test(field.text) && Env.lacks("qalc") ? Tr.t("Sums need qalc, which isn't here")
 				: /^\s*\/ps(\s|$)/i.test(field.text) && Processes.list.length === 0 ? "Looking..."
 				: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
 				: launcher.filing.length < 2 ? "Two letters of a file's name, or more"

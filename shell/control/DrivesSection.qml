@@ -12,14 +12,14 @@ Section {
 	name: "drives"
 	wanted: Drives.list.length > 0
 	icon: "drive"
-	title: "Drives"
+	title: Tr.t("Drives")
 	summary: Drives.list.length === 1 ? Drives.nameOf(Drives.list[0]) : `${Drives.list.length} plugged in`
 	switches: false
 
 	Rows {
 		values: Drives.list
 		room: section.roomInside
-		empty: "Nothing plugged in"
+		empty: Tr.t("Nothing plugged in")
 		onActivated: (index, drive) => Drives.open(drive)
 
 		delegate: Entry {
@@ -30,7 +30,7 @@ Section {
 			readonly property bool wrong: Drives.failure !== "" && Drives.failedOn === drive.object
 
 			text: Drives.nameOf(drive)
-			subtext: wrong ? Drives.failure : [Drives.sizeOf(drive.size), drive.mount ? drive.mount.replace(/^.*\//, "In ") : "Not mounted"].join(" · ")
+			subtext: wrong ? Drives.failure : [Drives.sizeOf(drive.size), drive.mount ? drive.mount.replace(/^.*\//, Tr.t("In ")) : Tr.t("Not mounted")].join(" · ")
 			failed: wrong
 			action: drive.ejectable ? "Eject" : drive.mount ? "Unmount" : ""
 			// Pulled out after that, so a second click, soon after the first.

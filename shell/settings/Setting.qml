@@ -78,7 +78,7 @@ Item {
 		flat: true
 		icon: "up"
 		iconSize: Theme.u(14)
-		tip: "One place up"
+		tip: Tr.t("One place up")
 		onClicked: setting.raised()
 	}
 

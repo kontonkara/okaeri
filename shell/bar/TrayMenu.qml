@@ -51,7 +51,7 @@ Panel {
 			check: entry.checkState === Qt.Checked,
 			more: entry.hasChildren
 		}));
-		return path.length > 1 ? [{ icon: "back", text: "Back", back: true }].concat(rows) : rows;
+		return path.length > 1 ? [{ icon: "back", text: Tr.t("Back"), back: true }].concat(rows) : rows;
 	}
 
 	align: "top"

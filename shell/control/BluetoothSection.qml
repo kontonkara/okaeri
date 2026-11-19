@@ -11,7 +11,7 @@ Section {
 	name: "bluetooth"
 	wanted: !!Bt.adapter
 	icon: Bt.enabled ? "bluetooth" : "bluetoothOff"
-	title: "Bluetooth"
+	title: Tr.t("Bluetooth")
 	summary: {
 		if (Bt.blocked)
 			return "Blocked by a switch";
@@ -97,14 +97,14 @@ Section {
 
 					Button {
 						height: Theme.u(30)
-						text: "No"
+						text: Tr.t("No")
 						onClicked: Bt.answer("no")
 					}
 
 					Button {
 						height: Theme.u(30)
 						filled: true
-						text: "Yes"
+						text: Tr.t("Yes")
 						onClicked: Bt.answer("yes")
 					}
 				}
@@ -121,7 +121,7 @@ Section {
 						anchors.right: pair.left
 						anchors.rightMargin: Theme.u(6)
 						implicitHeight: Theme.u(34)
-						placeholder: asked.kind === "pin" ? "PIN" : "Code"
+						placeholder: asked.kind === "pin" ? "PIN" : Tr.t("Code")
 						onAccepted: {
 							if (text !== "")
 								Bt.answer(text);
@@ -135,7 +135,7 @@ Section {
 						height: field.height
 						filled: true
 						enabled: field.text !== ""
-						text: "Pair"
+						text: Tr.t("Pair")
 						onClicked: Bt.answer(field.text)
 					}
 				}
@@ -146,7 +146,7 @@ Section {
 	Rows {
 		values: Bt.devices
 		room: section.roomInside - asked.height
-		empty: "Looking for devices..."
+		empty: Tr.t("Looking for devices...")
 		onActivated: (index, device) => Bt.connect(device)
 
 		delegate: BluetoothRow {}

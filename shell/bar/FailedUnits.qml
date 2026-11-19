@@ -83,7 +83,7 @@ BarButton {
 					Button {
 						height: Theme.u(26)
 						pad: Theme.u(10)
-						text: "Restart"
+						text: Tr.t("Restart")
 						onClicked: Units.act(modelData, "restart")
 					}
 
@@ -91,8 +91,8 @@ BarButton {
 						height: Theme.u(26)
 						pad: Theme.u(10)
 						flat: true
-						text: "Clear"
-						tip: "Off this list, as it is"
+						text: Tr.t("Clear")
+						tip: Tr.t("Off this list, as it is")
 						onClicked: Units.act(modelData, "clear")
 					}
 
@@ -100,8 +100,8 @@ BarButton {
 						height: Theme.u(26)
 						pad: Theme.u(10)
 						flat: true
-						text: failure.why ? "Less" : "Why"
-						tip: "What its journal said last"
+						text: failure.why ? Tr.t("Less") : Tr.t("Why")
+						tip: Tr.t("What its journal said last")
 						onClicked: {
 							failure.why = !failure.why;
 							if (failure.why)
@@ -114,7 +114,7 @@ BarButton {
 				Text {
 					width: parent.width
 					visible: failure.why
-					text: Units.told[failure.modelData.unit] ?? "Reading its journal..."
+					text: Units.told[failure.modelData.unit] ?? Tr.t("Reading its journal...")
 					textFormat: Text.PlainText
 					wrapMode: Text.WrapAnywhere
 					maximumLineCount: 8
@@ -131,7 +131,7 @@ BarButton {
 			visible: Units.failed.length > 1
 			height: Theme.u(28)
 			flat: true
-			text: "Clear all"
+			text: Tr.t("Clear all")
 			onClicked: Units.failed.forEach(unit => Units.act(unit, "clear"))
 		}
 	}

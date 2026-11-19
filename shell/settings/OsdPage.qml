@@ -7,17 +7,17 @@ Flickable {
 	id: page
 
 	readonly property var kinds: [
-		{ name: "volume", text: "Volume", subtext: "And muting it" },
-		{ name: "mic", text: "Microphone", subtext: "Its volume, and muting it" },
-		{ name: "brightness", text: "Brightness" },
-		{ name: "layout", text: "Keyboard layout", subtext: "With more than one" },
-		{ name: "locks", text: "Caps Lock and Num Lock" },
-		{ name: "profile", text: "Power profile", subtext: "Changed with no panel open, as the next three" },
-		{ name: "night", text: "Night light" },
-		{ name: "awake", text: "Keep awake" },
-		{ name: "dnd", text: "Do Not Disturb" },
-		{ name: "keys", text: "Keyboard light", subtext: "Where the keyboard has one" },
-		{ name: "media", text: "What plays", subtext: "After a key of the player's" }
+		{ name: "volume", text: Tr.t("Volume"), subtext: Tr.t("And muting it") },
+		{ name: "mic", text: Tr.t("Microphone"), subtext: Tr.t("Its volume, and muting it") },
+		{ name: "brightness", text: Tr.t("Brightness") },
+		{ name: "layout", text: Tr.t("Keyboard layout"), subtext: Tr.t("With more than one") },
+		{ name: "locks", text: Tr.t("Caps Lock and Num Lock") },
+		{ name: "profile", text: Tr.t("Power profile"), subtext: Tr.t("Changed with no panel open, as the next three") },
+		{ name: "night", text: Tr.t("Night light") },
+		{ name: "awake", text: Tr.t("Keep awake") },
+		{ name: "dnd", text: Tr.t("Do Not Disturb") },
+		{ name: "keys", text: Tr.t("Keyboard light"), subtext: Tr.t("Where the keyboard has one") },
+		{ name: "media", text: Tr.t("What plays"), subtext: Tr.t("After a key of the player's") }
 	]
 
 	// Those the files leave out, for each line's mark.
@@ -48,12 +48,12 @@ Flickable {
 			Pick {
 				holds: "osd.position"
 				words: "popup"
-				text: "Where"
-				subtext: "On the screen in focus"
+				text: Tr.t("Where")
+				subtext: Tr.t("On the screen in focus")
 				options: [
-					{ value: "bottom", text: "At the bottom" },
-					{ value: "middle", text: "In the middle" },
-					{ value: "top", text: "At the top" }
+					{ value: "bottom", text: Tr.t("At the bottom") },
+					{ value: "middle", text: Tr.t("In the middle") },
+					{ value: "top", text: Tr.t("At the top") }
 				]
 				value: Settings.osd.position
 				onChosen: value => Settings.set("osd", "position", value)
@@ -61,8 +61,8 @@ Flickable {
 
 			Choice {
 				holds: "osd.duration"
-				text: "For how long"
-				subtext: "From the last change"
+				text: Tr.t("For how long")
+				subtext: Tr.t("From the last change")
 				values: [1, 1.5, 2, 3, 5]
 				value: Settings.osd.duration
 				onChosen: value => Settings.set("osd", "duration", value)
@@ -70,8 +70,8 @@ Flickable {
 
 			Setting {
 				holds: "osd.percent"
-				text: "The level in numbers"
-				subtext: "Beside the slider"
+				text: Tr.t("The level in numbers")
+				subtext: Tr.t("Beside the slider")
 				checked: Settings.osd.percent
 				onToggled: wanted => Settings.set("osd", "percent", wanted)
 			}
@@ -79,8 +79,8 @@ Flickable {
 			Setting {
 				holds: "osd.tracks"
 				words: "song music"
-				text: "A track as it starts"
-				subtext: "What plays, with no key pressed"
+				text: Tr.t("A track as it starts")
+				subtext: Tr.t("What plays, with no key pressed")
 				checked: Settings.osd.tracks
 				onToggled: wanted => Settings.set("osd", "tracks", wanted)
 			}
@@ -88,7 +88,7 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "What has one"
+			title: Tr.t("What has one")
 
 			Repeater {
 				model: page.kinds

@@ -111,7 +111,7 @@ Column {
 			height: Theme.u(30)
 			flat: true
 			text: Qt.locale().standaloneMonthName(calendar.month, Locale.LongFormat) + (calendar.year === calendar.today.getFullYear() ? "" : ` ${calendar.year}`)
-			tip: "Back to today"
+			tip: Tr.t("Back to today")
 			onClicked: calendar.back()
 		}
 
@@ -269,7 +269,7 @@ Column {
 			width: parent.width - Theme.u(16)
 			topPadding: Theme.u(6)
 			bottomPadding: Theme.u(2)
-			text: calendar.same(calendar.picked, calendar.today) ? "Today" : Qt.formatDate(calendar.picked, calendar.picked.getFullYear() === calendar.today.getFullYear() ? "dddd, d MMMM" : "dddd, d MMMM yyyy")
+			text: calendar.same(calendar.picked, calendar.today) ? Tr.t("Today") : Qt.formatDate(calendar.picked, calendar.picked.getFullYear() === calendar.today.getFullYear() ? "dddd, d MMMM" : "dddd, d MMMM yyyy")
 			color: Theme.colors.subtext
 			elide: Text.ElideRight
 			font.family: Theme.font
@@ -336,7 +336,7 @@ Column {
 			x: Theme.u(8)
 			width: parent.width - Theme.u(16)
 			visible: Events.problem !== ""
-			text: `A calendar: ${Events.problem}`
+			text: Tr.f("A calendar: %1", Events.problem)
 			color: Theme.colors.error
 			elide: Text.ElideRight
 			font.family: Theme.font

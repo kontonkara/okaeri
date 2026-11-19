@@ -18,9 +18,9 @@ Flow {
 
 	Repeater {
 		model: [
-			{ text: "For an hour", span: 3600000 },
-			{ text: "For 8 hours", span: 28800000 },
-			{ text: "Until I say", span: 0 }
+			{ text: Tr.t("For an hour"), span: 3600000 },
+			{ text: Tr.t("For 8 hours"), span: 28800000 },
+			{ text: Tr.t("Until I say"), span: 0 }
 		]
 
 		Button {

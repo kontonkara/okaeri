@@ -390,7 +390,7 @@ Singleton {
 			const replaces = moment(props["RECURRENCE-ID"], zones);
 			const event = {
 				uid: props.UID?.value ?? "",
-				summary: unescaped(props.SUMMARY?.value ?? "").replace(/\s*\n\s*/g, " ").trim() || "An event",
+				summary: unescaped(props.SUMMARY?.value ?? "").replace(/\s*\n\s*/g, " ").trim() || Tr.t("An event"),
 				allDay: start.kind === "date",
 				kind: start.kind,
 				zone: start.zone,

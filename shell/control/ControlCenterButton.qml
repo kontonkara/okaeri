@@ -5,6 +5,6 @@ import qs.ui
 // For the bar: opens and closes the control center.
 BarButton {
 	icon: "sliders"
-	tip: "Control center"
+	tip: Tr.t("Control center")
 	onClicked: Control.toggle()
 }

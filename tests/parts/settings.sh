@@ -820,6 +820,15 @@ same "with what sound" "$(value .recording.audio)" '"system"'
 put "Where the videos go" '~/clips'
 same "where the videos go" "$(value .recording.folder)" "\"$HOME/clips\""
 
+step "The language"
+# Its own words in English, then as the system has them again.
+ipc settings open Look
+sleep 0.5
+higher Language
+same "the language" "$(value .language.name)" '"en"'
+lower Language
+same "the language, the system's" "$(value .language.name)" '""'
+
 step "Plugins"
 # The example in the repository, in the folder for them: off at first, and on by
 # its line.

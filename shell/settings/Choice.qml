@@ -20,7 +20,7 @@ Item {
 	property string subtext
 	required property var values
 	property real value: 0
-	property string none: "Never"
+	property string none: Tr.t("Never")
 	property string most
 	property string unit
 	readonly property real lower: values.filter(other => other < value).pop() ?? -1

@@ -16,20 +16,20 @@ Section {
 	readonly property string tile: Control.options
 	readonly property var own: Settings.control.custom.find(other => other.name === tile) ?? null
 	readonly property var about: ({
-			wifi: { title: "Wi-Fi", icon: "wifi" },
-			wired: { title: "Wired", icon: "ethernet" },
-			drives: { title: "Drives", icon: "drive" },
-			phone: { title: "Phone", icon: "phone" },
-			screenshot: { title: "Screenshot", icon: "image" },
-			bluetooth: { title: "Bluetooth", icon: "bluetooth" },
-			night: { title: "Night light", icon: "sunset" },
-			awake: { title: "Keep awake", icon: "coffee" },
-			power: { title: "Power", icon: "bolt" },
-			airplane: { title: "Airplane mode", icon: "plane" },
+			wifi: { title: Tr.t("Wi-Fi"), icon: "wifi" },
+			wired: { title: Tr.t("Wired"), icon: "ethernet" },
+			drives: { title: Tr.t("Drives"), icon: "drive" },
+			phone: { title: Tr.t("Phone"), icon: "phone" },
+			screenshot: { title: Tr.t("Screenshot"), icon: "image" },
+			bluetooth: { title: Tr.t("Bluetooth"), icon: "bluetooth" },
+			night: { title: Tr.t("Night light"), icon: "sunset" },
+			awake: { title: Tr.t("Keep awake"), icon: "coffee" },
+			power: { title: Tr.t("Power"), icon: "bolt" },
+			airplane: { title: Tr.t("Airplane mode"), icon: "plane" },
 			vpn: { title: "VPN", icon: "shield" },
-			record: { title: "Record", icon: "video" },
-			hotspot: { title: "Hotspot", icon: "hotspot" },
-			game: { title: "Game mode", icon: "gamepad" }
+			record: { title: Tr.t("Record"), icon: "video" },
+			hotspot: { title: Tr.t("Hotspot"), icon: "hotspot" },
+			game: { title: Tr.t("Game mode"), icon: "gamepad" }
 		})[tile] ?? { title: tile, icon: own && own.icon in Theme.icons ? own.icon : "play" }
 	// The groups of rows: { title, rows: [{ text, subtext, icon, check, enabled,
 	// does }] }, `does` being what a click on the row does.
@@ -45,21 +45,21 @@ Section {
 			const area = Settings.recording.area;
 			const audio = Settings.recording.audio;
 			return [{
-					title: "What's recorded",
+					title: Tr.t("What's recorded"),
 					rows: [
 						pick("The screen", area !== "region" || !Recorder.picks, () => Settings.set("recording", "area", "screen")),
 						Object.assign(pick("A part of it", area === "region" && Recorder.picks, () => Settings.set("recording", "area", "region"), Recorder.picks ? "Picked as it starts" : "It needs slurp, which isn't here"), { enabled: Recorder.picks })
 					]
 				}, {
-					title: "With the sound of",
+					title: Tr.t("With the sound of"),
 					rows: [
 						pick("Nothing", audio === "none", () => Settings.set("recording", "audio", "none")),
 						pick("What plays", audio === "system", () => Settings.set("recording", "audio", "system")),
 						pick("The mic", audio === "mic", () => Settings.set("recording", "audio", "mic"))
 					]
 				}, {
-					title: "The videos",
-					rows: [{ text: "Open their folder", subtext: Recorder.folder.replace(Quickshell.env("HOME"), "~"), icon: "file", does: () => {
+					title: Tr.t("The videos"),
+					rows: [{ text: Tr.t("Open their folder"), subtext: Recorder.folder.replace(Quickshell.env("HOME"), "~"), icon: "file", does: () => {
 								Env.act("open folder", () => Niri.spawn(["xdg-open", Recorder.folder]));
 								Control.leave();
 							} }]
@@ -72,10 +72,10 @@ Section {
 					Screenshots.take(kind);
 				} });
 			return [{
-					title: "Take one",
+					title: Tr.t("Take one"),
 					rows: [take("area", "A part of the screen", "Picked by niri"), take("screen", "The screen", delay ? `In ${delay} s` : ""), take("window", "The window in focus", delay ? `In ${delay} s` : "")]
 				}, {
-					title: "Of the screen and a window, wait first",
+					title: Tr.t("Of the screen and a window, wait first"),
 					rows: [0, 3, 5, 10].map(seconds => pick(seconds ? `${seconds} seconds` : "Not at all", delay === seconds, () => Settings.set("screenshots", "delay", seconds)))
 				}];
 		}
@@ -83,22 +83,22 @@ Section {
 			const own = Settings.nightLight;
 			const warmth = [3000, 3500, 4000, 4500, 5000];
 			return [{
-					title: "When",
+					title: Tr.t("When"),
 					rows: [
 						pick("All the time", own.mode === "always", () => Settings.set("nightLight", "mode", "always")),
 						pick("From, until", own.mode === "schedule", () => Settings.set("nightLight", "mode", "schedule"), `${own.from} to ${own.until}`),
 						pick("By the sun", own.mode === "sun", () => Settings.set("nightLight", "mode", "sun"), own.latitude || own.longitude ? "Where the settings say you are" : "Where you are goes in the settings"),
-						{ text: "Not at all", subtext: own.mode === "always" ? "Until it's turned on" : "Not tonight, nor after, until it's turned on", icon: "close", check: false, enabled: own.on, does: () => NightLight.stop() }
+						{ text: Tr.t("Not at all"), subtext: own.mode === "always" ? "Until it's turned on" : "Not tonight, nor after, until it's turned on", icon: "close", check: false, enabled: own.on, does: () => NightLight.stop() }
 					]
 				}, {
-					title: "How warm",
+					title: Tr.t("How warm"),
 					rows: (warmth.includes(own.temperature) ? warmth : warmth.concat([own.temperature]).sort((a, b) => a - b)).map(kelvin => pick(`${kelvin} K`, own.temperature === kelvin, () => Settings.set("nightLight", "temperature", kelvin), kelvin === 3000 ? "The warmest here" : kelvin === 5000 ? "Close to daylight" : ""))
 				}];
 		}
 		if (name === "awake") {
 			const minutes = [30, 60, 120, 240];
 			return [{
-					title: "For how long",
+					title: Tr.t("For how long"),
 					rows: minutes.map(span => ({ text: span < 60 ? `${span} minutes` : span === 60 ? "An hour" : `${span / 60} hours`, subtext: "From now", icon: "coffee", check: false, does: () => Awake.set(true, Date.now() + span * 60000) })).concat([
 						pick("Until it's turned off", Awake.on && Awake.until === 0, () => Awake.set(true, 0)),
 						pick("Not now", !Awake.on, () => Awake.set(false, 0))
@@ -107,7 +107,7 @@ Section {
 		}
 		if (name === "power")
 			return [{
-					title: "Profile",
+					title: Tr.t("Profile"),
 					rows: Power.choices.map(choice => pick(choice.text, Power.profile === choice.profile, () => Power.set(choice.profile)))
 				}];
 		const pages = { wifi: "The networks", wired: "What it has", drives: "What's plugged in", phone: "What it does", bluetooth: "The devices", vpn: "The connections", hotspot: "How a phone joins it" };
@@ -122,17 +122,17 @@ Section {
 	function placeGroup(name) {
 		const at = Control.shown.indexOf(name);
 		return {
-			title: "The tile",
+			title: Tr.t("The tile"),
 			rows: [
 				pick("A whole row", Settings.control.wide.includes(name), () => Control.setWide(name, !Settings.control.wide.includes(name)), "Or half of one, beside another"),
 				pick("Small tiles", Settings.control.size === "small", () => Settings.set("control", "size", Settings.control.size === "small" ? "large" : "small"), "All of them, a line each"),
-				{ text: "Earlier", subtext: "A place up among the tiles", icon: "back", enabled: at > 0, does: () => Control.moveTile(name, -1) },
-				{ text: "Later", subtext: "A place down among the tiles", icon: "chevron", enabled: at >= 0 && at < Control.shown.length - 1, does: () => Control.moveTile(name, 1) },
-				{ text: "Out of the panel", subtext: "The Control page of the settings brings it back", icon: "eyeOff", does: () => {
+				{ text: Tr.t("Earlier"), subtext: Tr.t("A place up among the tiles"), icon: "back", enabled: at > 0, does: () => Control.moveTile(name, -1) },
+				{ text: Tr.t("Later"), subtext: Tr.t("A place down among the tiles"), icon: "chevron", enabled: at >= 0 && at < Control.shown.length - 1, does: () => Control.moveTile(name, 1) },
+				{ text: Tr.t("Out of the panel"), subtext: Tr.t("The Control page of the settings brings it back"), icon: "eyeOff", does: () => {
 						Control.hideTile(name);
 						Control.unfolded = "";
 					} },
-				{ text: "More in the settings", subtext: "Its page there", icon: "gear", does: () => {
+				{ text: Tr.t("More in the settings"), subtext: Tr.t("Its page there"), icon: "gear", does: () => {
 						Control.leave();
 						Settings.pageWanted(name === "night" || name === "record" ? "Display" : "Control");
 					} }
@@ -143,7 +143,7 @@ Section {
 	name: "options"
 	icon: about.icon
 	title: about.title
-	summary: "What else it can do"
+	summary: Tr.t("What else it can do")
 	switches: false
 
 	Repeater {

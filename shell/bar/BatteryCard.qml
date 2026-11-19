@@ -97,19 +97,19 @@ Column {
 
 		Line {
 			visible: (card.device?.changeRate ?? 0) > 0
-			text: card.charging ? "Going in" : "Going out"
+			text: card.charging ? Tr.t("Going in") : Tr.t("Going out")
 			value: `${(card.device?.changeRate ?? 0).toFixed(1)} W`
 		}
 
 		Line {
 			visible: (card.device?.energyCapacity ?? 0) > 0
-			text: "Energy"
+			text: Tr.t("Energy")
 			value: `${(card.device?.energy ?? 0).toFixed(1)} of ${(card.device?.energyCapacity ?? 0).toFixed(1)} Wh`
 		}
 
 		Line {
 			visible: !!card.device?.healthSupported && card.device.healthPercentage > 0
-			text: "Health"
+			text: Tr.t("Health")
 			value: `${Math.round(card.device?.healthPercentage ?? 0)}% of what it held new`
 		}
 	}
@@ -121,7 +121,7 @@ Column {
 
 		Text {
 			leftPadding: Theme.u(4)
-			text: "Other devices"
+			text: Tr.t("Other devices")
 			color: Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -154,7 +154,7 @@ Column {
 
 			Text {
 				width: parent.width
-				text: `Charge to ${Power.limitTo}% only`
+				text: Tr.f("Charge to %1% only", Power.limitTo)
 				color: Theme.colors.text
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize
@@ -162,7 +162,7 @@ Column {
 
 			Text {
 				width: parent.width
-				text: `And again from ${Power.limitFrom}%, as UPower has it`
+				text: Tr.f("And again from %1%, as UPower has it", Power.limitFrom)
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
@@ -186,8 +186,8 @@ Column {
 		height: Theme.u(30)
 		flat: true
 		icon: "gear"
-		text: "Battery settings"
-		tip: "On the Session page"
+		text: Tr.t("Battery settings")
+		tip: Tr.t("On the Session page")
 		onClicked: {
 			card.closed();
 			Settings.pageWanted("Session");

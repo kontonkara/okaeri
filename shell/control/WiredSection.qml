@@ -10,7 +10,7 @@ Section {
 	name: "wired"
 	wanted: Wired.plugged
 	icon: "ethernet"
-	title: "Wired"
+	title: Tr.t("Wired")
 	summary: Wired.failure || Wired.summary
 	checked: Wired.connected
 	canSwitch: Wired.plugged
@@ -22,7 +22,7 @@ Section {
 		leftPadding: Theme.u(10)
 		topPadding: Theme.u(4)
 		bottomPadding: Theme.u(8)
-		text: Wired.plugged ? "Nothing to say of it yet" : "No cable in it"
+		text: Wired.plugged ? Tr.t("Nothing to say of it yet") : Tr.t("No cable in it")
 		color: Theme.colors.subtext
 		font.family: Theme.font
 		font.pixelSize: Theme.fontSize - Theme.u(1)

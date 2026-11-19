@@ -239,7 +239,7 @@ Card {
 				onClicked: Media.pick(modelData)
 				// Out of all this, by its name: the bar's part has it back, by a right
 				// click, and so do the settings. Not with Settings.media.menu off.
-				tip: Settings.media.menu ? "A right click leaves it out" : ""
+				tip: Settings.media.menu ? Tr.t("A right click leaves it out") : ""
 				onRightClicked: {
 					if (Settings.media.menu)
 						Media.ignore(modelData.identity, true);

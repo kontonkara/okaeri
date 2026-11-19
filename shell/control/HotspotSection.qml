@@ -11,7 +11,7 @@ Section {
 	name: "hotspot"
 	wanted: !!Wifi.device
 	icon: "hotspot"
-	title: "Hotspot"
+	title: Tr.t("Hotspot")
 	summary: Hotspot.summary
 	checked: Hotspot.on
 	canSwitch: !Wifi.blocked && Wifi.hasTool
@@ -28,8 +28,8 @@ Section {
 	Button {
 		height: Theme.u(30)
 		flat: true
-		text: "Change them in the settings"
-		tip: "On the Control page, a click on its tile there"
+		text: Tr.t("Change them in the settings")
+		tip: Tr.t("On the Control page, a click on its tile there")
 		onClicked: {
 			Control.leave();
 			Settings.pageWanted("Control");

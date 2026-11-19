@@ -84,6 +84,7 @@ Singleton {
 	readonly property var drives: Object.assign({}, defaults.drives, user.drives, own.drives)
 	readonly property var desktop: Object.assign({}, defaults.desktop, user.desktop, own.desktop)
 	readonly property var plugins: Object.assign({}, defaults.plugins, user.plugins, own.plugins)
+	readonly property var language: Object.assign({}, defaults.language, user.language, own.language)
 	readonly property var visualizer: Object.assign({}, defaults.visualizer, user.visualizer, own.visualizer)
 	readonly property var updates: Object.assign({}, defaults.updates, user.updates, own.updates)
 	readonly property var pomodoro: Object.assign({}, defaults.pomodoro, user.pomodoro, own.pomodoro)

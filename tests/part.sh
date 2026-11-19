@@ -67,6 +67,7 @@ trap 'exit 1' INT TERM
 
 export PIPEWIRE_RUNTIME_DIR=$real_run
 export XDG_RUNTIME_DIR=$work/run XDG_CACHE_HOME=$work/cache XDG_CONFIG_HOME=$work/config XDG_STATE_HOME=$work/state
+export OKAERI_LANGUAGE=en
 export OKAERI_DRY=1 QT_QPA_PLATFORM=wayland QSG_RHI_BACKEND=opengl QT_NO_XDG_DESKTOP_PORTAL=1
 # The weather asks nobody on the network here: a test that wants it answers itself.
 export OKAERI_WEATHER_URL=http://127.0.0.1:9 OKAERI_PLACES_URL=http://127.0.0.1:9

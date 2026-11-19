@@ -81,7 +81,7 @@ Column {
 		spacing: Theme.u(4)
 
 		Line {
-			text: "Processor"
+			text: Tr.t("Processor")
 			value: [System.cpu >= 0 ? `${System.cpu}%` : "", System.temperature >= 0 ? `${System.temperature} °C` : ""].filter(part => part !== "").join(" · ")
 		}
 
@@ -187,7 +187,7 @@ Column {
 		spacing: Theme.u(4)
 
 		Line {
-			text: "Memory"
+			text: Tr.t("Memory")
 			value: [System.memory >= 0 ? `${card.gib(System.memoryUsed)} of ${card.gib(System.memoryTotal)} GiB` : "", System.swap >= 0 ? `swap ${System.swap}%` : ""].filter(part => part !== "").join(" · ")
 		}
 
@@ -202,7 +202,7 @@ Column {
 		spacing: Theme.u(4)
 
 		Line {
-			text: "Network"
+			text: Tr.t("Network")
 			value: `↓ ${System.rate(System.down)}/s · ↑ ${System.rate(System.up)}/s`
 		}
 
@@ -224,7 +224,7 @@ Column {
 
 	Line {
 		visible: System.disk >= 0
-		text: "Disk"
+		text: Tr.t("Disk")
 		value: `${System.disk}% full`
 	}
 }

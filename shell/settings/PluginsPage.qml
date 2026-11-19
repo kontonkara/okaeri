@@ -25,7 +25,7 @@ Flickable {
 
 		Text {
 			width: parent.width
-			text: `Each a folder in ${Plugins.folder.replace(Quickshell.env("HOME"), "~")} with its plugin.json. One that's on runs as the shell does, with all it can do: turn on only what you trust.`
+			text: Tr.f("Each a folder in %1 with its plugin.json. One that's on runs as the shell does, with all it can do: turn on only what you trust.", Plugins.folder.replace(Quickshell.env("HOME"), "~"))
 			wrapMode: Text.Wrap
 			color: Theme.colors.subtext
 			font.family: Theme.font
@@ -37,7 +37,7 @@ Flickable {
 			visible: Plugins.list.length === 0
 			topPadding: Theme.u(6)
 			bottomPadding: Theme.u(6)
-			text: "None there yet"
+			text: Tr.t("None there yet")
 			color: Theme.colors.text
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
@@ -66,7 +66,7 @@ Flickable {
 				height: Theme.u(30)
 				flat: true
 				icon: "file"
-				text: "Open the folder"
+				text: Tr.t("Open the folder")
 				onClicked: Plugins.open()
 			}
 
@@ -74,7 +74,7 @@ Flickable {
 				height: Theme.u(30)
 				flat: true
 				icon: "refresh"
-				text: "Look again"
+				text: Tr.t("Look again")
 				onClicked: Plugins.look()
 			}
 		}

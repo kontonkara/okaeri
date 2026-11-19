@@ -197,7 +197,7 @@ FocusScope {
 			height: Theme.u(30)
 			flat: true
 			icon: "back"
-			tip: "Back · Escape"
+			tip: Tr.t("Back · Escape")
 			onClicked: look.back()
 		}
 
@@ -205,14 +205,14 @@ FocusScope {
 			objectName: "copy"
 			height: Theme.u(30)
 			icon: "copy"
-			text: "Copy"
+			text: Tr.t("Copy")
 			onClicked: look.picked(false)
 		}
 
 		Button {
 			height: Theme.u(30)
 			icon: "clipboard"
-			text: "Paste"
+			text: Tr.t("Paste")
 			onClicked: look.picked(true)
 		}
 
@@ -222,7 +222,7 @@ FocusScope {
 			height: Theme.u(30)
 			flat: true
 			icon: "text"
-			tip: "Change it before it's copied or pasted · Ctrl+E"
+			tip: Tr.t("Change it before it's copied or pasted · Ctrl+E")
 			onClicked: look.edit()
 		}
 
@@ -230,7 +230,7 @@ FocusScope {
 			visible: look.link !== ""
 			height: Theme.u(30)
 			icon: "link"
-			text: "Open link"
+			text: Tr.t("Open link")
 			tip: `${look.link} · Ctrl+O`
 			onClicked: look.open()
 		}
@@ -239,8 +239,8 @@ FocusScope {
 			visible: look.picture
 			height: Theme.u(30)
 			icon: "download"
-			text: "Save"
-			tip: `To ${Clipboard.saveFolder.replace(Quickshell.env("HOME"), "~")} · Ctrl+S`
+			text: Tr.t("Save")
+			tip: Tr.f("To %1 · Ctrl+S", Clipboard.saveFolder.replace(Quickshell.env("HOME"), "~"))
 			onClicked: look.save()
 		}
 
@@ -248,7 +248,7 @@ FocusScope {
 			height: Theme.u(30)
 			flat: true
 			icon: "pin"
-			tip: look.entry.pinned ? "Unpin · Ctrl+P" : "Pin · Ctrl+P"
+			tip: look.entry.pinned ? Tr.t("Unpin · Ctrl+P") : Tr.t("Pin · Ctrl+P")
 			ink: look.entry.pinned ? Theme.colors.accent : Theme.colors.text
 			onClicked: look.pinOrNot()
 		}
@@ -257,7 +257,7 @@ FocusScope {
 			height: Theme.u(30)
 			flat: true
 			icon: "trash"
-			tip: "Remove · Delete"
+			tip: Tr.t("Remove · Delete")
 			onClicked: look.removed()
 		}
 	}

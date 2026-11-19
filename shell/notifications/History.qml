@@ -29,7 +29,7 @@ Panel {
 			anchors.left: parent.left
 			anchors.leftMargin: Theme.u(4)
 			anchors.verticalCenter: parent.verticalCenter
-			text: "Notifications"
+			text: Tr.t("Notifications")
 			color: Theme.colors.text
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
@@ -44,7 +44,7 @@ Panel {
 			visible: list.count > 0
 			flat: true
 			icon: "trash"
-			text: "Clear all"
+			text: Tr.t("Clear all")
 			onClicked: NotificationStore.clear()
 
 			Keys.onTabPressed: list.enter(0, 1)
@@ -248,7 +248,7 @@ Panel {
 
 		Text {
 			anchors.horizontalCenter: parent.horizontalCenter
-			text: "No notifications"
+			text: Tr.t("No notifications")
 			color: Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize
@@ -288,7 +288,7 @@ Panel {
 
 			Text {
 				width: parent.width
-				text: "Do Not Disturb"
+				text: Tr.t("Do Not Disturb")
 				elide: Text.ElideRight
 				color: Theme.colors.text
 				font.family: Theme.font
@@ -319,7 +319,7 @@ Panel {
 			enabled: NotificationStore.dndUntil > 0
 			icon: "back"
 			iconSize: Theme.u(14)
-			tip: "Half an hour less"
+			tip: Tr.t("Half an hour less")
 			onClicked: NotificationStore.stepDnd(-1)
 		}
 
@@ -336,7 +336,7 @@ Panel {
 			activeFocusOnTab: false
 			icon: "chevron"
 			iconSize: Theme.u(14)
-			tip: NotificationStore.dndUntil > 0 ? "Half an hour more" : "For half an hour"
+			tip: NotificationStore.dndUntil > 0 ? Tr.t("Half an hour more") : Tr.t("For half an hour")
 			onClicked: NotificationStore.stepDnd(1)
 		}
 

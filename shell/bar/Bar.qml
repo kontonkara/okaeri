@@ -363,7 +363,7 @@ PanelWindow {
 
 		BarButton {
 			icon: "search"
-			tip: "Apps"
+			tip: Tr.t("Apps")
 			onClicked: Apps.launcherWanted()
 		}
 	}

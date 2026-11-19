@@ -12,9 +12,9 @@ Singleton {
 
 	readonly property int profile: PowerProfiles.profile
 	readonly property var choices: [
-		{ profile: PowerProfile.PowerSaver, text: "Saver" },
-		{ profile: PowerProfile.Balanced, text: "Balanced" }
-	].concat(PowerProfiles.hasPerformanceProfile ? [{ profile: PowerProfile.Performance, text: "Performance" }] : [])
+		{ profile: PowerProfile.PowerSaver, text: Tr.t("Saver") },
+		{ profile: PowerProfile.Balanced, text: Tr.t("Balanced") }
+	].concat(PowerProfiles.hasPerformanceProfile ? [{ profile: PowerProfile.Performance, text: Tr.t("Performance") }] : [])
 
 	readonly property int at: choices.findIndex(choice => choice.profile === profile)
 	readonly property string profileName: choices[at]?.text ?? ""

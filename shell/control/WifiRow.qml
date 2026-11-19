@@ -74,7 +74,7 @@ Entry {
 			anchors.rightMargin: Theme.u(6)
 			implicitHeight: Theme.u(34)
 			secret: true
-			placeholder: "Password"
+			placeholder: Tr.t("Password")
 			onAccepted: {
 				if (text !== "")
 					row.keyGiven(text);
@@ -100,7 +100,7 @@ Entry {
 			height: key.height
 			filled: true
 			enabled: key.text !== ""
-			text: "Connect"
+			text: Tr.t("Connect")
 			onClicked: row.keyGiven(key.text)
 		}
 	}

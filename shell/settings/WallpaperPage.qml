@@ -80,7 +80,7 @@ Column {
 		Button {
 			height: Theme.u(30)
 			flat: page.showing || page.online
-			text: "Pictures"
+			text: Tr.t("Pictures")
 			onClicked: {
 				page.showing = false;
 				page.online = false;
@@ -90,7 +90,7 @@ Column {
 		Button {
 			height: Theme.u(30)
 			flat: !page.showing
-			text: "How they show"
+			text: Tr.t("How they show")
 			onClicked: {
 				page.showing = true;
 				page.online = false;
@@ -100,7 +100,7 @@ Column {
 		Button {
 			height: Theme.u(30)
 			flat: !page.online
-			text: "Wallhaven"
+			text: Tr.t("Wallhaven")
 			onClicked: {
 				page.online = true;
 				page.showing = false;
@@ -135,7 +135,7 @@ Column {
 		TextField {
 			width: parent.width
 			icon: "image"
-			placeholder: "Folder"
+			placeholder: Tr.t("Folder")
 			text: Settings.pictures
 			keeps: true
 			onAccepted: Settings.set("wallpaper", "folder", text.replace(/^~(?=\/|$)/, Quickshell.env("HOME")))
@@ -150,9 +150,9 @@ Column {
 				id: whose
 
 				width: parent.width - (same.visible ? same.width + Theme.u(8) : 0)
-				text: "They're for"
-				subtext: page.screen && !page.current ? "It has what the others have" : ""
-				options: [{ value: "", text: "Every screen" }].concat(page.screens.length > 1 ? page.screens.map(name => ({ value: name, text: name })) : [], [{ value: "*light", text: "Light colors" }])
+				text: Tr.t("They're for")
+				subtext: page.screen && !page.current ? Tr.t("It has what the others have") : ""
+				options: [{ value: "", text: Tr.t("Every screen") }].concat(page.screens.length > 1 ? page.screens.map(name => ({ value: name, text: name })) : [], [{ value: "*light", text: Tr.t("Light colors") }])
 				value: page.screen
 				onChosen: value => page.screen = value
 			}
@@ -164,7 +164,7 @@ Column {
 				anchors.verticalCenter: parent.verticalCenter
 				height: Theme.u(30)
 				visible: page.screen !== "" && page.current !== ""
-				text: "As the others"
+				text: Tr.t("As the others")
 				onClicked: page.drop()
 			}
 		}
@@ -267,8 +267,8 @@ Column {
 
 				property string path: ""
 				property point at
-				readonly property var rows: !path ? [] : [{ text: "For every screen", does: path => Settings.set("wallpaper", "path", path) }].concat(page.screens.length > 1 ? page.screens.map(name => ({ text: `Only on ${name}`, does: path => Settings.set("wallpaper", "screens", Object.assign({}, page.own.screens, { [name]: path })) })) : [], [
-						{ text: "With light colors", does: path => Settings.set("wallpaper", "light", path) },
+				readonly property var rows: !path ? [] : [{ text: "For every screen", does: path => Settings.set("wallpaper", "path", path) }].concat(page.screens.length > 1 ? page.screens.map(name => ({ text: Tr.f("Only on %1", name), does: path => Settings.set("wallpaper", "screens", Object.assign({}, page.own.screens, { [name]: path })) })) : [], [
+						{ text: Tr.t("With light colors"), does: path => Settings.set("wallpaper", "light", path) },
 						{ text: "Open it", does: path => Env.act("open file", () => Niri.spawn(["xdg-open", path])) },
 						{ text: "Copy where it is", does: path => Env.act("copy path", () => Quickshell.execDetached(["wl-copy", "--", path])) }
 					])
@@ -342,7 +342,7 @@ Column {
 			Text {
 				anchors.centerIn: parent
 				visible: pictures.status !== FolderListModel.Loading && pictures.count === 0
-				text: "No pictures here"
+				text: Tr.t("No pictures here")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize
@@ -364,14 +364,14 @@ Column {
 			objectName: "wallhaven-field"
 			width: parent.width
 			icon: "search"
-			placeholder: "Look on Wallhaven, or Enter for the most liked"
+			placeholder: Tr.t("Look on Wallhaven, or Enter for the most liked")
 			onAccepted: Wallhaven.search(text)
 		}
 
 		Text {
 			width: parent.width
 			visible: text !== ""
-			text: Wallhaven.looking ? "Looking..." : Wallhaven.taking ? "Fetching it..." : Wallhaven.trouble || (Wallhaven.asked !== "" && Wallhaven.found.length === 0 ? "Nothing found" : "")
+			text: Wallhaven.looking ? Tr.t("Looking...") : Wallhaven.taking ? Tr.t("Fetching it...") : Wallhaven.trouble || (Wallhaven.asked !== "" && Wallhaven.found.length === 0 ? Tr.t("Nothing found") : "")
 			color: Wallhaven.trouble ? Theme.colors.error : Theme.colors.subtext
 			font.family: Theme.font
 			font.pixelSize: Theme.fontSize - Theme.u(1)
@@ -465,11 +465,11 @@ Column {
 
 			Card {
 				width: parent.width
-				title: "On the screen"
+				title: Tr.t("On the screen")
 
 				Pick {
 					holds: "wallpaper.fill"
-					text: "A picture of another shape"
+					text: Tr.t("A picture of another shape")
 					subtext: ({
 							crop: "Fills the screen, cut at its sides",
 							fit: "Is whole, with edges beside it",
@@ -478,11 +478,11 @@ Column {
 							tile: "Is as large as it is, over and over"
 						})[page.own.fill] ?? ""
 					options: [
-						{ value: "crop", text: "Cropped" },
-						{ value: "fit", text: "Fitted" },
-						{ value: "stretch", text: "Stretched" },
-						{ value: "center", text: "Centered" },
-						{ value: "tile", text: "Tiled" }
+						{ value: "crop", text: Tr.t("Cropped") },
+						{ value: "fit", text: Tr.t("Fitted") },
+						{ value: "stretch", text: Tr.t("Stretched") },
+						{ value: "center", text: Tr.t("Centered") },
+						{ value: "tile", text: Tr.t("Tiled") }
 					]
 					value: page.own.fill
 					onChosen: value => Settings.set("wallpaper", "fill", value)
@@ -490,7 +490,7 @@ Column {
 
 				Setting {
 					holds: "wallpaper.backdrop"
-					text: "Blurred behind the overview"
+					text: Tr.t("Blurred behind the overview")
 					checked: page.own.backdrop
 					onToggled: wanted => Settings.set("wallpaper", "backdrop", wanted)
 				}
@@ -498,16 +498,16 @@ Column {
 
 			Card {
 				width: parent.width
-				title: "A new one"
+				title: Tr.t("A new one")
 
 				Pick {
 					holds: "wallpaper.transition"
-					text: "The way it comes"
+					text: Tr.t("The way it comes")
 					options: [
-						{ value: "fade", text: "Fade" },
-						{ value: "slide", text: "Slide" },
-						{ value: "wipe", text: "Wipe" },
-						{ value: "zoom", text: "Zoom" }
+						{ value: "fade", text: Tr.t("Fade") },
+						{ value: "slide", text: Tr.t("Slide") },
+						{ value: "wipe", text: Tr.t("Wipe") },
+						{ value: "zoom", text: Tr.t("Zoom") }
 					]
 					value: page.own.transition
 					onChosen: value => Settings.set("wallpaper", "transition", value)
@@ -515,10 +515,10 @@ Column {
 
 				Choice {
 					holds: "wallpaper.fade"
-					text: "It takes"
+					text: Tr.t("It takes")
 					values: [0, 300, 500, 1000, 1500, 2000, 3000]
 					value: page.own.fade
-					none: "No time"
+					none: Tr.t("No time")
 					unit: " ms"
 					onChosen: value => Settings.set("wallpaper", "fade", value)
 				}
@@ -526,16 +526,16 @@ Column {
 				Pick {
 					holds: "wallpaper.every"
 					words: "slideshow rotate cycle"
-					text: "Another every"
-					subtext: "Out of the folder, for every screen without one of its own"
+					text: Tr.t("Another every")
+					subtext: Tr.t("Out of the folder, for every screen without one of its own")
 					options: [
-						{ value: 0, text: "Never" },
+						{ value: 0, text: Tr.t("Never") },
 						{ value: 5, text: "5 min" },
 						{ value: 15, text: "15 min" },
 						{ value: 30, text: "30 min" },
-						{ value: 60, text: "Hour" },
+						{ value: 60, text: Tr.t("Hour") },
 						{ value: 180, text: "3 hours" },
-						{ value: 1440, text: "Day" }
+						{ value: 1440, text: Tr.t("Day") }
 					]
 					value: page.own.every
 					onChosen: value => Settings.set("wallpaper", "every", value)
@@ -543,8 +543,8 @@ Column {
 
 				Setting {
 					holds: "wallpaper.random"
-					text: "Any of them"
-					subtext: "Not the next by name"
+					text: Tr.t("Any of them")
+					subtext: Tr.t("Not the next by name")
 					enabled: page.own.every > 0
 					checked: page.own.random
 					onToggled: wanted => Settings.set("wallpaper", "random", wanted)
@@ -554,20 +554,20 @@ Column {
 			// What's over the wallpaper, under the windows.
 			Card {
 				width: parent.width
-				title: "On the desktop"
+				title: Tr.t("On the desktop")
 
 				Setting {
 					holds: "desktop.clock"
 					words: "widget desktop clock"
-					text: "The time"
-					subtext: "Large, with the day"
+					text: Tr.t("The time")
+					subtext: Tr.t("Large, with the day")
 					checked: Settings.desktop.clock
 					onToggled: wanted => Settings.set("desktop", "clock", wanted)
 				}
 
 				Setting {
 					holds: "desktop.seconds"
-					text: "With seconds"
+					text: Tr.t("With seconds")
 					visible: Settings.desktop.clock
 					checked: Settings.desktop.seconds
 					onToggled: wanted => Settings.set("desktop", "seconds", wanted)
@@ -576,8 +576,8 @@ Column {
 				Setting {
 					holds: "desktop.weather"
 					words: "widget desktop"
-					text: "The weather now"
-					subtext: Weather.on ? "And today's high and low" : "Where you are goes on the Bar page, the clock's"
+					text: Tr.t("The weather now")
+					subtext: Weather.on ? Tr.t("And today's high and low") : Tr.t("Where you are goes on the Bar page, the clock's")
 					checked: Settings.desktop.weather
 					onToggled: wanted => Settings.set("desktop", "weather", wanted)
 				}
@@ -585,8 +585,8 @@ Column {
 				Setting {
 					holds: "desktop.media"
 					words: "widget desktop player music"
-					text: "What plays"
-					subtext: "With its buttons, while a player's open"
+					text: Tr.t("What plays")
+					subtext: Tr.t("With its buttons, while a player's open")
 					checked: Settings.desktop.media
 					onToggled: wanted => Settings.set("desktop", "media", wanted)
 				}
@@ -594,22 +594,22 @@ Column {
 				Setting {
 					holds: "desktop.events"
 					words: "widget desktop calendar agenda"
-					text: "What's coming"
-					subtext: Events.on ? "Today's and tomorrow's, from the calendars" : "Calendars go on the Bar page, the clock's"
+					text: Tr.t("What's coming")
+					subtext: Events.on ? Tr.t("Today's and tomorrow's, from the calendars") : Tr.t("Calendars go on the Bar page, the clock's")
 					checked: Settings.desktop.events
 					onToggled: wanted => Settings.set("desktop", "events", wanted)
 				}
 
 				Pick {
 					holds: "desktop.position"
-					text: "Where they are"
+					text: Tr.t("Where they are")
 					valueWidth: Theme.u(150)
 					options: [
-						{ value: "top-left", text: "Top left" },
-						{ value: "top-right", text: "Top right" },
-						{ value: "center", text: "In the middle" },
-						{ value: "bottom-left", text: "Bottom left" },
-						{ value: "bottom-right", text: "Bottom right" }
+						{ value: "top-left", text: Tr.t("Top left") },
+						{ value: "top-right", text: Tr.t("Top right") },
+						{ value: "center", text: Tr.t("In the middle") },
+						{ value: "bottom-left", text: Tr.t("Bottom left") },
+						{ value: "bottom-right", text: Tr.t("Bottom right") }
 					]
 					value: Settings.desktop.position
 					onChosen: value => Settings.set("desktop", "position", value)

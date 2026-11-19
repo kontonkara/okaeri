@@ -225,7 +225,7 @@ Scope {
 
 					Text {
 						anchors.verticalCenter: parent.verticalCenter
-						text: "Authentication required"
+						text: Tr.t("Authentication required")
 						color: Theme.colors.text
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize + Theme.u(2)
@@ -237,7 +237,7 @@ Scope {
 						anchors.verticalCenter: parent.verticalCenter
 						visible: dialog.view.who !== ""
 						width: Math.max(0, Math.min(implicitWidth, content.width - x))
-						text: `as ${dialog.view.who}`
+						text: Tr.f("as %1", dialog.view.who)
 						textFormat: Text.PlainText
 						elide: Text.ElideRight
 						color: Theme.colors.subtext
@@ -291,7 +291,7 @@ Scope {
 					Text {
 						id: label
 
-						text: "Authenticate as"
+						text: Tr.t("Authenticate as")
 						color: Theme.colors.text
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize
@@ -323,7 +323,7 @@ Scope {
 					width: parent.width
 					focus: true
 					enabled: dialog.view.asking
-					placeholder: dialog.view.prompt || "One moment"
+					placeholder: dialog.view.prompt || Tr.t("One moment")
 					secret: dialog.view.secret
 					onAccepted: dialog.submit()
 					onEnabledChanged: {
@@ -354,14 +354,14 @@ Scope {
 					spacing: Theme.u(8)
 
 					Button {
-						text: "Cancel"
+						text: Tr.t("Cancel")
 						onClicked: dialog.cancel()
 					}
 
 					Button {
 						id: authenticate
 
-						text: "Authenticate"
+						text: Tr.t("Authenticate")
 						filled: true
 						enabled: field.enabled && field.text !== ""
 						onClicked: dialog.submit()

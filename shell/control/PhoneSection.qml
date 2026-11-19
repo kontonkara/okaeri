@@ -21,14 +21,14 @@ Section {
 	name: "phone"
 	wanted: Phone.devices.length > 0
 	icon: "phone"
-	title: Phone.devices.length === 1 ? Phone.devices[0].name : "Phones"
+	title: Phone.devices.length === 1 ? Phone.devices[0].name : Tr.t("Phones")
 	summary: Phone.devices.map(device => device.charge >= 0 ? `${device.charge}%${device.charging ? ", charging" : ""}` : "In reach").join(" · ")
 	switches: false
 
 	Rows {
 		values: section.doings
 		room: section.roomInside
-		empty: "None in reach"
+		empty: Tr.t("None in reach")
 		onActivated: (index, doing) => Phone.ask(doing.device, doing.what)
 
 		delegate: Entry {

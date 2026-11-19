@@ -18,10 +18,10 @@ Panel {
 	property string part: ""
 	readonly property var rows: {
 		const own = ownRows(part);
-		const rest = [{ settings: true, text: "Settings of this part", subtext: "On the Bar page", icon: "gear" }];
+		const rest = [{ settings: true, text: Tr.t("Settings of this part"), subtext: Tr.t("On the Bar page"), icon: "gear" }];
 		// The way to the rest of the shell stays.
 		if (part !== "control")
-			rest.push({ off: true, text: "Off the bar", subtext: "The Bar page brings it back", icon: "eyeOff" });
+			rest.push({ off: true, text: Tr.t("Off the bar"), subtext: Tr.t("The Bar page brings it back"), icon: "eyeOff" });
 		return own.concat(own.length ? [{ separator: true }] : [], rest);
 	}
 
@@ -48,8 +48,8 @@ Panel {
 		if (name === "night") {
 			const own = Settings.nightLight;
 			return [
-				{ text: "Warmer", subtext: `${NightLight.warm} K now`, icon: "", stays: true, enabled: NightLight.warm > 2500, does: () => NightLight.step(-1) },
-				{ text: "Cooler", subtext: "Closer to daylight", icon: "", stays: true, enabled: NightLight.warm < 6000, does: () => NightLight.step(1) },
+				{ text: "Warmer", subtext: Tr.f("%1 K now", NightLight.warm), icon: "", stays: true, enabled: NightLight.warm > 2500, does: () => NightLight.step(-1) },
+				{ text: Tr.t("Cooler"), subtext: Tr.t("Closer to daylight"), icon: "", stays: true, enabled: NightLight.warm < 6000, does: () => NightLight.step(1) },
 				line,
 				pick("All the time", own.mode === "always", () => Settings.set("nightLight", "mode", "always")),
 				pick("From, until", own.mode === "schedule", () => Settings.set("nightLight", "mode", "schedule"), `${own.from} to ${own.until}`),

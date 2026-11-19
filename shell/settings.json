@@ -231,6 +231,9 @@
 		"bars": 10,
 		"playing": true
 	},
+	"language": {
+		"name": ""
+	},
 	"plugins": {
 		"enabled": []
 	},

@@ -91,39 +91,39 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Toasts"
+			title: Tr.t("Toasts")
 
 			Choice {
-				text: "They stay for"
-				subtext: "When the app doesn't say"
+				text: Tr.t("They stay for")
+				subtext: Tr.t("When the app doesn't say")
 				values: [3, 4, 5, 6, 8, 10, 15, 20, 30]
 				value: Settings.notifications.timeout
 				onChosen: value => page.set("timeout", value)
 			}
 
 			Choice {
-				text: "Low ones for"
+				text: Tr.t("Low ones for")
 				values: [1, 2, 3, 4, 5, 6, 8, 10]
 				value: Settings.notifications.timeoutLow
 				onChosen: value => page.set("timeoutLow", value)
 			}
 
 			Choice {
-				text: "Critical ones for"
+				text: Tr.t("Critical ones for")
 				values: [0, 10, 20, 30, 60, 120, 300]
 				value: Settings.notifications.timeoutCritical
-				none: "Till closed"
+				none: Tr.t("Till closed")
 				onChosen: value => page.set("timeoutCritical", value)
 			}
 
 			Setting {
-				text: "Apps can say how long"
+				text: Tr.t("Apps can say how long")
 				checked: Settings.notifications.appsDecide
 				onToggled: wanted => page.set("appsDecide", wanted)
 			}
 
 			Choice {
-				text: "At most at once"
+				text: Tr.t("At most at once")
 				values: [1, 2, 3, 4, 5, 6, 8]
 				value: Settings.notifications.cap
 				unit: " "
@@ -131,53 +131,53 @@ Flickable {
 			}
 
 			Pick {
-				text: "Where"
+				text: Tr.t("Where")
 				options: [
-					{ value: "top-left", text: "Top left" },
-					{ value: "top", text: "Top" },
-					{ value: "top-right", text: "Top right" },
-					{ value: "bottom-left", text: "Bottom left" },
-					{ value: "bottom-right", text: "Bottom right" }
+					{ value: "top-left", text: Tr.t("Top left") },
+					{ value: "top", text: Tr.t("Top") },
+					{ value: "top-right", text: Tr.t("Top right") },
+					{ value: "bottom-left", text: Tr.t("Bottom left") },
+					{ value: "bottom-right", text: Tr.t("Bottom right") }
 				]
 				value: Settings.notifications.position
 				onChosen: value => page.set("position", value)
 			}
 
 			Setting {
-				text: "Over fullscreen windows"
-				subtext: "Games and video too"
+				text: Tr.t("Over fullscreen windows")
+				subtext: Tr.t("Games and video too")
 				checked: Settings.notifications.overFullscreen
 				onToggled: wanted => page.set("overFullscreen", wanted)
 			}
 
 			Setting {
-				text: "With their buttons"
-				subtext: "The history has them either way"
+				text: Tr.t("With their buttons")
+				subtext: Tr.t("The history has them either way")
 				checked: Settings.notifications.actions
 				onToggled: wanted => page.set("actions", wanted)
 			}
 
 			Setting {
-				text: "A line for the time left"
-				subtext: "Under each: it has all of it again after the pointer was on it"
+				text: Tr.t("A line for the time left")
+				subtext: Tr.t("Under each: it has all of it again after the pointer was on it")
 				checked: Settings.notifications.timeLeft
 				onToggled: wanted => page.set("timeLeft", wanted)
 			}
 
 			Setting {
-				text: "Quiet while the screen is shared"
-				subtext: "Critical ones still show"
+				text: Tr.t("Quiet while the screen is shared")
+				subtext: Tr.t("Critical ones still show")
 				checked: Settings.notifications.quietSharing
 				onToggled: wanted => page.set("quietSharing", wanted)
 			}
 
 			Pick {
-				text: "They say"
-				subtext: "The history has all of it"
+				text: Tr.t("They say")
+				subtext: Tr.t("The history has all of it")
 				options: [
-					{ value: "all", text: "All of it" },
-					{ value: "title", text: "The title" },
-					{ value: "none", text: "Who it's from" }
+					{ value: "all", text: Tr.t("All of it") },
+					{ value: "title", text: Tr.t("The title") },
+					{ value: "none", text: Tr.t("Who it's from") }
 				]
 				value: Settings.notifications.toastText
 				onChosen: value => page.set("toastText", value)
@@ -189,7 +189,7 @@ Flickable {
 			Item {
 				id: sample
 
-				readonly property string text: "Show one"
+				readonly property string text: Tr.t("Show one")
 				readonly property string subtext: page.notifier ? "A toast as these say, to see them in place" : "It needs notify-send, which isn't here."
 
 				width: parent.width
@@ -224,37 +224,37 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "History"
+			title: Tr.t("History")
 
 			Setting {
-				text: "The same again makes one"
-				subtext: "With how many times it came"
+				text: Tr.t("The same again makes one")
+				subtext: Tr.t("With how many times it came")
 				checked: Settings.notifications.stack
 				onToggled: wanted => page.set("stack", wanted)
 			}
 
 			Setting {
-				text: "The bell with nothing new"
-				subtext: "Off, it only shows for something unread"
+				text: Tr.t("The bell with nothing new")
+				subtext: Tr.t("Off, it only shows for something unread")
 				checked: Settings.notifications.bellAlways
 				onToggled: wanted => page.set("bellAlways", wanted)
 			}
 
 			Setting {
-				text: "How many are unread, on the bell"
+				text: Tr.t("How many are unread, on the bell")
 				checked: Settings.notifications.bellCount
 				onToggled: wanted => page.set("bellCount", wanted)
 			}
 
 			Setting {
-				text: "Keep it over a restart"
-				subtext: "In a file only you can read, without the pictures that came as data"
+				text: Tr.t("Keep it over a restart")
+				subtext: Tr.t("In a file only you can read, without the pictures that came as data")
 				checked: Settings.notifications.keep
 				onToggled: wanted => page.set("keep", wanted)
 			}
 
 			Choice {
-				text: "How much of it"
+				text: Tr.t("How much of it")
 				values: [20, 50, 100, 200, 500]
 				value: Settings.notifications.history
 				unit: " "
@@ -262,10 +262,10 @@ Flickable {
 			}
 
 			Choice {
-				text: "How long it stays"
+				text: Tr.t("How long it stays")
 				values: [0, 1, 3, 7, 14, 30]
 				value: Settings.notifications.maxAge
-				none: "Always"
+				none: Tr.t("Always")
 				unit: " d"
 				onChosen: value => page.set("maxAge", value)
 			}
@@ -274,13 +274,13 @@ Flickable {
 		// The hours of every day toasts wait, as with Do Not Disturb on.
 		Card {
 			width: parent.width
-			title: "Quiet hours"
+			title: Tr.t("Quiet hours")
 
 			Field {
 				holds: "notifications.quietFrom"
 				words: "do not disturb schedule night hours"
-				text: "Quiet every day from"
-				subtext: "As 23:00, with the time below; empty for never"
+				text: Tr.t("Quiet every day from")
+				subtext: Tr.t("As 23:00, with the time below; empty for never")
 				placeholder: "23:00"
 				fieldWidth: Theme.u(100)
 				value: Settings.notifications.quietFrom
@@ -292,8 +292,8 @@ Flickable {
 
 			Field {
 				holds: "notifications.quietUntil"
-				text: "Until"
-				subtext: "Critical ones still show"
+				text: Tr.t("Until")
+				subtext: Tr.t("Critical ones still show")
 				placeholder: "07:00"
 				fieldWidth: Theme.u(100)
 				value: Settings.notifications.quietUntil
@@ -308,13 +308,13 @@ Flickable {
 		// long still, each to be let speak again.
 		Card {
 			width: parent.width
-			title: "Kept quiet"
+			title: Tr.t("Kept quiet")
 
 			Text {
 				width: parent.width
 				visible: Object.keys(NotificationStore.quietApps).length === 0
 				wrapMode: Text.WordWrap
-				text: "No app now: the bell beside an app's name in the history keeps it quiet for a while"
+				text: Tr.t("No app now: the bell beside an app's name in the history keeps it quiet for a while")
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(1)
@@ -337,7 +337,7 @@ Flickable {
 
 						Text {
 							width: parent.width
-							text: parent.parent.modelData || "Unknown"
+							text: parent.parent.modelData || Tr.t("Unknown")
 							textFormat: Text.PlainText
 							color: Theme.colors.text
 							elide: Text.ElideRight
@@ -347,7 +347,7 @@ Flickable {
 
 						Text {
 							width: parent.width
-							text: NotificationStore.quietLabel(parent.parent.modelData).replace(/^until/, "Until").replace(/^(?!Until)/, "For ")
+							text: NotificationStore.quietLabel(parent.parent.modelData).replace(/^until/, Tr.t("Until")).replace(/^(?!Until)/, Tr.t("For "))
 							color: Theme.colors.subtext
 							elide: Text.ElideRight
 							font.family: Theme.font
@@ -362,7 +362,7 @@ Flickable {
 						anchors.verticalCenter: parent.verticalCenter
 						height: Theme.u(28)
 						icon: "bell"
-						text: "Let it speak"
+						text: Tr.t("Let it speak")
 						onClicked: NotificationStore.setQuiet(parent.modelData, 0)
 					}
 				}
@@ -371,17 +371,17 @@ Flickable {
 
 		Card {
 			width: parent.width
-			title: "Apps"
+			title: Tr.t("Apps")
 
 			Row {
 				anchors.right: parent.right
 
 				Heading {
-					text: "Toasts"
+					text: Tr.t("Toasts")
 				}
 
 				Heading {
-					text: "History"
+					text: Tr.t("History")
 				}
 			}
 
@@ -431,7 +431,7 @@ Flickable {
 							anchors.right: switches.left
 							anchors.rightMargin: Theme.u(12)
 							anchors.verticalCenter: parent.verticalCenter
-							text: line.modelData || "All apps"
+							text: line.modelData || Tr.t("All apps")
 							textFormat: Text.PlainText
 							color: Theme.colors.text
 							elide: Text.ElideRight
@@ -482,29 +482,29 @@ Flickable {
 
 						TextField {
 							width: parent.width
-							placeholder: "Only when it says this, or /a pattern/"
+							placeholder: Tr.t("Only when it says this, or /a pattern/")
 							text: line.held.text ?? ""
 							keeps: true
 							onAccepted: page.change(line.modelData, "text", text || undefined)
 						}
 
 						Setting {
-							text: "Sound"
+							text: Tr.t("Sound")
 							checked: line.held.sound !== false
 							onToggled: wanted => page.change(line.modelData, "sound", wanted)
 						}
 
 						Setting {
-							text: "Through Do Not Disturb"
+							text: Tr.t("Through Do Not Disturb")
 							checked: !!line.held.bypass
 							onToggled: wanted => page.change(line.modelData, "bypass", wanted)
 						}
 
 						Choice {
-							text: "Its toasts stay for"
+							text: Tr.t("Its toasts stay for")
 							values: [0, 3, 5, 10, 15, 30, 60]
 							value: line.held.timeout ?? 0
-							none: "As above"
+							none: Tr.t("As above")
 							onChosen: value => page.change(line.modelData, "timeout", value || undefined)
 						}
 					}

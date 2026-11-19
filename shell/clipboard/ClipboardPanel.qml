@@ -112,7 +112,7 @@ Panel {
 
 			width: parent.width - (height + parent.spacing) * 3
 			icon: "search"
-			placeholder: "Filter"
+			placeholder: Tr.t("Filter")
 			shifted: true
 			onAccepted: list.activate(list.currentIndex)
 			onShiftAccepted: panel.pick(list.entry(list.currentIndex), true)
@@ -128,7 +128,7 @@ Panel {
 			height: filter.height
 			flat: !Clipboard.paused
 			icon: Clipboard.paused ? "play" : "pause"
-			tip: Clipboard.paused ? "Keep what's copied again" : "Keep nothing copied for now"
+			tip: Clipboard.paused ? Tr.t("Keep what's copied again") : Tr.t("Keep nothing copied for now")
 			activeFocusOnTab: false
 			onClicked: Clipboard.togglePause()
 		}
@@ -136,13 +136,13 @@ Panel {
 		Kind {
 			icon: "text"
 			shows: "text"
-			tip: "Only text · Ctrl+T"
+			tip: Tr.t("Only text · Ctrl+T")
 		}
 
 		Kind {
 			icon: "image"
 			shows: "picture"
-			tip: "Only pictures · Ctrl+I"
+			tip: Tr.t("Only pictures · Ctrl+I")
 		}
 	}
 
@@ -151,7 +151,7 @@ Panel {
 
 		width: parent.width
 		visible: Clipboard.paused
-		text: "Paused: nothing copied is kept"
+		text: Tr.t("Paused: nothing copied is kept")
 		color: Theme.colors.subtext
 		elide: Text.ElideRight
 		font.family: Theme.font
@@ -304,7 +304,7 @@ Panel {
 			height: Theme.u(28)
 			flat: true
 			icon: "trash"
-			text: "Clear all"
+			text: Tr.t("Clear all")
 			ink: Theme.colors.subtext
 			onClicked: Clipboard.clear()
 		}
