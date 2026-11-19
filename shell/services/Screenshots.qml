@@ -94,11 +94,11 @@ Singleton {
 		if (code === 3)
 			return;
 		if (!found) {
-			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-information", "No text there", code === 0 ? "" : `${reader} said no`]);
+			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-information", Tr.t("No text there"), code === 0 ? "" : Tr.f("%1 said no", reader)]);
 			return;
 		}
 		Quickshell.execDetached(["wl-copy", "--", found]);
-		Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=edit-copy", "Copied the text", found.length > 200 ? `${found.slice(0, 200)}…` : found]);
+		Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=edit-copy", Tr.t("Copied the text"), found.length > 200 ? `${found.slice(0, 200)}…` : found]);
 	}
 
 	// Onto the clipboard again, a picture.

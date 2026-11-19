@@ -143,7 +143,7 @@ Singleton {
 				return;
 			}
 			asking.drive = drive.object;
-			asking.exec(words.slice(0, 3).concat(drive.ejectable ? ["--action=open=Open", "--action=eject=Eject"] : ["--action=open=Open"], words.slice(3)));
+			asking.exec(words.slice(0, 3).concat(drive.ejectable ? [`--action=open=${Tr.t("Open")}`, `--action=eject=${Tr.t("Eject")}`] : [`--action=open=${Tr.t("Open")}`], words.slice(3)));
 		});
 	}
 

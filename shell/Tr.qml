@@ -14,6 +14,14 @@ Singleton {
 	readonly property string wanted: Settings.language.name || Quickshell.env("OKAERI_LANGUAGE") || (Quickshell.env("LC_ALL") || Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG") || "").slice(0, 2)
 	property var words: ({})
 
+	// The locale of that language, for the names of days and months, and date()
+	// with it, in Qt's letters: the system's own where it's the system's language.
+	readonly property var locale: wanted && wanted !== Qt.locale().name.slice(0, 2) ? Qt.locale(wanted) : Qt.locale()
+
+	function date(when, format) {
+		return (when instanceof Date ? when : new Date(when)).toLocaleString(locale, format);
+	}
+
 	function t(text) {
 		return words[text] ?? text;
 	}

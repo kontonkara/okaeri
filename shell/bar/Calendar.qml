@@ -20,7 +20,7 @@ Column {
 	readonly property int firstDay: {
 		const start = Settings.clock.weekStart;
 		// Qt's days run 1 for Monday to 7 for Sunday; JavaScript's from 0 for Sunday.
-		return start === "monday" ? 1 : start === "sunday" ? 0 : Qt.locale().firstDayOfWeek % 7;
+		return start === "monday" ? 1 : start === "sunday" ? 0 : Tr.locale.firstDayOfWeek % 7;
 	}
 	// The six weeks that show, from the first that has a day of the month.
 	readonly property var days: {
@@ -63,7 +63,7 @@ Column {
 		const to = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate() + 1);
 		if (one.allDay || (one.start < from && one.end >= to))
 			return "All day";
-		return one.start < from ? `Until ${Qt.formatDateTime(one.end, format)}` : Qt.formatDateTime(one.start, format);
+		return one.start < from ? `Until ${Tr.date(one.end, format)}` : Tr.date(one.start, format);
 	}
 
 	function same(a, b) {
@@ -110,7 +110,7 @@ Column {
 			anchors.centerIn: parent
 			height: Theme.u(30)
 			flat: true
-			text: Qt.locale().standaloneMonthName(calendar.month, Locale.LongFormat) + (calendar.year === calendar.today.getFullYear() ? "" : ` ${calendar.year}`)
+			text: Tr.locale.standaloneMonthName(calendar.month, Locale.LongFormat) + (calendar.year === calendar.today.getFullYear() ? "" : ` ${calendar.year}`)
 			tip: Tr.t("Back to today")
 			onClicked: calendar.back()
 		}
@@ -172,7 +172,7 @@ Column {
 					horizontalAlignment: Text.AlignHCenter
 					verticalAlignment: Text.AlignVCenter
 					// Qt counts from Sunday as 0 here too.
-					text: Qt.locale().dayName((calendar.firstDay + index) % 7, Locale.ShortFormat)
+					text: Tr.locale.dayName((calendar.firstDay + index) % 7, Locale.ShortFormat)
 					color: Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize - Theme.u(3)
@@ -269,7 +269,7 @@ Column {
 			width: parent.width - Theme.u(16)
 			topPadding: Theme.u(6)
 			bottomPadding: Theme.u(2)
-			text: calendar.same(calendar.picked, calendar.today) ? Tr.t("Today") : Qt.formatDate(calendar.picked, calendar.picked.getFullYear() === calendar.today.getFullYear() ? "dddd, d MMMM" : "dddd, d MMMM yyyy")
+			text: calendar.same(calendar.picked, calendar.today) ? Tr.t("Today") : Tr.date(calendar.picked, calendar.picked.getFullYear() === calendar.today.getFullYear() ? "dddd, d MMMM" : "dddd, d MMMM yyyy")
 			color: Theme.colors.subtext
 			elide: Text.ElideRight
 			font.family: Theme.font

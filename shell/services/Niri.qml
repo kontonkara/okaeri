@@ -374,7 +374,7 @@ window-rule {
 		// What niri wouldn't do is said, not left to be guessed at.
 		onExited: code => {
 			if (code !== 0)
-				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", "The screen stayed as it was", outputSaid.text.trim().split("\n").pop() || `niri said no to ${outputSet.command.slice(3).join(" ")}`]);
+				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", Tr.t("The screen stayed as it was"), outputSaid.text.trim().split("\n").pop() || Tr.f("niri said no to %1", outputSet.command.slice(3).join(" "))]);
 			if (niri.outputWork.length > 0)
 				niri.nextOutput();
 			else

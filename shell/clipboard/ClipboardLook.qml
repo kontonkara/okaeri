@@ -124,7 +124,7 @@ FocusScope {
 			// For tests: where it went.
 			console.info("okaeri: clipboard: saved", code === 0 ? name : "nothing");
 			if (code === 0)
-				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=image-x-generic", "Picture saved", name]);
+				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=image-x-generic", Tr.t("Picture saved"), name]);
 		}
 	}
 

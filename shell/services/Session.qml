@@ -116,7 +116,7 @@ Singleton {
 				return;
 			const row = session.known.find(other => other.action === runner.action);
 			const why = complaint.text.trim().split("\n").pop() || `It ended with ${code}`;
-			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", `${row ? row.text : runner.action} didn't happen`, why]);
+			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", Tr.f("%1 didn't happen", row ? row.text : runner.action), why]);
 		}
 	}
 

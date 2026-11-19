@@ -58,7 +58,7 @@ Singleton {
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor(seconds / 60) % 60;
 		const rest = seconds % 60;
-		return [hours ? `${hours} h` : "", minutes ? `${minutes} min` : "", rest ? `${rest} s` : ""].filter(part => part !== "").join(" ");
+		return [hours ? Tr.f("%1 h", hours) : "", minutes ? Tr.f("%1 min", minutes) : "", rest ? Tr.f("%1 s", rest) : ""].filter(part => part !== "").join(" ");
 	}
 
 	function start(seconds, what) {
@@ -116,13 +116,13 @@ Singleton {
 			rounds = done;
 			console.info("okaeri: pomodoro:", next);
 			Sounds.play("alarm-clock-elapsed");
-			Env.act("pomodoro next", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", worked ? "Work's done" : "Back to work", worked ? `${next === "long" ? "A long break" : "A break"}, ${timers.span(timers.left)}` : `${timers.span(timers.left)} of it`]));
+			Env.act("pomodoro next", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", worked ? Tr.t("Work's done") : Tr.t("Back to work"), worked ? Tr.f(next === "long" ? "A long break, %1" : "A break, %1", timers.span(timers.left)) : Tr.f("%1 of it", timers.span(timers.left))]));
 			return;
 		}
 		stop();
 		console.info("okaeri: timer: up");
 		Sounds.play("alarm-clock-elapsed");
-		Env.act("timer up", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", "--urgency=critical", "Time's up", what]));
+		Env.act("timer up", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", "--urgency=critical", Tr.t("Time's up"), what]));
 	}
 
 	Timer {

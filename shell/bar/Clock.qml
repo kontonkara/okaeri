@@ -24,14 +24,14 @@ Text {
 	// more, as Settings.clock.date has it.
 	readonly property bool upright: Settings.barSide
 	readonly property string stood: {
-		const hours = Qt.formatDateTime(clock.date, own.hours12 ? "h AP" : "HH").split(" ");
-		const lines = [hours[0], Qt.formatDateTime(clock.date, "mm")].concat(own.seconds ? [Qt.formatDateTime(clock.date, "ss")] : [], hours.slice(1));
-		const date = [Qt.formatDateTime(clock.date, "d"), Qt.formatDateTime(clock.date, "MMM")];
+		const hours = Tr.date(clock.date, own.hours12 ? "h AP" : "HH").split(" ");
+		const lines = [hours[0], Tr.date(clock.date, "mm")].concat(own.seconds ? [Tr.date(clock.date, "ss")] : [], hours.slice(1));
+		const date = [Tr.date(clock.date, "d"), Tr.date(clock.date, "MMM")];
 		return (own.date === "before" ? date.concat(lines) : own.date === "after" ? lines.concat(date) : lines).join("\n");
 	}
 
 	visible: upright || width <= room
-	text: upright ? stood + (timing ? `\n${timing}` : "") : (dated.advanceWidth <= room ? dated.text : Qt.formatDateTime(clock.date, timeFormat)) + outside + (timing ? `  ${timing}` : "")
+	text: upright ? stood + (timing ? `\n${timing}` : "") : (dated.advanceWidth <= room ? dated.text : Tr.date(clock.date, timeFormat)) + outside + (timing ? `  ${timing}` : "")
 	horizontalAlignment: Text.AlignHCenter
 	lineHeight: upright ? 0.95 : 1
 	color: Theme.colors.text
@@ -52,7 +52,7 @@ Text {
 		id: dated
 
 		font: time.font
-		text: time.formats.map(format => Qt.formatDateTime(clock.date, format)).join("  ")
+		text: time.formats.map(format => Tr.date(clock.date, format)).join("  ")
 	}
 
 	MouseArea {
@@ -89,7 +89,7 @@ Text {
 		listens: false
 		hovered: pointer.containsMouse
 		pressed: pointer.pressed
-		text: Qt.formatDateTime(clock.date, "dddd, d MMMM yyyy")
+		text: Tr.date(clock.date, "dddd, d MMMM yyyy")
 	}
 
 	Panel {

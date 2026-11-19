@@ -575,7 +575,7 @@ Singleton {
 				return;
 			reminded[key] = true;
 			const left = Math.max(1, Math.round((one.start - now) / 60000));
-			Env.act("calendar reminder", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=x-office-calendar", one.summary || "An event", `At ${Qt.formatTime(new Date(one.start), Settings.clock.hours12 ? "h:mm AP" : "HH:mm")}, in ${left} ${left === 1 ? "minute" : "minutes"}`]));
+			Env.act("calendar reminder", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=x-office-calendar", one.summary || Tr.t("An event"), Tr.f(left === 1 ? "At %1, in a minute" : "At %1, in %2 minutes", Tr.date(new Date(one.start), Settings.clock.hours12 ? "h:mm AP" : "HH:mm"), left)]));
 		});
 		// What started long ago is forgotten.
 		Object.keys(reminded).filter(key => Number(key.split(" ")[0]) < now - oneDay).forEach(key => delete reminded[key]);

@@ -125,7 +125,7 @@ Singleton {
 		}
 		onExited: code => {
 			const failed = code !== 0 && recorder.elapsed < 1;
-			notice.exec(["notify-send", "--app-name=okaeri", "--icon=video-x-generic"].concat(failed ? ["Couldn't record the screen", complaints.text.trim().split("\n").pop()] : ["--action=open=Open", "Recording saved", recorder.file]));
+			notice.exec(["notify-send", "--app-name=okaeri", "--icon=video-x-generic"].concat(failed ? [Tr.t("Couldn't record the screen"), complaints.text.trim().split("\n").pop()] : [`--action=open=${Tr.t("Open")}`, Tr.t("Recording saved"), recorder.file]));
 		}
 	}
 

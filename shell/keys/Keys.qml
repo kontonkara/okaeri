@@ -163,7 +163,7 @@ Scope {
 
 		function onColorPicked(color) {
 			Quickshell.execDetached(["wl-copy", "--", color]);
-			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=color-select-symbolic", color, "Copied"]);
+			Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=color-select-symbolic", color, Tr.t("Copied")]);
 		}
 	}
 

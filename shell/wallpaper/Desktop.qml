@@ -73,7 +73,7 @@ Scope {
 
 					Text {
 						width: parent.width
-						text: Qt.formatDateTime(clock.date, (Settings.clock.hours12 ? "h:mm" : Tr.t("HH:mm")) + (desktop.own.seconds ? ":ss" : "") + (Settings.clock.hours12 ? " AP" : ""))
+						text: Tr.date(clock.date, (Settings.clock.hours12 ? "h:mm" : Tr.t("HH:mm")) + (desktop.own.seconds ? ":ss" : "") + (Settings.clock.hours12 ? " AP" : ""))
 						color: Theme.colors.text
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize * 4
@@ -85,7 +85,7 @@ Scope {
 
 					Text {
 						width: parent.width
-						text: Qt.formatDateTime(clock.date, "dddd, d MMMM")
+						text: Tr.date(clock.date, "dddd, d MMMM")
 						color: Theme.colors.subtext
 						font.family: Theme.font
 						font.pixelSize: Theme.fontSize + Theme.u(2)
@@ -225,7 +225,7 @@ Scope {
 								anchors.left: parent.left
 								anchors.verticalCenter: parent.verticalCenter
 								width: Theme.u(90)
-								text: [parent.modelData.day, parent.modelData.allDay ? Tr.t("All day") : Qt.formatTime(parent.modelData.start, Settings.clock.hours12 ? "h:mm AP" : Tr.t("HH:mm"))].filter(part => part !== "").join(" ")
+								text: [parent.modelData.day, parent.modelData.allDay ? Tr.t("All day") : Tr.date(parent.modelData.start, Settings.clock.hours12 ? "h:mm AP" : Tr.t("HH:mm"))].filter(part => part !== "").join(" ")
 								elide: Text.ElideRight
 								color: Theme.colors.subtext
 								font.family: Theme.font

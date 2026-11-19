@@ -217,7 +217,7 @@ Flickable {
 					height: Theme.u(30)
 					enabled: page.notifier
 					text: sample.text
-					onClicked: Env.act("notify test", () => Quickshell.execDetached(["notify-send", "-e", "--app-name=okaeri", "--icon=dialog-information", "-A", "Got it", "This is how they look", "Where a toast comes, what it says of itself and for how long, with a line for the time it has left and the buttons it came with, as they're set on this page. A text as long as this one shows where it's cut, too."]))
+					onClicked: Env.act("notify test", () => Quickshell.execDetached(["notify-send", "-e", "--app-name=okaeri", "--icon=dialog-information", "-A", Tr.t("Got it"), Tr.t("This is how they look"), Tr.t("Where a toast comes, what it says of itself and for how long, with a line for the time it has left and the buttons it came with, as they're set on this page. A text as long as this one shows where it's cut, too.")]))
 				}
 			}
 		}

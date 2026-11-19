@@ -37,7 +37,7 @@ Scope {
 		const seconds = Power.battery?.timeToEmpty ?? 0;
 		const left = seconds > 0 ? `${Power.charge}%, ${Power.span(seconds)} left` : `${Power.charge}% left`;
 		sender.exec(["notify-send", "--print-id", `--replace-id=${shown}`, "--app-name=okaeri", "--icon=battery-caution",
-			`--urgency=${level > 1 ? "critical" : "normal"}`, level > 1 ? "Battery nearly empty" : "Battery low", left]);
+			`--urgency=${level > 1 ? "critical" : "normal"}`, level > 1 ? Tr.t("Battery nearly empty") : Tr.t("Battery low"), left]);
 	}
 
 	onLevelChanged: update()

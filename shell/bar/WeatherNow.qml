@@ -108,7 +108,7 @@ Column {
 
 				Text {
 					anchors.horizontalCenter: parent.horizontalCenter
-					text: Qt.formatDateTime(modelData.time, Settings.clock.hours12 ? "h AP" : Tr.t("HH:mm"))
+					text: Tr.date(modelData.time, Settings.clock.hours12 ? "h AP" : Tr.t("HH:mm"))
 					color: Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize - Theme.u(3)
@@ -168,7 +168,7 @@ Column {
 
 				Text {
 					anchors.horizontalCenter: parent.horizontalCenter
-					text: Qt.locale().dayName(modelData.date.getDay(), Locale.ShortFormat)
+					text: Tr.locale.dayName(modelData.date.getDay(), Locale.ShortFormat)
 					color: Theme.colors.subtext
 					font.family: Theme.font
 					font.pixelSize: Theme.fontSize - Theme.u(2)

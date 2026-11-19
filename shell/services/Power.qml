@@ -189,7 +189,7 @@ Singleton {
 		}
 		onExited: code => {
 			if (code !== 0)
-				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", "The battery's limit stayed as it was", limitSaid.text.trim().split("\n").pop() ?? ""]);
+				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", Tr.t("The battery's limit stayed as it was"), limitSaid.text.trim().split("\n").pop() ?? ""]);
 			power.lookLimit();
 		}
 	}

@@ -180,7 +180,7 @@ Singleton {
 		if (minutes < 60)
 			return `${minutes} min ago`;
 		const date = new Date(time);
-		return Qt.formatDateTime(date, date.toDateString() === clock.date.toDateString() ? "HH:mm" : "d MMM HH:mm");
+		return Tr.date(date, date.toDateString() === clock.date.toDateString() ? "HH:mm" : "d MMM HH:mm");
 	}
 
 	// One alike in the history, for this one to take the place of.
@@ -489,7 +489,7 @@ Singleton {
 	// How long `app` still keeps quiet, in words, "" if it doesn't.
 	function quietLabel(app) {
 		const end = quietApps[app] ?? 0;
-		return end >= always ? "until you say" : end > 0 ? `${Power.span(Math.max(0, end - quieting.now) / 1000)} · until ${Qt.formatDateTime(new Date(end), "HH:mm")}` : "";
+		return end >= always ? "until you say" : end > 0 ? `${Power.span(Math.max(0, end - quieting.now) / 1000)} · until ${Tr.date(new Date(end), "HH:mm")}` : "";
 	}
 
 	function togglePanel() {
