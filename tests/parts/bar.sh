@@ -2184,6 +2184,40 @@ shot islands
 same "between the lanes of a bar that's whole" "$(pixel whole 400 16)" "$(pixel whole 1300 16)"
 same "between the islands" "$(pixel islands 400 16)" "$(pixel islands 400 500)"
 [ "$(pixel islands 700 16)" != "$(pixel islands 400 16)" ] || fail "no island around the clock"
+
+step "Capsules, and a part's own look"
+# Each part on its own, the desktop between; then on a whole bar the clock in
+# a capsule of its own, red, and the control center's icon green, and a
+# separator and a space taking room on the right.
+settings '{ "bar": { "right": ["control"], "look": "capsules" } }'
+sleep 0.5
+shot capsules
+same "between the capsules" "$(pixel capsules 400 16)" "$(pixel capsules 400 500)"
+[ "$(pixel capsules 700 10)" != "$(pixel capsules 400 10)" ] || fail "no capsule around the clock"
+settings '{ "bar": { "right": ["notifications", "control"], "looks": { "clock": { "capsule": true, "fill": "#ff0000" }, "control": { "ink": "#00ff00" } } } }'
+sleep 0.5
+shot looks
+same "the clock's own fill" "$(pixel looks 700 10)" "srgb(255,0,0)"
+[ "$(magick "$out/looks.png" -crop 40x30+1355+6 +repage -fuzz 25% -fill black +opaque "#00ff00" -format '%[fx:maxima.g > 0.5]' info:)" = 1 ] || fail "the control center's icon isn't green"
+settings '{ "bar": { "right": ["notifications", "separator", "space", "control"] } }'
+sleep 0.5
+shot spacers
+[ "$(lane spacers | head -n 1)" -lt $(($(lane looks | head -n 1) - 20)) ] || fail "the separator and the space take no room: $(lane spacers | head -n 1) against $(lane looks | head -n 1)"
+
+step "Panels by the pointer"
+# Resting on the clock opens its panel, with hoverOpens; without, it doesn't.
+move 700 600
+settings '{}'
+move 700 16
+sleep 0.8
+same "a panel by the pointer, unasked" "$(panels)" 0
+move 700 600
+settings '{ "bar": { "hoverOpens": true } }'
+move 700 16
+wait_panels 1 "the clock's panel by the pointer"
+move 700 600
+click
+wait_panels 0 "the panel by the pointer, gone"
 settings '{}'
 
 step "Palettes"

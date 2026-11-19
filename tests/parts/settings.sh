@@ -356,6 +356,25 @@ same "the parts with it removed" "$(value .bar.scripts)" '[]'
 same "the left without it" "$(value .bar.left)" '["workspaces","media","clock"]'
 same "the clicks without it" "$(value .bar.actions)" '{}'
 
+step "A part's look"
+# A capsule of its own, its fill a dot's, its icons and words a color typed,
+# the pipette asking niri, and all of it back as the theme has it.
+choose 745 "$left_y"
+higher "A capsule"
+same "its capsule" "$(value .bar.looks.clock)" '{"capsule":true}'
+press_on "Its fill" "dot-#e06c75"
+same "its fill" "$(value .bar.looks.clock.fill)" '"#e06c75"'
+put "Its icons and words" '00ff00'
+same "its ink" "$(value .bar.looks.clock.ink)" '"#00ff00"'
+shot part-look
+press_on "Its fill" pipette
+wait_log "okaeri: dry: color pick"
+press_on "As the theme" line
+same "its look as the theme's" "$(value .bar.looks)" '{}'
+# A separator and a space wait off the bar, one more of each as they go on it.
+[ -n "$(ipc settings spot Separator line)" ] || fail "no separator off the bar"
+[ -n "$(ipc settings spot Space line)" ] || fail "no space off the bar"
+
 step "All of the bar, and its screens"
 page "$bar_y"
 higher "The wheel on it"

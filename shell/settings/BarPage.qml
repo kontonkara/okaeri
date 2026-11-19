@@ -50,6 +50,17 @@ Flickable {
 		const all = Object.assign({}, builtIn);
 		scripts.forEach(own => all[own.name] = all[own.name] ?? own.name);
 		Plugins.running.filter(plugin => plugin.bar !== "").forEach(plugin => all[plugin.id] = all[plugin.id] ?? plugin.name);
+		// Separators and spaces: those on a bar, and one more of each to put there.
+		const lanes = ["left", "center", "right"];
+		const on = [];
+		[Settings.bar].concat(Object.values(Settings.bar.screens ?? {})).forEach(own => lanes.forEach(lane => (own[lane] ?? []).forEach(name => on.push(name))));
+		[{ kind: "separator", text: "Separator" }, { kind: "space", text: "Space" }].forEach(spacer => {
+			on.filter(name => Settings.spacer(name) && name.startsWith(spacer.kind)).forEach(name => all[name] = spacer.text);
+			let spare = spacer.kind;
+			for (let count = 2; all[spare] !== undefined; count++)
+				spare = `${spacer.kind} ${count}`;
+			all[spare] = spacer.text;
+		});
 		return all;
 	}
 	readonly property var buttons: [
@@ -202,7 +213,7 @@ Flickable {
 	function renameScript(name, to) {
 		if (to === name)
 			return true;
-		if (!to || names[to] !== undefined)
+		if (!to || names[to] !== undefined || Settings.spacer(to))
 			return false;
 		// The part first: the bar knows nothing by the new name before.
 		changeScript(name, "name", to);
@@ -213,6 +224,11 @@ Flickable {
 			delete actions[name];
 			Settings.set("bar", "actions", actions);
 		}
+		if (Settings.bar.looks[name]) {
+			const looks = Object.assign({}, Settings.bar.looks, { [to]: Settings.bar.looks[name] });
+			delete looks[name];
+			Settings.set("bar", "looks", looks);
+		}
 		chosen = to;
 		return true;
 	}
@@ -220,6 +236,7 @@ Flickable {
 	function removeScript(name) {
 		Settings.eachLane(parts => parts.filter(other => other !== name));
 		runs(name, "", "");
+		setLook(name, "", "");
 		Settings.set("bar", "scripts", scripts.filter(own => own.name !== name));
 		chosen = "";
 	}
@@ -236,6 +253,23 @@ Flickable {
 
 	function removeCalendar(source) {
 		Settings.set("clock", "calendars", Events.sources.filter(other => other !== source));
+	}
+
+	// The look of `part`, Settings.bar.looks, with `key` as `value`: none of its
+	// own with "", and with no key none of it.
+	function setLook(part, key, value) {
+		const looks = Object.assign({}, Settings.bar.looks);
+		const own = key ? Object.assign({}, looks[part]) : {};
+		if (value === "" || value === undefined)
+			delete own[key];
+		else
+			own[key] = value;
+		if (Object.keys(own).length > 0)
+			looks[part] = own;
+		else
+			delete looks[part];
+		if (JSON.stringify(looks) !== JSON.stringify(Settings.bar.looks))
+			Settings.set("bar", "looks", looks);
 	}
 
 	// What `button` on `part` runs from now on: nothing with no command, and with
@@ -498,7 +532,62 @@ Flickable {
 
 			Loader {
 				width: parent.width
-				sourceComponent: page.partSettings[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : page.builtIn[page.chosen] ? nothingSettings : scriptSettings)
+				sourceComponent: page.partSettings[page.chosen] ?? (page.elsewhere[page.chosen] ? elsewhereSettings : Settings.spacer(page.chosen) ? spacerSettings : page.builtIn[page.chosen] ? nothingSettings : scriptSettings)
+			}
+		}
+
+		// Its capsule and its colors, over what the bar's look gives every part.
+		Card {
+			id: looks
+
+			readonly property var own: Settings.bar.looks[page.chosen] ?? ({})
+			readonly property bool capsule: own.capsule ?? (Settings.bar.look === "capsules" && !Settings.spacer(page.chosen))
+
+			width: parent.width
+			visible: page.chosen !== ""
+			title: visible ? Tr.t("How it looks") : ""
+
+			Pick {
+				holds: "bar.looks"
+				words: "capsule pill background shape"
+				visible: !page.chosen.startsWith("space")
+				text: Tr.t("A capsule")
+				subtext: looks.own.capsule === undefined ? Tr.t("As the bar's look has it, on the Look page") : ""
+				options: [
+					{ value: "", text: Tr.t("As the bar") },
+					{ value: "on", text: Tr.t("Its own") },
+					{ value: "off", text: Tr.t("None") }
+				]
+				value: looks.own.capsule === undefined ? "" : looks.own.capsule ? "on" : "off"
+				onChosen: value => page.setLook(page.chosen, "capsule", value === "" ? "" : value === "on")
+			}
+
+			Shade {
+				holds: "bar.looks"
+				words: "capsule background colour color"
+				visible: looks.capsule
+				text: Tr.t("Its fill")
+				none: Settings.bar.look === "capsules" ? Theme.barFill : Theme.hover
+				value: looks.own.fill ?? ""
+				onChosen: value => page.setLook(page.chosen, "fill", value)
+			}
+
+			Shade {
+				holds: "bar.looks"
+				words: "icon text foreground colour color"
+				visible: !page.chosen.startsWith("space")
+				text: Tr.t("Its icons and words")
+				subtext: Tr.t("The accent and the warnings keep theirs")
+				value: looks.own.ink ?? ""
+				onChosen: value => page.setLook(page.chosen, "ink", value)
+			}
+
+			Button {
+				visible: Object.keys(looks.own).length > 0
+				height: Theme.u(30)
+				flat: true
+				text: Tr.t("As the theme")
+				onClicked: page.setLook(page.chosen, "", "")
 			}
 		}
 
@@ -507,7 +596,7 @@ Flickable {
 			id: clicks
 
 			width: parent.width
-			visible: page.chosen !== "" && page.chosen !== "tray"
+			visible: page.chosen !== "" && page.chosen !== "tray" && !Settings.spacer(page.chosen)
 			title: visible ? Tr.t("Clicks and the wheel on it") : ""
 
 			// Anew for another part: what was typed and not kept goes.
@@ -582,6 +671,15 @@ Flickable {
 				subtext: Tr.t("What a part is or says, under the pointer")
 				checked: Settings.bar.tips
 				onToggled: wanted => Settings.set("bar", "tips", wanted)
+			}
+
+			Setting {
+				holds: "bar.hoverOpens"
+				words: "hover pointer open"
+				text: Tr.t("The pointer opens panels")
+				subtext: Tr.t("Resting on the clock, the battery, the media, the load, the notes, the notifications or the control center")
+				checked: Settings.bar.hoverOpens
+				onToggled: wanted => Settings.set("bar", "hoverOpens", wanted)
 			}
 
 			Setting {
@@ -1007,6 +1105,33 @@ Flickable {
 				onChosen: value => Settings.set("workspaces", "labels", value)
 			}
 
+			Pick {
+				holds: "workspaces.numerals"
+				words: "roman numbers digits"
+				visible: Settings.workspaces.labels !== "none"
+				text: Tr.t("Numbers as")
+				options: [
+					{ value: "arabic", text: "1 2 3" },
+					{ value: "roman", text: "I II III" },
+					{ value: "kanji", text: [0x4e00, 0x4e8c, 0x4e09].map(point => String.fromCodePoint(point)).join(" ") },
+					{ value: "circled", text: [0x2460, 0x2461, 0x2462].map(point => String.fromCodePoint(point)).join(" ") }
+				]
+				value: Settings.workspaces.numerals
+				onChosen: value => Settings.set("workspaces", "numerals", value)
+			}
+
+			Pick {
+				holds: "workspaces.shape"
+				words: "pill square rounded"
+				text: Tr.t("Their shape")
+				options: [
+					{ value: "round", text: Tr.t("Round") },
+					{ value: "square", text: Tr.t("Square") }
+				]
+				value: Settings.workspaces.shape
+				onChosen: value => Settings.set("workspaces", "shape", value)
+			}
+
 			Setting {
 				holds: "workspaces.apps"
 				text: Tr.t("The apps on each")
@@ -1196,6 +1321,36 @@ Flickable {
 				values: [1, 2, 5, 10]
 				value: Settings.system.interval
 				onChosen: value => Settings.set("system", "interval", value)
+			}
+
+			Field {
+				holds: "system.format"
+				words: "template text"
+				text: Tr.t("Written as")
+				subtext: Tr.t("With {cpu}, {memory}, {temperature}, {down}, {up}, {swap}, {disk}; empty for the above")
+				placeholder: "{cpu}% {temperature}°"
+				value: Settings.system.format
+				onKept: value => Settings.set("system", "format", value)
+			}
+
+			Repeater {
+				model: [
+					{ name: "temperature", text: Tr.t("Red from a temperature of"), values: [0, 70, 75, 80, 85, 90, 95], unit: "°" },
+					{ name: "cpu", text: Tr.t("Red from the processor at"), values: [0, 50, 70, 80, 90, 95], unit: "%" },
+					{ name: "memory", text: Tr.t("Red from memory at"), values: [0, 50, 70, 80, 90, 95], unit: "%" }
+				]
+
+				Choice {
+					required property var modelData
+
+					holds: "system.alerts"
+					words: "warning threshold alert"
+					text: modelData.text
+					values: modelData.values
+					value: Settings.system.alerts?.[modelData.name] ?? 0
+					unit: modelData.unit
+					onChosen: value => Settings.set("system", "alerts", Object.assign({}, Settings.system.alerts, { [modelData.name]: value }))
+				}
 			}
 		}
 	}
@@ -1462,6 +1617,14 @@ Flickable {
 					}
 				}
 			}
+		}
+	}
+
+	Component {
+		id: spacerSettings
+
+		Note {
+			text: page.chosen.startsWith("space") ? Tr.t("Room between the parts beside it. Another comes up off the bar, for more of them.") : Tr.t("A line between the parts beside it. Another comes up off the bar, for more of them.")
 		}
 	}
 

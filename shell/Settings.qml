@@ -103,6 +103,12 @@ Singleton {
 		return bar.left.includes(part) ? "top-left" : bar.center.includes(part) ? "top" : "top-right";
 	}
 
+	// Whether a name on the bar is a separator or a space: "separator",
+	// "separator 2", "space" and on, as many as there are.
+	function spacer(name) {
+		return /^(separator|space)( [0-9]+)?$/.test(name);
+	}
+
 	// Whether `screen` has a bar: Settings.bar.hideOn names those that don't.
 	function barOn(screen) {
 		return !screen || !bar.hideOn.includes(screen.name);

@@ -20,6 +20,24 @@ Grid {
 	readonly property var own: Settings.workspaces
 	readonly property var shown: own.empty ? Niri.on(output) : Niri.busyOn(output)
 	readonly property bool labeled: own.labels !== "none"
+	// Numbers as Settings.workspaces.numerals writes them: "roman", "kanji",
+	// "circled", or as they are.
+	function numeral(number) {
+		if (own.numerals === "roman" && number > 0 && number < 40)
+			return ["X", "IX", "V", "IV", "I"].reduce((state, letter, at) => {
+				const worth = [10, 9, 5, 4, 1][at];
+				while (state.left >= worth) {
+					state.text += letter;
+					state.left -= worth;
+				}
+				return state;
+			}, { text: "", left: number }).text;
+		if (own.numerals === "kanji" && number > 0 && number <= 10)
+			return String.fromCodePoint([0x4e00, 0x4e8c, 0x4e09, 0x56db, 0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d, 0x5341][number - 1]);
+		if (own.numerals === "circled" && number > 0 && number <= 20)
+			return String.fromCodePoint(0x2460 + number - 1);
+		return `${number}`;
+	}
 	readonly property bool upright: Settings.barSide
 	// As many icons to a pill, and a count of the rest.
 	readonly property int most: 4
@@ -100,7 +118,8 @@ Grid {
 
 			width: workspaces.upright ? across : along
 			height: workspaces.upright ? along : across
-			radius: Theme.round(across)
+			// Round, or square with Settings.workspaces.shape.
+			radius: workspaces.own.shape === "square" ? Math.min(Theme.round(across), Theme.u(3)) : Theme.round(across)
 			border.width: landing.containsDrag || (workspaces.over?.id === modelData.id && workspaces.dragging !== undefined) ? Theme.u(2) : 0
 			border.color: Theme.colors.text
 			// With those with windows marked, the empty ones fade, in case the
@@ -135,7 +154,7 @@ Grid {
 
 					visible: workspaces.labeled
 					// A long name would take the bar.
-					text: (workspaces.own.labels === "name" ? pill.name : `${pill.modelData.idx}`).slice(0, 12)
+					text: (workspaces.own.labels === "name" && pill.modelData.name ? pill.modelData.name : workspaces.numeral(pill.modelData.idx)).slice(0, 12)
 					textFormat: Text.PlainText
 					color: pill.ink
 					font.family: Theme.font

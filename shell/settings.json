@@ -121,6 +121,8 @@
 	},
 	"workspaces": {
 		"labels": "none",
+		"numerals": "arabic",
+		"shape": "round",
 		"apps": false,
 		"occupied": true,
 		"empty": true,
@@ -189,7 +191,13 @@
 		"memory": true,
 		"temperature": true,
 		"network": false,
-		"interval": 2
+		"interval": 2,
+		"format": "",
+		"alerts": {
+			"temperature": 85,
+			"cpu": 0,
+			"memory": 0
+		}
 	},
 	"network": {
 		"label": "none"
@@ -266,8 +274,10 @@
 		"tips": true,
 		"reserve": true,
 		"autoHide": false,
+		"hoverOpens": false,
 		"actions": {},
 		"scripts": [],
-		"screens": {}
+		"screens": {},
+		"looks": {}
 	}
 }

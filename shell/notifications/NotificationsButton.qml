@@ -16,4 +16,9 @@ BarButton {
 	onRightClicked: NotificationStore.setDnd(!NotificationStore.dnd, 0)
 	takesWheel: true
 	onScrolled: steps => NotificationStore.stepDnd(steps)
+
+	// For the pointer resting on it, with Settings.bar.hoverOpens.
+	function flip() {
+		NotificationStore.togglePanel();
+	}
 }

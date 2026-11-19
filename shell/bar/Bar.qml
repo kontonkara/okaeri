@@ -18,9 +18,10 @@ import qs.ui
 // on its left half and the volume on its right, or it's "volume", "brightness",
 // "workspaces" or "none". It's at the top of the screen, or at the bottom or a side
 // with Settings.bar.position: at a side the lanes run down it and its parts stand
-// upright. With Settings.bar.autoHide it's out of sight, and
-// windows have the whole screen, until the pointer rests at that edge of the screen
-// or a panel opens there.
+// upright. Settings.bar.looks gives a part a capsule and colors of its own, and
+// "separator" and "space" go between parts, numbered for more: "space 2". With
+// Settings.bar.autoHide it's out of sight, and windows have the whole screen,
+// until the pointer rests at that edge of the screen or a panel opens there.
 PanelWindow {
 	id: bar
 
@@ -65,6 +66,10 @@ PanelWindow {
 	// With Settings.bar.look "islands" each lane has a fill of its own, and the
 	// desktop shows between them.
 	readonly property bool islands: Settings.bar.look === "islands"
+	// With "capsules" each part has one, and the bar itself is only those.
+	readonly property bool capsules: Settings.bar.look === "capsules"
+	// No fill across it.
+	readonly property bool apart: islands || capsules
 	readonly property bool hides: Settings.bar.autoHide
 	// What has it in sight then: the pointer at the top of the screen or on it,
 	// and a panel on its screen.
@@ -183,9 +188,10 @@ PanelWindow {
 
 		x: Math.round(body.x) + 1
 		y: Math.round(body.y) + 1
-		// As islands, only those: this one is then empty, and they go with it.
-		width: bar.islands ? 0 : bar.width - 2
-		height: bar.islands ? 0 : bar.height - 2
+		// As islands or capsules, only those: this one is then empty, and they go
+		// with it.
+		width: bar.apart ? 0 : bar.width - 2
+		height: bar.apart ? 0 : bar.height - 2
 		radius: bar.corners
 
 		Island {
@@ -233,26 +239,99 @@ PanelWindow {
 		columns: bar.upright ? 1 : 1000
 		horizontalItemAlignment: Grid.AlignHCenter
 		verticalItemAlignment: Grid.AlignVCenter
-		spacing: Theme.u(4)
+		spacing: bar.capsules ? Theme.u(6) : Theme.u(4)
 
 		Repeater {
 			model: lane.names
 
-			Loader {
-				id: place
+			// A part, in a capsule of its own where it has one, and in colors of its
+			// own where Settings.bar.looks has them for it: { capsule, fill, ink },
+			// colors as "#rrggbb" or "accent".
+			Item {
+				id: spot
 
 				required property string modelData
-				readonly property real room: lane.room
-				// What its clicks and the wheel on it run, by the button or the way.
-				// The tray's icons are apps, with clicks of their own.
-				readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
+				readonly property var look: Settings.bar.looks?.[modelData] ?? ({})
+				readonly property bool spacer: Settings.spacer(modelData)
+				readonly property bool capsule: look.capsule ?? (bar.capsules && !spacer)
+				// Its own fill, or the bar's where the bar is only capsules.
+				readonly property color fill: Theme.shade(look.fill, bar.capsules ? Theme.barFill : Theme.hover)
+				// The color of its icons and words: its own, or one that shows on a
+				// fill of its own, or the theme's.
+				readonly property color ink: look.ink ? Theme.shade(look.ink, Theme.colors.text) : look.fill && capsule ? Theme.inkOn(fill) : Theme.colors.text
+				readonly property real pad: capsule ? Theme.u(6) : 0
+				readonly property real across: capsule ? Math.max(bar.upright ? place.width : place.height, Theme.barHeight - Theme.u(6)) : 0
 
-				visible: item?.wanted ?? true
-				sourceComponent: bar.parts[modelData] ?? (Settings.bar.scripts.some(own => own.name === modelData) ? script : Plugins.barOf(modelData) ? pluginPart : null)
+				visible: place.item?.wanted ?? true
+				width: bar.upright ? Math.max(place.width, across) : place.width + pad * 2
+				height: bar.upright ? place.height + pad * 2 : Math.max(place.height, across)
 
-				Component.onCompleted: {
-					if (!sourceComponent)
-						console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}, or of the scripts or the plugins that are on`);
+				Rectangle {
+					id: pill
+
+					anchors.fill: parent
+					visible: spot.capsule
+					radius: Theme.round(Math.min(width, height), Theme.u(3))
+					color: spot.fill
+					border.width: bar.capsules && !spot.look.fill ? 1 : 0
+					border.color: Theme.border
+
+					// Its glass, as the islands', a pixel in.
+					Region {
+						id: pane
+
+						item: spot.capsule && spot.visible ? pill : null
+						x: 1
+						y: 1
+						width: -2
+						height: -2
+						radius: pill.radius
+						intersection: Intersection.Combine
+					}
+
+					Component.onCompleted: glass.regions.push(pane)
+				}
+
+				Loader {
+					id: place
+
+					readonly property string modelData: spot.modelData
+					readonly property real room: lane.room
+					// What its clicks and the wheel on it run, by the button or the way.
+					// The tray's icons are apps, with clicks of their own.
+					readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
+
+					anchors.centerIn: parent
+					sourceComponent: bar.parts[modelData] ?? (spot.spacer ? (modelData.startsWith("separator") ? separator : space) : Settings.bar.scripts.some(own => own.name === modelData) ? script : Plugins.barOf(modelData) ? pluginPart : null)
+					layer.enabled: !Qt.colorEqual(spot.ink, Theme.colors.text)
+					layer.effect: Recolor {
+						to: spot.ink
+					}
+
+					Component.onCompleted: {
+						if (!sourceComponent)
+							console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}, a separator or a space, or of the scripts or the plugins that are on`);
+					}
+
+					// A part of the user's own shows what the command changed at once.
+					function ran() {
+						if (item && item.ran)
+							item.ran();
+					}
+				}
+
+				// With Settings.bar.hoverOpens, the pointer resting on a part with a
+				// panel opens it, while none is open on this screen.
+				HoverHandler {
+					id: rest
+
+					enabled: Settings.bar.hoverOpens && typeof place.item?.flip === "function" && !place.runs.left
+				}
+
+				Timer {
+					interval: 350
+					running: rest.enabled && rest.hovered && !bar.called
+					onTriggered: place.item.flip()
 				}
 
 				// Over the part, for the buttons that have a command, and the wheel
@@ -289,12 +368,6 @@ PanelWindow {
 					}
 				}
 
-				// A part of the user's own shows what the command changed at once.
-				function ran() {
-					if (item && item.ran)
-						item.ran();
-				}
-
 				// A right click on a part with none of its own, nor a command for
 				// it: the part's menu. Over the part, so the part's own buttons
 				// don't take it first; a handler and not a MouseArea, so the
@@ -317,6 +390,33 @@ PanelWindow {
 
 	PartMenu {
 		id: partMenu
+	}
+
+	// A line between parts, across the bar, and room between them: as many of
+	// each as there are names for, "separator", "separator 2" and on.
+	Component {
+		id: separator
+
+		Item {
+			width: bar.upright ? Theme.u(18) : Theme.u(9)
+			height: bar.upright ? Theme.u(9) : Theme.u(18)
+
+			Rectangle {
+				anchors.centerIn: parent
+				width: bar.upright ? parent.width : Math.max(1, Theme.u(1))
+				height: bar.upright ? Math.max(1, Theme.u(1)) : parent.height
+				color: Qt.alpha(Theme.colors.text, 0.3)
+			}
+		}
+	}
+
+	Component {
+		id: space
+
+		Item {
+			width: Theme.u(14)
+			height: Theme.u(14)
+		}
 	}
 
 	// A plugin's part, from its folder, by the name the bar has it by.
@@ -542,14 +642,14 @@ PanelWindow {
 
 			anchors.fill: parent
 			radius: bar.corners
-			color: bar.islands ? "transparent" : Theme.barFill
+			color: bar.apart ? "transparent" : Theme.barFill
 		}
 
 		// Over the fill, as on a panel: under the glass a border of its own would show
 		// as a light line.
 		Rectangle {
 			anchors.fill: parent
-			visible: !bar.islands
+			visible: !bar.apart
 			radius: bar.corners
 			color: "transparent"
 			border.width: 1

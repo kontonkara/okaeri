@@ -341,6 +341,22 @@ Singleton {
 	// The corners of a card, and of what sits in one.
 	readonly property real cardRadius: radius < 0 ? u(14) : radius
 
+	// A color of the settings: "accent" for the theme's, "#rrggbb", or with
+	// anything else `otherwise`.
+	function shade(value, otherwise) {
+		return value === "accent" ? colors.accent : /^#[0-9a-fA-F]{6}$/.test(value ?? "") ? value : otherwise;
+	}
+
+	// The text color or the background one, whichever shows better on `fill`.
+	function inkOn(fill) {
+		const light = value => {
+			const color = Qt.color(value);
+			return [color.r, color.g, color.b].map(part => part <= 0.04045 ? part / 12.92 : Math.pow((part + 0.055) / 1.055, 2.4)).reduce((sum, part, at) => sum + part * [0.2126, 0.7152, 0.0722][at], 0);
+		};
+		const against = value => (Math.max(light(fill), light(value)) + 0.05) / (Math.min(light(fill), light(value)) + 0.05);
+		return against(colors.text) >= against(colors.background) ? colors.text : colors.background;
+	}
+
 	// The corner radius for something `size` across: round, unless the theme
 	// sets one; `inset`, how far inside a rounded thing it sits.
 	function round(size, inset) {
@@ -442,6 +458,7 @@ Singleton {
 		download: "M12 4v11 M7 10l5 5 5-5 M5 20h14",
 		drive: "M8 3h8v5H8z M6 8h12v13H6z M10 5h1 M13 5h1 M9 17h6",
 		pencil: "M4 20h4L19 9l-4-4L4 16z M14 6l4 4",
+		pipette: "M14.5 4.5l5 5 M17 7l-9.5 9.5-3.5 1 1-3.5L14.5 4.5 M3.5 20.5l2-2",
 		notes: "M6 3h12v18H6z M9 8h6 M9 12h6 M9 16h4",
 		plugin: "M5 8h4V5h6v3h4v11H5z M12 11v5 M9.5 13.5h5",
 		box: "M5 5h14v14H5z",

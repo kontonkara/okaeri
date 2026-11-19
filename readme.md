@@ -148,7 +148,8 @@ that window go there.
 
 A click on a workspace that wants attention goes to the window that does, an
 app's icon on a workspace dragged onto another takes its window there, and the
-title of the window in focus has its app's icon.
+title of the window in focus has its app's icon. Workspaces can say their
+numbers as they are, in Roman, in kanji or in circles, and be round or square.
 The bar can have a button for the launcher, among its parts on the Bar page.
 A right click on what plays has the players there are, to leave one out of the
 bar, its card and the media keys, as a browser; so does a right click on one in

@@ -7,4 +7,9 @@ BarButton {
 	icon: "sliders"
 	tip: Tr.t("Control center")
 	onClicked: Control.toggle()
+
+	// For the pointer resting on it, with Settings.bar.hoverOpens.
+	function flip() {
+		Control.toggle();
+	}
 }

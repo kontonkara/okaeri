@@ -158,10 +158,11 @@ Flickable {
 			Pick {
 				holds: "bar.look"
 				text: Tr.t("The bar")
-				subtext: Settings.bar.look === "islands" ? Tr.t("Each group of its parts on its own, the desktop between") : Tr.t("One piece across the screen")
+				subtext: Settings.bar.look === "islands" ? Tr.t("Each group of its parts on its own, the desktop between") : Settings.bar.look === "capsules" ? Tr.t("Each part on its own, the desktop between") : Tr.t("One piece across the screen")
 				options: [
 					{ value: "whole", text: Tr.t("Whole") },
-					{ value: "islands", text: Tr.t("Islands") }
+					{ value: "islands", text: Tr.t("Islands") },
+					{ value: "capsules", text: Tr.t("Capsules") }
 				]
 				value: Settings.bar.look
 				onChosen: value => Settings.set("bar", "look", value)
