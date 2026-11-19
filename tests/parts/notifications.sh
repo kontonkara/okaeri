@@ -2,6 +2,11 @@
 # by the real pointer and keys. With OKAERI_GUEST=1 in the environment it tries
 # guest mode instead.
 
+fail() {
+	echo "notifications: $1" >&2
+	exit 1
+}
+
 # Next to another shell: no server, and the rest still works.
 if [ "${OKAERI_GUEST:-}" = 1 ]; then
 	dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
@@ -18,9 +23,16 @@ fi
 toast_x=1206
 top_close_x=1375
 top_close_y=63
-empty_toggle_y=212
 # The top toast's picture.
 tile=40x40+1030+56
+# Where part $2 of what says $1 in the history is on the screen, as "x y": its
+# objectName, or "line" for its middle. These go by what things say rather than
+# where they were, as a line that comes pushes the rest along.
+spot() {
+	where=$(ipc notifications spot "$1" "$2")
+	[ -n "$where" ] || fail "nothing that says \"$1\" with a $2 in the history"
+	echo "$where"
+}
 
 # With a limit: one with actions waits for an answer.
 send() {
@@ -425,7 +437,7 @@ wait_state history 3
 settle
 shot panel-closed-one
 # Clear all.
-move 1331 67
+move $(spot "Clear all" line)
 click
 wait_state history 0
 stop_sender
@@ -446,13 +458,15 @@ wait_state panel true
 settle
 
 step "Do Not Disturb"
-move 1360 "$empty_toggle_y"
+move $(spot "Do Not Disturb" switch)
 click
 wait_state dnd true
 settle
 shot panel-dnd
 # Its knob went right: there it's the panel's color, off it was the track's.
-looks panel-dnd 1369 "$empty_toggle_y" 000000
+# shellcheck disable=SC2046
+set -- $(spot "Do Not Disturb" switch)
+looks panel-dnd $(($1 + 9)) "$2" 000000
 key Escape
 wait_state panel false
 settle
@@ -837,7 +851,7 @@ step "Do Not Disturb for a while"
 ipc notifications toggle
 wait_state panel true
 settle
-move 1100 "$empty_toggle_y"
+move $(spot "Do Not Disturb" line)
 wheel 1
 wait_state dnd true
 settle
@@ -846,12 +860,12 @@ wheel -1
 wait_state dnd false
 # The arrows beside the switch do the same, from off too: with a time under its
 # name the line is a little taller.
-move 1320 "$empty_toggle_y"
+move $(spot "Do Not Disturb" more)
 click
 wait_state dnd true
 settle
 shot dnd-arrow
-move 1295 $((empty_toggle_y + 4))
+move $(spot "Do Not Disturb" less)
 click
 wait_state dnd false
 key Escape

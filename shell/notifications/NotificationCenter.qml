@@ -48,6 +48,11 @@ Scope {
 			NotificationStore.togglePanel();
 		}
 
+		// For tests: where what says `text` in the history is, as Panel.spot() has it.
+		function spot(text: string, part: string): string {
+			return history.spot(text, part);
+		}
+
 		function clear(): void {
 			NotificationStore.clear();
 		}

@@ -92,6 +92,8 @@ Item {
 	Button {
 		id: arrow
 
+		objectName: "more"
+
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 		height: Theme.u(30)

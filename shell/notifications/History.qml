@@ -309,6 +309,8 @@ Panel {
 		Button {
 			id: less
 
+			objectName: "less"
+
 			anchors.right: more.left
 			anchors.verticalCenter: parent.verticalCenter
 			height: Theme.u(26)
@@ -324,6 +326,8 @@ Panel {
 		Button {
 			id: more
 
+			objectName: "more"
+
 			anchors.right: toggle.left
 			anchors.rightMargin: Theme.u(6)
 			anchors.verticalCenter: parent.verticalCenter
@@ -338,6 +342,8 @@ Panel {
 
 		Toggle {
 			id: toggle
+
+			objectName: "switch"
 
 			anchors.right: parent.right
 			anchors.rightMargin: Theme.u(4)

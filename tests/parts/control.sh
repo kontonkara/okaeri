@@ -66,15 +66,15 @@ mute_x=1051
 slider_left=1074
 slider_width=225
 sound_x=1363
-# The tiles: Wi-Fi and Bluetooth on the first row, with their arrows, the night
-# light and keeping awake on the second, the power profile on the third.
-left_tile_x=1096
-right_tile_x=1289
-wifi_arrow_x=1181
-bt_arrow_x=1364
-tiles_y=217
-tiles_y2=283
-tiles_y3=349
+# Where part $2 of what says $1 in the panel is on the screen, as "x y": a tile by
+# its title, a level by its label, a row by what it says, and its part by its
+# objectName, or "line" for its middle. These go by what things say rather than
+# where they were, as a tile or a row that comes pushes the rest along.
+spot() {
+	where=$(ipc control spot "$1" "$2")
+	[ -n "$where" ] || fail "nothing that says \"$1\" with a $2 in the panel"
+	echo "$where"
+}
 # A page: its header, with the way back and the switch, and its rows.
 page_y=83
 back_x=1051
@@ -152,11 +152,11 @@ fail_awake() {
 	exit 1
 }
 # The power profile's tile goes on to the next one, and so does the wheel on it.
-when 'dry: power profile' at $left_tile_x $tiles_y3
+when 'dry: power profile' at $(spot Power line)
 when 'dry: power profile' wheel 1
 # The night light: on, wlsunset as set; the wheel on its tile makes it warmer.
 when 'dry: night light -t 4000 -T 4001' ipc night toggle
-move $left_tile_x $tiles_y2
+move $(spot "Night light" line)
 when 'dry: night light -t 3750 -T 3751' wheel 1
 shot night
 ipc night toggle
@@ -192,7 +192,7 @@ sleep 0.2
 awake() {
 	ipc awake state | jq -r .on
 }
-move $right_tile_x $tiles_y2
+move $(spot "Keep awake" line)
 wheel 1
 sleep 0.3
 [ "$(awake)" = true ] || fail_awake "the wheel didn't turn it on"
@@ -204,7 +204,7 @@ sleep 0.3
 # A right click on a tile opens what else it can do in the panel's place, and
 # Escape goes back to the tiles.
 shot before-options
-move $right_tile_x $tiles_y2
+move $(spot "Keep awake" line)
 click right
 sleep 0.5
 shot awake-options
@@ -230,8 +230,9 @@ sleep 0.4
 tiles() {
 	jq -c '.control.tiles // [] | map(select(. == "night" or . == "awake"))' "$XDG_STATE_HOME/okaeri/settings.json"
 }
+# Tile $1 a tile's width to the left.
 drag_left() {
-	move $right_tile_x $tiles_y2
+	move $(spot "$1" line)
 	hold
 	wlrctl pointer move -20 0
 	sleep 0.1
@@ -240,9 +241,9 @@ drag_left() {
 	let_go
 	sleep 0.4
 }
-drag_left
+drag_left "Keep awake"
 [ "$(tiles)" = '["awake","night"]' ] || fail "a tile dragged onto another didn't take its place: $(tiles)"
-drag_left
+drag_left "Night light"
 [ "$(tiles)" = '["night","awake"]' ] || fail "the tile dragged back isn't where it was: $(tiles)"
 # A right click on the volume opens its page, as the arrow at its end does.
 shot before-level
@@ -258,14 +259,14 @@ when 'dry: mute' at $mute_x $volume_y
 when 'dry: brightness' at $((slider_left + slider_width / 4)) $brightness_y
 
 # A click on a tile switches it.
-when 'dry: wifi false' at $left_tile_x $tiles_y
-when 'dry: bluetooth ' at $right_tile_x $tiles_y
+when 'dry: wifi false' at $(spot Wi-Fi line)
+when 'dry: bluetooth ' at $(spot Bluetooth line)
 move $outside_x $outside_y
 sleep 0.2
 shot real-tiles
 # Its arrow opens its page in the panel's place; Escape goes back to the tiles,
 # and so does the way back.
-at $wifi_arrow_x $tiles_y
+at $(spot Wi-Fi arrow)
 sleep 0.4
 move $outside_x $outside_y
 sleep 0.2
@@ -278,7 +279,7 @@ move $outside_x $outside_y
 sleep 0.2
 shot real-back
 alike real-tiles real-back 380x260+1016+100 || fail "Escape didn't go back to the tiles"
-at $bt_arrow_x $tiles_y
+at $(spot Bluetooth arrow)
 sleep 0.4
 move $outside_x $outside_y
 sleep 0.2
@@ -290,7 +291,7 @@ sleep 0.2
 shot real-back-again
 alike real-tiles real-back-again 380x260+1016+100 || fail "the way back didn't go back"
 # Closed on a page, it opens on the tiles again.
-at $wifi_arrow_x $tiles_y
+at $(spot Wi-Fi arrow)
 sleep 0.3
 toggle
 toggle
@@ -848,20 +849,20 @@ at $back_x $page_y
 sleep 0.4
 airplane=$XDG_STATE_HOME/okaeri/airplane.json
 offs=$(seen 'dry: bluetooth false')
-when 'dry: wifi false' at $right_tile_x $tiles_y3
+when 'dry: wifi false' at $(spot "Airplane mode" line)
 sleep 0.3
 [ "$(seen 'dry: bluetooth false')" -gt "$offs" ] || fail "airplane mode left Bluetooth on"
 [ "$(jq -c . "$airplane")" = '{"wifi":true,"bluetooth":true}' ] || fail "what was on isn't kept: $(cat "$airplane")"
 shot airplane-on
 ons=$(seen 'dry: bluetooth true')
-when 'dry: wifi true' at $right_tile_x $tiles_y3
+when 'dry: wifi true' at $(spot "Airplane mode" line)
 sleep 0.3
 [ "$(seen 'dry: bluetooth true')" -gt "$ons" ] || fail "Bluetooth didn't come back after airplane mode"
 [ ! -s "$airplane" ] || fail "airplane mode is still kept: $(cat "$airplane")"
 # One of them turned on by hand meanwhile ends it, and the other stays as it is.
 ipc probe bluetooth false
 sleep 0.2
-when 'dry: wifi false' at $right_tile_x $tiles_y3
+when 'dry: wifi false' at $(spot "Airplane mode" line)
 [ "$(jq -c . "$airplane")" = '{"wifi":true,"bluetooth":false}' ] || fail "what was on isn't kept: $(cat "$airplane")"
 never 'dry: wifi true' ipc probe bluetooth true
 [ ! -s "$airplane" ] || fail "airplane mode goes on with Bluetooth turned on"
@@ -873,15 +874,14 @@ printf '%s\n' 'Work:11111111-2222-3333-4444-555555555555:vpn:activated' 'Home\: 
 sleep 3.5
 [ "$(ipc probe vpns)" = 'Work=VPN+,Home: wg=WireGuard' ] || fail "the VPNs are $(ipc probe vpns)"
 shot vpn-tile
-tiles_y4=$((tiles_y3 + 66))
-when 'dry: vpn down' at $left_tile_x $tiles_y4
+when 'dry: vpn down' at $(spot VPN line)
 # Recording the screen is the tile beside it: the panel goes first, as it isn't
 # what's to be recorded.
-when 'dry: record start screen none' at $right_tile_x $tiles_y4
+when 'dry: record start screen none' at $(spot Record line)
 sleep 0.4
 [ "$(panels)" = 0 ] || fail "the panel stays for a recording"
 toggle
-at $wifi_arrow_x $tiles_y4
+at $(spot VPN arrow)
 sleep 0.4
 shot vpn-page
 when 'dry: vpn up' at $row_x "$(row 1)"
@@ -963,16 +963,16 @@ done
 # down.
 printf '{ "hotspot": { "name": "Den, by the door" } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
-when 'dry: hotspot on' at $right_tile_x $tiles_y4
+when 'dry: hotspot on' at $(spot Hotspot line)
 made=$(jq -r .hotspot.password "$XDG_STATE_HOME/okaeri/settings.json")
 [ "${#made}" = 12 ] || fail "no password made up for the hotspot"
 [ "$(seen "$made")" = 0 ] || fail "the hotspot's password is in the log"
-when 'dry: hotspot on' at $right_tile_x $tiles_y4
+when 'dry: hotspot on' at $(spot Hotspot line)
 [ "$(jq -r .hotspot.password "$XDG_STATE_HOME/okaeri/settings.json")" = "$made" ] || fail "the hotspot's password was made up again"
 ipc probe hotspot true
 sleep 0.3
 shot hotspot-on
-when 'dry: hotspot off' at $right_tile_x $tiles_y4
+when 'dry: hotspot off' at $(spot Hotspot line)
 ipc probe hotspot false
 # Its page has the code a phone joins it by, with what would end a field in it
 # taken as text, and the picture goes as the page does.
@@ -991,15 +991,16 @@ sleep 0.4
 
 # A tile of one's own, under the hotspot's, alone in its row: it's on while its
 # check ends well, looked at every few seconds, and a click runs its command.
-tiles_y5=$((tiles_y4 + 66))
 printf '{ "control": { "custom": [{ "name": "Mine", "command": "touch %s", "check": "test -e %s" }] } }\n' "$work/flag" "$work/flag" >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.8
 shot own-off
 touch "$work/flag"
 sleep 3.5
 shot own-on
-[ "$(differ own-off own-on "170x50+1210+$((tiles_y5 - 25))")" != 0 ] || fail "a tile of one's own doesn't follow its check"
-when 'dry: tile run' at $right_tile_x $tiles_y5
+# shellcheck disable=SC2046
+set -- $(spot Mine line)
+[ "$(differ own-off own-on "170x50+$(($1 - 85))+$(($2 - 25))")" != 0 ] || fail "a tile of one's own doesn't follow its check"
+when 'dry: tile run' at "$1" "$2"
 rm "$work/flag"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.5
@@ -1014,7 +1015,7 @@ sleep 0.4
 shot dark-off
 when 'dry: wifi scan true' ipc probe wifi true
 when 'dry: bluetooth discovery true' ipc probe bluetooth true
-at $wifi_arrow_x $tiles_y
+at $(spot Wi-Fi arrow)
 sleep 0.4
 
 # A list longer than the screen scrolls in its place, and the panel stays on
@@ -1160,19 +1161,23 @@ when 'dry: mic mute' at $mute_x $mic_y
 at $sound_x $volume_y
 sleep 0.4
 shot outputs
-when 'dry: output' at 1200 183
-when 'dry: app volume' at 1218 263
-when 'dry: app mute true' at $mute_x 263
+when 'dry: output' at $(spot Headphones line)
+# The app's level, by its name over it: its slider is under that.
+# shellcheck disable=SC2046
+set -- $(spot Player line)
+app_y=$(($2 + 8))
+when 'dry: app volume' at "$1" "$app_y"
+when 'dry: app mute true' at $mute_x "$app_y"
 shot playback
 # Another output for that app alone, from the list its button shows under it,
 # and back to where the rest go: a row of 38 px each, under the app's 44.
-at $sound_x 263
+at $(spot Player more)
 sleep 0.3
 shot app-outputs
-when 'dry: app output own' at 1200 372
-at $sound_x 263
+when 'dry: app output own' at 1200 $(($2 + 22 + 19 + 2 * 38))
+at $(spot Player more)
 sleep 0.3
-when 'dry: app output shared' at 1200 296
+when 'dry: app output shared' at 1200 $(($2 + 22 + 19))
 at $back_x $page_y
 sleep 0.3
 # A sound card that can work in three ways, as pw-dump has it, off and one that
@@ -1186,7 +1191,9 @@ JSON
 at $sound_x $volume_y
 sleep 0.6
 shot cards
-card_y=248
+# shellcheck disable=SC2046
+set -- $(spot "A card" line)
+card_y=$2
 never 'dry: card profile' at 1200 $card_y
 shot card-ways
 never 'dry: card profile' at 1200 $((card_y + 38))

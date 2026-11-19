@@ -63,6 +63,11 @@ Panel {
 			controlCenter.toggle();
 		}
 
+		// For tests: where what says `text` is, as Panel.spot() has it.
+		function spot(text: string, part: string): string {
+			return controlCenter.spot(text, part);
+		}
+
 		// Open at a page: wifi, wired, drives, phone, bluetooth, vpn, hotspot, sound or mic.
 		function page(name: string): void {
 			Control.show(name);

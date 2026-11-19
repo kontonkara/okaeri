@@ -248,7 +248,7 @@ FloatingWindow {
 	// "higher", "lower", "field" or "mark", or with "line" its middle. Nothing for
 	// what isn't there.
 	function spot(text, part) {
-		const found = spotted(shownPage, text, true) ?? spotted(shownPage, text, false);
+		const [found, target] = Spots.part(shownPage, text, part, ["text"]);
 		if (!found)
 			return "";
 		if (shownPage.bring)
@@ -261,41 +261,10 @@ FloatingWindow {
 				view.contentY = Math.max(0, Math.min(top - Theme.u(16), view.contentHeight - view.height));
 			break;
 		}
-		// What's beside words that aren't a line, as an app's switches by its name, is
-		// a step or two up from them.
-		let target = part === "line" ? found : named(found, part);
-		for (let above = found.parent, steps = 0; !target && above && steps < 2 && found.subtext === undefined; above = above.parent, steps++)
-			target = named(above, part);
 		if (!target)
 			return "";
 		const at = target.mapToItem(null, target.width / 2, target.height / 2);
 		return `${Math.round(at.x)} ${Math.round(at.y)}`;
-	}
-
-	function spotted(item, text, lines) {
-		if (!item || !item.visible)
-			return null;
-		if (item.text === text && (!lines || item.subtext !== undefined))
-			return item;
-		for (const child of item.children ?? []) {
-			const found = spotted(child, text, lines);
-			if (found)
-				return found;
-		}
-		return null;
-	}
-
-	function named(item, name) {
-		if (!item)
-			return null;
-		if (item.objectName === name)
-			return item;
-		for (const child of item.children ?? []) {
-			const found = named(child, name);
-			if (found)
-				return found;
-		}
-		return null;
 	}
 
 	function copyConfig(kind) {

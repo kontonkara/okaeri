@@ -96,6 +96,18 @@ PanelWindow {
 			dismiss();
 	}
 
+	// For tests, which go by what things say and not by where they were: where the
+	// part `part` of what says `text` in the card is on the screen, as "x y", its
+	// objectName, or "line" for its middle. Text, a title and a label all say
+	// something. Nothing for what isn't in sight.
+	function spot(text, part) {
+		const target = Spots.part(body, text, part, ["text", "title", "label"])[1];
+		if (!target)
+			return "";
+		const at = target.mapToItem(null, target.width / 2, target.height / 2);
+		return `${Math.round(at.x + strip.margins.left + (screen?.x ?? 0))} ${Math.round(at.y + (screen?.y ?? 0))}`;
+	}
+
 	anchors {
 		top: true
 		left: true
