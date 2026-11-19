@@ -1099,3 +1099,21 @@ type "/shot edit"
 sleep 0.3
 key Return
 wait_log "okaeri: dry: screenshot edit"
+
+# One's processes under /ps, a sleeper of the test's own among them, found by
+# its command line: Enter asks to end it and the launcher stays, Enter again
+# ends it, here only said.
+perl -e '$0 = "okaeri-sleeper"; sleep 300' &
+sleeper=$!
+open
+type "/ps okaeri-sleeper"
+sleep 2.5
+shot processes
+key Return
+sleep 0.3
+shot process-asked
+key Return
+wait_log "okaeri: dry: process end"
+key Escape
+kill "$sleeper"
+wait "$sleeper" 2>/dev/null || true

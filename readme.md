@@ -234,9 +234,11 @@ standard input in the launcher and prints the one picked, as dmenu does, with
 the line picked was, from 0, `--only-match` to take nothing but a line, and
 `--select` for the line to start on. The launcher finds apps' own actions by
 their names too, as New Private Window, and Shift+Enter on a window under `/win`
-closes it. A `>` in front runs the rest as a command, and a `?` looks it up on
-the web, at the address its page of the settings has. `okaeri color pick`, or
-`/color` there, copies the color of what's clicked next as `#rrggbb`. The button
+closes it. Under `/ps` are your processes, the busiest first, with how much
+of the processor and the memory each takes: Enter twice ends one, and
+Shift+Enter twice kills it. A `>` in front runs the rest as a command, and a `?`
+looks it up on the web, at the address its page of the settings has. `okaeri
+color pick`, or `/color` there, copies the color of what's clicked next as `#rrggbb`. The button
 in its field, or Ctrl+G, has the groups apps go by in the list's place: folders
 of your own, made on its page of the settings and filled from an app's menu in
 the launcher, and the kinds apps say they are, Games, Programming, Design and the

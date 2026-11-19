@@ -31,6 +31,7 @@ Panel {
 		{ mode: "emoji", text: "Emoji and symbols", subtext: "/emoji and a name: Enter types it and copies it, Shift+Enter only copies", icon: "text" },
 		{ mode: "clip", text: "Clipboard", subtext: "/clip and what was copied: Enter copies it again, Shift+Enter the other of that and pasting", icon: "clipboard" },
 		{ mode: "file", text: "Files", subtext: "/file and a part of the name: Enter opens it, Shift+Enter its folder", icon: "file" },
+		{ mode: "ps", text: "Processes", subtext: "/ps and a name: Enter twice ends one, Shift+Enter twice kills it", icon: "chip" },
 		{ mode: "set", text: "Settings", subtext: "/set and what to look for", icon: "gear" },
 		{ mode: "shot", text: "Screenshots", subtext: "/shot: take one, or the latest: Enter opens one, Shift+Enter copies it", icon: "image" },
 		{ mode: "color", text: "A color off the screen", subtext: "/color: a click on the screen copies it as #rrggbb", icon: "eye" },
@@ -252,6 +253,22 @@ Panel {
 		return found;
 	}
 
+	// One's processes with `query` in their names, their command lines or as their
+	// pids, the busiest first. Enter on one asks to end it and stays, and on it
+	// again ends it; Shift+Enter kills it the same way. Each row stays itself as
+	// its numbers change.
+	function processRows(query) {
+		return Processes.list.filter(one => !query || one.name.toLowerCase().includes(query) || one.command.toLowerCase().includes(query) || String(one.pid) === query).slice(0, 50).map(one => ({
+			key: `ps|${one.pid}`,
+			pid: one.pid,
+			stays: true,
+			does: () => Processes.ask(one.pid, false),
+			text: one.name,
+			subtext: Processes.armed === one.pid ? (Processes.armedHard ? "Shift+Enter again kills it" : "Enter again ends it") : `${one.cpu.toFixed(1)}% · ${Processes.memory(one.memory)} · ${one.pid}`,
+			icon: "chip"
+		}));
+	}
+
 	// A screenshot to take, the text off the screen and the latest to edit where
 	// there's what for, and the latest taken, those that have `query` in their
 	// names.
@@ -331,6 +348,8 @@ Panel {
 			return timer(asked[2]);
 		case "shot":
 			return shots(query);
+		case "ps":
+			return processRows(query);
 		case "color":
 			return [{ does: () => colorSoon.restart(), text: "Pick a color off the screen", subtext: "A click on it copies it as #rrggbb", icon: "eye" }];
 		}
@@ -355,9 +374,10 @@ Panel {
 
 	// The same search over apps that came or went, on the same app if it's there.
 	function refresh() {
-		const selected = found.values[list.currentIndex]?.entry?.id;
+		// The row picked stays picked: an app by its entry, the rest by their keys.
+		const was = found.values[list.currentIndex];
 		search();
-		list.currentIndex = Math.max(0, found.values.findIndex(row => row.entry?.id === selected));
+		list.currentIndex = Math.max(0, found.values.findIndex(row => was?.entry ? row.entry?.id === was.entry.id : row.key === was?.key));
 	}
 
 	function openMenu(row) {
@@ -375,6 +395,10 @@ Panel {
 	// an emoji is only copied. A window closes, and the launcher stays on the rest
 	// of them.
 	function otherWay(row) {
+		if (row?.pid) {
+			Processes.ask(row.pid, true);
+			return;
+		}
 		if (row?.window) {
 			Env.act("close window", () => Niri.closeWindow(row.window));
 			return;
@@ -429,6 +453,28 @@ Panel {
 
 		interval: 300
 		onTriggered: Env.act("color pick", () => Niri.pickColor())
+	}
+
+	// One's processes are looked at while /ps is open, and only then; each look and
+	// a row asked to end shows at once.
+	Binding {
+		target: Processes
+		property: "watched"
+		value: launcher.shown && /^\s*\/ps(\s|$)/i.test(field.text)
+	}
+
+	Connections {
+		target: Processes
+
+		function onListChanged() {
+			if (Processes.watched)
+				launcher.refresh();
+		}
+
+		function onArmedChanged() {
+			if (Processes.watched)
+				launcher.refresh();
+		}
 	}
 
 	Connections {
@@ -767,6 +813,7 @@ Panel {
 			anchors.centerIn: parent
 			visible: list.count === 0
 			text: /^\s*\/calc(\s|$)/i.test(field.text) && Env.lacks("qalc") ? "Sums need qalc, which isn't here"
+				: /^\s*\/ps(\s|$)/i.test(field.text) && Processes.list.length === 0 ? "Looking..."
 				: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
 				: launcher.filing.length < 2 ? "Two letters of a file's name, or more"
 				: looking.running || finder.running ? "Looking..." : "Nothing found"
