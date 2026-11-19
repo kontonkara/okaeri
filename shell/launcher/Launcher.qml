@@ -240,7 +240,7 @@ Panel {
 	}
 
 	// A timer for as long as what's typed first says, with the rest of it as what
-	// it's for; the one that runs, to stop; and the stopwatch.
+	// it's for, or pomodoros; the one that runs, to stop; and the stopwatch.
 	function timer(asked) {
 		const words = asked.trim().split(/\s+/);
 		const seconds = Timers.parse(words[0] ?? "");
@@ -248,6 +248,8 @@ Panel {
 		const found = [];
 		if (seconds > 0)
 			found.push({ does: () => Timers.start(seconds, what), text: `A timer for ${Timers.span(seconds)}`, subtext: what || "It says when the time is up", icon: "bell" });
+		else if (!Timers.counting)
+			found.push({ does: () => Timers.startPomodoro(), text: "Pomodoros", subtext: `${Settings.pomodoro.work} min of work, then a break, and again`, icon: "bell" });
 		if (Timers.counting)
 			found.push({ does: () => Timers.stop(), text: "Stop the timer", subtext: `${Timers.clock(Timers.left)} left`, icon: "close" });
 		found.push({ does: () => Timers.toggleWatch(), text: Timers.watching ? "Stop the stopwatch" : "Start the stopwatch", subtext: Timers.watched > 0 ? Timers.clock(Timers.watched) : "", icon: Timers.watching ? "pause" : "play" });

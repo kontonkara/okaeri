@@ -7,7 +7,7 @@ import qs.ui
 // lengths, or what's left of the one that runs and a way to stop it; the
 // stopwatch beside it starts and stands by a click, and a right click has it
 // at nothing again. `okaeri timer start 10m` and the launcher's /timer take any
-// length.
+// length. Pomodoros go from there too, or by `okaeri pomodoro start`.
 Flow {
 	id: row
 
@@ -28,11 +28,20 @@ Flow {
 	}
 
 	Button {
+		visible: !Timers.counting
+		height: Theme.u(28)
+		flat: true
+		text: "Pomodoro"
+		tip: `${Settings.pomodoro.work} min of work, then a break, and again`
+		onClicked: Timers.startPomodoro()
+	}
+
+	Button {
 		visible: Timers.counting
 		height: Theme.u(28)
 		icon: "close"
-		text: [Timers.clock(Timers.left), Timers.label].filter(part => part !== "").join(" · ")
-		tip: "Stop the timer"
+		text: [Timers.clock(Timers.left), Timers.label, Timers.phase ? `${(Timers.rounds - (Timers.phase === "work" ? 0 : 1)) % Math.max(1, Settings.pomodoro.rounds) + 1} of ${Settings.pomodoro.rounds}` : ""].filter(part => part !== "").join(" · ")
+		tip: Timers.phase ? "Stop the pomodoros" : "Stop the timer"
 		longest: Theme.u(180)
 		onClicked: Timers.stop()
 	}

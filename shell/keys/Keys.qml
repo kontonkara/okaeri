@@ -190,6 +190,24 @@ Scope {
 		}
 	}
 
+	// Pomodoros: work, a break and again, as Settings.pomodoro has them, and where
+	// they are, as JSON.
+	IpcHandler {
+		target: "pomodoro"
+
+		function start(): void {
+			Timers.startPomodoro();
+		}
+
+		function stop(): void {
+			Timers.stop();
+		}
+
+		function state(): string {
+			return JSON.stringify({ phase: Timers.phase, rounds: Timers.rounds, left: Timers.left });
+		}
+	}
+
 	IpcHandler {
 		target: "stopwatch"
 

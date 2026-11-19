@@ -271,4 +271,24 @@ sleep 1.2
 ipc stopwatch reset
 [ "$(ipc stopwatch seconds)" = 0 ] || fail "the stopwatch after a reset: $(ipc stopwatch seconds)"
 
+# Pomodoros, short ones: work, a break by itself after it, work again, and after
+# two works the long break; stopped, nothing.
+printf '{ "pomodoro": { "work": 0.05, "pause": 0.05, "long": 0.05, "rounds": 2 } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+phase() {
+	ipc pomodoro state | jq -c '[.phase, .rounds]'
+}
+ipc pomodoro start
+[ "$(phase)" = '["work",0]' ] || fail "pomodoros start with work: $(phase)"
+for wanted in '["break",1]' '["work",1]' '["long",2]'; do
+	for _ in $(seq 50); do
+		[ "$(phase)" = "$wanted" ] && break
+		sleep 0.1
+	done
+	[ "$(phase)" = "$wanted" ] || fail "pomodoros: $(phase), not $wanted"
+done
+ipc pomodoro stop
+[ "$(phase)" = '["",0]' ] || fail "stopped pomodoros: $(phase)"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+
 echo "keys: all good" >&2

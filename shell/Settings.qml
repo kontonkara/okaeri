@@ -86,6 +86,7 @@ Singleton {
 	readonly property var plugins: Object.assign({}, defaults.plugins, user.plugins, own.plugins)
 	readonly property var visualizer: Object.assign({}, defaults.visualizer, user.visualizer, own.visualizer)
 	readonly property var updates: Object.assign({}, defaults.updates, user.updates, own.updates)
+	readonly property var pomodoro: Object.assign({}, defaults.pomodoro, user.pomodoro, own.pomodoro)
 	readonly property var screenshots: Object.assign({}, defaults.screenshots, user.screenshots, own.screenshots)
 	// Where the wallpapers are to pick from: the folder set, or where the wallpaper is.
 	readonly property string pictures: wallpaper.folder || wallpaper.path.replace(/\/[^/]*$/, "") || `${Quickshell.env("HOME")}/Pictures`

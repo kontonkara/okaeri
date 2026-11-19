@@ -5,8 +5,10 @@ import Quickshell
 import qs
 
 // A timer that counts down to a notification and a sound, and a stopwatch: one
-// of each, for the clock on the bar, its card and the launcher. They end with
-// the shell.
+// of each, for the clock on the bar, its card and the launcher. The timer can go
+// by pomodoros too: work, a break, work again, and a longer break after
+// Settings.pomodoro.rounds of work, each going on to the next by itself. They
+// end with the shell.
 Singleton {
 	id: timers
 
@@ -22,6 +24,10 @@ Singleton {
 	// Seconds: what's left of the timer, and what the stopwatch has.
 	readonly property int left: counting ? Math.max(0, Math.ceil((until - now) / 1000)) : 0
 	readonly property int watched: Math.floor((banked + (watching ? Math.max(0, now - since) : 0)) / 1000)
+	// Of pomodoros: "work", "break" or "long", "" for a timer that's only that, and
+	// how many works were done.
+	property string phase
+	property int rounds: 0
 
 	// How long `text` asks for, in seconds, 0 for what isn't a time: "90", minutes;
 	// "10m", "1h30m", "45s", "1:30" as minutes and seconds.
@@ -68,6 +74,21 @@ Singleton {
 	function stop() {
 		until = 0;
 		label = "";
+		phase = "";
+		rounds = 0;
+	}
+
+	// Pomodoros, from work.
+	function startPomodoro() {
+		stop();
+		nextPhase("work");
+	}
+
+	function nextPhase(next) {
+		const own = Settings.pomodoro;
+		const minutes = next === "work" ? own.work : next === "long" ? own.long : own.pause;
+		start(Math.max(1, Math.round(minutes * 60)), next === "work" ? "Work" : next === "long" ? "A long break" : "A break");
+		phase = next;
 	}
 
 	function toggleWatch() {
@@ -87,6 +108,17 @@ Singleton {
 
 	function done() {
 		const what = label;
+		if (phase) {
+			const worked = phase === "work";
+			const done = rounds + (worked ? 1 : 0);
+			const next = !worked ? "work" : done % Math.max(1, Settings.pomodoro.rounds) === 0 ? "long" : "break";
+			nextPhase(next);
+			rounds = done;
+			console.info("okaeri: pomodoro:", next);
+			Sounds.play("alarm-clock-elapsed");
+			Env.act("pomodoro next", () => Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=alarm-symbolic", worked ? "Work's done" : "Back to work", worked ? `${next === "long" ? "A long break" : "A break"}, ${timers.span(timers.left)}` : `${timers.span(timers.left)} of it`]));
+			return;
+		}
 		stop();
 		console.info("okaeri: timer: up");
 		Sounds.play("alarm-clock-elapsed");

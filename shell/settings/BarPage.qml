@@ -803,6 +803,47 @@ Flickable {
 				onChosen: value => Settings.set("clock", "remind", value / 60)
 			}
 
+			Choice {
+				holds: "pomodoro.work"
+				words: "pomodoro focus timer"
+				text: "A pomodoro's work"
+				subtext: "From the clock's card, then a break"
+				values: [15, 20, 25, 30, 45, 50, 60]
+				unit: "min"
+				value: Settings.pomodoro.work
+				onChosen: value => Settings.set("pomodoro", "work", value)
+			}
+
+			Choice {
+				holds: "pomodoro.pause"
+				words: "pomodoro break"
+				text: "Its break"
+				values: [3, 5, 10, 15]
+				unit: "min"
+				value: Settings.pomodoro.pause
+				onChosen: value => Settings.set("pomodoro", "pause", value)
+			}
+
+			Choice {
+				holds: "pomodoro.long"
+				words: "pomodoro break"
+				text: "A long break"
+				values: [10, 15, 20, 30]
+				unit: "min"
+				value: Settings.pomodoro.long
+				onChosen: value => Settings.set("pomodoro", "long", value)
+			}
+
+			Choice {
+				holds: "pomodoro.rounds"
+				words: "pomodoro"
+				text: "After how many works"
+				subtext: "The long break"
+				values: [2, 3, 4, 5, 6]
+				value: Settings.pomodoro.rounds
+				onChosen: value => Settings.set("pomodoro", "rounds", value)
+			}
+
 			// The calendars whose events the month has, and a field for one more. What a
 			// calendar can be is said under the field's name rather than in a note of its
 			// own, so that with none the card grows by that one row.

@@ -164,7 +164,9 @@ as long as the Bar page says.
 The month's card has a timer and a stopwatch, which show beside the time while
 they run; `okaeri timer start 10m`, or `1h30m`, `45s`, `1:30`, starts one of any
 length, as `/timer 10m tea` in the launcher does, and `okaeri stopwatch toggle`
-and `reset` are the stopwatch's.
+and `reset` are the stopwatch's. Pomodoros go from the clock's card, `/timer` and
+`okaeri pomodoro start`: work, a break, work again, and a long break after a
+few, each on to the next by itself, as long as the Bar page says.
 
 A click on the battery shows it in full: how the charge went over the last day,
 the power going in or out, the energy in it and how worn it is.

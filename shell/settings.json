@@ -216,6 +216,12 @@
 		"editor": "",
 		"languages": "eng"
 	},
+	"pomodoro": {
+		"work": 25,
+		"pause": 5,
+		"long": 15,
+		"rounds": 4
+	},
 	"updates": {
 		"every": 3,
 		"command": ""
