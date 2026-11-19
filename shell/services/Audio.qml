@@ -45,6 +45,8 @@ Singleton {
 	readonly property var outputs: Pipewire.nodes.values.filter(node => node.isSink && !node.isStream && /^(alsa|bluez)_output/.test(node.name) && reaches(node))
 	// Where sound can come from, the same way: devices' microphones.
 	readonly property var inputs: Pipewire.nodes.values.filter(node => !node.isSink && !node.isStream && /^(alsa|bluez)_input/.test(node.name))
+	// What apps play into that isn't a device, a filter: for outputOf().
+	readonly property var filters: Pipewire.linkGroups.values.filter(group => nodes.includes(group.source) && !!group.target && !/^(alsa|bluez)_output/.test(group.target.name)).map(group => group.target)
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
 	// The sound cards that can work in more ways than one: { id, name, profiles:
@@ -151,6 +153,25 @@ Singleton {
 		Env.act(`app mute ${!muted}`, () => node.audio.muted = !muted);
 	}
 
+	// Where an app's sound ends up: one of `outputs`, or the one a smart filter it
+	// plays into is for, as WirePlumber puts one in the way. null while it plays to
+	// nothing.
+	function outputOf(stream) {
+		const target = Pipewire.linkGroups.values.find(group => group.source === stream)?.target ?? null;
+		if (!target || outputs.includes(target))
+			return target;
+		if (!target.properties?.["filter.smart"])
+			return null;
+		const name = (String(target.properties["filter.smart.target"] ?? "").match(/"node\.name"\s*:\s*"([^"]+)"/) ?? [])[1];
+		return name ? outputs.find(node => node.name === name) ?? null : sink;
+	}
+
+	// An app's sound to `output` of its own, which WirePlumber keeps for it next
+	// time too, or with null to where the rest go again.
+	function route(stream, output) {
+		Env.act(`app output ${output ? "own" : "shared"}`, () => Quickshell.execDetached(output ? ["pw-metadata", String(stream.id), "target.object", output.name] : ["pw-metadata", "-d", String(stream.id), "target.object"]));
+	}
+
 	// Its app's name, without what a wrapper makes of it.
 	function streamName(node) {
 		const name = node.properties["application.name"] ?? node.description ?? node.name;
@@ -208,7 +229,8 @@ Singleton {
 		enabled: !!node
 	}
 
+	// And the filters apps play into, for where each leads: none of them a device.
 	PwObjectTracker {
-		objects: [audio.sink, audio.source].concat(audio.streams).filter(node => !!node)
+		objects: [audio.sink, audio.source].concat(audio.streams).concat(audio.filters).filter(node => !!node)
 	}
 }

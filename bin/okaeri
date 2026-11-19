@@ -116,6 +116,7 @@ top|the busiest processes on the load's card
 xdg-open|opening files, folders and links
 udisksctl|the drives one plugs in: mounting and ejecting them
 kdeconnect-cli|a phone through KDE Connect, with kdeconnectd running
+pw-metadata|an app's own output, from PipeWire
 LIST
 	if [ -n "${NIRI_SOCKET:-}" ] && has quickshell; then
 		if quickshell ipc -p "$shell" show >/dev/null 2>&1; then

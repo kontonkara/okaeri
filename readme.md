@@ -133,9 +133,10 @@ recording takes in, how warm the night light is, how long to keep awake, the pow
 profile, and for every tile whether it takes a whole row, where it sits, and
 leaving it out; all of them can be small. A tile dragged onto another takes its
 place, and a right click on the volume or the microphone opens its page, where
-each app playing or listening has a volume of its own. The dock has the apps it
-keeps and those with windows, all of them or only its screen's, and a right click
-on one has its windows, what else it can start, bringing its windows here,
+each app playing or listening has a volume of its own, and one playing can have
+an output of its own too, which WirePlumber keeps for it. The dock has the apps
+it keeps and those with windows, all of them or only its screen's, and a right
+click on one has its windows, what else it can start, bringing its windows here,
 keeping it and closing it. Its icons grow under the pointer, an app hops as it
 starts and while it asks to be looked at, and it can have a button for the
 launcher, and stay in sight on an empty workspace where it hides. An app has how

@@ -6,12 +6,15 @@ import qs.ui
 // Where the sound goes, with more than one place for it, a click moving it
 // there, the sound cards that can work in more ways than one, a click showing
 // those ways under it to pick from, and the volume of each app playing, with a
-// way to mute it.
+// way to mute it and, with more than one output, to send it to one of its own.
 Section {
 	id: section
 
 	// The id of the card whose ways are shown, -1 for none: one at a time.
 	property int opened: -1
+	// The app whose outputs are shown under it, by its place in the list, -1 for
+	// none: one at a time too.
+	property int routing: -1
 
 	// A way picked for `card`: the one it's in already is left as it is, as a
 	// change cuts the sound for a moment.
@@ -29,6 +32,7 @@ Section {
 	// A screen may have come since the last time.
 	onUnfoldedChanged: {
 		opened = -1;
+		routing = -1;
 		if (unfolded) {
 			Audio.checkScreens();
 			Audio.lookCards();
@@ -143,22 +147,55 @@ Section {
 
 	Repeater {
 		model: Audio.nodes
+		onCountChanged: section.routing = -1
 
-		Level {
+		Column {
+			id: app
+
 			required property var modelData
+			required property int index
+			// The page, for the list of its outputs: in that list `section` is its own.
+			readonly property var page: section
+			// Where it plays now, and whether its outputs are shown.
+			readonly property var going: Audio.outputOf(modelData)
+			readonly property bool open: section.routing === index
 
-			label: Audio.streamName(modelData)
-			value: modelData.audio.volume
-			onMoved: wanted => Audio.changeStream(modelData, wanted)
+			width: parent.width
 
-			Button {
-				anchors.centerIn: parent
-				height: Theme.u(28)
-				flat: true
-				icon: modelData.audio.muted ? "volumeOff" : "volume"
-				iconSize: Theme.u(16)
-				ink: modelData.audio.muted ? Theme.colors.subtext : Theme.colors.text
-				onClicked: Audio.toggleStream(modelData)
+			Level {
+				// Its output said only where it's not where the rest go.
+				label: Audio.streamName(app.modelData) + (Audio.outputs.length > 1 && app.going && app.going !== Audio.sink ? ` · ${app.going.description}` : "")
+				value: app.modelData.audio.volume
+				more: Audio.outputs.length > 1 ? "headphones" : ""
+				moreShown: app.open
+				onMoved: wanted => Audio.changeStream(app.modelData, wanted)
+				onMoreWanted: section.routing = app.open ? -1 : app.index
+
+				Button {
+					anchors.centerIn: parent
+					height: Theme.u(28)
+					flat: true
+					icon: app.modelData.audio.muted ? "volumeOff" : "volume"
+					iconSize: Theme.u(16)
+					ink: app.modelData.audio.muted ? Theme.colors.subtext : Theme.colors.text
+					onClicked: Audio.toggleStream(app.modelData)
+				}
+			}
+
+			// Where the rest go, which follows the default, and each other output,
+			// the one it plays to with a check, lined up under its name.
+			List {
+				x: Theme.u(40)
+				width: parent.width - x - Theme.u(5)
+				height: app.open ? count * rowHeight : 0
+				visible: app.open
+				interactive: false
+				model: [{ text: "Where the rest go", subtext: Audio.sink?.description ?? "", check: !app.going || app.going === Audio.sink, output: null }].concat(Audio.outputs.filter(node => node !== Audio.sink).map(node => ({ text: node.description, subtext: node.nickname, check: app.going === node, output: node })))
+				onActivated: (index, entry) => {
+					app.page.routing = -1;
+					if (!entry.check || !entry.output)
+						Audio.route(app.modelData, entry.output);
+				}
 			}
 		}
 	}

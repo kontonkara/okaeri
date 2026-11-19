@@ -5,7 +5,8 @@ import qs.ui
 // A level: what's put in it in front, a slider, and the percentage, or the
 // step for one of `steps`, and with `opens`, a page by that name, an arrow to
 // it, and a right click anywhere on it opens it too, as one on a tile opens what
-// else the tile can do.
+// else the tile can do. With `more`, an icon, a button of that at its end
+// says moreWanted(), for what else there is to it there.
 Item {
 	id: level
 
@@ -22,9 +23,12 @@ Item {
 	// look finer than it is. 0 for a percentage.
 	property int steps: 0
 	property string opens
+	property string more
+	property bool moreShown: false
 	default property alias front: front.data
 
 	signal moved(real wanted)
+	signal moreWanted
 
 	width: parent.width
 	height: Theme.u(label ? 44 : 34)
@@ -91,11 +95,17 @@ Item {
 		anchors.right: parent.right
 		anchors.verticalCenter: parent.verticalCenter
 		height: Theme.u(30)
-		visible: level.opens !== ""
+		visible: level.opens !== "" || level.more !== ""
 		flat: true
-		icon: "chevron"
+		icon: level.more || "chevron"
 		iconSize: Theme.u(16)
-		onClicked: Control.unfolded = level.opens
+		ink: level.moreShown ? Theme.colors.accent : Theme.colors.text
+		onClicked: {
+			if (level.more)
+				level.moreWanted();
+			else
+				Control.unfolded = level.opens;
+		}
 	}
 
 	TapHandler {

@@ -1164,6 +1164,15 @@ when 'dry: output' at 1200 183
 when 'dry: app volume' at 1218 263
 when 'dry: app mute true' at $mute_x 263
 shot playback
+# Another output for that app alone, from the list its button shows under it,
+# and back to where the rest go: a row of 38 px each, under the app's 44.
+at $sound_x 263
+sleep 0.3
+shot app-outputs
+when 'dry: app output own' at 1200 372
+at $sound_x 263
+sleep 0.3
+when 'dry: app output shared' at 1200 296
 at $back_x $page_y
 sleep 0.3
 # A sound card that can work in three ways, as pw-dump has it, off and one that
@@ -1278,7 +1287,7 @@ key Escape
 sleep 0.4
 
 # What was asked for says what, and nothing else: no names, no password.
-if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+( -s [0-9:]+ -S [0-9:]+ -d [0-9]+)?|app volume [0-9.]+|app mute (true|false)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|wired (up|down)|drive (arrived|mount|eject) /dev/sdb1|phone (ring|ping|send-clipboard)|hotspot (on|off)|card profile [0-9]+|keyboard light [0-9]+|record start screen none|tile run|bluetooth (true|false|connect|pair|cancel|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
+if log | grep 'dry:' | sed 's/.*dry: //' | grep -vxE 'sound [a-z-]+|wifi forget|bluetooth forget|output|input|ddc DP-1 [0-9]+|night light -t [0-9]+ -T [0-9]+( -s [0-9:]+ -S [0-9:]+ -d [0-9]+)?|app volume [0-9.]+|app mute (true|false)|app output (own|shared)|mic volume [0-9.]+|mic mute (true|false)|power profile [A-Za-z]+|volume [0-9.]+|mute (true|false)|brightness [0-9]+|wifi (true|false|connect|connect hidden|connect with a key|disconnect|scan true|scan false)|vpn (up|down)|wired (up|down)|drive (arrived|mount|eject) /dev/sdb1|phone (ring|ping|send-clipboard)|hotspot (on|off)|card profile [0-9]+|keyboard light [0-9]+|record start screen none|tile run|bluetooth (true|false|connect|pair|cancel|pairable true|pairable false|agent|answer (confirm|accept) (yes|no)|answer (pin|passkey)|trust and connect|disconnect|discovery true|discovery false)'; then
 	echo "control: something else in what was asked for" >&2
 	exit 1
 fi
