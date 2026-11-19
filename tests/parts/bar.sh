@@ -1871,6 +1871,20 @@ own "echo one; exec sleep 38.3" 0
 sleep 0.5
 same "what it ran, with another command" "$(pgrep -fc 'sleep 37[.]3')" 0
 same "what it runs now" "$(pgrep -fc 'sleep 38[.]3')" 1
+# `okaeri bar update` runs it again at once: one read once a day shows what's
+# printed now.
+printf 'before\n' >"$work/says"
+own "cat $work/says" 86400
+sleep 0.5
+shot own-before
+printf 'what it says after the update\n' >"$work/says"
+ipc bar update mine
+wait_log "okaeri: bar: update mine"
+sleep 0.5
+shot own-after
+[ "$(lane own-after | head -n 1)" -lt "$(lane own-before | head -n 1)" ] || fail "the part didn't run again by the call"
+own "echo one; exec sleep 38.3" 0
+sleep 0.5
 settings '{}'
 sleep 0.5
 same "what it ran, off the bar" "$(pgrep -fc 'sleep 38[.]3')" 0

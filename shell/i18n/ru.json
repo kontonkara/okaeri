@@ -636,7 +636,7 @@
 	"The date": "Дата",
 	"The device": "Устройство",
 	"The dock of": "Док экрана",
-	"The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there.": "Первая выведенная строка показывается, вторая — подсказка под указателем; или строка JSON с text, tooltip и class. Если ничего не выведено, части нет.",
+	"The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there. okaeri bar update and its name runs it again at once.": "Первая выведенная строка показывается, вторая — подсказка под указателем; или строка JSON с text, tooltip и class. Если ничего не выведено, части нет. okaeri bar update с её именем запускает её сразу.",
 	"The history has all of it": "В истории — целиком",
 	"The history has them either way": "В истории они есть в любом случае",
 	"Their brightness": "Их яркость",

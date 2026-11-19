@@ -2,15 +2,16 @@
 
 ## The bar
 
-Its parts are laid out on the Bar page of the settings: dragged to a lane, or
-off the bar. A click on one there shows its settings, how it looks and what
-clicks and the wheel on it run. The bar takes parts of your own too: a
-command, and what it prints is on the bar. The first line shows and the second
-is what the pointer on it says, or it's a line of JSON with `text`, `tooltip`
-and `class`. It runs every so many seconds, or once, and then each line it
-goes on to print is shown in turn. A click or the wheel on any part, yours or
-not, can run a command too, in place of what the part does with it, and a part
-of yours runs again right after, to show what that changed.
+Its parts are laid out on the Bar page of the settings: dragged to a lane, or off
+the bar. A click on one there shows its settings, how it looks and what clicks and
+the wheel on it run. The bar takes parts of your own too: a command, and what it
+prints is on the bar. The first line shows and the second is what the pointer on
+it says, or it's a line of JSON with `text`, `tooltip` and `class`. It runs every
+so many seconds, or once, and then each line it goes on to print is shown in turn;
+`okaeri bar update <name>` runs it again at once, for a script that knows when
+what it shows has changed. A click or the wheel on any part, yours or not, can run
+a command too, in place of what the part does with it, and a part of yours runs
+again right after, to show what that changed.
 
 A right click on a part with none of its own opens a menu by it: what it has
 to set, where it has some, its settings, and taking it off the bar. The screen

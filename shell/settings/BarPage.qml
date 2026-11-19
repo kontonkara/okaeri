@@ -1607,7 +1607,7 @@ Flickable {
 					}
 
 					Note {
-						text: Tr.t("The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there.")
+						text: Tr.t("The first line it prints shows, and the second is what the pointer on it says; or a line of JSON with text, tooltip and class. With nothing printed the part isn't there. okaeri bar update and its name runs it again at once.")
 					}
 
 					Button {

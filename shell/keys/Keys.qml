@@ -120,25 +120,6 @@ Scope {
 		}
 	}
 
-	// Whether the bar hides, as its page of the settings has it: a key for it to
-	// go out of sight, or to stay. Without the --, `show` is a command of
-	// quickshell's own.
-	IpcHandler {
-		target: "bar"
-
-		function show(): void {
-			Settings.set("bar", "autoHide", false);
-		}
-
-		function hide(): void {
-			Settings.set("bar", "autoHide", true);
-		}
-
-		function toggle(): void {
-			Settings.set("bar", "autoHide", !Settings.bar.autoHide);
-		}
-	}
-
 	// The month under the clock, and the load of the machine, on the bar of the
 	// screen in focus or of the first that has them.
 	IpcHandler {

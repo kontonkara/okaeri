@@ -12,6 +12,7 @@ them:
 | `okaeri settings toggle`, `settings open Wallpaper` | the settings window, at a page |
 | `okaeri settings get dock.magnify`, `set`, `reset`, `config nix`, `schema` | one setting, all of them, their schema |
 | `okaeri bar toggle` | the bar hides, or stays |
+| `okaeri bar update <name>` | a part of your own runs again now, `""` every one |
 | `okaeri dock toggle`, `dock pin firefox`, `unpin` | the dock, and what it keeps |
 | `okaeri calendar toggle`, `media card`, `battery toggle`, `load toggle` | the bar's cards |
 | `okaeri notes add`, `notes toggle` | things to do |

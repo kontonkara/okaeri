@@ -86,6 +86,22 @@ BarButton {
 			again.restart();
 	}
 
+	// `okaeri bar update`: one that runs every so often runs now, and one that keeps
+	// running starts again.
+	Connections {
+		target: Panels
+
+		function onUpdateWanted(name) {
+			if (name !== "" && name !== part.name)
+				return;
+			console.info("okaeri: bar: update", part.name);
+			if (part.stays)
+				part.renew();
+			else if (!process.running)
+				part.start();
+		}
+	}
+
 	visible: wanted
 	longest: Theme.u(240)
 	text: said
