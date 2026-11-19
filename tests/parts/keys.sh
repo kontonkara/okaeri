@@ -291,4 +291,9 @@ ipc pomodoro stop
 [ "$(phase)" = '["",0]' ] || fail "stopped pomodoros: $(phase)"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 
+# Charging stopped short of full, as UPower can here: asked by a call, here only
+# said.
+ipc battery limit true
+wait_log "okaeri: dry: battery limit true"
+
 echo "keys: all good" >&2

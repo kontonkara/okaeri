@@ -257,6 +257,15 @@ Scope {
 		function toggle(): void {
 			Panels.ask("battery", Niri.focusedScreen?.name ?? "");
 		}
+
+		// Charging stopped short of full, where UPower can, and whether it is.
+		function limit(on: bool): void {
+			Power.setLimit(on);
+		}
+
+		function limited(): bool {
+			return Power.limited;
+		}
 	}
 
 	// The keyboard's own light, where it has one.

@@ -235,6 +235,18 @@ sed -i "s|^\treadonly property string tool: .*|\treadonly property string tool: 
 # be one more thing on the bar.
 sed -i -e 's/^\treadonly property var microphone: .*/\tproperty var microphone: []/' \
 	-e 's/^\treadonly property var camera: .*/\tproperty var camera: []/' "$work/shell/services/Privacy.qml"
+# What UPower says of stopping the charge short of full is a stand-in's, which
+# takes a change without making it; the rest of what Power asks goes to UPower.
+cat >"$work/power-busctl" <<SH
+#!/bin/sh
+case "\$*" in
+*ChargeThresholdSupported*) printf 'b true\nb false\nu 70\nu 80\n' ;;
+*EnableChargeThreshold*) exit 0 ;;
+*) exec busctl "\$@" ;;
+esac
+SH
+chmod +x "$work/power-busctl"
+sed -i "s|^\treadonly property string bus: .*|\treadonly property string bus: \"$work/power-busctl\"|" "$work/shell/services/Power.qml"
 # The machine's battery could run low under a test: here it's what a test says.
 sed -i -e 's/^\treadonly property int charge: .*/\tproperty int charge: 100/' \
 	-e 's/^\treadonly property bool draining: .*/\tproperty bool draining: false/' \

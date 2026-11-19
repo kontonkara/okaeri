@@ -169,7 +169,9 @@ and `reset` are the stopwatch's. Pomodoros go from the clock's card, `/timer` an
 few, each on to the next by itself, as long as the Bar page says.
 
 A click on the battery shows it in full: how the charge went over the last day,
-the power going in or out, the energy in it and how worn it is.
+the power going in or out, the energy in it and how worn it is. Where UPower can
+stop the charge short of full, the card turns that on and off, as `okaeri
+battery limit true` does: easier on a battery that's mostly on the charger.
 The load's card has what keeps the processor busiest now, and two clicks on one
 end it.
 

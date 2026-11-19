@@ -144,6 +144,56 @@ Singleton {
 		return parts.filter(part => part !== "").join(" · ");
 	}
 
+	// Charging stopped short of full, as UPower does where the battery can: up to
+	// limitTo percent, and again from limitFrom, while `limited`. Read as the
+	// battery's card shows, and set from there or `okaeri battery limit`: UPower
+	// lets the one at the machine do it.
+	readonly property string batteryObject: `/org/freedesktop/UPower/devices/battery_${(battery?.nativePath ?? "").replace(/[^A-Za-z0-9_]/g, "_")}`
+	property bool limitable: false
+	property bool limited: false
+	property int limitFrom: 0
+	property int limitTo: 0
+
+	function lookLimit() {
+		if (battery)
+			limitLook.running = true;
+	}
+
+	onBatteryChanged: lookLimit()
+
+	function setLimit(wanted) {
+		if (limitable)
+			Env.act(`battery limit ${wanted}`, () => limitSet.exec([bus, "call", "--system", "org.freedesktop.UPower", batteryObject, "org.freedesktop.UPower.Device", "EnableChargeThreshold", "b", String(!!wanted)]));
+	}
+
+	Process {
+		id: limitLook
+
+		command: [power.bus, "get-property", "--system", "org.freedesktop.UPower", power.batteryObject, "org.freedesktop.UPower.Device", "ChargeThresholdSupported", "ChargeThresholdEnabled", "ChargeStartThreshold", "ChargeEndThreshold"]
+		stdout: StdioCollector {
+			onStreamFinished: {
+				const lines = text.trim().split("\n");
+				power.limitable = lines.length === 4 && lines[0] === "b true";
+				power.limited = power.limitable && lines[1] === "b true";
+				power.limitFrom = Number(lines[2]?.split(" ")[1] ?? 0);
+				power.limitTo = Number(lines[3]?.split(" ")[1] ?? 0);
+			}
+		}
+	}
+
+	Process {
+		id: limitSet
+
+		stderr: StdioCollector {
+			id: limitSaid
+		}
+		onExited: code => {
+			if (code !== 0)
+				Quickshell.execDetached(["notify-send", "--app-name=okaeri", "--icon=dialog-error", "The battery's limit stayed as it was", limitSaid.text.trim().split("\n").pop() ?? ""]);
+			power.lookLimit();
+		}
+	}
+
 	Process {
 		id: historyLook
 

@@ -21,7 +21,10 @@ Column {
 
 	spacing: Theme.u(10)
 
-	Component.onCompleted: Power.lookHistory()
+	Component.onCompleted: {
+		Power.lookHistory();
+		Power.lookLimit();
+	}
 
 	Timer {
 		interval: 300000
@@ -133,6 +136,48 @@ Column {
 				text: modelData.name
 				value: `${modelData.percent}%`
 			}
+		}
+	}
+
+	// Charging stopped short of full, where the battery can: easier on it, for a
+	// machine that's mostly on the charger.
+	Item {
+		width: parent.width
+		height: Theme.u(36)
+		visible: Power.limitable
+
+		Column {
+			anchors.left: parent.left
+			anchors.leftMargin: Theme.u(4)
+			anchors.right: limit.left
+			anchors.verticalCenter: parent.verticalCenter
+
+			Text {
+				width: parent.width
+				text: `Charge to ${Power.limitTo}% only`
+				color: Theme.colors.text
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize
+			}
+
+			Text {
+				width: parent.width
+				text: `And again from ${Power.limitFrom}%, as UPower has it`
+				color: Theme.colors.subtext
+				font.family: Theme.font
+				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+		}
+
+		Toggle {
+			id: limit
+
+			objectName: "limit"
+			anchors.right: parent.right
+			anchors.rightMargin: Theme.u(4)
+			anchors.verticalCenter: parent.verticalCenter
+			checked: Power.limited
+			onToggled: wanted => Power.setLimit(wanted)
 		}
 	}
 
