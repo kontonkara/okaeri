@@ -645,6 +645,31 @@ done
 [ "$(jq -c '[.todos[].text]' "$XDG_STATE_HOME/okaeri/notes.json" 2>/dev/null)" = '["buy milk","call mom"]' ] || fail "the notes' file"
 printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 
+step "A plugin"
+# The example in the repository, found, and off until it's turned on: then its
+# part is on the bar by its folder's name, and what it runs with the shell
+# answers a call. Off again, both go.
+mkdir -p "$XDG_CONFIG_HOME/okaeri/plugins"
+cp -r "$repo/examples/plugins/hello" "$XDG_CONFIG_HOME/okaeri/plugins/"
+ipc plugins look
+sleep 0.5
+[ "$(ipc plugins list)" = '[{"id":"hello","name":"Hello","on":false,"bar":true,"background":true,"trouble":""}]' ] || fail "the plugins found: $(ipc plugins list)"
+move 300 600
+printf '{ "plugins": { "enabled": ["hello"] }, "bar": { "right": ["hello", "control"] } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+for _ in $(seq 30); do
+	[ "$(ipc hello ping 2>/dev/null)" = pong ] && break
+	sleep 0.1
+done
+[ "$(ipc hello ping 2>/dev/null)" = pong ] || fail "no answer from what the plugin runs"
+sleep 0.5
+shot plugin-bar
+[ "$(lane plugin-bar | wc -l)" = 2 ] || fail "the plugin's part isn't on the bar: $(lane plugin-bar | wc -l) on the right"
+printf '{}' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+[ "$(ipc hello ping 2>/dev/null)" != pong ] || fail "what the plugin runs stays after it's off"
+rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
+ipc plugins look
+
 step "On the desktop"
 # The time, over the wallpaper and under the windows, on each screen: on the
 # layer below them, taking no keys, and gone again with it off.

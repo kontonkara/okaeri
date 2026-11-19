@@ -216,6 +216,9 @@
 		"editor": "",
 		"languages": "eng"
 	},
+	"plugins": {
+		"enabled": []
+	},
 	"desktop": {
 		"clock": false,
 		"seconds": false,

@@ -41,11 +41,13 @@ Flickable {
 		launcher: "Launcher",
 		notes: "Notes and things to do"
 	})
-	// The user's own parts go by the names they have.
+	// The user's own parts go by the names they have, and plugins' by their folders'
+	// names, shown by what they call themselves.
 	readonly property var scripts: Settings.bar.scripts
 	readonly property var names: {
 		const all = Object.assign({}, builtIn);
 		scripts.forEach(own => all[own.name] = all[own.name] ?? own.name);
+		Plugins.running.filter(plugin => plugin.bar !== "").forEach(plugin => all[plugin.id] = all[plugin.id] ?? plugin.name);
 		return all;
 	}
 	readonly property var buttons: [

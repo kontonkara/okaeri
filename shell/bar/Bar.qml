@@ -246,11 +246,11 @@ PanelWindow {
 				readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
 
 				visible: item?.wanted ?? true
-				sourceComponent: bar.parts[modelData] ?? (Settings.bar.scripts.some(own => own.name === modelData) ? script : null)
+				sourceComponent: bar.parts[modelData] ?? (Settings.bar.scripts.some(own => own.name === modelData) ? script : Plugins.barOf(modelData) ? pluginPart : null)
 
 				Component.onCompleted: {
 					if (!sourceComponent)
-						console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}, or of the scripts`);
+						console.info(`okaeri: no "${modelData}" for the bar, it's one of ${Object.keys(bar.parts).join(", ")}, or of the scripts or the plugins that are on`);
 				}
 
 				// Over the part, for the buttons that have a command, and the wheel
@@ -315,6 +315,17 @@ PanelWindow {
 
 	PartMenu {
 		id: partMenu
+	}
+
+	// A plugin's part, from its folder, by the name the bar has it by.
+	Component {
+		id: pluginPart
+
+		Loader {
+			readonly property bool wanted: item?.wanted ?? true
+
+			source: Plugins.barOf(parent?.modelData ?? "")
+		}
 	}
 
 	Component {

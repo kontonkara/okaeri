@@ -202,6 +202,10 @@ card to add one, tick it off or take it away, and to write in. `/todo` in the
 launcher adds one or ticks one off, `okaeri notes add` adds one from a script,
 and `okaeri notes toggle` shows the card by a key.
 
+Plugins are folders in `~/.config/okaeri/plugins`, each with a `plugin.json`:
+none runs until it's turned on, on the Plugins page of the settings, where
+"Look again" finds new ones; `examples/plugins/hello` is one to start from.
+
 Over the wallpaper and under the windows, the desktop can have the time, the
 weather, what plays with its buttons, and what the calendars have coming, at a
 corner or in the middle: on the Wallpaper page, with how pictures show.

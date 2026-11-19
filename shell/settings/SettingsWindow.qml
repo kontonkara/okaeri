@@ -32,7 +32,8 @@ FloatingWindow {
 		{ text: "Display", icon: "sunset", page: displayPage, sections: ["display", "recording", "screenshots", "nightLight.mode", "nightLight.temperature", "nightLight.from", "nightLight.until", "nightLight.latitude", "nightLight.longitude"] },
 		{ text: "Wallpaper", icon: "image", page: wallpaperPage, sections: ["wallpaper", "desktop"] },
 		{ text: "Look", icon: "eye", page: lookPage, sections: ["bar.look", "control.size"], keys: ["blur", "toastBlur", "barBlur", "realBlur", "opacity", "animations", "speed", "panelMotion", "toastMotion", "barHeight", "barIcon", "barMargin", "radius", "fontSize", "scale", "font", "fontWeight", "extends", "auto", "day", "night", "dayFrom", "nightFrom", "accent", "wallpaperAccent", "wallpaperPalette"] },
-		{ text: "Session", icon: "lock", page: sessionPage, sections: ["session", "idle", "hooks", "game", "battery.warning", "battery.saver"] }
+		{ text: "Session", icon: "lock", page: sessionPage, sections: ["session", "idle", "hooks", "game", "battery.warning", "battery.saver"] },
+		{ text: "Plugins", icon: "plugin", page: pluginsPage, sections: ["plugins"] }
 	]
 	property int page: 0
 	// What the screen in focus has room for, and the least it's made.
@@ -483,6 +484,12 @@ FloatingWindow {
 		id: trayPage
 
 		TrayPage {}
+	}
+
+	Component {
+		id: pluginsPage
+
+		PluginsPage {}
 	}
 
 	Component {

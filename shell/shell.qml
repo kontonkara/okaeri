@@ -13,6 +13,7 @@ import qs.notifications
 import qs.osd
 import qs.polkit
 import qs.session
+import qs.services
 import qs.settings
 import qs.wallpaper
 
@@ -54,6 +55,18 @@ ShellRoot {
 	Wallpaper {}
 
 	Desktop {}
+
+	// What plugins that are on run with the shell, each as long as it's on.
+	Variants {
+		model: Plugins.running.map(plugin => plugin.background).filter(url => url !== "")
+
+		LazyLoader {
+			required property string modelData
+
+			active: true
+			source: modelData
+		}
+	}
 
 	LazyLoader {
 		active: Quickshell.env("OKAERI_GALLERY") === "1"

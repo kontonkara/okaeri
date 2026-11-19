@@ -1,0 +1,6 @@
+{
+	"name": "Hello",
+	"description": "A part for the bar that counts clicks, and `okaeri hello ping`",
+	"bar": "Bar.qml",
+	"background": "Main.qml"
+}

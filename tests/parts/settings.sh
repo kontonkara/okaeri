@@ -817,6 +817,21 @@ same "with what sound" "$(value .recording.audio)" '"system"'
 put "Where the videos go" '~/clips'
 same "where the videos go" "$(value .recording.folder)" "\"$HOME/clips\""
 
+step "Plugins"
+# The example in the repository, in the folder for them: off at first, and on by
+# its line.
+mkdir -p "$XDG_CONFIG_HOME/okaeri/plugins"
+cp -r "$repo/examples/plugins/hello" "$XDG_CONFIG_HOME/okaeri/plugins/"
+ipc plugins look
+ipc settings open Plugins
+sleep 0.5
+shot plugins-page
+flip Hello
+same "the plugins on" "$(value .plugins.enabled)" '["hello"]'
+flip Hello
+same "the plugins on, none" "$(value .plugins.enabled)" '[]'
+rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
+
 step "The display's page"
 page "$display_y"
 shot display-page
