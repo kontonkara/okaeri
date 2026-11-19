@@ -46,7 +46,7 @@ Singleton {
 	// Where sound can come from, the same way: devices' microphones.
 	readonly property var inputs: Pipewire.nodes.values.filter(node => !node.isSink && !node.isStream && /^(alsa|bluez)_input/.test(node.name))
 	// What apps play into that isn't a device, a filter: for outputOf().
-	readonly property var filters: Pipewire.linkGroups.values.filter(group => nodes.includes(group.source) && !!group.target && !/^(alsa|bluez)_output/.test(group.target.name)).map(group => group.target)
+	readonly property var filters: (Pipewire.linkGroups?.values ?? []).filter(group => !!group?.target && nodes.includes(group.source) && !/^(alsa|bluez)_output/.test(group.target.name ?? "")).map(group => group.target)
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
 	// The sound cards that can work in more ways than one: { id, name, profiles:
@@ -157,7 +157,7 @@ Singleton {
 	// plays into is for, as WirePlumber puts one in the way. null while it plays to
 	// nothing.
 	function outputOf(stream) {
-		const target = Pipewire.linkGroups.values.find(group => group.source === stream)?.target ?? null;
+		const target = (Pipewire.linkGroups?.values ?? []).find(group => group?.source === stream)?.target ?? null;
 		if (!target || outputs.includes(target))
 			return target;
 		if (!target.properties?.["filter.smart"])
@@ -231,6 +231,7 @@ Singleton {
 
 	// And the filters apps play into, for where each leads: none of them a device.
 	PwObjectTracker {
-		objects: [audio.sink, audio.source].concat(audio.streams).concat(audio.filters).filter(node => !!node)
+		// What PipeWire is in the middle of changing can be had as nothing for a moment.
+		objects: [audio.sink, audio.source].concat(audio.streams ?? [], audio.filters ?? []).filter(node => !!node)
 	}
 }
