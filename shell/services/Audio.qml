@@ -47,6 +47,15 @@ Singleton {
 	readonly property var inputs: Pipewire.nodes.values.filter(node => !node.isSink && !node.isStream && /^(alsa|bluez)_input/.test(node.name))
 	// What apps play into that isn't a device, a filter: for outputOf().
 	readonly property var filters: (Pipewire.linkGroups?.values ?? []).filter(group => !!group?.target && nodes.includes(group.source) && !/^(alsa|bluez)_output/.test(group.target.name ?? "")).map(group => group.target)
+	// What PwObjectTracker has bound: the devices in use, the streams and the
+	// filters, never undefined.
+	readonly property var tracked: {
+		try {
+			return [sink, source].concat(streams ?? [], filters ?? []).filter(node => !!node);
+		} catch (error) {
+			return [];
+		}
+	}
 	// The PCI addresses of what has a screen on it, without the function.
 	property var screens: []
 	// The sound cards that can work in more ways than one: { id, name, profiles:
@@ -231,7 +240,8 @@ Singleton {
 
 	// And the filters apps play into, for where each leads: none of them a device.
 	PwObjectTracker {
-		// What PipeWire is in the middle of changing can be had as nothing for a moment.
-		objects: [audio.sink, audio.source].concat(audio.streams ?? [], audio.filters ?? []).filter(node => !!node)
+		// What PipeWire is in the middle of changing, or the shell as it reloads, can
+		// be had as nothing for a moment.
+		objects: audio.tracked ?? []
 	}
 }
