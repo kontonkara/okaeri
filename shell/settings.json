@@ -287,6 +287,7 @@
 		"reserve": true,
 		"autoHide": false,
 		"hoverOpens": false,
+		"overWindows": "same",
 		"actions": {},
 		"scripts": [],
 		"screens": {},

@@ -673,6 +673,21 @@ Flickable {
 				onToggled: wanted => Settings.set("bar", "tips", wanted)
 			}
 
+			Pick {
+				holds: "bar.overWindows"
+				words: "windows dodge intellihide solid opaque"
+				text: Tr.t("With windows on the workspace")
+				subtext: Settings.bar.overWindows === "solid" ? Tr.t("Solid, without its glass; with none, as it was") : Settings.bar.overWindows === "hide" ? Tr.t("It hides, as if it always did; with none it's there") : Tr.t("The same with windows or without")
+				options: [
+					{ value: "same", text: Tr.t("As it is") },
+					{ value: "solid", text: Tr.t("Solid") },
+					{ value: "hide", text: Tr.t("Out of the way") }
+				]
+				value: Settings.bar.overWindows
+				valueWidth: Theme.u(140)
+				onChosen: value => Settings.set("bar", "overWindows", value)
+			}
+
 			Setting {
 				holds: "bar.hoverOpens"
 				words: "hover pointer open"

@@ -70,7 +70,15 @@ PanelWindow {
 	readonly property bool capsules: Settings.bar.look === "capsules"
 	// No fill across it.
 	readonly property bool apart: islands || capsules
-	readonly property bool hides: Settings.bar.autoHide
+	// Whether its screen shows a workspace with windows on it, for
+	// Settings.bar.overWindows: "solid" has it without its glass then, and "hide"
+	// has it hide then as it would with autoHide.
+	// Looked at as niri says what changed: as a binding it would go round with
+	// the window, whose screen comes and goes with its sight.
+	property bool busy: false
+	readonly property bool solid: Settings.bar.overWindows === "solid" && busy
+	readonly property color fill: solid ? Theme.colors.background : Theme.barFill
+	readonly property bool hides: Settings.bar.autoHide || (Settings.bar.overWindows === "hide" && busy)
 	// What has it in sight then: the pointer at the top of the screen or on it,
 	// and a panel on its screen.
 	readonly property bool pointed: sensor.containsMouse || over.hovered
@@ -127,7 +135,7 @@ PanelWindow {
 	exclusionMode: Settings.bar.reserve && !hides ? ExclusionMode.Auto : ExclusionMode.Ignore
 	color: "transparent"
 	WlrLayershell.namespace: "okaeri-bar"
-	BackgroundEffect.blurRegion: Theme.barBlur ? glass : null
+	BackgroundEffect.blurRegion: Theme.barBlur && !solid ? glass : null
 
 	onHidesChanged: settle()
 	onPointedChanged: settle()
@@ -138,7 +146,30 @@ PanelWindow {
 		if (down)
 			visible = true;
 	}
-	Component.onCompleted: settle()
+	onScreenChanged: lookBusy()
+	Component.onCompleted: {
+		lookBusy();
+		settle();
+	}
+
+	function lookBusy() {
+		if (!screen)
+			return;
+		const shown = Niri.on(screen.name).find(workspace => workspace.is_active);
+		busy = !!shown && Niri.holds(shown);
+	}
+
+	Connections {
+		target: Niri
+
+		function onWorkspacesChanged() {
+			bar.lookBusy();
+		}
+
+		function onWindowsChanged() {
+			bar.lookBusy();
+		}
+	}
 
 	Timer {
 		id: coming
@@ -255,7 +286,7 @@ PanelWindow {
 				readonly property bool spacer: Settings.spacer(modelData)
 				readonly property bool capsule: look.capsule ?? (bar.capsules && !spacer)
 				// Its own fill, or the bar's where the bar is only capsules.
-				readonly property color fill: Theme.shade(look.fill, bar.capsules ? Theme.barFill : Theme.hover)
+				readonly property color fill: Theme.shade(look.fill, bar.capsules ? bar.fill : Theme.hover)
 				// The color of its icons and words: its own, or one that shows on a
 				// fill of its own, or the theme's.
 				readonly property color ink: look.ink ? Theme.shade(look.ink, Theme.colors.text) : look.fill && capsule ? Theme.inkOn(fill) : Theme.colors.text
@@ -642,7 +673,7 @@ PanelWindow {
 
 			anchors.fill: parent
 			radius: bar.corners
-			color: bar.apart ? "transparent" : Theme.barFill
+			color: bar.apart ? "transparent" : bar.fill
 		}
 
 		// Over the fill, as on a panel: under the glass a border of its own would show
@@ -673,7 +704,7 @@ PanelWindow {
 				Rectangle {
 					anchors.fill: parent
 					radius: bar.corners
-					color: Theme.barFill
+					color: bar.fill
 				}
 
 				Rectangle {

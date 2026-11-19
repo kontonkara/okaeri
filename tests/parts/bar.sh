@@ -2003,6 +2003,19 @@ sleep 0.6
 shot hides-over
 there hides-over || fail "the bar that doesn't hide is out of sight"
 same "the window with the space kept again" "$(tile)" "$kept"
+# Out of the way of windows: hidden while the workspace has one, and in sight
+# again on an empty one.
+settings '{ "bar": { "overWindows": "hide" } }'
+sleep 1
+shot hides-windows
+there hides-windows && fail "the bar stays in sight over a window"
+niri msg action focus-workspace 100
+sleep 1.2
+shot hides-empty
+there hides-empty || fail "the bar isn't there on an empty workspace"
+niri msg action focus-workspace-previous
+settings '{}'
+sleep 0.6
 kill "$under"
 wait "$under" 2>/dev/null || true
 

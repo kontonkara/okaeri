@@ -923,5 +923,10 @@
 	"Springing": "Пружиня",
 	"Dropping in": "Падая",
 	"The pointer opens panels": "Панели открываются наведением",
-	"Resting on the clock, the battery, the media, the load, the notes, the notifications or the control center": "Если задержать указатель на часах, батарее, медиа, нагрузке, заметках, уведомлениях или центре управления"
+	"Resting on the clock, the battery, the media, the load, the notes, the notifications or the control center": "Если задержать указатель на часах, батарее, медиа, нагрузке, заметках, уведомлениях или центре управления",
+	"With windows on the workspace": "Когда на рабочем столе есть окна",
+	"Solid, without its glass; with none, as it was": "Непрозрачный, без стекла; без окон — как был",
+	"It hides, as if it always did; with none it's there": "Прячется, как при автоскрытии; без окон виден",
+	"The same with windows or without": "Одинаково с окнами и без",
+	"Solid": "Непрозрачный"
 }
