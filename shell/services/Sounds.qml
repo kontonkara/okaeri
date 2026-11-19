@@ -4,12 +4,15 @@ import QtQuick
 import Quickshell
 import qs
 
-// Short sounds out of the freedesktop sound theme, wherever that's installed, at
-// Settings.sounds.volume. Several at once make one.
+// Short sounds out of the freedesktop sound theme, wherever that's installed, or
+// a file by its path, at Settings.sounds.volume. Several at once make one.
 Singleton {
 	id: sounds
 
-	readonly property string player: `IFS=:
+	readonly property string player: `case $2 in
+*/*) exec pw-play --media-role Notification --volume "$1" "$2" ;;
+esac
+IFS=:
 for dir in \${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
 	for kind in oga ogg wav; do
 		file=$dir/sounds/freedesktop/stereo/$2.$kind
@@ -21,7 +24,8 @@ done`
 	function play(name) {
 		if (Settings.sounds.volume > 0 && Date.now() - last > 100) {
 			last = Date.now();
-			Env.act(`sound ${name}`, () => Quickshell.execDetached(["sh", "-c", player, "sh", String(Settings.sounds.volume / 100), name]));
+			const sound = name.replace(/^~(?=\/)/, Quickshell.env("HOME"));
+			Env.act(`sound ${sound}`, () => Quickshell.execDetached(["sh", "-c", player, "sh", String(Settings.sounds.volume / 100), sound]));
 		}
 	}
 }

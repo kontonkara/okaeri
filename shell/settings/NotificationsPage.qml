@@ -56,7 +56,7 @@ Flickable {
 		const changed = Object.assign({ app }, rule(app), { [key]: wanted });
 		if (wanted === undefined)
 			delete changed[key];
-		const holds = changed.toast === false || changed.history === false || changed.sound === false || !!changed.bypass || changed.timeout !== undefined || !!changed.text;
+		const holds = changed.toast === false || changed.history === false || changed.sound === false || !!changed.bypass || changed.timeout !== undefined || !!changed.text || !!changed.soundFile || !!changed.run;
 		const others = Settings.notifications.rules.filter(rule => !same(rule, app));
 		set("rules", (holds ? others.concat([changed]) : others).sort((a, b) => !a.app - !b.app));
 	}
@@ -500,6 +500,25 @@ Flickable {
 							text: Tr.t("Sound")
 							checked: line.held.sound !== false
 							onToggled: wanted => page.change(line.modelData, "sound", wanted)
+						}
+
+						Field {
+							objectName: "sound-file"
+							visible: line.held.sound !== false
+							text: Tr.t("A sound of its own")
+							subtext: Tr.t("One of the sound theme's by its name, or a file")
+							placeholder: "bell"
+							value: line.held.soundFile ?? ""
+							onKept: value => page.change(line.modelData, "soundFile", value || undefined)
+						}
+
+						Field {
+							objectName: "run"
+							text: Tr.t("It runs")
+							subtext: Tr.t("As one comes: OKAERI_APP, OKAERI_SUMMARY, OKAERI_BODY and OKAERI_URGENCY")
+							placeholder: Tr.t("A command")
+							value: line.held.run ?? ""
+							onKept: value => page.change(line.modelData, "run", value || undefined)
 						}
 
 						Setting {

@@ -13,10 +13,12 @@ import qs.services
 // no server and it all stays empty. The history is kept over a restart, in a
 // directory only the user can read.
 // Settings.notifications.rules say what's done with some: { app, text, toast,
-// history, sound, bypass, timeout }, app being its name or desktop entry, in any
-// case, and all if left out, text words it has to have, or between slashes a
-// pattern for them, and the others what's different for it: false to not show or
-// sound, bypass to go through Do Not Disturb, timeout in seconds, 0 to stay.
+// history, sound, soundFile, bypass, timeout, run }, app being its name or desktop
+// entry, in any case, and all if left out, text words it has to have, or between
+// slashes a pattern for them, and the others what's different for it: false to
+// not show or sound, a sound of the theme's by its name or a file of its own,
+// bypass to go through Do Not Disturb, timeout in seconds, 0 to stay, and a
+// command to run as one comes.
 Singleton {
 	id: store
 
@@ -258,6 +260,8 @@ Singleton {
 				twin.dismiss();
 			}
 		}
+		if (!notification.lastGeneration)
+			runFor(notification);
 		// From before a reload it had its toast, and only a critical one still has.
 		const shows = !quiet(notification) && (!notification.lastGeneration || critical(notification));
 		// Only in the server's list after this returns. A transient one that
@@ -284,8 +288,19 @@ Singleton {
 			if (Settings.sounds.screenshots)
 				Sounds.play("screen-capture");
 		} else if (Settings.sounds.notifications && notification.urgency !== NotificationUrgency.Low && rule(notification).sound !== false) {
-			Sounds.play(critical(notification) ? "dialog-warning" : "message-new-instant");
+			Sounds.play(rule(notification).soundFile || (critical(notification) ? "dialog-warning" : "message-new-instant"));
 		}
+	}
+
+	// A rule's `run`, a command for sh, as one comes in, shown or not: what it says
+	// is in its environment, OKAERI_APP, OKAERI_SUMMARY, OKAERI_BODY and
+	// OKAERI_URGENCY, low, normal or critical.
+	function runFor(notification) {
+		const command = rule(notification).run;
+		if (!command)
+			return;
+		const urgency = notification.urgency === NotificationUrgency.Low ? "low" : notification.urgency === NotificationUrgency.Critical ? "critical" : "normal";
+		Env.act(`notification run ${command}`, () => Quickshell.execDetached(["env", `OKAERI_APP=${notification.appName ?? ""}`, `OKAERI_SUMMARY=${notification.summary ?? ""}`, `OKAERI_BODY=${notification.body ?? ""}`, `OKAERI_URGENCY=${urgency}`, "sh", "-c", command]));
 	}
 
 	function show(notification) {

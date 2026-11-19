@@ -1412,7 +1412,7 @@ ipc notifications clear
 wait_state history 0
 
 step "Rules with more to them"
-printf '{ "notifications": { "rules": [{ "text": "secret", "toast": false }, { "app": "Pager", "bypass": true }, { "app": "Mute", "sound": false }, { "app": "Short", "timeout": 1 }] } }\n' >"$config"
+printf '{ "notifications": { "rules": [{ "text": "secret", "toast": false }, { "app": "Pager", "bypass": true }, { "app": "Mute", "sound": false }, { "app": "Short", "timeout": 1 }, { "app": "Bell", "soundFile": "~/bell.oga", "run": "echo \\"$OKAERI_SUMMARY\\"" }] } }\n' >"$config"
 sleep 0.5
 send -a Mail "A SECRET word" "Quietly."
 wait_state history 1
@@ -1433,6 +1433,17 @@ wait_state toasts 0
 send -a Short -t 60000 "Short" "Its rule says a second."
 wait_state toasts 1
 wait_state toasts 0 25
+# A sound of its own, a file in the home, and a command as it comes.
+send -a Bell "Rung" "With its own sound."
+wait_log "okaeri: dry: notification run echo"
+wait_log "bell.oga"
+log | grep -q "okaeri: dry: sound /.*/bell.oga" || fail "the rule's own sound: $(log | grep "dry: sound" | tail -n 1)"
+ipc notifications clear
+wait_state toasts 0
+printf '{}\n' >"$config"
+sleep 0.5
+ipc notifications clear
+wait_state history 0
 printf '{}\n' >"$config"
 sleep 0.5
 ipc notifications clear

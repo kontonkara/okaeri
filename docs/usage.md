@@ -140,13 +140,16 @@ save the picture, to `saveTo` in the clipboard's settings or Pictures.
 
 ## Notifications
 
-The bell beside an app's name in the history keeps it quiet for an hour, eight
-or until you say, and the Notifications page lists those that are; a
-screenshot's toast opens its folder, copies it or deletes it. A toast under the
-pointer has that bell too. Toasts wait every day between two times too, as with
-Do Not Disturb on: the quiet hours, on the Notifications page. The on-screen
-display says what plays after a key of the player's, too, and as a track starts
-by itself where its page says so.
+The bell beside an app's name in the history keeps it quiet for an hour, eight or
+until you say, and the Notifications page lists those that are; a screenshot's
+toast opens its folder, copies it or deletes it. A toast under the pointer has
+that bell too. Toasts wait every day between two times too, as with Do Not Disturb
+on: the quiet hours, on the Notifications page. An app's rule there, or one for
+some words, can keep its toasts or its history away, let it through Do Not
+Disturb, give it a sound of its own, from the sound theme or a file, and run a
+command as one comes, with `OKAERI_APP`, `OKAERI_SUMMARY`, `OKAERI_BODY` and
+`OKAERI_URGENCY` in its environment. The on-screen display says what plays after a
+key of the player's, too, and as a track starts by itself where its page says so.
 
 ## Screens
 
