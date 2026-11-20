@@ -13,6 +13,32 @@ Flickable {
 	clip: true
 	boundsBehavior: Flickable.StopAtBounds
 
+	component Note: Text {
+		width: parent.width
+		wrapMode: Text.WordWrap
+		color: Theme.colors.subtext
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize - Theme.u(2)
+	}
+
+	readonly property var modes: Array.isArray(Settings.launcher.modes) ? Settings.launcher.modes : []
+	// The launcher's own modes, which one of one's own can't be called.
+	readonly property var taken: ["calc", "win", "wall", "emoji", "clip", "file", "ps", "set", "shot", "color", "todo", "timer", "session"]
+
+	function addMode(name) {
+		const mode = name.replace(/^\//, "").trim().toLowerCase();
+		if (/^[a-z0-9_-]+$/.test(mode) && !taken.includes(mode) && !modes.some(one => one.mode === mode))
+			Settings.set("launcher", "modes", modes.concat([{ mode, list: "", run: "", live: false }]));
+	}
+
+	function changeMode(mode, key, value) {
+		Settings.set("launcher", "modes", modes.map(one => one.mode === mode ? Object.assign({}, one, { [key]: value }) : one));
+	}
+
+	function dropMode(mode) {
+		Settings.set("launcher", "modes", modes.filter(one => one.mode !== mode));
+	}
+
 	component App: Setting {
 		required property string modelData
 		readonly property var entry: Apps.find(modelData)
@@ -196,6 +222,93 @@ Flickable {
 						onClicked: Apps.dropFolder(parent.modelData.name)
 					}
 				}
+			}
+		}
+
+		// Modes of one's own, each a command that lists rows and one that takes the
+		// row picked, under a / and the name.
+		Card {
+			width: parent.width
+			title: Tr.t("Modes of your own")
+
+			Field {
+				holds: "launcher.modes"
+				words: "script prefix command plugin"
+				text: Tr.t("A mode of your own")
+				subtext: Tr.t("By a name, which a / in front of opens")
+				placeholder: "ssh"
+				fieldWidth: Theme.u(160)
+				value: ""
+				onKept: value => page.addMode(value)
+			}
+
+			Repeater {
+				model: page.modes
+
+				Column {
+					id: own
+
+					required property var modelData
+
+					width: parent.width
+					spacing: Theme.u(6)
+
+					Item {
+						width: parent.width
+						height: Theme.u(34)
+
+						Text {
+							anchors.left: parent.left
+							anchors.right: drop.left
+							anchors.verticalCenter: parent.verticalCenter
+							text: `/${own.modelData.mode}`
+							textFormat: Text.PlainText
+							elide: Text.ElideRight
+							color: Theme.colors.text
+							font.family: Theme.font
+							font.pixelSize: Theme.fontSize
+						}
+
+						Button {
+							id: drop
+
+							anchors.right: parent.right
+							anchors.verticalCenter: parent.verticalCenter
+							height: Theme.u(28)
+							flat: true
+							icon: "trash"
+							tip: Tr.t("Away with the mode")
+							onClicked: page.dropMode(own.modelData.mode)
+						}
+					}
+
+					Field {
+						text: Tr.t("It lists by")
+						subtext: Tr.t("A command for sh: a line a row, what's typed is $1")
+						placeholder: "awk '/^Host /{print $2}' ~/.ssh/config"
+						value: own.modelData.list ?? ""
+						onKept: value => page.changeMode(own.modelData.mode, "list", value)
+					}
+
+					Field {
+						text: Tr.t("Enter runs")
+						subtext: Tr.t("With the row as $1; nothing here copies it")
+						placeholder: "kitty ssh \"$1\""
+						value: own.modelData.run ?? ""
+						onKept: value => page.changeMode(own.modelData.mode, "run", value)
+					}
+
+					Setting {
+						text: Tr.t("Asked again as you type")
+						subtext: Tr.t("Else it lists once, and what's typed picks from that")
+						checked: !!own.modelData.live
+						onToggled: wanted => page.changeMode(own.modelData.mode, "live", wanted)
+					}
+				}
+			}
+
+			Note {
+				text: Tr.t("A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.")
 			}
 		}
 

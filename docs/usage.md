@@ -130,6 +130,14 @@ that group's.
   types one, `/timer` and `/todo` are above.
 - A `>` in front runs the rest as a command, and a `?` looks it up on the web,
   at the address its page of the settings has.
+- Modes of your own, made on its page of the settings, list what a command of
+  yours prints, a line a row, and Enter runs another with the row picked, or
+  copies it: `/ssh` for the hosts in `~/.ssh/config`, say, with
+  `awk '/^Host /{print $2}' ~/.ssh/config` to list them and
+  `kitty ssh "$1"` to run. A row can say more after a tab, what goes under it,
+  and after another what Enter takes instead of its text. One asked again as
+  you type has what's typed as `$1`. Plugins bring modes too, see
+  [plugins](plugins.md).
 
 ## The clipboard
 

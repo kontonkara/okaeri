@@ -934,5 +934,18 @@
 	"It runs": "Запускает",
 	"As one comes: OKAERI_APP, OKAERI_SUMMARY, OKAERI_BODY and OKAERI_URGENCY": "Когда приходит: OKAERI_APP, OKAERI_SUMMARY, OKAERI_BODY и OKAERI_URGENCY",
 	"They wait while you're away for": "Ждут, пока вас нет, после",
-	"And start over when you're back; a video playing keeps them going": "И отсчитывают заново, когда вы вернулись; при играющем видео не ждут"
+	"And start over when you're back; a video playing keeps them going": "И отсчитывают заново, когда вы вернулись; при играющем видео не ждут",
+	"A mode of yours": "Ваш режим",
+	"From %1": "Из %1",
+	"Modes of your own": "Свои режимы",
+	"A mode of your own": "Свой режим",
+	"By a name, which a / in front of opens": "По имени, его открывает / перед ним",
+	"Away with the mode": "Убрать режим",
+	"It lists by": "Строки даёт",
+	"A command for sh: a line a row, what's typed is $1": "Команда для sh: строка на строку, набранное в $1",
+	"Enter runs": "Enter запускает",
+	"With the row as $1; nothing here copies it": "Со строкой в $1; без команды строка копируется",
+	"Asked again as you type": "Заново при наборе",
+	"Else it lists once, and what's typed picks from that": "Иначе список берётся раз, а набранное выбирает из него",
+	"A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.": "После табуляции у строки может быть подпись, а после второй — то, что Enter возьмёт вместо текста. Режимы приносят и плагины."
 }

@@ -670,7 +670,7 @@ for _ in $(seq 30); do
 	[ "$(ipc plugins list)" != '[]' ] && break
 	sleep 0.1
 done
-[ "$(ipc plugins list)" = '[{"id":"hello","name":"Hello","on":false,"bar":true,"background":true,"trouble":""}]' ] || fail "the plugins found: $(ipc plugins list)"
+[ "$(ipc plugins list)" = '[{"id":"hello","name":"Hello","on":false,"bar":true,"background":true,"launcher":true,"trouble":""}]' ] || fail "the plugins found: $(ipc plugins list)"
 move 300 600
 printf '{ "plugins": { "enabled": ["hello"] }, "bar": { "right": ["hello", "control"] } }' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 for _ in $(seq 30); do

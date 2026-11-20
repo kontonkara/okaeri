@@ -59,7 +59,7 @@ Flickable {
 					holds: "plugins.enabled"
 					words: "plugin addon extension"
 					text: plugin.modelData.name
-					subtext: plugin.modelData.trouble || [plugin.modelData.description, [plugin.modelData.bar ? "a part for the bar" : "", plugin.modelData.background ? "runs with the shell" : ""].filter(part => part !== "").join(", ")].filter(part => part !== "").join(" · ")
+					subtext: plugin.modelData.trouble || [plugin.modelData.description, [plugin.modelData.bar ? "a part for the bar" : "", plugin.modelData.background ? "runs with the shell" : "", plugin.modelData.launcher || plugin.modelData.modes.length > 0 ? "modes for the launcher" : ""].filter(part => part !== "").join(", ")].filter(part => part !== "").join(" · ")
 					enabled: !plugin.modelData.trouble
 					checked: plugin.modelData.on
 					onToggled: wanted => Plugins.enable(plugin.modelData.id, wanted)

@@ -882,6 +882,74 @@ is_closed "a file's folder"
 printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
 sleep 0.4
 
+# Modes of one's own: a command lists the rows, what's typed picks from them,
+# and Enter runs another with the row, or copies it where there's none. A live
+# one is asked again as what's typed changes. A name the launcher has is passed
+# over.
+# Whole at once: the shell reads it as it changes.
+cat >"$work/modes.json" <<'EOF'
+{ "launcher": { "modes": [
+	{ "mode": "pick", "list": "printf 'alpha\\tthe first\\nbeta\\tthe second\\tB\\n'", "run": "echo \"$1\"" },
+	{ "mode": "echo", "live": true, "list": "printf 'got %s\\n' \"$1\"" },
+	{ "mode": "calc", "list": "echo taken" }
+] } }
+EOF
+mv "$work/modes.json" "$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.5
+texts() {
+	ipc launcher texts
+}
+open
+type "/"
+sleep 0.4
+texts | grep -q '"/pick"' || fail "a mode of one's own isn't under a lone /: $(texts)"
+[ "$(texts | grep -o '"/calc"' | wc -l)" -eq 0 ] || fail "a mode of one's own took the name of the launcher's"
+type "pick "
+sleep 0.6
+[ "$(texts)" = '["alpha","beta"]' ] || fail "a mode's rows aren't what its command listed: $(texts)"
+type "be"
+sleep 0.3
+[ "$(texts)" = '["beta"]' ] || fail "what's typed doesn't pick from a mode's rows: $(texts)"
+key Return
+wait_log "okaeri: dry: launcher mode pick"
+is_closed "a mode's row"
+nothing_launched
+open
+type "/echo one"
+sleep 0.8
+[ "$(texts)" = '["got one"]' ] || fail "a live mode wasn't asked with what's typed: $(texts)"
+type " two"
+sleep 0.8
+[ "$(texts)" = '["got one two"]' ] || fail "a live mode wasn't asked again: $(texts)"
+key Return
+for _ in $(seq 30); do
+	[ "$(wl-paste -n 2>/dev/null)" = 'got one two' ] && break
+	sleep 0.1
+done
+[ "$(wl-paste -n 2>/dev/null)" = 'got one two' ] || fail "a mode with nothing to run didn't copy the row: $(wl-paste -n 2>&1)"
+is_closed "a live mode's row"
+
+# A plugin's modes: by its plugin.json's commands, and by a QML file of its.
+mkdir -p "$XDG_CONFIG_HOME/okaeri/plugins"
+cp -r "$repo/examples/plugins/hello" "$XDG_CONFIG_HOME/okaeri/plugins/"
+printf '{ "plugins": { "enabled": ["hello"] } }\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 1
+open
+type "/greet priv"
+sleep 0.6
+[ "$(texts)" = '["Privet"]' ] || fail "a plugin's mode didn't list its rows: $(texts)"
+key Escape
+open
+type "/hi bob"
+sleep 0.3
+[ "$(texts)" = '["Hello, bob"]' ] || fail "a plugin's QML mode has other rows: $(texts)"
+key Return
+wait_log "okaeri: hello: bob"
+is_closed "a plugin's QML mode"
+rm -r "$XDG_CONFIG_HOME/okaeri/plugins"
+printf '{}\n' >"$XDG_CONFIG_HOME/okaeri/settings.json"
+sleep 0.4
+
 # A script's lines to pick one of: what's typed narrows them down, Enter is the
 # answer, Escape is none, and with nothing found what's typed is.
 dmenu() {

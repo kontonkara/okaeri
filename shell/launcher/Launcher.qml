@@ -39,6 +39,107 @@ Panel {
 		{ mode: "timer", text: Tr.t("Timer and stopwatch"), subtext: "/timer and how long, as 10m or 1:30, and what for", icon: "bell" },
 		{ mode: "session", text: Tr.t("Session"), subtext: "/session", icon: "power" }
 	]
+
+	// Modes of one's own, Settings.launcher.modes, and those plugins bring, by
+	// their plugin.json's `modes` or a QML file, `launcher`. A command lists the
+	// rows, with what's typed as $1: a line each, its text, after a tab what's
+	// under it, and after another what Enter gives `run` as $1, else the text;
+	// with no `run` Enter copies that. A `live` one is asked again as what's typed
+	// changes; the rest once as the mode opens, and what's typed picks from what
+	// it listed. A name the launcher has already, or one taken before, is left
+	// out. A plugin's run in its folder.
+	readonly property var ownModes: {
+		const taken = new Set(modes.map(row => row.mode));
+		const all = (Array.isArray(Settings.launcher.modes) ? Settings.launcher.modes : []).filter(one => one && typeof one.list === "string" && one.list !== "").map(one => Object.assign({ text: "", subtext: Tr.t("A mode of yours"), run: "", live: false, dir: "" }, one)).concat(...Plugins.running.map(plugin => plugin.modes.map(one => Object.assign({}, one, { subtext: one.subtext || Tr.f("From %1", plugin.name), dir: plugin.dir }))), qmlModes);
+		return all.filter(one => {
+			const name = String(one.mode ?? "").toLowerCase();
+			if (!/^[a-z0-9_-]+$/.test(name) || taken.has(name))
+				return false;
+			taken.add(name);
+			return true;
+		});
+	}
+	// Those of plugins' QML files, each { mode, text, subtext, icon, item }.
+	property var qmlModes: []
+	// What a command of a mode listed: for which mode and what was typed, and
+	// the rows.
+	property var listed: ({ mode: "", asked: "", rows: [] })
+	// The mode of one's own that's typed, and what's typed after it.
+	readonly property var owning: {
+		const asked = field.text.match(/^\s*\/(\S+)\s(.*)$/);
+		const own = asked ? ownModes.find(one => one.mode.toLowerCase() === asked[1].toLowerCase()) : null;
+		return own ? { own, query: asked[2].trim() } : null;
+	}
+
+	onOwningChanged: {
+		if (!owning || owning.own.item)
+			return;
+		if (owning.own.live)
+			listing.restart();
+		else if (listed.mode !== owning.own.mode)
+			listOwn();
+	}
+
+	function gatherModes() {
+		const found = [];
+		for (let at = 0; at < pluginModes.count; at++) {
+			const item = pluginModes.objectAt(at)?.item;
+			if (item && typeof item.rows === "function" && typeof item.mode === "string")
+				found.push({ mode: item.mode, text: String(item.text || ""), subtext: String(item.subtext || Tr.f("From %1", pluginModes.objectAt(at).name)), icon: String(item.icon || ""), item });
+		}
+		qmlModes = found;
+	}
+
+	// Asked of the command of the mode that's typed, one at a time, the last one
+	// last.
+	function listOwn() {
+		if (!owning || owning.own.item || lister.running)
+			return;
+		const own = owning.own;
+		lister.mode = own.mode;
+		lister.asked = own.live ? owning.query : "";
+		lister.workingDirectory = own.dir || home;
+		lister.command = ["sh", "-c", own.list, "sh", lister.asked];
+		lister.running = true;
+	}
+
+	function ownRows(own, query) {
+		const wanted = query.toLowerCase();
+		if (own.item) {
+			let rows = [];
+			try {
+				rows = own.item.rows(query);
+			} catch (error) {
+				console.warn("okaeri: launcher: mode", own.mode, "failed:", error);
+			}
+			return (Array.isArray(rows) ? rows : []).filter(row => row && row.text !== undefined).map(row => Object.assign({}, row, { text: String(row.text), subtext: String(row.subtext ?? ""), icon: row.icon || own.icon || "play", does: typeof row.does === "function" ? row.does : () => {} }));
+		}
+		if (listed.mode !== own.mode)
+			return [];
+		return listed.rows.filter(row => own.live || !wanted || row.text.toLowerCase().includes(wanted) || row.subtext.toLowerCase().includes(wanted)).slice(0, 200).map(row => Object.assign({ does: () => runOwn(own, row.value, query), icon: "play" }, row));
+	}
+
+	// `run` with what the row gives, by niri, so what it starts isn't the
+	// shell's; or that copied.
+	function runOwn(own, value, query) {
+		if (!own.run) {
+			Clipboard.put(value);
+			return;
+		}
+		const into = own.dir ? `cd '${own.dir.replace(/'/g, "'\\''")}' || exit; ` : "";
+		Env.act(`launcher mode ${own.mode}`, () => Niri.spawn(["sh", "-c", into + own.run, "sh", value, query]));
+	}
+
+	function readListed(text) {
+		listed = {
+			mode: lister.mode,
+			asked: lister.asked,
+			rows: text.split("\n").filter(line => line.trim() !== "").map(line => {
+				const [shown, under, value] = line.split("\t");
+				return { text: shown, subtext: under ?? "", value: value || shown, mark: `${lister.mode}|${line}` };
+			})
+		};
+	}
 	// The group whose apps alone show, by its key, "" for all of them; and whether
 	// the groups there are show in the list's place, to pick one of.
 	property string group: ""
@@ -342,7 +443,7 @@ Panel {
 		if (!asked)
 			return grouped ? Apps.search(text, grouped.has) : sum().concat(Apps.search(text), wanted ? windows(wanted) : [], wanted.length < 2 ? [] : session(wanted));
 		if (asked[2] === undefined)
-			return modes.filter(row => row.mode.startsWith(asked[1].toLowerCase()));
+			return modes.concat(ownModes.map(own => ({ mode: own.mode, text: own.text || `/${own.mode}`, subtext: own.text ? `/${own.mode} · ${own.subtext}` : own.subtext, icon: own.icon || "play" }))).filter(row => row.mode.toLowerCase().startsWith(asked[1].toLowerCase()));
 		const query = asked[2].trim().toLowerCase();
 		switch (asked[1].toLowerCase()) {
 		case "calc":
@@ -372,7 +473,7 @@ Panel {
 		case "color":
 			return [{ does: () => colorSoon.restart(), text: Tr.t("Pick a color off the screen"), subtext: Tr.t("A click on it copies it as #rrggbb"), icon: "eye" }];
 		}
-		return [];
+		return owning ? ownRows(owning.own, asked[2].trim()) : [];
 	}
 
 	function rows() {
@@ -461,6 +562,7 @@ Panel {
 	onPanelOpened: {
 		Session.check();
 		menuOf = null;
+		listed = { mode: "", asked: "", rows: [] };
 		group = "";
 		grouping = false;
 		field.text = "";
@@ -606,6 +708,11 @@ Panel {
 		function secret(): bool {
 			return field.secret && !field.revealed;
 		}
+
+		// For tests: what the rows say, as JSON.
+		function texts(): string {
+			return JSON.stringify(found.values.map(row => row.text));
+		}
 	}
 
 	// A moment after the last key.
@@ -633,6 +740,69 @@ Panel {
 			launcher.files = paths.text.split("\n").filter(path => path !== "");
 			if (launcher.shown)
 				launcher.search();
+		}
+	}
+
+	// A moment after the last key, for a live mode of one's own.
+	Timer {
+		id: listing
+
+		interval: 200
+		onTriggered: launcher.listOwn()
+	}
+
+	Process {
+		id: lister
+
+		// The mode and what was typed it was asked for: by the time it's done, that
+		// may be something else.
+		property string mode
+		property string asked
+
+		stdout: StdioCollector {
+			id: listedText
+		}
+		stderr: StdioCollector {
+			onStreamFinished: {
+				if (text.trim() !== "")
+					console.warn("okaeri: launcher: mode", lister.mode, "said:", text.trim());
+			}
+		}
+		onExited: {
+			launcher.readListed(listedText.text);
+			const own = launcher.owning?.own;
+			if (own && !own.item && (own.mode !== mode || own.live && launcher.owning.query !== asked))
+				launcher.listOwn();
+			if (launcher.shown)
+				launcher.search();
+		}
+	}
+
+	// Plugins' QML modes, each as long as its plugin is on.
+	Instantiator {
+		id: pluginModes
+
+		model: Plugins.running.filter(plugin => plugin.launcher !== "")
+		onObjectAdded: launcher.gatherModes()
+		onObjectRemoved: Qt.callLater(launcher.gatherModes)
+
+		Loader {
+			required property var modelData
+			readonly property string name: modelData.name
+
+			source: modelData.launcher
+			onLoaded: launcher.gatherModes()
+		}
+	}
+
+	// A QML mode says when its rows changed, and the list follows while it's open.
+	Connections {
+		target: launcher.owning?.own.item ?? null
+		ignoreUnknownSignals: true
+
+		function onChanged() {
+			if (launcher.shown)
+				launcher.refresh();
 		}
 	}
 
@@ -849,6 +1019,7 @@ Panel {
 			visible: list.count === 0
 			text: /^\s*\/calc(\s|$)/i.test(field.text) && Env.lacks("qalc") ? Tr.t("Sums need qalc, which isn't here")
 				: /^\s*\/ps(\s|$)/i.test(field.text) && Processes.list.length === 0 ? "Looking..."
+				: launcher.owning && !launcher.owning.own.item && (lister.running || listing.running || launcher.listed.mode !== launcher.owning.own.mode) ? "Looking..."
 				: !/^\s*\/file(\s|$)/i.test(field.text) ? "Nothing found"
 				: launcher.filing.length < 2 ? "Two letters of a file's name, or more"
 				: looking.running || finder.running ? "Looking..." : "Nothing found"

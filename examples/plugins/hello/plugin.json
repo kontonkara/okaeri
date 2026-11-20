@@ -1,8 +1,12 @@
 {
 	"name": "Hello",
-	"description": "A part for the bar that counts clicks, and `okaeri hello ping`",
+	"description": "A part for the bar that counts clicks, `okaeri hello ping`, and /hi and /greet in the launcher",
 	"bar": "Bar.qml",
 	"background": "Main.qml",
+	"launcher": "Mode.qml",
+	"modes": [
+		{ "mode": "greet", "text": "Greetings", "list": "printf 'Hello\\tIn English\\nPrivet\\tIn Russian\\n'", "run": "" }
+	],
 	"settings": [
 		{ "key": "greeting", "text": "What it says", "type": "text", "default": "Hello" },
 		{ "key": "count", "text": "It counts clicks", "type": "toggle", "default": true }

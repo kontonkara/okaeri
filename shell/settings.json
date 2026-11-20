@@ -40,7 +40,8 @@
 		"files": "",
 		"search": "https://duckduckgo.com/?q=%s",
 		"categories": true,
-		"folders": []
+		"folders": [],
+		"modes": []
 	},
 	"clipboard": {
 		"images": true,

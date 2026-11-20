@@ -7,19 +7,21 @@ import Quickshell.Io
 import qs
 
 // Plugins: folders in okaeri/plugins of the config directory, each with its
-// plugin.json, { name, description, bar, background, settings }, bar and
-// background QML files of the folder's, either or both, and settings what the
-// settings window has to set for it, which option() reads. A bar's part goes on
-// the bar by the folder's name as any part does; a background one runs with the
-// shell, for what has no place of its own, an IpcHandler say. Their code is the
-// shell's own, with all it can do: none runs until Settings.plugins.enabled
-// names it.
+// plugin.json, { name, description, bar, background, launcher, modes, settings },
+// bar, background and launcher QML files of the folder's, any of them, modes
+// the launcher's by commands, and settings what the settings window has to set
+// for it, which option() reads. A bar's part goes on the bar by the folder's
+// name as any part does; a background one runs with the shell, for what has no
+// place of its own, an IpcHandler say; a launcher one is a mode of the
+// launcher's, as `modes` are. Their code is the shell's own, with all it can
+// do: none runs until Settings.plugins.enabled names it.
 Singleton {
 	id: plugins
 
 	readonly property string folder: `${Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config"}/okaeri/plugins`
-	// { id, name, description, bar, background, on, trouble }, by the folder's
-	// name, bar and background as URLs or "".
+	// { id, name, description, bar, background, launcher, modes, dir, on, trouble },
+	// by the folder's name, bar, background and launcher as URLs or "", dir the
+	// folder.
 	property var list: []
 	readonly property var running: list.filter(plugin => plugin.on && !plugin.trouble)
 
@@ -61,6 +63,20 @@ Singleton {
 				}));
 	}
 
+	// Modes for the launcher, as its plugin.json's `modes` lists them: each
+	// { mode, text, subtext, list, run, live }, as Settings.launcher.modes has
+	// them, its commands run in the plugin's folder.
+	function modesOf(listed) {
+		return (Array.isArray(listed) ? listed : []).filter(one => one && typeof one.mode === "string" && typeof one.list === "string" && one.list !== "").map(one => ({
+					mode: one.mode,
+					text: String(one.text || ""),
+					subtext: String(one.subtext || ""),
+					list: one.list,
+					run: typeof one.run === "string" ? one.run : "",
+					live: !!one.live
+				}));
+	}
+
 	// What plugin `id` has `key` set to: as the settings window set it, or as its
 	// plugin.json says to start with. For a plugin's own code: Plugins.option("hello",
 	// "greeting").
@@ -86,9 +102,9 @@ Singleton {
 			const file = name => name && !String(name).includes("..") ? `file://${folder}/${id}/${name}` : "";
 			try {
 				const about = JSON.parse(line.slice(tab + 1));
-				found.push({ id, name: String(about.name || id), description: String(about.description || ""), bar: file(about.bar), background: file(about.background), settings: settingsOf(about.settings), on: Settings.plugins.enabled.includes(id), trouble: "" });
+				found.push({ id, name: String(about.name || id), description: String(about.description || ""), bar: file(about.bar), background: file(about.background), launcher: file(about.launcher), modes: modesOf(about.modes), dir: `${folder}/${id}`, settings: settingsOf(about.settings), on: Settings.plugins.enabled.includes(id), trouble: "" });
 			} catch (error) {
-				found.push({ id, name: id, description: "", bar: "", background: "", settings: [], on: false, trouble: "Its plugin.json can't be read" });
+				found.push({ id, name: id, description: "", bar: "", background: "", launcher: "", modes: [], dir: "", settings: [], on: false, trouble: "Its plugin.json can't be read" });
 			}
 		}
 		list = found.sort((a, b) => a.name.localeCompare(b.name));
@@ -139,7 +155,7 @@ Singleton {
 		target: "plugins"
 
 		function list(): string {
-			return JSON.stringify(plugins.list.map(plugin => ({ id: plugin.id, name: plugin.name, on: plugin.on, bar: plugin.bar !== "", background: plugin.background !== "", trouble: plugin.trouble })));
+			return JSON.stringify(plugins.list.map(plugin => ({ id: plugin.id, name: plugin.name, on: plugin.on, bar: plugin.bar !== "", background: plugin.background !== "", launcher: plugin.launcher !== "" || plugin.modes.length > 0, trouble: plugin.trouble })));
 		}
 
 		function look(): void {
