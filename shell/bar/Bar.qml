@@ -294,8 +294,11 @@ PanelWindow {
 				readonly property real across: capsule ? Math.max(bar.upright ? place.width : place.height, Theme.barHeight - Theme.u(6)) : 0
 
 				visible: place.item?.wanted ?? true
-				width: bar.upright ? Math.max(place.width, across) : place.width + pad * 2
-				height: bar.upright ? place.height + pad * 2 : Math.max(place.height, across)
+				// In an even number of whole pixels, so that what's in the middle of it, and
+				// the lane it's in the middle of the bar, stand on whole ones: on half a
+				// pixel text smears and a capsule's corners come out uneven.
+				width: Math.ceil((bar.upright ? Math.max(place.width, across) : place.width + pad * 2) / 2) * 2
+				height: Math.ceil((bar.upright ? place.height + pad * 2 : Math.max(place.height, across)) / 2) * 2
 
 				Rectangle {
 					id: pill
@@ -332,7 +335,8 @@ PanelWindow {
 					// The tray's icons are apps, with clicks of their own.
 					readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
 
-					anchors.centerIn: parent
+					x: Math.round((spot.width - width) / 2)
+					y: Math.round((spot.height - height) / 2)
 					sourceComponent: bar.parts[modelData] ?? (spot.spacer ? (modelData.startsWith("separator") ? separator : space) : Settings.bar.scripts.some(own => own.name === modelData) ? script : Plugins.barOf(modelData) ? pluginPart : null)
 					layer.enabled: !Qt.colorEqual(spot.ink, Theme.colors.text)
 					layer.effect: Recolor {
@@ -749,7 +753,7 @@ PanelWindow {
 			id: left
 
 			x: bar.upright ? Math.round((parent.width - width) / 2) : Theme.u(14)
-			y: bar.upright ? Theme.u(14) : (parent.height - height) / 2
+			y: bar.upright ? Theme.u(14) : Math.round((parent.height - height) / 2)
 			names: Settings.laneOf(bar.screen?.name ?? "", "left")
 		}
 
@@ -763,7 +767,7 @@ PanelWindow {
 			readonly property real along: Math.round(Math.max(from, Math.min(((bar.upright ? parent.height : parent.width) - length) / 2, to - length)))
 
 			x: bar.upright ? Math.round((parent.width - width) / 2) : along
-			y: bar.upright ? along : (parent.height - height) / 2
+			y: bar.upright ? along : Math.round((parent.height - height) / 2)
 			names: Settings.laneOf(bar.screen?.name ?? "", "center")
 			room: bar.upright ? Infinity : to - from
 		}
@@ -771,8 +775,8 @@ PanelWindow {
 		Lane {
 			id: right
 
-			x: bar.upright ? Math.round((parent.width - width) / 2) : parent.width - width - Theme.u(8)
-			y: bar.upright ? parent.height - height - Theme.u(8) : (parent.height - height) / 2
+			x: bar.upright ? Math.round((parent.width - width) / 2) : Math.round(parent.width - width - Theme.u(8))
+			y: bar.upright ? Math.round(parent.height - height - Theme.u(8)) : Math.round((parent.height - height) / 2)
 			names: Settings.laneOf(bar.screen?.name ?? "", "right")
 		}
 	}
