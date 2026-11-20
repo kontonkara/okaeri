@@ -148,9 +148,13 @@ PanelWindow {
 		id: glass
 
 		x: Math.round(scope.shiftX + scope.originX * (1 - scope.scale)) + 1
-		y: Math.round(scope.y + scope.shiftY + scope.originY * (1 - scope.scale)) + 1
+		// No further than it shows, below the bar's band.
+		readonly property real top: Math.round(inside.y + scope.y + scope.shiftY + scope.originY * (1 - scope.scale)) + 1
+		readonly property real bottom: top + Math.round(scope.height * scope.scale) - 2
+
+		y: Math.max(top, inside.y)
 		width: Math.round(scope.width * scope.scale) - 2
-		height: Math.round(scope.height * scope.scale) - 2
+		height: Math.max(0, Math.min(bottom, inside.y + inside.height) - y)
 		radius: card.radius
 	}
 
@@ -216,132 +220,145 @@ PanelWindow {
 			onClicked: panel.dismiss()
 		}
 
-		FocusScope {
-			id: scope
+		// Where it stands by the bar, below its band: what slides or drops in comes
+		// out from under the bar, not over it.
+		Item {
+			id: inside
 
-			// Where in it transformOrigin is.
-			readonly property real originX: panel.beside ? (panel.edge === "left" ? 0 : width) : panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
-			readonly property real originY: panel.align === "center" ? height / 2
-				: panel.beside ? (panel.align === "top-left" ? 0 : panel.align === "top-right" ? height : height / 2)
-				: panel.low ? height : 0
+			readonly property real cut: !panel.upright && panel.align !== "center" && panel.edge === Settings.barAt ? panel.band : 0
 
-			y: panel.align === "center" ? Math.round((parent.height - height) / 2)
-				: panel.beside ? (panel.align === "top-left" ? Theme.edge
-					: panel.align === "top-right" ? parent.height - Theme.edge - height
-					: Math.round(Math.max(Theme.edge, Math.min(panel.middle - height / 2, parent.height - Theme.edge - height))))
-				: panel.low ? Math.round(parent.height - panel.off - height)
-				: panel.edge === "top" ? Math.round(panel.off) : Settings.top(panel.screen)
+			y: panel.low ? 0 : cut
 			width: parent.width
-			height: card.height
-			focus: true
-			opacity: 0
-			scale: Theme.panelMotion === "grow" ? 0.94 : Theme.panelMotion === "spring" ? 0.85 : 1
-			// How far it is from its place, 1 out of sight and 0 there: it slides that
-			// far in from the bar, or with no bar beside it from below, with
-			// Theme.panelMotion "slide".
-			property real away: 1
-			readonly property real lift: Theme.panelMotion === "slide" ? Theme.u(28) : Theme.panelMotion === "drop" ? Theme.u(56) : 0
-			// "spring" and "drop" go past their place and back.
-			readonly property bool springs: Theme.panelMotion === "spring" || Theme.panelMotion === "drop"
-			readonly property real shiftX: panel.beside ? away * lift * (panel.edge === "left" ? -1 : 1) : 0
-			readonly property real shiftY: panel.beside ? 0 : away * lift * (panel.align === "center" || panel.low ? 1 : -1)
+			height: parent.height - cut
+			clip: cut > 0
 
-			transform: Translate {
-				x: scope.shiftX
-				y: scope.shiftY
-			}
-			// It grows out of where it belongs.
-			transformOrigin: panel.align === "center" ? Item.Center
-				: panel.beside ? [[Item.TopLeft, Item.Left, Item.BottomLeft], [Item.TopRight, Item.Right, Item.BottomRight]][panel.edge === "left" ? 0 : 1][panel.align === "top-left" ? 0 : panel.align === "top-right" ? 2 : 1]
-				: panel.align === "top-right" ? (panel.low ? Item.BottomRight : Item.TopRight)
-				: panel.align === "top-left" ? (panel.low ? Item.BottomLeft : Item.TopLeft)
-				: panel.low ? Item.Bottom : Item.Top
+			FocusScope {
+				id: scope
 
-			Keys.onEscapePressed: panel.leave()
+				// Where in it transformOrigin is.
+				readonly property real originX: panel.beside ? (panel.edge === "left" ? 0 : width) : panel.align === "top-right" ? width : panel.align === "top-left" ? 0 : width / 2
+				readonly property real originY: panel.align === "center" ? height / 2
+					: panel.beside ? (panel.align === "top-left" ? 0 : panel.align === "top-right" ? height : height / 2)
+					: panel.low ? height : 0
 
-			states: State {
-				name: "shown"
-				when: panel.shown
-
-				PropertyChanges {
-					scope.opacity: 1
-					scope.scale: 1
-					scope.away: 0
-				}
-			}
-
-			transitions: [
-				Transition {
-					to: "shown"
-					enabled: Theme.animate
-
-					NumberAnimation {
-						property: "opacity"
-						duration: Theme.ms(140)
-						easing.type: Easing.OutCubic
-					}
-
-					NumberAnimation {
-						properties: "scale,away"
-						duration: Theme.ms(scope.springs ? 340 : 240)
-						easing.type: scope.springs ? Easing.OutBack : Easing.OutQuint
-						easing.overshoot: 1.8
-					}
-				},
-				Transition {
-					from: "shown"
-					enabled: Theme.animate
-
-					// Out of sight once it faded, and not before: leaving the state puts
-					// opacity at 0 for a moment before the fade takes it back to 1, and a
-					// window hidden then fades where nobody sees it.
-					onRunningChanged: {
-						if (!running && !panel.shown)
-							panel.visible = false;
-					}
-
-					NumberAnimation {
-						properties: "opacity,scale,away"
-						duration: Theme.ms(130)
-						easing.type: Easing.InCubic
-					}
-				}
-			]
-
-			Rectangle {
-				id: card
-
-				// What's on it starts on a whole pixel too.
-				readonly property int inset: Math.round(panel.padding)
-
+				y: (panel.align === "center" ? Math.round((strip.height - height) / 2)
+					: panel.beside ? (panel.align === "top-left" ? Theme.edge
+						: panel.align === "top-right" ? strip.height - Theme.edge - height
+						: Math.round(Math.max(Theme.edge, Math.min(panel.middle - height / 2, strip.height - Theme.edge - height))))
+					: panel.low ? Math.round(strip.height - panel.off - height)
+					: panel.edge === "top" ? Math.round(panel.off) : Settings.top(panel.screen)) - inside.y
 				width: parent.width
-				height: Math.ceil(body.implicitHeight) + inset * 2
-				radius: Theme.cardRadius
-				color: Theme.panel
+				height: card.height
+				focus: true
+				opacity: 0
+				scale: Theme.panelMotion === "grow" ? 0.94 : Theme.panelMotion === "spring" ? 0.85 : 1
+				// How far it is from its place, 1 out of sight and 0 there: it slides that
+				// far in from the bar, or with no bar beside it from below, with
+				// Theme.panelMotion "slide".
+				property real away: 1
+				readonly property real lift: Theme.panelMotion === "slide" ? Theme.u(28) : Theme.panelMotion === "drop" ? Theme.u(56) : 0
+				// "spring" and "drop" go past their place and back.
+				readonly property bool springs: Theme.panelMotion === "spring" || Theme.panelMotion === "drop"
+				readonly property real shiftX: panel.beside ? away * lift * (panel.edge === "left" ? -1 : 1) : 0
+				readonly property real shiftY: panel.beside ? 0 : away * lift * (panel.align === "center" || panel.low ? 1 : -1)
 
-				// A click on the card isn't a click elsewhere.
-				MouseArea {
-					anchors.fill: parent
-					acceptedButtons: Qt.AllButtons
+				transform: Translate {
+					x: scope.shiftX
+					y: scope.shiftY
+				}
+				// It grows out of where it belongs.
+				transformOrigin: panel.align === "center" ? Item.Center
+					: panel.beside ? [[Item.TopLeft, Item.Left, Item.BottomLeft], [Item.TopRight, Item.Right, Item.BottomRight]][panel.edge === "left" ? 0 : 1][panel.align === "top-left" ? 0 : panel.align === "top-right" ? 2 : 1]
+					: panel.align === "top-right" ? (panel.low ? Item.BottomRight : Item.TopRight)
+					: panel.align === "top-left" ? (panel.low ? Item.BottomLeft : Item.TopLeft)
+					: panel.low ? Item.Bottom : Item.Top
+
+				Keys.onEscapePressed: panel.leave()
+
+				states: State {
+					name: "shown"
+					when: panel.shown
+
+					PropertyChanges {
+						scope.opacity: 1
+						scope.scale: 1
+						scope.away: 0
+					}
 				}
 
-				Column {
-					id: body
+				transitions: [
+					Transition {
+						to: "shown"
+						enabled: Theme.animate
 
-					x: card.inset
-					y: card.inset
-					width: parent.width - card.inset * 2
-					spacing: Math.round(Theme.u(10))
-				}
+						NumberAnimation {
+							property: "opacity"
+							duration: Theme.ms(140)
+							easing.type: Easing.OutCubic
+						}
 
-				// Over the fill: a border of its own would have the fill stop short of it,
-				// and with a fill to see through, it would show as a light line.
+						NumberAnimation {
+							properties: "scale,away"
+							duration: Theme.ms(scope.springs ? 340 : 240)
+							easing.type: scope.springs ? Easing.OutBack : Easing.OutQuint
+							easing.overshoot: 1.8
+						}
+					},
+					Transition {
+						from: "shown"
+						enabled: Theme.animate
+
+						// Out of sight once it faded, and not before: leaving the state puts
+						// opacity at 0 for a moment before the fade takes it back to 1, and a
+						// window hidden then fades where nobody sees it.
+						onRunningChanged: {
+							if (!running && !panel.shown)
+								panel.visible = false;
+						}
+
+						NumberAnimation {
+							properties: "opacity,scale,away"
+							duration: Theme.ms(130)
+							easing.type: Easing.InCubic
+						}
+					}
+				]
+
 				Rectangle {
-					anchors.fill: parent
-					radius: parent.radius
-					color: "transparent"
-					border.width: 1
-					border.color: Theme.border
+					id: card
+
+					// What's on it starts on a whole pixel too.
+					readonly property int inset: Math.round(panel.padding)
+
+					width: parent.width
+					height: Math.ceil(body.implicitHeight) + inset * 2
+					radius: Theme.cardRadius
+					color: Theme.panel
+
+					// A click on the card isn't a click elsewhere.
+					MouseArea {
+						anchors.fill: parent
+						acceptedButtons: Qt.AllButtons
+					}
+
+					Column {
+						id: body
+
+						x: card.inset
+						y: card.inset
+						width: parent.width - card.inset * 2
+						spacing: Math.round(Theme.u(10))
+					}
+
+					// Over the fill: a border of its own would have the fill stop short of it,
+					// and with a fill to see through, it would show as a light line.
+					Rectangle {
+						anchors.fill: parent
+						radius: parent.radius
+						color: "transparent"
+						border.width: 1
+						border.color: Theme.border
+					}
 				}
 			}
 		}

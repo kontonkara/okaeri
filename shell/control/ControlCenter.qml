@@ -96,9 +96,19 @@ Panel {
 			clip: true
 			boundsBehavior: Flickable.StopAtBounds
 
+			// Only once it's open: as it opens what's in it is laid out, and a height that
+			// followed that would cut the tiles off as the panel comes.
+			property bool settled: false
+
+			Timer {
+				running: true
+				interval: Theme.ms(400)
+				onTriggered: view.settled = true
+			}
+
 			// The panel grows and shrinks to what's in it, not at once.
 			Behavior on height {
-				enabled: Theme.animate
+				enabled: Theme.animate && view.settled
 
 				NumberAnimation {
 					duration: Theme.ms(200)
