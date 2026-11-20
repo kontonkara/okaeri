@@ -278,8 +278,33 @@ PanelWindow {
 		id: lane
 
 		required property var names
-		// What the clock can take, if it's here.
+		// How far along the bar it can reach.
 		property real room: Infinity
+
+		// How far along the bar its parts reach with all the room they want.
+		function wished() {
+			let length = 0;
+			for (const child of children) {
+				if (child.visible && typeof child.wish === "number" && child.wish > 0)
+					length += child.wish + spacing;
+			}
+			return Math.max(0, length - spacing);
+		}
+
+		// How far along the bar the parts but `item` reach, with the room between: not
+		// by the lane's length, which `item` is in.
+		function besides(item) {
+			let length = 0;
+			for (const child of children) {
+				// Its own length isn't read at all: what it can take would go by it.
+				if (child === item || !child.visible)
+					continue;
+				const along = bar.upright ? child.height : child.width;
+				if (along > 0)
+					length += along + spacing;
+			}
+			return length;
+		}
 
 		columns: bar.upright ? 1 : 1000
 		horizontalItemAlignment: Grid.AlignHCenter
@@ -308,6 +333,9 @@ PanelWindow {
 				readonly property real across: capsule ? Math.max(bar.upright ? place.width : place.height, Theme.barHeight - Theme.u(6)) : 0
 
 				visible: place.item?.wanted ?? true
+				// How long it is along the bar with all the room its part wants.
+				readonly property real wish: place.item && typeof place.item.wish === "number" ? Math.ceil((place.item.wish + pad * 2) / 2) * 2 : bar.upright ? height : width
+
 				// In an even number of whole pixels, so that what's in the middle of it, and
 				// the lane it's in the middle of the bar, stand on whole ones: on half a
 				// pixel text smears and a capsule's corners come out uneven.
@@ -344,7 +372,9 @@ PanelWindow {
 					id: place
 
 					readonly property string modelData: spot.modelData
-					readonly property real room: lane.room
+					// What it can take along the bar: its lane's room, less what the others
+					// there and its capsule take.
+					readonly property real room: lane.room - lane.besides(spot) - spot.pad * 2
 					// What its clicks and the wheel on it run, by the button or the way.
 					// The tray's icons are apps, with clicks of their own.
 					readonly property var runs: modelData === "tray" ? ({}) : Settings.bar.actions[modelData] ?? ({})
@@ -619,6 +649,7 @@ PanelWindow {
 
 		Workspaces {
 			output: bar.screen ? bar.screen.name : ""
+			room: parent ? parent.room : Infinity
 		}
 	}
 
@@ -771,6 +802,9 @@ PanelWindow {
 		Lane {
 			id: left
 
+			// Up to the middle lane where that stands in the middle, or to the right one:
+			// the workspaces show fewer before they push the clock aside.
+			room: bar.upright ? Infinity : Math.max(0, (center.wished() > 0 ? Math.round((parent.width - center.wished()) / 2) : right.x) - Theme.u(12) - x)
 			x: bar.upright ? Math.round((parent.width - width) / 2) : Theme.u(14)
 			y: bar.upright ? Theme.u(14) : Math.round((parent.height - height) / 2)
 			names: Settings.laneOf(bar.screen?.name ?? "", "left")

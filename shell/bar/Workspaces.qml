@@ -18,7 +18,26 @@ Grid {
 
 	required property string output
 	readonly property var own: Settings.workspaces
-	readonly property var shown: own.empty ? Niri.on(output) : Niri.busyOn(output)
+	// What it can take along the bar: with more than fit, those around the active
+	// one show, and a mark at the end where there are more.
+	property real room: Infinity
+	readonly property var all: own.empty ? Niri.on(output) : Niri.busyOn(output)
+	readonly property var shown: {
+		if (!isFinite(room))
+			return all;
+		// About what a pill takes, the active one's more and a mark at each end.
+		const each = Theme.u(own.apps ? 48 : labeled ? 24 : 12) + spacing;
+		const fits = Math.max(1, Math.floor((room + spacing - Theme.u(16) - (all.length * each > room + spacing ? (Theme.u(14) + spacing) * 2 : 0)) / each));
+		if (all.length <= fits)
+			return all;
+		const at = Math.max(0, all.findIndex(workspace => workspace.is_active));
+		const from = Math.max(0, Math.min(at - Math.floor(fits / 2), all.length - fits));
+		return all.slice(from, from + fits);
+	}
+	// About how long it is with all of them, whatever `room` is.
+	readonly property real wish: all.length * (Theme.u(own.apps ? 48 : labeled ? 24 : 12) + spacing)
+	readonly property bool before: shown.length > 0 && shown[0] !== all[0]
+	readonly property bool after: shown.length > 0 && shown[shown.length - 1] !== all[all.length - 1]
 	readonly property bool labeled: own.labels !== "none"
 	// Numbers as Settings.workspaces.numerals writes them: "roman", "kanji",
 	// "circled", or as they are.
@@ -54,7 +73,7 @@ Grid {
 		if (steps === 0)
 			return;
 		wheel -= steps * 120;
-		Niri.turn(shown, own.reverse ? -steps : steps);
+		Niri.turn(all, own.reverse ? -steps : steps);
 	}
 
 	// The workspace whose pill is at `point`, null between them.
@@ -91,6 +110,20 @@ Grid {
 	horizontalItemAlignment: Grid.AlignHCenter
 	verticalItemAlignment: Grid.AlignVCenter
 	spacing: Theme.u(6)
+
+	// More before those shown, and after them.
+	component More: Text {
+		width: Theme.u(14)
+		horizontalAlignment: Text.AlignHCenter
+		text: workspaces.upright ? "\u22ee" : "\u2026"
+		color: Theme.colors.subtext
+		font.family: Theme.font
+		font.pixelSize: Theme.fontSize
+	}
+
+	More {
+		visible: workspaces.before
+	}
 
 	Repeater {
 		// By id, as each change makes them all anew: a pill that's made anew has
@@ -288,5 +321,9 @@ Grid {
 				}
 			}
 		}
+	}
+
+	More {
+		visible: workspaces.after
 	}
 }

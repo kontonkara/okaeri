@@ -15,6 +15,9 @@ Text {
 
 	property real room: Infinity
 	readonly property var own: Settings.clock
+	// How long it is with all the room it wants, whatever `room` is: what the
+	// lanes beside it go by.
+	readonly property real wish: upright ? implicitWidth : Math.ceil(dated.advanceWidth + besides.advanceWidth)
 	readonly property string timeFormat: (own.hours12 ? "h:mm" : "HH:mm") + (own.seconds ? ":ss" : "") + (own.hours12 ? " AP" : "")
 	readonly property var formats: own.date === "none" || !own.dateFormat ? [timeFormat] : own.date === "after" ? [timeFormat, own.dateFormat] : [own.dateFormat, timeFormat]
 	readonly property string outside: Weather.on && Settings.weather.bar && Weather.current ? `  ${Weather.current.temperature}°` : ""
@@ -53,6 +56,13 @@ Text {
 
 		font: time.font
 		text: time.formats.map(format => Tr.date(clock.date, format)).join("  ")
+	}
+
+	TextMetrics {
+		id: besides
+
+		font: time.font
+		text: time.outside + (time.timing ? `  ${time.timing}` : "")
 	}
 
 	MouseArea {
