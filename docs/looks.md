@@ -63,9 +63,13 @@ in the `hooks`, and on the Session page, with `~` for your home:
 
 A `from` that isn't a whole path is one that comes with okaeri, in
 `shell/templates`, wherever it's installed: `kitty.conf`, `foot.ini`,
-`alacritty.toml`, `gtk3.css` and `gtk4.css`, for `~/.config/gtk-3.0/gtk.css`
-and `~/.config/gtk-4.0/gtk.css`, and `fuzzel.ini`. Each says at its top what to
-put in the app's own config to take it in.
+`alacritty.toml`, `ghostty`, `wezterm.toml`, `tmux.conf`, `btop.theme`,
+`fuzzel.ini`, `qtct.conf` for qt6ct and qt5ct, and `gtk3.css` and `gtk4.css`,
+for `~/.config/gtk-3.0/gtk.css` and `~/.config/gtk-4.0/gtk.css`. Each says at
+its top where to write it and what to put in the app's own config to take it
+in, and a click on its name on the Session page adds it so. Colors that let
+what's under them through, as `dim` does, are written as they look over the
+background.
 
 ## The language
 

@@ -1,0 +1,20 @@
+# okaeri's colors for Ghostty, written anew as they change. With this written to
+# ~/.config/ghostty/themes/okaeri, in Ghostty's config:
+#
+#   theme = okaeri
+#
+# Its reload_config key, ctrl+shift+comma unless it's bound otherwise, takes
+# them at once, and a new Ghostty takes them as it starts. The palette has no
+# greens or blues, so most of the sixteen terminal colors stay Ghostty's own:
+# red is the palette's error, and bright black its dim.
+
+foreground = {{text}}
+background = {{background}}
+cursor-color = {{accent}}
+cursor-text = {{background}}
+selection-foreground = {{background}}
+selection-background = {{accent}}
+split-divider-color = {{surface}}
+palette = 1={{error}}
+palette = 8={{dim}}
+palette = 9={{error}}

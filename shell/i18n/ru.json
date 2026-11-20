@@ -188,7 +188,7 @@
 	"Don't": "Не надо",
 	"Drives": "Диски",
 	"Each group of its parts on its own, the desktop between": "Каждая группа частей отдельно, между ними рабочий стол",
-	"Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone: kitty.conf, foot.ini, alacritty.toml, gtk3.css, gtk4.css and fuzzel.ini.": "Каждый шаблон записывается в свой файл при смене цветов: {{accent}} — как #rrggbb, {{accent.strip}} — без #, {{accent.rgb}} — как r, g, b, так же для остальных цветов, {{mode}} — light или dark. Шаблоны из okaeri задаются просто по имени: kitty.conf, foot.ini, alacritty.toml, gtk3.css, gtk4.css и fuzzel.ini.",
+	"Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone, and each below adds one, to where its top says to put it.": "Каждый шаблон записывается в свой файл при смене цветов: {{accent}} — как #rrggbb, {{accent.strip}} — без #, {{accent.rgb}} — как r, g, b, так же для остальных цветов, {{mode}} — light или dark. Шаблоны из okaeri задаются просто по имени, а кнопки ниже добавляют их туда, куда советует их заголовок.",
 	"Earlier": "Раньше",
 	"East is above 0": "Восток — больше 0",
 	"Edit": "Изменить",
@@ -949,5 +949,6 @@
 	"Else it lists once, and what's typed picks from that": "Иначе список берётся раз, а набранное выбирает из него",
 	"A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.": "После табуляции у строки может быть подпись, а после второй — то, что Enter возьмёт вместо текста. Режимы приносят и плагины.",
 	"What apps say they're doing": "Что приложения сообщают о себе",
-	"How far a download or a copy is along, and counts of their own": "Ход загрузки или копирования и их собственные счётчики"
+	"How far a download or a copy is along, and counts of their own": "Ход загрузки или копирования и их собственные счётчики",
+	"To %1": "В %1"
 }

@@ -14,6 +14,20 @@ Flickable {
 	readonly property var waits: [0, 60, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600]
 	// Each a template and the file it's written to: see hooks/Templates.qml.
 	readonly property var templates: Array.isArray(Settings.hooks.templates) ? Settings.hooks.templates : []
+	// Those that come with okaeri, and where each goes as its top says.
+	readonly property var ready: [
+		{ from: "kitty.conf", to: "~/.config/kitty/okaeri.conf" },
+		{ from: "foot.ini", to: "~/.config/foot/okaeri.ini" },
+		{ from: "alacritty.toml", to: "~/.config/alacritty/okaeri.toml" },
+		{ from: "ghostty", to: "~/.config/ghostty/themes/okaeri" },
+		{ from: "wezterm.toml", to: "~/.config/wezterm/colors/okaeri.toml" },
+		{ from: "tmux.conf", to: "~/.config/tmux/okaeri.conf" },
+		{ from: "btop.theme", to: "~/.config/btop/themes/okaeri.theme" },
+		{ from: "fuzzel.ini", to: "~/.config/fuzzel/okaeri.ini" },
+		{ from: "gtk3.css", to: "~/.config/gtk-3.0/gtk.css" },
+		{ from: "gtk4.css", to: "~/.config/gtk-4.0/gtk.css" },
+		{ from: "qtct.conf", to: "~/.config/qt6ct/colors/okaeri.conf" }
+	]
 
 	// Those the files leave out, for each line's mark.
 	readonly property var fileHidden: Settings.inFiles("session", "hidden") ?? []
@@ -240,11 +254,30 @@ Flickable {
 			Text {
 				width: parent.width
 				wrapMode: Text.WordWrap
-				text: Tr.t("Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone: kitty.conf, foot.ini, alacritty.toml, gtk3.css, gtk4.css and fuzzel.ini.")
+				text: Tr.t("Each template is written to its file as the colors change, with {{accent}} in it as #rrggbb, {{accent.strip}} without the #, {{accent.rgb}} as r, g, b, the same for the other colors, and {{mode}} as light or dark. Those that come with okaeri go by their names alone, and each below adds one, to where its top says to put it.")
 				textFormat: Text.PlainText
 				color: Theme.colors.subtext
 				font.family: Theme.font
 				font.pixelSize: Theme.fontSize - Theme.u(2)
+			}
+
+			// Those that come with okaeri and aren't written yet, a click each.
+			Flow {
+				width: parent.width
+				spacing: Math.round(Theme.u(6))
+
+				Repeater {
+					model: page.ready.filter(one => !page.templates.some(own => own.from === one.from))
+
+					Button {
+						required property var modelData
+
+						height: Math.round(Theme.u(30))
+						text: modelData.from
+						tip: Tr.f("To %1", modelData.to)
+						onClicked: page.addTemplate(modelData.from, modelData.to)
+					}
+				}
 			}
 
 			// By how many there are: a change to one doesn't make the rows anew, and

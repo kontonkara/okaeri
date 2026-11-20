@@ -1,0 +1,22 @@
+# okaeri's colors for WezTerm, written anew as they change. With this written to
+# ~/.config/wezterm/colors/okaeri.toml, in wezterm.lua:
+#
+#   config.color_scheme = "okaeri"
+#
+# WezTerm takes them as it starts, or as it reads its config again. The palette
+# has no greens or blues, so the sixteen terminal colors stay WezTerm's own.
+
+[metadata]
+name = "okaeri"
+
+[colors]
+foreground = "{{text}}"
+background = "{{background}}"
+cursor_bg = "{{accent}}"
+cursor_fg = "{{background}}"
+cursor_border = "{{accent}}"
+selection_fg = "{{background}}"
+selection_bg = "{{accent}}"
+scrollbar_thumb = "{{surface}}"
+split = "{{surface}}"
+visual_bell = "{{surface}}"

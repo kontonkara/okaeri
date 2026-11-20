@@ -58,8 +58,11 @@ Scope {
 			if (!Object.keys(colors).includes(name) || ![undefined, "strip", "rgb"].includes(form))
 				return whole;
 			try {
+				// One that lets what's under it through, as dim and subtext do, as it
+				// looks over the background: apps take colors without that.
 				const color = Qt.color(`${colors[name]}`);
-				const parts = [color.r, color.g, color.b].map(part => Math.round(part * 255));
+				const under = Qt.color(`${colors.background}`);
+				const parts = ["r", "g", "b"].map(part => Math.round((color[part] * color.a + under[part] * (1 - color.a)) * 255));
 				if (form === "rgb")
 					return parts.join(", ");
 				const hex = parts.map(part => (part < 16 ? "0" : "") + part.toString(16)).join("");
