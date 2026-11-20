@@ -283,7 +283,11 @@ PanelWindow {
 	Watch {
 		value: Power.profile
 		ready: Power.choices.length > 1
-		onMoved: osd.tell("profile", 1)
+		// Only as the shell changed it: what else did shows it itself.
+		onMoved: {
+			if (Date.now() - Power.setAt < 5000)
+				osd.tell("profile", 1);
+		}
 	}
 
 	Watch {

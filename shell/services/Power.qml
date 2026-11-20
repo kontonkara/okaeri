@@ -110,7 +110,12 @@ Singleton {
 			set(choices[((at + steps) % count + count) % count].profile);
 	}
 
+	// When the shell last set the profile: the OSD shows only what it changed, as
+	// another program that changes it may show it in a way of its own.
+	property real setAt: 0
+
 	function set(choice) {
+		setAt = Date.now();
 		Env.act(`power profile ${PowerProfile.toString(choice)}`, () => PowerProfiles.profile = choice);
 	}
 

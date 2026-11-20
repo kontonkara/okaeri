@@ -165,7 +165,8 @@ command as one comes, with `OKAERI_APP`, `OKAERI_SUMMARY`, `OKAERI_BODY` and
 as under the pointer, and start over once you're back, unless a video keeps the
 screen awake; the Notifications page has how long. The on-screen display says what
 plays after a key of the player's, too, and as a track starts by itself where its
-page says so.
+page says so. A power profile it shows only as okaeri changed it: another program
+that changes it, the laptop's own say, may show it in a way of its own.
 
 ## Screens
 
