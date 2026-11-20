@@ -78,6 +78,9 @@ Item {
 
 			Text {
 				width: parent.width
+				// None at all where there's none: an empty line would put the text above
+				// the middle.
+				visible: entry.subtext !== ""
 				text: entry.subtext
 				color: entry.failed ? Theme.colors.error : Theme.colors.subtext
 				elide: Text.ElideRight
