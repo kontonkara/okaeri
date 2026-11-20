@@ -351,7 +351,10 @@ PanelWindow {
 					readonly property bool launcher: !!modelData.launcher
 					readonly property bool running: modelData.windows.length > 0
 					readonly property bool focused: modelData.windows.some(window => window.is_focused)
-					readonly property bool urgent: modelData.windows.some(window => window.is_urgent)
+					readonly property bool urgent: modelData.windows.some(window => window.is_urgent) || !!said?.urgent
+					// What it says of itself, by Badges, while it has windows: how far along
+					// it is, a count and that it asks to be looked at.
+					readonly property var said: launcher || !dock.own.progress || modelData.windows.length === 0 ? null : Badges.of(modelData)
 					readonly property bool kept: dock.own.pinned.includes(modelData.id)
 					readonly property string image: launcher ? "" : modelData.entry ? Apps.image(modelData.entry.icon) : Apps.imageOf(modelData.id)
 					// How large it is now, and how far along it's moved, for those under
@@ -363,8 +366,8 @@ PanelWindow {
 					property real up: 0
 					// The line before it, if it's the first of those not kept.
 					readonly property real lead: index === dock.split ? dock.sep : 0
-					// What it said that's not been seen.
-					readonly property int unread: launcher || !dock.own.unread ? 0 : NotificationStore.unreadOf(modelData)
+					// What it said that's not been seen: its own count, or its notifications.
+					readonly property int unread: launcher ? 0 : (said?.count ?? 0) > 0 ? said.count : dock.own.unread ? NotificationStore.unreadOf(modelData) : 0
 
 					width: dock.upright ? dock.thick - Theme.u(12) : dock.slot + lead
 					height: dock.upright ? dock.slot + lead : dock.thick - Theme.u(12)
@@ -489,6 +492,37 @@ PanelWindow {
 										font.family: Theme.font
 										font.pixelSize: Theme.fontSize - Theme.u(4)
 										font.weight: Theme.fontWeight
+									}
+								}
+
+								// How far along what it does is, as it says, along the icon's foot.
+								Rectangle {
+									objectName: "progress"
+									anchors.left: parent.left
+									anchors.right: parent.right
+									anchors.bottom: parent.bottom
+									anchors.margins: Theme.u(2)
+									visible: (app.said?.progress ?? -1) >= 0
+									height: Math.round(Theme.u(5))
+									radius: height / 2
+									color: Qt.alpha(Theme.colors.background, 0.85)
+
+									Rectangle {
+										x: 1
+										y: 1
+										width: Math.max(height, (parent.width - 2) * Math.max(0, app.said?.progress ?? 0))
+										height: parent.height - 2
+										radius: height / 2
+										color: Theme.colors.accent
+
+										Behavior on width {
+											enabled: Theme.animate
+
+											NumberAnimation {
+												duration: Theme.ms(200)
+												easing.type: Easing.OutCubic
+											}
+										}
 									}
 								}
 

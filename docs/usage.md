@@ -103,8 +103,11 @@ pointer, an app hops, grows or rocks as it starts and while it asks to be
 looked at, a dot, a line or a dot for each window marks one that's open, and
 it can have a button for the launcher, and stay in sight on an empty workspace
 where it hides. An app has how many of its notifications are unread, and a line
-goes after the apps it keeps. An app with a window, carried out of the dock
-onto a workspace of the bar, has that window go there.
+goes after the apps it keeps. What an app says of itself, as browsers and file
+managers do of a download or a copy, shows on it too: how far along that is,
+a count of its own, and that it asks to be looked at; busctl hears it. An app
+with a window, carried out of the dock onto a workspace of the bar, has that
+window go there.
 
 ## The launcher
 

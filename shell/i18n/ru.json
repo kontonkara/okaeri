@@ -947,5 +947,7 @@
 	"With the row as $1; nothing here copies it": "Со строкой в $1; без команды строка копируется",
 	"Asked again as you type": "Заново при наборе",
 	"Else it lists once, and what's typed picks from that": "Иначе список берётся раз, а набранное выбирает из него",
-	"A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.": "После табуляции у строки может быть подпись, а после второй — то, что Enter возьмёт вместо текста. Режимы приносят и плагины."
+	"A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.": "После табуляции у строки может быть подпись, а после второй — то, что Enter возьмёт вместо текста. Режимы приносят и плагины.",
+	"What apps say they're doing": "Что приложения сообщают о себе",
+	"How far a download or a copy is along, and counts of their own": "Ход загрузки или копирования и их собственные счётчики"
 }

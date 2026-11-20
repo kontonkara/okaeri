@@ -199,6 +199,15 @@ Flickable {
 			}
 
 			Setting {
+				holds: "dock.progress"
+				words: "launcherentry download badge count"
+				text: Tr.t("What apps say they're doing")
+				subtext: Tr.t("How far a download or a copy is along, and counts of their own")
+				checked: page.own.progress
+				onToggled: wanted => Settings.setDock(page.forScreen, "progress", wanted)
+			}
+
+			Setting {
 				holds: "dock.separator"
 				text: Tr.t("A line after those kept")
 				subtext: Tr.t("Before the others with windows")

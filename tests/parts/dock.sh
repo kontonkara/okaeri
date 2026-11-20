@@ -315,6 +315,28 @@ kill "$away"
 wait "$away" 2>/dev/null || true
 sleep 0.5
 
+# What an app says of itself on the bus: how far along it is shows on its icon
+# while it says so, and goes as it says it's done.
+move 700 400
+sleep 0.4
+shot unsaid
+said() {
+	busctl --user emit /okaeri/test com.canonical.Unity.LauncherEntry Update 'sa{sv}' application://kitty.desktop "$@"
+}
+said 2 progress d 0.6 progress-visible b true
+wait_log 'okaeri: badges: kitty {"progress":0.6,"count":0,"urgent":false}'
+sleep 0.5
+shot said
+band() {
+	magick "$out/$1.png" "$out/unsaid.png" -compose difference -composite -crop 1400x80+0+820 +repage -format '%[fx:maxima > 0.2]' info:
+}
+[ "$(band said)" = 1 ] || fail "how far along an app is doesn't show on the dock"
+said 2 progress-visible b false count-visible b false
+wait_log 'okaeri: badges: kitty {"progress":-1,"count":0,"urgent":false}'
+sleep 0.5
+shot unsaid-again
+[ "$(band unsaid-again)" = 0 ] || fail "how far along an app was stays on the dock after it said it's done"
+
 kill "$first"
 wait "$first" 2>/dev/null || true
 settings '{}'

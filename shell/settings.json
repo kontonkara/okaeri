@@ -157,6 +157,7 @@
 		"smartHide": false,
 		"separator": true,
 		"unread": true,
+		"progress": true,
 		"screens": {}
 	},
 	"hooks": {
