@@ -75,8 +75,8 @@ PanelWindow {
 	function hide() {
 		if (shown) {
 			shown = false;
-			// A fade that never got to start won't say it ended.
-			if (scope.opacity === 0)
+			// With nothing to fade, at once; else as the fade ends.
+			if (!Theme.animate)
 				visible = false;
 			panelClosed();
 		}
@@ -292,6 +292,14 @@ PanelWindow {
 					from: "shown"
 					enabled: Theme.animate
 
+					// Out of sight once it faded, and not before: leaving the state puts
+					// opacity at 0 for a moment before the fade takes it back to 1, and a
+					// window hidden then fades where nobody sees it.
+					onRunningChanged: {
+						if (!running && !panel.shown)
+							panel.visible = false;
+					}
+
 					NumberAnimation {
 						properties: "opacity,scale,away"
 						duration: Theme.ms(130)
@@ -299,11 +307,6 @@ PanelWindow {
 					}
 				}
 			]
-
-			onOpacityChanged: {
-				if (opacity === 0)
-					panel.visible = false;
-			}
 
 			Rectangle {
 				id: card
