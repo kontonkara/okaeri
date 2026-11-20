@@ -1624,12 +1624,9 @@ sleep 1.2
 shot network-tip
 [ "$(magick "$out/network-tip.png" "$out/network-bare.png" -compose difference -composite \
 	-crop "300x40+1100+44" +repage -format '%[fx:maxima > 0.05]' info:)" = 1 ] || fail "no tip under the network"
-# A click opens the control center at Wi-Fi's page: Escape goes back to the
-# tiles, and then closes it.
+# A click opens the control center at Wi-Fi's page, and Escape closes it: what
+# was opened at a page doesn't go back to the tiles.
 click
-wait_up 1
-key Escape
-sleep 0.3
 wait_up 1
 key Escape
 wait_up 0

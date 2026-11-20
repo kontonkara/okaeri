@@ -31,7 +31,6 @@ BarButton {
 		return about.concat([trouble]).filter(part => part !== "").join(" · ");
 	}
 	onClicked: {
-		Control.unfolded = "wifi";
-		Control.toggle();
+		Control.toggleFrom(button, "network", "wifi");
 	}
 }

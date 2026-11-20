@@ -53,8 +53,7 @@ Item {
 		cursorShape: Qt.PointingHandCursor
 		onClicked: event => {
 			if (event.button === Qt.MiddleButton) {
-				Control.unfolded = "mic";
-				Control.toggle();
+				Control.toggleFrom(signs, "privacy", "mic");
 			} else if (signs.listened) {
 				Audio.toggleMicMute();
 			}

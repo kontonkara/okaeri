@@ -21,7 +21,6 @@ BarButton {
 	ink: devices.length > 0 ? Theme.colors.text : Theme.colors.subtext
 	tip: devices.length > 0 ? devices.map(device => device.batteryAvailable ? `${device.name} · ${Math.round(device.battery * 100)}%` : device.name).join(", ") : "Bluetooth on, nothing connected"
 	onClicked: {
-		Control.unfolded = "bluetooth";
-		Control.toggle();
+		Control.toggleFrom(button, "bluetooth", "bluetooth");
 	}
 }

@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs
+import qs.ui
 
 // What the panel and its bar button share. Nothing here reaches for Wi-Fi or
 // Bluetooth, so the bar doesn't start them: they come with the first opening.
@@ -13,6 +14,17 @@ Singleton {
 	// keys then go on to it.
 	property string unfolded: ""
 	property bool keyed: false
+	// The part of the bar it was opened from, by its name, and where its middle is
+	// along the bar, -1 for none: the panel opens by it. And whether it was
+	// opened at a page: Escape then closes it, as it does the tiles.
+	property string from: "control"
+	property real middle: -1
+	property bool straight: false
+
+	onUnfoldedChanged: {
+		if (unfolded === "")
+			straight = false;
+	}
 
 	// The tile whose page of what else it can do is open, by a right click on it,
 	// and the tiles the panel shows now, in their order.
@@ -74,6 +86,17 @@ Singleton {
 	}
 
 	function toggle() {
+		toggled();
+	}
+
+	// From part `name` of the bar, `item`, at `page`, or at the tiles with "".
+	function toggleFrom(item, name, page) {
+		if (!open) {
+			from = name;
+			middle = Panels.middleOf(item);
+			unfolded = page;
+			straight = page !== "";
+		}
 		toggled();
 	}
 

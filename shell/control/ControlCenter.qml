@@ -17,15 +17,26 @@ import qs.ui
 Panel {
 	id: controlCenter
 
-	align: Settings.corner("control")
+	// By the part of the bar it was opened from, the control center's own by keys.
+	align: Settings.corner(Control.from)
+	middle: Control.middle >= 0 ? Control.middle : upright ? (screen ? screen.height : height) / 2 : across / 2
+	// A page it was opened at by a part of the bar closes with it, as the tiles do.
 	escapes: () => {
-		if (Control.unfolded === "")
+		if (Control.unfolded === "" || Control.straight)
 			return false;
 		Control.unfolded = "";
 		return true;
 	}
 	onShownChanged: Control.open = shown
-	onPanelClosed: Control.unfolded = ""
+	// Back to the tiles once it's out of sight, not as it fades: they'd show then.
+	onVisibleChanged: {
+		if (!visible) {
+			Control.unfolded = "";
+			Control.straight = false;
+			Control.from = "control";
+			Control.middle = -1;
+		}
+	}
 	// A reload takes it away without closing it, and what's scanning would go
 	// on with nobody left to stop it.
 	Component.onDestruction: Control.open = false

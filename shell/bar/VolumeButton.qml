@@ -10,6 +10,8 @@ import qs.ui
 // at the sound, the middle button or a right click mutes it, and the wheel turns
 // it by Settings.audio.step percent.
 BarButton {
+	id: button
+
 	readonly property bool wanted: Audio.ready
 	readonly property string percent: `${Math.round(Audio.volume * 100)}%`
 	readonly property string output: Audio.sink?.description || Audio.sink?.nickname || ""
@@ -29,8 +31,7 @@ BarButton {
 	ink: Audio.muted ? Theme.colors.subtext : Theme.colors.text
 	tip: [output, Audio.muted ? `Muted, at ${percent}` : percent].filter(part => part !== "").join(" · ")
 	onClicked: {
-		Control.unfolded = "sound";
-		Control.toggle();
+		Control.toggleFrom(button, "volume", "sound");
 	}
 	onMiddleClicked: Audio.toggleMute()
 	onRightClicked: Audio.toggleMute()
