@@ -749,6 +749,8 @@ FloatingWindow {
 					enabled: Object.keys(Settings.own).length + Object.keys(Theme.own).length > 0
 					atStart: true
 					pad: Theme.u(10)
+					// Not into the button beside it, in a longer language.
+					longest: width - pad * 2
 					flat: true
 					text: Tr.t("Back to the config")
 					onClicked: {
