@@ -698,6 +698,16 @@ Flickable {
 			}
 
 			Setting {
+				holds: "bar.hoverCloses"
+				words: "hover pointer close leave"
+				enabled: Settings.bar.hoverOpens
+				text: Tr.t("And closes them as it leaves")
+				subtext: Tr.t("A panel it opened goes once the pointer is off both it and the part")
+				checked: Settings.bar.hoverCloses
+				onToggled: wanted => Settings.set("bar", "hoverCloses", wanted)
+			}
+
+			Setting {
 				holds: "bar.autoHide"
 				text: Tr.t("It hides")
 				subtext: Tr.t("Until the pointer rests at the top of the screen, or a panel opens")

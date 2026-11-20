@@ -83,6 +83,20 @@ PanelWindow {
 	// and a panel on its screen.
 	readonly property bool pointed: sensor.containsMouse || over.hovered
 	readonly property bool called: Panels.open.some(panel => panel.screen === bar.screen)
+	// The panel the pointer opened, and the hold on the part it rested on: with
+	// Settings.bar.hoverCloses it goes as the pointer leaves both.
+	property var byHover: null
+	property var restedOn: null
+
+	Timer {
+		interval: 400
+		running: Settings.bar.hoverCloses && !!bar.byHover && bar.byHover.shown && !bar.byHover.hovered && !bar.restedOn?.hovered
+		onTriggered: {
+			bar.byHover.hide();
+			bar.byHover = null;
+		}
+	}
+
 	property bool down: true
 	// How far it goes to be out of sight.
 	readonly property real away: Theme.edge + Theme.barHeight
@@ -366,7 +380,12 @@ PanelWindow {
 				Timer {
 					interval: 350
 					running: rest.enabled && rest.hovered && !bar.called
-					onTriggered: place.item.flip()
+					onTriggered: {
+						const before = Panels.open.slice();
+						place.item.flip();
+						bar.byHover = Panels.open.find(panel => !before.includes(panel)) ?? null;
+						bar.restedOn = rest;
+					}
 				}
 
 				// Over the part, for the buttons that have a command, and the wheel

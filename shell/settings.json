@@ -290,6 +290,7 @@
 		"reserve": true,
 		"autoHide": false,
 		"hoverOpens": false,
+		"hoverCloses": true,
 		"overWindows": "same",
 		"actions": {},
 		"scripts": [],

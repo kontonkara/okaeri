@@ -19,8 +19,10 @@ recording can stay on the bar to start one, a click on the microphone in use mut
 it, and how far the wheel turns the volume is on the volume's card. The list of
 failed units starts one again, takes it off the list, or shows what its journal
 said last. With "The pointer opens panels" on the Bar page, the pointer resting on
-the clock and the like opens its panel. With windows on the workspace the bar can
-turn solid, without its glass, or hide as if it always did, and be back with none.
+the clock and the like opens its panel, and that goes again as the pointer leaves
+both, unless "And closes them as it leaves" is off. With windows on the
+workspace the bar can turn solid, without its glass, or hide as if it always
+did, and be back with none.
 
 A click on a workspace that wants attention goes to the window that does, an
 app's icon on a workspace dragged onto another takes its window there, and the

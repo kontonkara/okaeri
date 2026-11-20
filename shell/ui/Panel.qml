@@ -43,6 +43,8 @@ PanelWindow {
 	// What Escape does before it closes the panel: true if that was all of it.
 	property var escapes: () => false
 	property bool shown: false
+	// Whether the pointer is on its card.
+	readonly property bool hovered: cardHover.hovered
 	// How tall what's put in it can get: the screen, without the bar and the
 	// card's own edges.
 	readonly property real room: height - (edge === "top" ? off : Settings.top(screen)) - (edge === "bottom" ? off : Settings.bottom(screen)) - padding * 2
@@ -334,6 +336,10 @@ PanelWindow {
 					height: Math.ceil(body.implicitHeight) + inset * 2
 					radius: Theme.cardRadius
 					color: Theme.panel
+
+					HoverHandler {
+						id: cardHover
+					}
 
 					// A click on the card isn't a click elsewhere.
 					MouseArea {

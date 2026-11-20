@@ -950,5 +950,7 @@
 	"A row may say more after a tab: what's under it, and after another tab what Enter takes instead of its text. Plugins bring modes too.": "После табуляции у строки может быть подпись, а после второй — то, что Enter возьмёт вместо текста. Режимы приносят и плагины.",
 	"What apps say they're doing": "Что приложения сообщают о себе",
 	"How far a download or a copy is along, and counts of their own": "Ход загрузки или копирования и их собственные счётчики",
-	"To %1": "В %1"
+	"To %1": "В %1",
+	"And closes them as it leaves": "И закрывает их, когда уходит",
+	"A panel it opened goes once the pointer is off both it and the part": "Открытая наведением панель закрывается, когда указатель ушёл и с неё, и с части бара"
 }
